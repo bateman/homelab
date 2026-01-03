@@ -73,9 +73,10 @@
 | Spec | Valore |
 |------|--------|
 | Funzione | Firewall / Router / Controller UniFi |
-| WAN | 1x 2.5GbE (ingresso fibra/ISP) |
-| LAN | 8x 1GbE |
-| SFP+ | 1x 10GbE (uplink a switch) |
+| WAN RJ45 | 1x 2.5GbE (ingresso fibra/ISP) |
+| WAN SFP+ | 1x 10GbE (non usata - ISP non supporta 10G) |
+| LAN RJ45 | 8x 1GbE |
+| LAN SFP+ | 1x 10GbE (uplink a switch) |
 | IP | 192.168.2.1 |
 
 ### U4 — Patch Panel deleyCON
@@ -95,7 +96,7 @@
 
 | Spec | Valore |
 |------|--------|
-| CPU | ARM AnnapurnaLabs AL524 |
+| CPU | Marvell Octeon TX2 CN9131 quad-core 2.2GHz |
 | Bay | 4x 3.5" HDD (RAID configurabile) |
 | SFP+ | 2x 10GbE |
 | SFP+ Port 1 | Uplink a Switch (trunk VLAN) |
