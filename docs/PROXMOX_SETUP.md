@@ -356,8 +356,10 @@ Se non già fatto:
 Datacenter → Storage → Add → NFS
 - ID: nas-backup
 - Server: 192.168.3.10
-- Export: /share/backup/proxmox
+- Export: /share/backup
 - Content: VZDump backup file
+
+> **Nota**: I backup Proxmox verranno salvati in una sottocartella automatica (`dump/`).
 
 ### 7.2 Creare Backup Job Schedulato
 

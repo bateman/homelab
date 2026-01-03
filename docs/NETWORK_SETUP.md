@@ -79,8 +79,10 @@ Cliccare "Add Network"
 | Name | Servers |
 | Gateway IP/Subnet | 192.168.3.1/24 |
 | VLAN ID | 3 |
-| DHCP Range | 192.168.3.100 - 192.168.3.200 |
+| DHCP Mode | None (IP statici) |
 | Domain Name | servers.local |
+
+> **Nota**: VLAN Servers usa IP statici. Assegnare manualmente: NAS=.10, Proxmox=.20, Stampante=.30, PC=.40
 
 ### 2.4 Creare VLAN Media (VLAN 4)
 
@@ -240,8 +242,10 @@ Settings → Profiles → Port Groups → Create New Group
   - `8989` (Sonarr)
   - `7878` (Radarr)
   - `8686` (Lidarr)
-  - `8080` (qBittorrent)
+  - `6767` (Bazarr)
   - `32400` (Plex)
+
+> **Nota**: qBittorrent (8080) e SABnzbd (8085) non sono inclusi - i client media non devono accedere direttamente ai download client.
 
 **Gruppo: Infrastructure Ports**
 - Ports:

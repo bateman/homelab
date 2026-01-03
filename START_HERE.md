@@ -34,15 +34,17 @@ Prima di iniziare, assicurati di avere:
 
 **Riferimento:** [`rack-homelab-config.md`](rack-homelab-config.md)
 
-### Ordine di montaggio rack (dall'alto verso il basso)
+### Layout Rack (dal basso verso l'alto)
 
-1. [ ] **U1**: Patch panel / cable management
-2. [ ] **U2**: QNAP TS-435XeU (con isolante neoprene sotto)
-3. [ ] **U3**: Spazio ventilazione
-4. [ ] **U4**: USW-Enterprise-8-PoE
-5. [ ] **U5-U6**: UDM-SE
-6. [ ] **U7**: Lenovo IdeaCentre Mini PC (con staffa)
-7. [ ] **U8**: UPS
+1. [ ] **U1**: UPS (peso in basso, minima generazione calore)
+2. [ ] **Isolante**: Neoprene 5mm tra UPS e NAS
+3. [ ] **U2**: QNAP TS-435XeU (zona fresca per HDD)
+4. [ ] **U3**: Pannello ventilato (protezione termica HDD)
+5. [ ] **U4**: Patch panel (passivo, buffer termico)
+6. [ ] **U5**: UDM-SE
+7. [ ] **U6**: USW-Enterprise-8-PoE
+8. [ ] **U7**: Pannello ventilato (isolamento termico)
+9. [ ] **U8**: Lenovo Mini PC (top, dissipazione verso l'alto)
 
 ### Cablaggio
 
@@ -81,7 +83,7 @@ Creare le seguenti reti in **Settings → Networks**:
 | VLAN ID | Nome | Subnet | Gateway | DHCP Range |
 |---------|------|--------|---------|------------|
 | 2 | Management | 192.168.2.0/24 | 192.168.2.1 | .100-.200 |
-| 3 | Servers | 192.168.3.0/24 | 192.168.3.1 | .100-.200 |
+| 3 | Servers | 192.168.3.0/24 | 192.168.3.1 | Disabilitato (IP statici) |
 | 4 | Media | 192.168.4.0/24 | 192.168.4.1 | .100-.200 |
 | 5 | Guest | 192.168.5.0/24 | 192.168.5.1 | .100-.200 |
 | 6 | IoT | 192.168.6.0/24 | 192.168.6.1 | .100-.200 |
@@ -226,9 +228,9 @@ make urls
 Seguire esattamente questo ordine per le dipendenze:
 
 ```
-1. qBittorrent     → Download client torrent
-2. NZBGet/SABnzbd  → Download client Usenet
-3. Prowlarr        → Indexer manager (connette ai download client)
+1. Prowlarr        → Indexer manager (configurare per primo)
+2. qBittorrent     → Download client torrent
+3. SABnzbd         → Download client Usenet
 4. Sonarr          → TV (connette a Prowlarr + download client)
 5. Radarr          → Film (connette a Prowlarr + download client)
 6. Lidarr          → Musica (connette a Prowlarr + download client)
@@ -237,6 +239,8 @@ Seguire esattamente questo ordine per le dipendenze:
 9. Pi-hole         → DNS (indipendente)
 10. Home Assistant → Domotica (indipendente)
 ```
+
+> **Nota**: Prowlarr si configura per primo, poi i download client, poi le app *arr che li collegano tutti insieme.
 
 ### Configurazioni Critiche
 
@@ -295,7 +299,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 ### Verifica Fase 6
 
 - [ ] Proxmox accessibile: `https://192.168.3.20:8006`
-- [ ] Plex accessibile: `http://192.168.3.20:32400/web`
+- [ ] Plex accessibile: `http://192.168.3.21:32400/web` (container LXC)
 - [ ] Tailscale connesso
 
 ---
