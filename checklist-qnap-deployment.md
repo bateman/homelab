@@ -209,7 +209,7 @@ docker compose logs | grep -i error
 - [ ] Prowlarr: `http://192.168.3.10:9696` risponde
 - [ ] Bazarr: `http://192.168.3.10:6767` risponde
 - [ ] qBittorrent: `http://192.168.3.10:8080` risponde
-- [ ] SABnzbd: `http://192.168.3.10:8085` risponde
+- [ ] NZBGet: `http://192.168.3.10:6789` risponde
 - [ ] Pi-hole: `http://192.168.3.10:8081/admin` risponde
 - [ ] Home Assistant: `http://192.168.3.10:8123` risponde
 - [ ] Portainer: `https://192.168.3.10:9443` risponde
@@ -246,17 +246,18 @@ docker compose logs | grep -i error
   - `tv` → Save path: `tv`
   - `music` → Save path: `music`
 
-### SABnzbd
-- [ ] Accedere a `http://192.168.3.10:8085`
+### NZBGet
+- [ ] Accedere a `http://192.168.3.10:6789`
 - [ ] Completare wizard iniziale
-- [ ] Config → Folders:
-  - Temporary Download Folder: `/data/usenet/incomplete`
-  - Completed Download Folder: `/data/usenet/complete`
-- [ ] Config → Categories:
-  - `movies` → Folder/Path: `movies`
-  - `tv` → Folder/Path: `tv`
-  - `music` → Folder/Path: `music`
-- [ ] Config → General → API Key: annotare
+- [ ] Settings → Paths:
+  - MainDir: `/data/usenet`
+  - DestDir: `/data/usenet/complete`
+  - InterDir: `/data/usenet/incomplete`
+- [ ] Settings → Categories:
+  - `movies` → DestDir: `movies`
+  - `tv` → DestDir: `tv`
+  - `music` → DestDir: `music`
+- [ ] Settings → Security → ControlUsername/ControlPassword: annotare
 
 ### Sonarr
 - [ ] Accedere a `http://192.168.3.10:8989`
@@ -270,10 +271,10 @@ docker compose logs | grep -i error
     - Host: `qbittorrent`
     - Port: `8080`
     - Category: `tv`
-  - Add → SABnzbd
-    - Host: `sabnzbd`
-    - Port: `8080`
-    - API Key: (da SABnzbd)
+  - Add → NZBGet
+    - Host: `nzbget`
+    - Port: `6789`
+    - Username/Password: (da NZBGet)
     - Category: `tv`
 - [ ] Settings → General → API Key: annotare (per Prowlarr)
 

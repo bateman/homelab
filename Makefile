@@ -253,6 +253,7 @@ health: check-docker
 	$(call check_service,http://localhost:6789,NZBGet)
 	$(call check_service,http://localhost:7500,Huntarr)
 	$(call check_service,http://localhost:11011/health,Cleanuparr)
+	$(call check_service,http://localhost:8191/health,FlareSolverr)
 	$(call check_service,http://localhost:8081/admin,Pi-hole)
 	$(call check_service,http://localhost:8123/api/,HomeAssistant)
 	$(call check_service,http://localhost:8200,Duplicati)
