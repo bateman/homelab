@@ -50,13 +50,76 @@
 
 ## Configurazione Storage
 
+### Scelta Filesystem: ext4 vs ZFS
+
+| Aspetto | ext4 | ZFS |
+|---------|------|-----|
+| **RAM minima** | ~256MB | **8-16GB dedicati** (1GB/TB per ARC) |
+| **CPU overhead** | Basso | Medio-alto (checksumming, compression) |
+| **Complessità** | Semplice, maturo | Complesso, curva apprendimento ripida |
+| **Integrità dati** | Base (journaling) | Eccellente (checksumming end-to-end) |
+| **Snapshot** | No (serve LVM) | Sì, nativi e efficienti |
+| **Self-healing** | No | Sì (con mirror/raidz) |
+| **Compression** | No | Sì (LZ4, ZSTD) - guadagno 10-30% |
+| **Hardlinking** | ✓ Ottimo | ✓ Ottimo |
+| **QNAP QTS support** | Nativo, stabile | Limitato |
+
+**Raccomandazione: ext4**
+- QTS ha supporto nativo e stabile
+- Il TS-435XeU ha RAM limitata (4-8GB tipici)
+- Per media server le feature avanzate ZFS non sono critiche
+- Hardlinking funziona perfettamente
+
+> ZFS avrebbe senso con 16GB+ RAM e priorità massima su integrità dati, oppure su Proxmox/TrueNAS.
+
+### Scelta RAID: RAID 5 vs RAID 10
+
+| Aspetto | RAID 5 | RAID 10 |
+|---------|--------|---------|
+| **Capacità utile (4 dischi)** | **75%** (3 su 4) | 50% (2 su 4) |
+| **Fault tolerance** | 1 disco | 1 disco (2 se in mirror diversi) |
+| **Read performance** | Buona | **Eccellente** |
+| **Write performance** | Degradata (parity calc) | **Eccellente** |
+| **Rebuild time** | Lungo + stress dischi | **Veloce** |
+| **Rischio durante rebuild** | Alto (URE può fallire) | **Basso** |
+| **Random I/O (Docker)** | Medio | **Ottimo** |
+| **Sequential I/O (streaming)** | Buono | Buono |
+| **Costo per TB** | **Minore** | Maggiore |
+
+**Performance indicative (4x HDD SATA):**
+```
+                    RAID 5          RAID 10
+Sequential Read:    ~400 MB/s       ~400 MB/s
+Sequential Write:   ~200 MB/s       ~300 MB/s
+Random Read 4K:     ~300 IOPS       ~500 IOPS
+Random Write 4K:    ~100 IOPS       ~400 IOPS  ← differenza critica per Docker
+```
+
+**Raccomandazione: RAID 10**
+- Container Station genera molto random I/O
+- Database SQLite degli *arr beneficiano di write veloci
+- Rebuild più sicuro e veloce
+- Hardlinking e import istantanei
+
+> RAID 5 ha senso se la capacità è priorità assoluta e il budget per dischi è limitato.
+
+### Riepilogo Configurazione Raccomandata
+
+| Componente | Scelta | Motivo |
+|------------|--------|--------|
+| **Filesystem** | ext4 | Compatibilità QTS, basso overhead RAM/CPU |
+| **RAID** | RAID 10 | Performance I/O per Docker, rebuild sicuro |
+| **Volume** | Static | Miglior performance hardlink |
+
+---
+
 ### Storage Pool
 - [ ] Control Panel → Storage & Snapshots → Storage/Snapshots
 - [ ] Create → New Storage Pool
-- [ ] Selezionare tutti gli HDD
-- [ ] RAID type raccomandato:
-  - 2 dischi: RAID 1 (mirror)
-  - 4 dischi: RAID 10 (performance + ridondanza) o RAID 5 (capacità)
+- [ ] Selezionare tutti gli HDD (4 dischi)
+- [ ] RAID type: **RAID 10** (raccomandato per media server)
+  - Alternativa 2 dischi: RAID 1 (mirror)
+  - Alternativa se capacità prioritaria: RAID 5
 - [ ] Alert threshold: 80%
 - [ ] Completare creazione (tempo variabile in base a capacità)
 
@@ -70,10 +133,10 @@
 ### Static Volume
 - [ ] Storage & Snapshots → Create → New Volume
 - [ ] Volume type: **Static Volume** (raccomandato per hardlink performance)
-  - Alternativa: Thick Volume se preferisci snapshots
+  - Alternativa: Thick Volume se preferisci snapshots nativi
 - [ ] Allocare tutto lo spazio disponibile (o quota desiderata)
 - [ ] Nome: `DataVol1`
-- [ ] Filesystem: ext4 (default, buona compatibilità)
+- [ ] Filesystem: **ext4** (raccomandato per compatibilità e basso overhead)
 
 ### Shared Folders
 Creare le seguenti shared folders su DataVol1:
