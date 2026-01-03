@@ -19,10 +19,11 @@ Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox c
 - **Prowlarr** (9696) - Indexer
 - **Bazarr** (6767) - Sottotitoli
 - **qBittorrent** (8080) - Torrent
-- **SABnzbd** (8085) - Usenet
+- **NZBGet** (6789) - Usenet
 - **Pi-hole** (8081) - DNS/Ad-blocking
 - **Home Assistant** (8123) - Domotica
 - **Portainer** (9443) - Gestione Docker
+- **Duplicati** (8200) - Backup automatizzati
 
 ## Quick Start
 

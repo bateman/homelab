@@ -24,11 +24,12 @@ Questo repository contiene la configurazione infrastructure-as-code completa per
 
 ```
 homelab/
-├── docker-compose.yml      # Definizione stack Docker principale
+├── compose.yml             # Stack infrastruttura (Pi-hole, HA, Portainer, Duplicati)
+├── compose.media.yml       # Stack media (*arr, download clients, monitoring)
 ├── Makefile                # Comandi gestione stack
 ├── setup-folders.sh        # Creazione struttura cartelle iniziale
-├── recyclarr.yml           # Sync profili qualita' Trash Guides
-├── recyclarr-snippet.yml   # Snippet configurazione Recyclarr
+├── .env.example            # Template variabili ambiente
+├── recyclarr.yml           # Esempio config profili qualita' Trash Guides
 ├── rack-homelab-config.md  # Layout rack hardware e piano IP
 ├── firewall-config.md      # Regole firewall UDM-SE e config VLAN
 ├── runbook-backup-restore.md       # Procedure backup/restore
@@ -52,12 +53,16 @@ homelab/
 | Home Assistant | 8123 | Automazione domotica |
 | Portainer | 9443 | Gestione Docker |
 | FlareSolverr | 8191 | Bypass Cloudflare |
+| Recyclarr | - | Sync profili Trash Guides |
+| Watchtower | - | Auto-update container |
+| Duplicati | 8200 | Backup incrementale con UI |
 
 ## Comandi Comuni
 
 ```bash
 # Gestione stack (via Makefile)
 make setup      # Crea struttura cartelle (eseguire una volta)
+make validate   # Verifica configurazione compose
 make up         # Avvia tutti i container
 make down       # Ferma tutti i container
 make restart    # Restart completo
@@ -67,6 +72,10 @@ make status     # Stato container e utilizzo risorse
 make health     # Health check tutti i servizi
 make backup     # Backup configurazioni
 make urls       # Mostra tutti gli URL WebUI
+
+# Recyclarr (sync profili qualita')
+make recyclarr-sync     # Sync manuale profili Trash Guides
+make recyclarr-config   # Genera template configurazione
 
 # Specifici per servizio
 make logs-sonarr    # Logs per servizio specifico
@@ -106,11 +115,14 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 
 ## Linee Guida Sviluppo
 
-### Quando modifichi docker-compose.yml
-1. Tutti i servizi *arr montano `/share/data:/data` per supporto hardlink
-2. Usa anchor YAML (`&common-env`) per variabili ambiente condivise
-3. Mantieni relazioni `depends_on` tra servizi
-4. Conserva label Watchtower per auto-update
+### Quando modifichi i file compose
+1. `compose.yml` contiene servizi infrastruttura (Pi-hole, Home Assistant, Portainer, Watchtower)
+2. `compose.media.yml` contiene lo stack media (*arr, download clients, monitoring)
+3. Tutti i servizi *arr montano `/share/data:/data` per supporto hardlink
+4. Usa anchor YAML (`&common-env`, `&common-logging`, `&common-healthcheck`) per config condivise
+5. Mantieni relazioni `depends_on` tra servizi
+6. Conserva label Watchtower per auto-update
+7. Ogni servizio deve avere: healthcheck, logging, deploy.resources
 
 ### Quando modifichi regole firewall
 1. Le regole sono processate in ordine - la posizione conta
@@ -120,12 +132,13 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 5. Termina con catch-all "Block All Inter-VLAN"
 
 ### Quando aggiungi nuovi servizi
-1. Aggiungi a `docker-compose.yml` con environment/volumes appropriati
-2. Aggiorna `setup-folders.sh` se servono nuove directory config
-3. Aggiungi endpoint health check al target health del `Makefile`
-4. Aggiorna target urls del `Makefile` con nuova WebUI
-5. Documenta nella tabella servizi di `rack-homelab-config.md`
-6. Aggiungi regole firewall se serve accesso inter-VLAN
+1. Aggiungi a `compose.yml` (infrastruttura) o `compose.media.yml` (media stack)
+2. Includi: healthcheck, logging, deploy.resources, labels watchtower
+3. Aggiorna `setup-folders.sh` se servono nuove directory config
+4. Aggiungi endpoint health check al target health del `Makefile`
+5. Aggiorna target urls del `Makefile` con nuova WebUI
+6. Documenta nella tabella servizi sopra e in `rack-homelab-config.md`
+7. Aggiungi regole firewall se serve accesso inter-VLAN
 
 ## Posizione API Key
 
@@ -137,10 +150,22 @@ Le API key sono salvate nella config di ogni servizio e vanno recuperate da:
 
 ## Strategia Backup
 
-- **Config Docker**: Backup giornaliero via `make backup` -> `/share/backup/`
+### Duplicati (consigliato)
+Container dedicato con WebUI per backup automatizzati:
+- **URL**: http://192.168.3.10:8200
+- **Sorgente**: `/source/config` (tutte le config dei servizi)
+- **Destinazione locale**: `/backups` -> `/share/backup`
+- **Destinazione offsite**: Backblaze B2 (configurare via WebUI)
+- **Retention consigliata**: 7 daily, 4 weekly, 3 monthly
+
+### Backup rapido manuale
+```bash
+make backup  # Crea tar.gz in ./backups/
+```
+
+### Altri backup
 - **Config QTS**: Settimanale via Control Panel -> Backup/Restore
 - **VM Proxmox**: Settimanale su NAS via mount NFS
-- **Offsite**: Rclone verso Backblaze B2 o rsync via Tailscale
 
 Vedi `runbook-backup-restore.md` per procedure dettagliate.
 
