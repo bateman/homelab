@@ -45,7 +45,7 @@ homelab/
 | Prowlarr | 9696 | Gestione indexer |
 | Bazarr | 6767 | Gestione sottotitoli |
 | qBittorrent | 8080 | Client torrent |
-| SABnzbd | 8085 | Client Usenet |
+| NZBGet | 6789 | Client Usenet |
 | Huntarr | 7500 | Monitoring *arr |
 | Cleanuparr | 11011 | Pulizia automatica |
 | Pi-hole | 8081 | DNS ad-blocking |
@@ -132,7 +132,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 Le API key sono salvate nella config di ogni servizio e vanno recuperate da:
 - Sonarr/Radarr/Lidarr/Prowlarr: Settings -> General -> API Key
 - qBittorrent: Settings -> WebUI -> Authentication
-- SABnzbd: Config -> General -> API Key
+- NZBGet: Settings -> Security -> ControlUsername/ControlPassword
 - Password Pi-hole: file `.env` (`PIHOLE_PASSWORD`)
 
 ## Strategia Backup
