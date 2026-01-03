@@ -2,26 +2,26 @@
 # Docker Compose - Media Stack (Trash Guides compliant)
 # NAS QNAP TS-435XeU - Homelab
 #
-# Stack *arr per gestione media automatizzata con supporto hardlinking
+# *arr stack for automated media management with hardlinking support
 #
-# Struttura cartelle (su /share/data per hardlinking):
+# Folder structure (on /share/data for hardlinking):
 #   /share/data/
 #   ├── torrents/{movies,tv,music}/
 #   ├── usenet/{incomplete,complete/{movies,tv,music}}/
 #   └── media/{movies,tv,music}/
 #
-# Uso:
+# Usage:
 #   docker compose -f compose.yml -f compose.media.yml up -d
-#   oppure: make up
+#   or simply: make up
 # =============================================================================
 
-# Riferimento alla network definita in compose.yml
+# Reference to network defined in compose.yml
 networks:
   media_net:
     external: true
     name: homelab_media_net
 
-# Anchor riutilizzabili (duplicati per file standalone, ignorati se usato con compose.yml)
+# Reusable anchors (duplicated for standalone use, ignored when used with compose.yml)
 x-common-env: &common-env
   PUID: 1000
   PGID: 100
@@ -293,8 +293,8 @@ services:
       - media_net
     restart: unless-stopped
     logging: *common-logging
-    # Recyclarr esegue sync su schedule interno, non serve healthcheck HTTP
-    # Sync manuale: docker exec recyclarr recyclarr sync
+    # Recyclarr runs sync on internal schedule, no HTTP healthcheck needed
+    # Manual sync: docker exec recyclarr recyclarr sync
     deploy:
       resources:
         limits:

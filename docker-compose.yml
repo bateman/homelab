@@ -1,16 +1,16 @@
 # =============================================================================
-# DEPRECATED - Questo file e' mantenuto per retrocompatibilita'
+# DEPRECATED - This file is kept for backwards compatibility
 # =============================================================================
 #
-# La configurazione e' stata suddivisa in:
-#   - compose.yml       -> Servizi infrastruttura (Pi-hole, HA, Portainer, Watchtower)
-#   - compose.media.yml -> Stack media (download clients, *arr, monitoring)
+# Configuration has been split into:
+#   - compose.yml       -> Infrastructure services (Pi-hole, HA, Portainer, Watchtower)
+#   - compose.media.yml -> Media stack (download clients, *arr, monitoring)
 #
-# USO RACCOMANDATO:
+# RECOMMENDED USAGE:
 #   docker compose -f compose.yml -f compose.media.yml up -d
-#   oppure semplicemente: make up
+#   or simply: make up
 #
-# Questo file include entrambi i file per retrocompatibilita' con:
+# This file includes both files for backwards compatibility with:
 #   docker compose up -d
 # =============================================================================
 

@@ -2,21 +2,21 @@
 # Docker Compose - Infrastructure Stack
 # NAS QNAP TS-435XeU - Homelab
 #
-# Servizi infrastrutturali: DNS, automazione, gestione container
-# Per lo stack media, vedi compose.media.yml
+# Infrastructure services: DNS, automation, container management
+# For media stack, see compose.media.yml
 #
-# Uso:
+# Usage:
 #   docker compose -f compose.yml -f compose.media.yml up -d
-#   oppure: make up
+#   or simply: make up
 # =============================================================================
 
-# Network condivisa tra tutti i servizi
+# Shared network for all services
 networks:
   media_net:
     driver: bridge
 
 # =============================================================================
-# Anchor YAML riutilizzabili
+# Reusable YAML Anchors
 # =============================================================================
 
 x-common-env: &common-env
@@ -38,7 +38,7 @@ x-common-healthcheck: &common-healthcheck
   start_period: 60s
 
 # =============================================================================
-# Servizi Infrastruttura
+# Infrastructure Services
 # =============================================================================
 
 services:
@@ -82,11 +82,11 @@ services:
   # ---------------------------------------------------------------------------
   # Home Automation
   # ---------------------------------------------------------------------------
-  # NOTA: Home Assistant usa network_mode: host per il discovery di dispositivi
-  # (Zigbee, Bluetooth, mDNS). Questo significa che:
-  # - Non fa parte della rete media_net
-  # - Non puo' risolvere altri container per nome
-  # - Comunica con altri servizi tramite IP host (192.168.3.10)
+  # NOTE: Home Assistant uses network_mode: host for device discovery
+  # (Zigbee, Bluetooth, mDNS). This means:
+  # - It is not part of media_net network
+  # - It cannot resolve other containers by name
+  # - It communicates with other services via host IP (192.168.3.10)
   homeassistant:
     image: ghcr.io/home-assistant/home-assistant:stable
     container_name: homeassistant
@@ -167,11 +167,11 @@ services:
   # ---------------------------------------------------------------------------
   # Backup
   # ---------------------------------------------------------------------------
-  # Duplicati: backup incrementale con deduplica e cifratura
+  # Duplicati: incremental backup with deduplication and encryption
   # WebUI: http://192.168.3.10:8200
-  # Configurazione consigliata:
-  #   - Backup giornaliero /source/config -> /backups (locale)
-  #   - Backup settimanale -> Backblaze B2 (offsite)
+  # Recommended configuration:
+  #   - Daily backup /source/config -> /backups (local)
+  #   - Weekly backup -> Backblaze B2 (offsite)
   #   - Retention: 7 daily, 4 weekly, 3 monthly
   duplicati:
     image: lscr.io/linuxserver/duplicati:latest
@@ -180,8 +180,8 @@ services:
       <<: *common-env
     volumes:
       - ./config/duplicati:/config
-      - ./config:/source/config:ro        # Config servizi (read-only)
-      - /share/backup:/backups            # Destinazione backup locale
+      - ./config:/source/config:ro        # Service configs (read-only)
+      - /share/backup:/backups            # Local backup destination
     ports:
       - "8200:8200"
     networks:

@@ -11,33 +11,33 @@ COMPOSE_FILES := -f compose.yml -f compose.media.yml
 COMPOSE_CMD := docker compose $(COMPOSE_FILES)
 BACKUP_DIR := ./backups
 
-# Colori per output (se terminale supporta)
+# Colors for output (if terminal supports it)
 RED := \033[0;31m
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
 NC := \033[0m # No Color
 
 # =============================================================================
-# Validazione
+# Validation
 # =============================================================================
 
 check-docker:
 	@command -v docker >/dev/null 2>&1 || { \
-		echo "$(RED)Errore: docker non trovato. Installa Docker prima di continuare.$(NC)"; \
+		echo "$(RED)Error: docker not found. Install Docker before continuing.$(NC)"; \
 		exit 1; \
 	}
 
 check-compose: check-docker
 	@docker compose version >/dev/null 2>&1 || { \
-		echo "$(RED)Errore: docker compose non disponibile. Serve Docker Compose v2.$(NC)"; \
+		echo "$(RED)Error: docker compose not available. Docker Compose v2 required.$(NC)"; \
 		exit 1; \
 	}
 
 validate: check-compose
-	@echo ">>> Validazione configurazione..."
+	@echo ">>> Validating configuration..."
 	@$(COMPOSE_CMD) config --quiet && \
-		echo "$(GREEN)Configurazione valida$(NC)" || { \
-		echo "$(RED)Errore nella configurazione compose$(NC)"; \
+		echo "$(GREEN)Configuration valid$(NC)" || { \
+		echo "$(RED)Error in compose configuration$(NC)"; \
 		exit 1; \
 	}
 
@@ -46,85 +46,85 @@ validate: check-compose
 # =============================================================================
 
 help:
-	@echo "Media Stack - Comandi disponibili:"
+	@echo "Media Stack - Available commands:"
 	@echo ""
-	@echo "  $(GREEN)Setup & Validazione$(NC)"
-	@echo "    make setup       - Crea struttura cartelle (run once)"
-	@echo "    make validate    - Verifica configurazione compose"
+	@echo "  $(GREEN)Setup & Validation$(NC)"
+	@echo "    make setup       - Create folder structure (run once)"
+	@echo "    make validate    - Verify compose configuration"
 	@echo ""
-	@echo "  $(GREEN)Gestione Container$(NC)"
-	@echo "    make up          - Avvia tutti i container"
-	@echo "    make down        - Ferma tutti i container"
-	@echo "    make restart     - Restart completo"
-	@echo "    make pull        - Aggiorna immagini Docker"
+	@echo "  $(GREEN)Container Management$(NC)"
+	@echo "    make up          - Start all containers"
+	@echo "    make down        - Stop all containers"
+	@echo "    make restart     - Full restart"
+	@echo "    make pull        - Update Docker images"
 	@echo ""
 	@echo "  $(GREEN)Monitoring$(NC)"
-	@echo "    make logs        - Mostra logs (follow)"
-	@echo "    make status      - Stato container e risorse"
-	@echo "    make health      - Health check tutti i servizi"
-	@echo "    make urls        - Mostra URL WebUI"
+	@echo "    make logs        - Show logs (follow)"
+	@echo "    make status      - Container status and resources"
+	@echo "    make health      - Health check all services"
+	@echo "    make urls        - Show WebUI URLs"
 	@echo ""
 	@echo "  $(GREEN)Backup$(NC)"
-	@echo "    make backup      - Backup rapido config (tar.gz locale)"
-	@echo "    Duplicati WebUI  - http://192.168.3.10:8200 (backup schedulati)"
+	@echo "    make backup      - Quick config backup (local tar.gz)"
+	@echo "    Duplicati WebUI  - http://192.168.3.10:8200 (scheduled backups)"
 	@echo ""
 	@echo "  $(GREEN)Utilities$(NC)"
-	@echo "    make clean       - Rimuove risorse Docker orfane"
-	@echo "    make recyclarr-sync   - Sync manuale profili Trash Guides"
-	@echo "    make recyclarr-config - Genera config Recyclarr template"
+	@echo "    make clean       - Remove orphan Docker resources"
+	@echo "    make recyclarr-sync   - Manual Trash Guides profile sync"
+	@echo "    make recyclarr-config - Generate Recyclarr config template"
 	@echo ""
-	@echo "  $(GREEN)Per servizio$(NC)"
-	@echo "    make logs-SERVICE  - Logs singolo servizio (es: make logs-sonarr)"
-	@echo "    make shell-SERVICE - Shell nel container (es: make shell-radarr)"
+	@echo "  $(GREEN)Per service$(NC)"
+	@echo "    make logs-SERVICE  - Single service logs (e.g.: make logs-sonarr)"
+	@echo "    make shell-SERVICE - Shell into container (e.g.: make shell-radarr)"
 
 # =============================================================================
 # Setup
 # =============================================================================
 
 setup: check-compose
-	@echo ">>> Creazione struttura cartelle..."
+	@echo ">>> Creating folder structure..."
 	@if [ ! -x setup-folders.sh ]; then \
 		chmod +x setup-folders.sh; \
 	fi
 	@./setup-folders.sh
-	@echo ">>> Creazione directory config aggiuntive..."
+	@echo ">>> Creating additional config directories..."
 	@mkdir -p ./config/recyclarr ./config/duplicati
 	@if [ ! -f .env ]; then \
-		echo ">>> Creazione .env da template..."; \
+		echo ">>> Creating .env from template..."; \
 		cp .env.example .env 2>/dev/null || echo "PIHOLE_PASSWORD=changeme" > .env; \
-		echo "$(YELLOW)ATTENZIONE: Modifica .env con le tue password$(NC)"; \
+		echo "$(YELLOW)WARNING: Edit .env with your passwords$(NC)"; \
 	fi
-	@echo "$(GREEN)>>> Setup completato$(NC)"
+	@echo "$(GREEN)>>> Setup complete$(NC)"
 
 # =============================================================================
 # Container Management
 # =============================================================================
 
 up: validate
-	@echo ">>> Avvio stack..."
+	@echo ">>> Starting stack..."
 	@$(COMPOSE_CMD) up -d
 	@if [ $$? -eq 0 ]; then \
-		echo "$(GREEN)>>> Stack avviato$(NC)"; \
+		echo "$(GREEN)>>> Stack started$(NC)"; \
 		$(MAKE) --no-print-directory status; \
 	else \
-		echo "$(RED)>>> Errore durante l'avvio dello stack$(NC)"; \
+		echo "$(RED)>>> Error starting stack$(NC)"; \
 		exit 1; \
 	fi
 
 down: check-compose
-	@echo ">>> Arresto stack..."
+	@echo ">>> Stopping stack..."
 	@$(COMPOSE_CMD) down
-	@echo "$(GREEN)>>> Stack arrestato$(NC)"
+	@echo "$(GREEN)>>> Stack stopped$(NC)"
 
 restart: down up
 
 pull: check-compose
-	@echo ">>> Pull immagini aggiornate..."
+	@echo ">>> Pulling updated images..."
 	@$(COMPOSE_CMD) pull
 	@if [ $$? -eq 0 ]; then \
-		echo "$(GREEN)>>> Pull completato. Esegui 'make restart' per applicare$(NC)"; \
+		echo "$(GREEN)>>> Pull complete. Run 'make restart' to apply$(NC)"; \
 	else \
-		echo "$(RED)>>> Errore durante il pull delle immagini$(NC)"; \
+		echo "$(RED)>>> Error pulling images$(NC)"; \
 		exit 1; \
 	fi
 
@@ -148,7 +148,7 @@ status: check-compose
 	if [ -n "$$CONTAINERS" ]; then \
 		docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}" $$CONTAINERS; \
 	else \
-		echo "$(YELLOW)Nessun container in esecuzione$(NC)"; \
+		echo "$(YELLOW)No containers running$(NC)"; \
 	fi
 	@echo ""
 	@echo "=== Disk Usage ==="
@@ -165,35 +165,35 @@ status: check-compose
 shell-%: check-compose
 	@$(COMPOSE_CMD) exec $* /bin/bash 2>/dev/null || \
 		$(COMPOSE_CMD) exec $* /bin/sh 2>/dev/null || { \
-		echo "$(RED)Errore: impossibile aprire shell in $*$(NC)"; \
+		echo "$(RED)Error: cannot open shell in $*$(NC)"; \
 		exit 1; \
 	}
 
 backup: check-docker
-	@echo ">>> Backup configurazioni..."
+	@echo ">>> Backing up configurations..."
 	@mkdir -p $(BACKUP_DIR)
 	@if [ ! -d ./config ]; then \
-		echo "$(RED)Errore: directory config non trovata$(NC)"; \
+		echo "$(RED)Error: config directory not found$(NC)"; \
 		exit 1; \
 	fi
 	@BACKUP_NAME="config-backup-$$(date +%Y%m%d-%H%M%S).tar.gz"; \
 	if tar -czf "$(BACKUP_DIR)/$$BACKUP_NAME" ./config; then \
-		echo "$(GREEN)>>> Backup creato: $(BACKUP_DIR)/$$BACKUP_NAME$(NC)"; \
+		echo "$(GREEN)>>> Backup created: $(BACKUP_DIR)/$$BACKUP_NAME$(NC)"; \
 		ls -lh "$(BACKUP_DIR)/$$BACKUP_NAME"; \
 	else \
-		echo "$(RED)>>> Errore durante la creazione del backup$(NC)"; \
+		echo "$(RED)>>> Error creating backup$(NC)"; \
 		exit 1; \
 	fi
 
 clean: check-docker
-	@echo ">>> Pulizia risorse Docker orfane..."
-	@echo "$(YELLOW)ATTENZIONE: Questa operazione rimuove container, immagini e volumi non utilizzati$(NC)"
-	@read -p "Continuare? [y/N] " confirm; \
+	@echo ">>> Cleaning orphan Docker resources..."
+	@echo "$(YELLOW)WARNING: This will remove unused containers, images and volumes$(NC)"
+	@read -p "Continue? [y/N] " confirm; \
 	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
 		docker system prune -f && docker volume prune -f; \
-		echo "$(GREEN)>>> Pulizia completata$(NC)"; \
+		echo "$(GREEN)>>> Cleanup complete$(NC)"; \
 	else \
-		echo ">>> Operazione annullata"; \
+		echo ">>> Operation cancelled"; \
 	fi
 
 # =============================================================================
@@ -201,23 +201,23 @@ clean: check-docker
 # =============================================================================
 
 recyclarr-sync: check-compose
-	@echo ">>> Sync profili qualita' Trash Guides..."
+	@echo ">>> Syncing Trash Guides quality profiles..."
 	@if docker ps --format '{{.Names}}' | grep -q '^recyclarr$$'; then \
 		docker exec recyclarr recyclarr sync && \
-		echo "$(GREEN)>>> Sync completato$(NC)"; \
+		echo "$(GREEN)>>> Sync complete$(NC)"; \
 	else \
-		echo "$(RED)Errore: container recyclarr non in esecuzione$(NC)"; \
-		echo "Esegui 'make up' prima di sincronizzare"; \
+		echo "$(RED)Error: recyclarr container not running$(NC)"; \
+		echo "Run 'make up' before syncing"; \
 		exit 1; \
 	fi
 
 recyclarr-config: check-compose
-	@echo ">>> Generazione template configurazione Recyclarr..."
+	@echo ">>> Generating Recyclarr configuration template..."
 	@if docker ps --format '{{.Names}}' | grep -q '^recyclarr$$'; then \
 		docker exec recyclarr recyclarr config create && \
-		echo "$(GREEN)>>> Template creato in ./config/recyclarr/$(NC)"; \
+		echo "$(GREEN)>>> Template created in ./config/recyclarr/$(NC)"; \
 	else \
-		echo "$(RED)Errore: container recyclarr non in esecuzione$(NC)"; \
+		echo "$(RED)Error: recyclarr container not running$(NC)"; \
 		exit 1; \
 	fi
 
@@ -251,7 +251,7 @@ health: check-docker
 	$(call check_service,http://localhost:8081/admin,Pi-hole)
 	$(call check_service,http://localhost:8123/api/,HomeAssistant)
 	$(call check_service,http://localhost:8200,Duplicati)
-	@# Portainer usa HTTPS
+	@# Portainer uses HTTPS
 	@STATUS=$$(curl -sk -o /dev/null -w '%{http_code}' --max-time 5 https://localhost:9443 2>/dev/null); \
 	if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "303" ]; then \
 		echo "Portainer: $(GREEN)OK ($$STATUS)$(NC)"; \
