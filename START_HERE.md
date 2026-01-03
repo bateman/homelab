@@ -19,13 +19,13 @@ Prima di iniziare, assicurati di avere:
 
 | Fase | Descrizione | Documenti di Riferimento |
 |------|-------------|--------------------------|
-| 1 | Installazione Hardware | `rack-homelab-config.md` |
-| 2 | Setup Rete UniFi | `docs/NETWORK_SETUP.md` |
-| 3 | Setup NAS QNAP | `checklist-qnap-deployment.md` |
-| 4 | Deploy Stack Docker | `checklist-qnap-deployment.md`, `Makefile` |
-| 5 | Configurazione Servizi | `checklist-qnap-deployment.md` |
-| 6 | Setup Proxmox/Plex | `docs/PROXMOX_SETUP.md` |
-| 7 | Configurazione Backup | `runbook-backup-restore.md` |
+| 1 | Installazione Hardware | [`rack-homelab-config.md`](rack-homelab-config.md) |
+| 2 | Setup Rete UniFi | [`docs/NETWORK_SETUP.md`](docs/NETWORK_SETUP.md) |
+| 3 | Setup NAS QNAP | [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md) |
+| 4 | Deploy Stack Docker | [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md), [`Makefile`](Makefile) |
+| 5 | Configurazione Servizi | [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md) |
+| 6 | Setup Proxmox/Plex | [`docs/PROXMOX_SETUP.md`](docs/PROXMOX_SETUP.md) |
+| 7 | Configurazione Backup | [`runbook-backup-restore.md`](runbook-backup-restore.md) |
 | 8 | Verifica Finale | Questa guida |
 
 ---
