@@ -23,6 +23,7 @@ Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox c
 - **Pi-hole** (8081) - DNS/Ad-blocking
 - **Home Assistant** (8123) - Domotica
 - **Portainer** (9443) - Gestione Docker
+- **Duplicati** (8200) - Backup automatizzati
 
 ## Quick Start
 

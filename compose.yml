@@ -163,3 +163,39 @@ services:
           memory: 128M
         reservations:
           memory: 32M
+
+  # ---------------------------------------------------------------------------
+  # Backup
+  # ---------------------------------------------------------------------------
+  # Duplicati: backup incrementale con deduplica e cifratura
+  # WebUI: http://192.168.3.10:8200
+  # Configurazione consigliata:
+  #   - Backup giornaliero /source/config -> /backups (locale)
+  #   - Backup settimanale -> Backblaze B2 (offsite)
+  #   - Retention: 7 daily, 4 weekly, 3 monthly
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:latest
+    container_name: duplicati
+    environment:
+      <<: *common-env
+    volumes:
+      - ./config/duplicati:/config
+      - ./config:/source/config:ro        # Config servizi (read-only)
+      - /share/backup:/backups            # Destinazione backup locale
+    ports:
+      - "8200:8200"
+    networks:
+      - media_net
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8200"]
+      <<: *common-healthcheck
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"

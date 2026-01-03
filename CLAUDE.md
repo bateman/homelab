@@ -56,6 +56,7 @@ homelab/
 | FlareSolverr | 8191 | Bypass Cloudflare |
 | Recyclarr | - | Sync profili Trash Guides |
 | Watchtower | - | Auto-update container |
+| Duplicati | 8200 | Backup incrementale con UI |
 
 ## Comandi Comuni
 
@@ -150,10 +151,22 @@ Le API key sono salvate nella config di ogni servizio e vanno recuperate da:
 
 ## Strategia Backup
 
-- **Config Docker**: Backup giornaliero via `make backup` -> `/share/backup/`
+### Duplicati (consigliato)
+Container dedicato con WebUI per backup automatizzati:
+- **URL**: http://192.168.3.10:8200
+- **Sorgente**: `/source/config` (tutte le config dei servizi)
+- **Destinazione locale**: `/backups` -> `/share/backup`
+- **Destinazione offsite**: Backblaze B2 (configurare via WebUI)
+- **Retention consigliata**: 7 daily, 4 weekly, 3 monthly
+
+### Backup rapido manuale
+```bash
+make backup  # Crea tar.gz in ./backups/
+```
+
+### Altri backup
 - **Config QTS**: Settimanale via Control Panel -> Backup/Restore
 - **VM Proxmox**: Settimanale su NAS via mount NFS
-- **Offsite**: Rclone verso Backblaze B2 o rsync via Tailscale
 
 Vedi `runbook-backup-restore.md` per procedure dettagliate.
 

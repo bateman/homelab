@@ -64,8 +64,11 @@ help:
 	@echo "    make health      - Health check tutti i servizi"
 	@echo "    make urls        - Mostra URL WebUI"
 	@echo ""
+	@echo "  $(GREEN)Backup$(NC)"
+	@echo "    make backup      - Backup rapido config (tar.gz locale)"
+	@echo "    Duplicati WebUI  - http://192.168.3.10:8200 (backup schedulati)"
+	@echo ""
 	@echo "  $(GREEN)Utilities$(NC)"
-	@echo "    make backup      - Backup configurazioni"
 	@echo "    make clean       - Rimuove risorse Docker orfane"
 	@echo "    make recyclarr-sync   - Sync manuale profili Trash Guides"
 	@echo "    make recyclarr-config - Genera config Recyclarr template"
@@ -84,8 +87,8 @@ setup: check-compose
 		chmod +x setup-folders.sh; \
 	fi
 	@./setup-folders.sh
-	@echo ">>> Creazione directory config/recyclarr..."
-	@mkdir -p ./config/recyclarr
+	@echo ">>> Creazione directory config aggiuntive..."
+	@mkdir -p ./config/recyclarr ./config/duplicati
 	@if [ ! -f .env ]; then \
 		echo ">>> Creazione .env da template..."; \
 		cp .env.example .env 2>/dev/null || echo "PIHOLE_PASSWORD=changeme" > .env; \
@@ -247,6 +250,7 @@ health: check-docker
 	$(call check_service,http://localhost:11011/health,Cleanuparr)
 	$(call check_service,http://localhost:8081/admin,Pi-hole)
 	$(call check_service,http://localhost:8123/api/,HomeAssistant)
+	$(call check_service,http://localhost:8200,Duplicati)
 	@# Portainer usa HTTPS
 	@STATUS=$$(curl -sk -o /dev/null -w '%{http_code}' --max-time 5 https://localhost:9443 2>/dev/null); \
 	if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "303" ]; then \
@@ -284,4 +288,5 @@ urls:
 	@echo "  Pi-hole:      http://192.168.3.10:8081/admin"
 	@echo "  Home Assist:  http://192.168.3.10:8123"
 	@echo "  Portainer:    https://192.168.3.10:9443"
+	@echo "  Duplicati:    http://192.168.3.10:8200"
 	@echo ""
