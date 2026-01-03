@@ -53,8 +53,13 @@ sudo dd bs=4M if=proxmox-ve_*.iso of=/dev/sdX conv=fsync status=progress
 
 1. [ ] Accettare EULA
 2. [ ] Selezionare disco per installazione
-   - Se SSD NVMe disponibile, selezionarlo
-   - Filesystem: ext4 (default) o ZFS (se RAM sufficiente)
+   - Selezionare SSD NVMe
+   - **Filesystem: ext4** (consigliato per NVMe singolo)
+
+   > **Nota**: ZFS richiede almeno 8GB RAM dedicata e offre vantaggi (snapshot,
+   > integrity) principalmente con configurazioni multi-disco. Per NVMe singolo,
+   > ext4 è più efficiente in termini di risorse.
+
 3. [ ] Impostazioni locali:
    - Country: Italy
    - Timezone: Europe/Rome
@@ -157,7 +162,14 @@ Aggiungere anche storage per backup:
 
 Datacenter → proxmox → local → CT Templates → Templates
 
-Scaricare: `ubuntu-22.04-standard` (o Debian 12)
+Scaricare: `debian-12-standard` (Bookworm)
+
+> **Perché Debian invece di Ubuntu?**
+> - Footprint ridotto (~150MB vs ~400MB immagine base)
+> - Minore consumo RAM (~50-80MB idle vs ~150-200MB)
+> - Aggiornamenti meno frequenti/più stabili
+> - Stessa base di Proxmox (compatibilità ottimale)
+> - Sufficiente per Plex che ha dipendenze minime
 
 ### 4.2 Creare Container
 
@@ -172,7 +184,7 @@ Datacenter → proxmox → Create CT
 | SSH Public Key | (opzionale) |
 
 **Tab Template:**
-- Template: ubuntu-22.04-standard (o quello scaricato)
+- Template: debian-12-standard
 
 **Tab Disks:**
 | Campo | Valore |
@@ -417,24 +429,150 @@ docker-compose up -d
 Accedere: `http://192.168.3.22:81`
 Default login: admin@example.com / changeme
 
-### 8.2 GPU Passthrough per Transcoding (Avanzato)
+### 8.2 GPU Passthrough Intel Quick Sync per LXC
 
-Se il Mini PC ha GPU Intel integrata:
+Il Mini PC Lenovo ha CPU Intel i5-1240H con iGPU integrata che supporta Quick Sync
+per hardware transcoding in Plex. Questo riduce drasticamente il carico CPU.
+
+#### 8.2.1 Verificare iGPU su Host Proxmox
 
 ```bash
-# Sul host Proxmox
-# Aggiungere moduli kernel
-echo "vfio" >> /etc/modules
-echo "vfio_iommu_type1" >> /etc/modules
-echo "vfio_pci" >> /etc/modules
+# SSH nel Proxmox
+ssh root@192.168.3.20
 
-# Per LXC, usare bind mount del device
-# Modificare /etc/pve/lxc/100.conf
-echo "lxc.cgroup2.devices.allow: c 226:* rwm" >> /etc/pve/lxc/100.conf
-echo "lxc.mount.entry: /dev/dri dev/dri none bind,optional,create=dir" >> /etc/pve/lxc/100.conf
+# Verificare presenza device DRI (Direct Rendering Infrastructure)
+ls -la /dev/dri/
+# Output atteso:
+# drwxr-xr-x 3 root root       100 date time .
+# drwxr-xr-x 18 root root     4600 date time ..
+# drwxr-xr-x 2 root root        80 date time by-path
+# crw-rw---- 1 root video  226,  0 date time card0
+# crw-rw---- 1 root render 226, 128 date time renderD128
+
+# Verificare driver Intel caricato
+lspci -k | grep -A 3 VGA
+# Dovrebbe mostrare "Kernel driver in use: i915"
 ```
 
-Riavviare container e abilitare hardware transcoding in Plex.
+#### 8.2.2 Caricare Moduli Kernel (se necessario)
+
+```bash
+# Verificare che i915 sia caricato
+lsmod | grep i915
+
+# Se non presente, caricare manualmente
+modprobe i915
+
+# Rendere permanente
+echo "i915" >> /etc/modules
+```
+
+#### 8.2.3 Configurare Permessi Device
+
+```bash
+# Identificare GID del gruppo render e video
+getent group render video
+# Output tipico: render:x:108:  video:x:44:
+
+# Annotare i numeri (108 e 44 nell'esempio)
+```
+
+#### 8.2.4 Configurare LXC per GPU Passthrough
+
+**IMPORTANTE**: Fermare il container prima di modificare la configurazione.
+
+```bash
+# Fermare container Plex
+pct stop 100
+
+# Modificare configurazione LXC
+nano /etc/pve/lxc/100.conf
+```
+
+Aggiungere le seguenti righe alla fine del file:
+
+```bash
+# Intel iGPU Passthrough per Quick Sync
+lxc.cgroup2.devices.allow: c 226:0 rwm
+lxc.cgroup2.devices.allow: c 226:128 rwm
+lxc.mount.entry: /dev/dri dev/dri none bind,optional,create=dir
+lxc.mount.entry: /dev/dri/card0 dev/dri/card0 none bind,optional,create=file
+lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file
+```
+
+> **Nota**: `c 226:0` è card0, `c 226:128` è renderD128. Il major number 226
+> è standard per device DRI su Linux.
+
+#### 8.2.5 Avviare Container e Verificare
+
+```bash
+# Avviare container
+pct start 100
+
+# Entrare nel container
+pct enter 100
+
+# Verificare device disponibili
+ls -la /dev/dri/
+# Dovrebbe mostrare card0 e renderD128
+
+# Installare vainfo per test Quick Sync
+apt update && apt install -y vainfo
+
+# Testare VA-API (Video Acceleration API)
+vainfo
+# Output atteso con elenco profili supportati (H.264, HEVC, VP9, AV1)
+```
+
+Output esempio `vainfo` per i5-1240H:
+```
+libva info: VA-API version 1.17.0
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so
+libva info: Found init function __vaDriverInit_1_17
+libva info: va_openDriver() returns 0
+vainfo: VA-API version: 1.17 (libva 2.12.0)
+vainfo: Driver version: Intel iHD driver for Intel(R) Gen Graphics - 23.1.1
+vainfo: Supported profile and entrypoints
+      VAProfileH264Main               : VAEntrypointVLD
+      VAProfileH264Main               : VAEntrypointEncSlice
+      VAProfileHEVCMain               : VAEntrypointVLD
+      VAProfileHEVCMain               : VAEntrypointEncSlice
+      ...
+```
+
+#### 8.2.6 Configurare Plex per Hardware Transcoding
+
+1. Accedere a Plex: `http://192.168.3.21:32400/web`
+2. Settings → Transcoder
+3. [ ] **Hardware transcoding**: Enabled (richiede Plex Pass)
+4. [ ] **Use hardware acceleration when available**: Checked
+5. [ ] **Use hardware-accelerated video encoding**: Checked
+
+#### 8.2.7 Verificare Hardware Transcoding Attivo
+
+Durante la riproduzione con transcoding:
+
+```bash
+# Nel container Plex
+# Monitorare utilizzo GPU Intel
+apt install -y intel-gpu-tools
+intel_gpu_top
+```
+
+Oppure in Plex Dashboard → Now Playing, verificare che mostri "(hw)" accanto
+al codec durante il transcoding.
+
+#### 8.2.8 Troubleshooting GPU
+
+| Problema | Causa | Soluzione |
+|----------|-------|-----------|
+| /dev/dri non esiste | Driver i915 non caricato | `modprobe i915` |
+| Permission denied | Permessi cgroup errati | Verificare config LXC |
+| vainfo fallisce | Driver mancanti nel container | `apt install intel-media-va-driver-non-free` |
+| Transcoding ancora software | Plex Pass non attivo | Verificare abbonamento |
+| renderD128 non presente | Kernel troppo vecchio | Aggiornare Proxmox |
+
+> **Nota**: Hardware transcoding richiede abbonamento **Plex Pass**.
 
 ---
 
