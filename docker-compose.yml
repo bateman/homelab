@@ -61,17 +61,16 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
-  # SABnzbd sostituisce NZBGet (non piu' mantenuto dal 2021)
-  sabnzbd:
-    image: lscr.io/linuxserver/sabnzbd:latest
-    container_name: sabnzbd
+  nzbget:
+    image: lscr.io/linuxserver/nzbget:latest
+    container_name: nzbget
     environment:
       <<: *common-env
     volumes:
-      - ./config/sabnzbd:/config
+      - ./config/nzbget:/config
       - /share/data:/data              # Full /data mount per path consistency
     ports:
-      - "8085:8080"                     # WebUI (remapped per evitare conflitto con qBittorrent)
+      - "6789:6789"                     # WebUI
     networks:
       - media_net
     restart: unless-stopped
@@ -130,7 +129,7 @@ services:
     restart: unless-stopped
     depends_on:
       - qbittorrent
-      - sabnzbd
+      - nzbget
       - prowlarr
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
@@ -150,7 +149,7 @@ services:
     restart: unless-stopped
     depends_on:
       - qbittorrent
-      - sabnzbd
+      - nzbget
       - prowlarr
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
@@ -170,7 +169,7 @@ services:
     restart: unless-stopped
     depends_on:
       - qbittorrent
-      - sabnzbd
+      - nzbget
       - prowlarr
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
