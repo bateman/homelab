@@ -2,6 +2,8 @@
 
 Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox con stack media completo.
 
+> **Nuova installazione?** Inizia da [`START_HERE.md`](START_HERE.md) per una guida passo-passo completa.
+
 ## Hardware
 
 | Dispositivo | Ruolo | IP |
@@ -62,11 +64,17 @@ Configurato per supporto hardlinking secondo [Trash Guides](https://trash-guides
 
 ## Documentazione
 
-- [`CLAUDE.md`](CLAUDE.md) - Guida completa progetto
-- [`rack-homelab-config.md`](rack-homelab-config.md) - Layout hardware
-- [`firewall-config.md`](firewall-config.md) - Regole firewall
-- [`runbook-backup-restore.md`](runbook-backup-restore.md) - Procedure backup
-- [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md) - Checklist deployment
+### Guide Installazione
+- [`START_HERE.md`](START_HERE.md) - **Guida installazione completa (inizia qui)**
+- [`docs/NETWORK_SETUP.md`](docs/NETWORK_SETUP.md) - Setup rete UniFi e VLAN
+- [`docs/PROXMOX_SETUP.md`](docs/PROXMOX_SETUP.md) - Setup Proxmox e Plex
+- [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md) - Checklist deployment QNAP
+
+### Riferimenti
+- [`CLAUDE.md`](CLAUDE.md) - Guida completa progetto e sviluppo
+- [`rack-homelab-config.md`](rack-homelab-config.md) - Layout hardware e piano IP
+- [`firewall-config.md`](firewall-config.md) - Regole firewall UDM-SE
+- [`runbook-backup-restore.md`](runbook-backup-restore.md) - Procedure backup/restore
 
 ## Comandi Utili
 
