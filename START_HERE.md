@@ -230,7 +230,7 @@ Seguire esattamente questo ordine per le dipendenze:
 ```
 1. Prowlarr        → Indexer manager (configurare per primo)
 2. qBittorrent     → Download client torrent
-3. SABnzbd         → Download client Usenet
+3. NZBGet          → Download client Usenet
 4. Sonarr          → TV (connette a Prowlarr + download client)
 5. Radarr          → Film (connette a Prowlarr + download client)
 6. Lidarr          → Musica (connette a Prowlarr + download client)

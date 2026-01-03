@@ -176,13 +176,13 @@ Definire in Settings -> Profiles -> Port Groups:
 | DNS | 53 |
 | Plex | 32400 |
 | Plex-Discovery | 32410-32414 |
-| Arr-Stack | 8989, 7878, 8686, 9696, 6767, 8080, 8085, 7500, 11011, 8081 |
+| Arr-Stack | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 7500, 11011, 8081, 8191 |
 | HomeAssistant | 8123 |
 | Portainer | 9443 |
 | Stampa | 631, 9100 |
 | mDNS | 5353 |
 
-> **Nota**: Arr-Stack include: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), SABnzbd (8085), Huntarr (7500), Cleanuparr (11011), Pi-hole (8081).
+> **Nota**: Arr-Stack include: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (7500), Cleanuparr (11011), Pi-hole (8081), FlareSolverr (8191).
 
 ---
 
