@@ -3,13 +3,14 @@
 # NAS QNAP TS-435XeU - Homelab
 # =============================================================================
 
-.PHONY: help setup up down restart logs pull status backup clean health urls \
+.PHONY: help setup up down restart logs pull update status backup clean health urls \
         validate check-docker check-compose recyclarr-sync recyclarr-config
 
 # Compose files
 COMPOSE_FILES := -f compose.yml -f compose.media.yml
 COMPOSE_CMD := docker compose $(COMPOSE_FILES)
 BACKUP_DIR := ./backups
+HOST_IP := 192.168.3.10
 
 # Colors for output (if terminal supports it)
 RED := \033[0;31m
@@ -57,6 +58,7 @@ help:
 	@echo "    make down        - Stop all containers"
 	@echo "    make restart     - Full restart"
 	@echo "    make pull        - Update Docker images"
+	@echo "    make update      - Pull images and restart (pull + restart)"
 	@echo ""
 	@echo "  $(GREEN)Monitoring$(NC)"
 	@echo "    make logs        - Show logs (follow)"
@@ -65,8 +67,8 @@ help:
 	@echo "    make urls        - Show WebUI URLs"
 	@echo ""
 	@echo "  $(GREEN)Backup$(NC)"
-	@echo "    make backup      - Quick config backup (local tar.gz)"
-	@echo "    Duplicati WebUI  - http://192.168.3.10:8200 (scheduled backups)"
+	@echo "    make backup      - Quick config backup (local tar.gz, before changes)"
+	@echo "    Duplicati WebUI  - http://$(HOST_IP):8200 (scheduled backups)"
 	@echo ""
 	@echo "  $(GREEN)Utilities$(NC)"
 	@echo "    make clean       - Remove orphan Docker resources"
@@ -127,6 +129,9 @@ pull: check-compose
 		echo "$(RED)>>> Error pulling images$(NC)"; \
 		exit 1; \
 	fi
+
+update: pull restart
+	@echo "$(GREEN)>>> Update complete$(NC)"
 
 # =============================================================================
 # Monitoring
@@ -270,23 +275,23 @@ urls:
 	@echo "=== Web UI URLs ==="
 	@echo ""
 	@echo "$(GREEN)Media Stack$(NC)"
-	@echo "  Sonarr:       http://192.168.3.10:8989"
-	@echo "  Radarr:       http://192.168.3.10:7878"
-	@echo "  Lidarr:       http://192.168.3.10:8686"
-	@echo "  Prowlarr:     http://192.168.3.10:9696"
-	@echo "  Bazarr:       http://192.168.3.10:6767"
+	@echo "  Sonarr:       http://$(HOST_IP):8989"
+	@echo "  Radarr:       http://$(HOST_IP):7878"
+	@echo "  Lidarr:       http://$(HOST_IP):8686"
+	@echo "  Prowlarr:     http://$(HOST_IP):9696"
+	@echo "  Bazarr:       http://$(HOST_IP):6767"
 	@echo ""
 	@echo "$(GREEN)Download$(NC)"
-	@echo "  qBittorrent:  http://192.168.3.10:8080"
-	@echo "  NZBGet:       http://192.168.3.10:6789"
+	@echo "  qBittorrent:  http://$(HOST_IP):8080"
+	@echo "  NZBGet:       http://$(HOST_IP):6789"
 	@echo ""
 	@echo "$(GREEN)Monitoring$(NC)"
-	@echo "  Huntarr:      http://192.168.3.10:7500"
-	@echo "  Cleanuparr:   http://192.168.3.10:11011"
+	@echo "  Huntarr:      http://$(HOST_IP):7500"
+	@echo "  Cleanuparr:   http://$(HOST_IP):11011"
 	@echo ""
 	@echo "$(GREEN)Infrastructure$(NC)"
-	@echo "  Pi-hole:      http://192.168.3.10:8081/admin"
-	@echo "  Home Assist:  http://192.168.3.10:8123"
-	@echo "  Portainer:    https://192.168.3.10:9443"
-	@echo "  Duplicati:    http://192.168.3.10:8200"
+	@echo "  Pi-hole:      http://$(HOST_IP):8081/admin"
+	@echo "  Home Assist:  http://$(HOST_IP):8123"
+	@echo "  Portainer:    https://$(HOST_IP):9443"
+	@echo "  Duplicati:    http://$(HOST_IP):8200"
 	@echo ""
