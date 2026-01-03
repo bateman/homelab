@@ -1,0 +1,407 @@
+# Checklist Deployment — QNAP TS-435XeU
+
+> Checklist completa per setup iniziale NAS QNAP con Container Station e media stack
+
+---
+
+## Pre-Installazione Hardware
+
+### Rack e Fisico
+- [ ] NAS montato in rack U2 (sotto pannello ventilato)
+- [ ] Isolante neoprene 5mm posizionato tra NAS e UPS
+- [ ] Ventilazione laterale non ostruita
+- [ ] Cavi SFP+ 10G collegati (porta 1 verso switch)
+- [ ] Cavo RJ45 2.5GbE di backup collegato (opzionale)
+
+### Storage
+- [ ] HDD installati nei bay (verificare compatibilità: qnap.com/compatibility)
+- [ ] HDD dello stesso modello/capacità per RAID
+- [ ] SSD M.2 NVMe per caching installato (opzionale ma raccomandato)
+
+---
+
+## Setup Iniziale QTS
+
+### Primo Avvio
+- [ ] Collegare monitor + tastiera oppure usare Qfinder Pro
+- [ ] Accedere a `http://<ip>:8080` o `http://qnapnas.local:8080`
+- [ ] Completare wizard iniziale
+- [ ] Aggiornare firmware all'ultima versione stabile
+- [ ] Riavviare dopo aggiornamento
+
+### Configurazione Amministratore
+- [ ] Cambiare password admin default
+- [ ] Creare utente amministrativo secondario
+- [ ] Abilitare 2FA per admin (Control Panel → Security → 2-Step Verification)
+- [ ] Disabilitare account "admin" default (opzionale, dopo creazione altro admin)
+
+### Configurazione Rete
+- [ ] Assegnare IP statico: `192.168.3.10`
+- [ ] Subnet mask: `255.255.255.0`
+- [ ] Gateway: `192.168.3.1`
+- [ ] DNS primario: `192.168.3.1` (UDM-SE) o `1.1.1.1`
+- [ ] DNS secondario: `1.0.0.1`
+- [ ] Hostname: `qnap-nas` (o nome scelto)
+- [ ] Verificare MTU 9000 se Jumbo Frames abilitati su switch
+
+**Percorso:** Control Panel → Network & Virtual Switch → Interfaces
+
+---
+
+## Configurazione Storage
+
+### Storage Pool
+- [ ] Control Panel → Storage & Snapshots → Storage/Snapshots
+- [ ] Create → New Storage Pool
+- [ ] Selezionare tutti gli HDD
+- [ ] RAID type raccomandato:
+  - 2 dischi: RAID 1 (mirror)
+  - 4 dischi: RAID 10 (performance + ridondanza) o RAID 5 (capacità)
+- [ ] Alert threshold: 80%
+- [ ] Completare creazione (tempo variabile in base a capacità)
+
+### SSD Cache (se presente M.2)
+- [ ] Storage & Snapshots → Cache Acceleration
+- [ ] Create
+- [ ] Selezionare SSD M.2
+- [ ] Cache mode: Read-Write (raccomandato per Container Station)
+- [ ] Associare allo Storage Pool principale
+
+### Static Volume
+- [ ] Storage & Snapshots → Create → New Volume
+- [ ] Volume type: **Static Volume** (raccomandato per hardlink performance)
+  - Alternativa: Thick Volume se preferisci snapshots
+- [ ] Allocare tutto lo spazio disponibile (o quota desiderata)
+- [ ] Nome: `DataVol1`
+- [ ] Filesystem: ext4 (default, buona compatibilità)
+
+### Shared Folders
+Creare le seguenti shared folders su DataVol1:
+
+| Nome | Percorso | Scopo |
+|------|----------|-------|
+| data | /share/data | Mount principale per hardlinking |
+| container | /share/container | Docker configs e compose files |
+| backup | /share/backup | Backup locali |
+
+**Percorso:** Control Panel → Shared Folders → Create
+
+Per ogni folder:
+- [ ] Creare folder
+- [ ] Permessi: admin RW, everyone RO (o secondo policy)
+- [ ] Abilitare Recycle Bin (opzionale)
+
+---
+
+## Configurazione Utenti e Permessi
+
+### Utente Docker
+- [ ] Control Panel → Users → Create
+- [ ] Username: `dockeruser` (o nome scelto)
+- [ ] UID: verificare che sia 1000 (o annotare per PUID)
+- [ ] Password: generare password sicura
+- [ ] Permessi shared folders:
+  - data: RW
+  - container: RW
+  - backup: RO
+
+### Verificare PUID/PGID
+```bash
+# Via SSH (abilitare in Control Panel → Network Services → Telnet/SSH)
+ssh admin@192.168.3.10
+
+# Verificare ID utente
+id dockeruser
+# Output atteso: uid=1000(dockeruser) gid=100(everyone) ...
+
+# Se UID diverso, annotare e aggiornare docker-compose.yml
+```
+
+---
+
+## Installazione Container Station
+
+### Installazione
+- [ ] App Center → Search "Container Station"
+- [ ] Installare Container Station 3
+- [ ] Attendere completamento
+- [ ] Aprire Container Station
+- [ ] Completare wizard iniziale
+
+### Configurazione Container Station
+- [ ] Settings → Docker root path: lasciare default o spostare su DataVol1
+- [ ] Settings → Default registry: Docker Hub (default)
+- [ ] Verificare versione Docker: `docker version`
+
+### Struttura Cartelle Media Stack
+```bash
+# Via SSH
+cd /share/container
+mkdir -p mediastack
+cd mediastack
+
+# Copiare docker-compose.yml e setup-folders.sh
+# (via SCP, SFTP, o File Station)
+
+# Eseguire setup
+chmod +x setup-folders.sh
+sudo ./setup-folders.sh
+```
+
+Verificare struttura creata:
+- [ ] `/share/data/torrents/movies` esiste
+- [ ] `/share/data/torrents/tv` esiste
+- [ ] `/share/data/torrents/music` esiste
+- [ ] `/share/data/usenet/incomplete` esiste
+- [ ] `/share/data/usenet/complete/movies` esiste
+- [ ] `/share/data/usenet/complete/tv` esiste
+- [ ] `/share/data/usenet/complete/music` esiste
+- [ ] `/share/data/media/movies` esiste
+- [ ] `/share/data/media/tv` esiste
+- [ ] `/share/data/media/music` esiste
+- [ ] `./config/` con tutte le sottocartelle esiste
+
+### Permessi Cartelle
+```bash
+# Verificare ownership
+ls -la /share/data
+# Dovrebbe mostrare 1000:100 (o PUID:PGID configurati)
+
+# Se necessario correggere
+sudo chown -R 1000:100 /share/data
+sudo chown -R 1000:100 /share/container/mediastack/config
+sudo chmod -R 775 /share/data
+sudo chmod -R 775 /share/container/mediastack/config
+```
+
+---
+
+## Deploy Docker Stack
+
+### File Environment
+- [ ] Creare file `.env` in `/share/container/mediastack/`
+```bash
+# .env
+PIHOLE_PASSWORD=<password-sicura>
+```
+
+### Primo Avvio
+```bash
+cd /share/container/mediastack
+
+# Pull immagini
+docker compose pull
+
+# Avvio stack
+docker compose up -d
+
+# Verificare status
+docker compose ps
+
+# Verificare logs per errori
+docker compose logs | grep -i error
+```
+
+### Verifica Servizi
+- [ ] Sonarr: `http://192.168.3.10:8989` risponde
+- [ ] Radarr: `http://192.168.3.10:7878` risponde
+- [ ] Lidarr: `http://192.168.3.10:8686` risponde
+- [ ] Prowlarr: `http://192.168.3.10:9696` risponde
+- [ ] Bazarr: `http://192.168.3.10:6767` risponde
+- [ ] qBittorrent: `http://192.168.3.10:8080` risponde
+- [ ] SABnzbd: `http://192.168.3.10:8085` risponde
+- [ ] Pi-hole: `http://192.168.3.10:8081/admin` risponde
+- [ ] Home Assistant: `http://192.168.3.10:8123` risponde
+- [ ] Portainer: `https://192.168.3.10:9443` risponde
+
+---
+
+## Configurazione Servizi *arr
+
+### Prowlarr (primo)
+- [ ] Accedere a `http://192.168.3.10:9696`
+- [ ] Settings → General → Authentication: Forms
+- [ ] Creare username/password
+- [ ] Settings → General → Annotare API Key
+- [ ] Indexers → Add indexers desiderati
+- [ ] Settings → Apps → Add Sonarr
+  - Prowlarr Server: `http://prowlarr:9696`
+  - Sonarr Server: `http://sonarr:8989`
+  - API Key: (da Sonarr)
+- [ ] Ripetere per Radarr e Lidarr
+
+### qBittorrent
+- [ ] Accedere a `http://192.168.3.10:8080`
+- [ ] Default login: admin / adminadmin (cambiare subito)
+- [ ] Options → Downloads:
+  - Default Save Path: `/data/torrents`
+  - Keep incomplete in: disabilitato (usa stesso path)
+- [ ] Options → Downloads → Default Torrent Management Mode: **Automatic**
+- [ ] Options → BitTorrent:
+  - Seeding limits secondo preferenze
+- [ ] Options → WebUI:
+  - Cambiare password
+- [ ] Categories (click destro nel pannello sinistro → Add category):
+  - `movies` → Save path: `movies`
+  - `tv` → Save path: `tv`
+  - `music` → Save path: `music`
+
+### SABnzbd
+- [ ] Accedere a `http://192.168.3.10:8085`
+- [ ] Completare wizard iniziale
+- [ ] Config → Folders:
+  - Temporary Download Folder: `/data/usenet/incomplete`
+  - Completed Download Folder: `/data/usenet/complete`
+- [ ] Config → Categories:
+  - `movies` → Folder/Path: `movies`
+  - `tv` → Folder/Path: `tv`
+  - `music` → Folder/Path: `music`
+- [ ] Config → General → API Key: annotare
+
+### Sonarr
+- [ ] Accedere a `http://192.168.3.10:8989`
+- [ ] Settings → Media Management:
+  - Rename Episodes: Yes
+  - Standard Episode Format: configurare secondo preferenze
+  - **Use Hardlinks instead of Copy: Yes** ← CRITICO
+  - Root Folders → Add: `/data/media/tv`
+- [ ] Settings → Download Clients:
+  - Add → qBittorrent
+    - Host: `qbittorrent`
+    - Port: `8080`
+    - Category: `tv`
+  - Add → SABnzbd
+    - Host: `sabnzbd`
+    - Port: `8080`
+    - API Key: (da SABnzbd)
+    - Category: `tv`
+- [ ] Settings → General → API Key: annotare (per Prowlarr)
+
+### Radarr
+- [ ] Accedere a `http://192.168.3.10:7878`
+- [ ] Settings → Media Management:
+  - Rename Movies: Yes
+  - **Use Hardlinks instead of Copy: Yes** ← CRITICO
+  - Root Folders → Add: `/data/media/movies`
+- [ ] Settings → Download Clients: (come Sonarr, category: `movies`)
+- [ ] Settings → General → API Key: annotare
+
+### Lidarr
+- [ ] Accedere a `http://192.168.3.10:8686`
+- [ ] Settings → Media Management:
+  - **Use Hardlinks instead of Copy: Yes** ← CRITICO
+  - Root Folders → Add: `/data/media/music`
+- [ ] Settings → Download Clients: (come Sonarr, category: `music`)
+- [ ] Settings → General → API Key: annotare
+
+### Bazarr
+- [ ] Accedere a `http://192.168.3.10:6767`
+- [ ] Settings → Sonarr:
+  - Address: `sonarr`
+  - Port: `8989`
+  - API Key: (da Sonarr)
+  - Test → Save
+- [ ] Settings → Radarr: (configurazione analoga)
+- [ ] Settings → Languages: configurare lingue sottotitoli
+- [ ] Settings → Providers: aggiungere provider sottotitoli
+
+---
+
+## Verifica Hardlinking
+
+Test critico per verificare che hardlinking funzioni:
+
+```bash
+# Via SSH sul NAS
+
+# 1. Creare file di test in torrents
+echo "test hardlink" > /share/data/torrents/movies/test.txt
+
+# 2. Creare hardlink in media
+ln /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
+
+# 3. Verificare stesso inode
+ls -li /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
+
+# Output atteso: stesso numero inode (prima colonna)
+# Esempio:
+# 12345 -rw-r--r-- 2 dockeruser everyone 15 Jan  2 10:00 /share/data/torrents/movies/test.txt
+# 12345 -rw-r--r-- 2 dockeruser everyone 15 Jan  2 10:00 /share/data/media/movies/test.txt
+#   ^-- stesso inode = hardlink OK
+
+# 4. Cleanup
+rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
+```
+
+Se inode diversi: **PROBLEMA** — verificare che entrambi i path siano sullo stesso volume/filesystem.
+
+---
+
+## Configurazione Pi-hole
+
+- [ ] Accedere a `http://192.168.3.10:8081/admin`
+- [ ] Login con password da `.env`
+- [ ] Settings → DNS:
+  - Upstream DNS: verificare 1.1.1.1, 1.0.0.1
+  - Interface: rispondere su tutte le interfacce
+- [ ] Adlists → Aggiungere liste aggiuntive (opzionale):
+  - `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts`
+
+### Configurare UDM-SE per usare Pi-hole
+- [ ] UDM-SE → Settings → Networks → (ogni VLAN)
+- [ ] DHCP Name Server: `192.168.3.10`
+- [ ] Oppure: usare Pi-hole solo per VLAN specifiche
+
+---
+
+## Configurazione Recyclarr
+
+- [ ] Verificare file `./config/recyclarr/recyclarr.yml` presente
+- [ ] Inserire API key Sonarr nel file
+- [ ] Inserire API key Radarr nel file
+- [ ] Test sync manuale:
+```bash
+docker exec recyclarr recyclarr sync
+```
+- [ ] Verificare Quality Profiles creati in Sonarr/Radarr
+
+---
+
+## Post-Installazione
+
+### Backup Configurazione Iniziale
+```bash
+cd /share/container/mediastack
+make backup
+```
+- [ ] Backup creato in `./backups/`
+- [ ] Copiare backup offsite (USB, cloud)
+
+### Backup QTS Config
+- [ ] Control Panel → System → Backup/Restore → Backup System Settings
+- [ ] Salvare file `.bin` in location sicura
+
+### Documentazione
+- [ ] Annotare tutti gli API key in password manager
+- [ ] Aggiornare documentazione con eventuali modifiche
+- [ ] Screenshot configurazioni importanti
+
+---
+
+## Troubleshooting Comune
+
+| Problema | Causa Probabile | Soluzione |
+|----------|-----------------|-----------|
+| Container non parte | Permessi cartelle | `chown -R 1000:100 ./config` |
+| Hardlink non funziona | Path su filesystem diversi | Verificare mount points |
+| qBittorrent "stalled" | Porta non raggiungibile | Verificare port forwarding 50413 |
+| Pi-hole non risolve | Porta 53 in uso | Verificare altri servizi DNS su NAS |
+| WebUI non risponde | Container crashed | `docker compose logs <service>` |
+
+---
+
+## Riferimenti
+
+- Trash Guides Docker Setup: https://trash-guides.info/File-and-Folder-Structure/How-to-set-up/Docker/
+- QNAP Container Station: https://www.qnap.com/en/how-to/tutorial/article/how-to-use-container-station-3
+- LinuxServer.io Images: https://docs.linuxserver.io/
