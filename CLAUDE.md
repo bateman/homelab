@@ -24,9 +24,8 @@ Questo repository contiene la configurazione infrastructure-as-code completa per
 
 ```
 homelab/
-├── compose.yml             # Stack infrastruttura (Pi-hole, HA, Portainer)
+├── compose.yml             # Stack infrastruttura (Pi-hole, HA, Portainer, Duplicati)
 ├── compose.media.yml       # Stack media (*arr, download clients, monitoring)
-├── docker-compose.yml      # Wrapper retrocompatibile (include entrambi)
 ├── Makefile                # Comandi gestione stack
 ├── setup-folders.sh        # Creazione struttura cartelle iniziale
 ├── .env.example            # Template variabili ambiente
