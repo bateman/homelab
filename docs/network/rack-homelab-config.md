@@ -19,8 +19,8 @@
 ┃ U4  │ 🔌 Patch Panel                                                          ┃
 ┃     │   • Passivo, nessun calore — fa da buffer naturale                      ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ U3  │ 🌀 Pannello ventilato #2                                                ┃
-┃     │   • Protegge gli HDD del NAS dal calore proveniente dall'alto           ┃
+┃ U3  │ 🔌 Multipresa Rack                                                      ┃
+┃     │   • Alimentazione dispositivi con spina standard (es. Mini PC)          ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ U2  │ 💾 NAS QNAP                                                             ┃
 ┃     │   • HDD nella zona piu' fresca del rack                                 ┃
@@ -87,10 +87,14 @@
 | Categoria | CAT6A/CAT7 |
 | Certificazione | 10 Gbit/s |
 
-### U3 — Pannello Ventilato #2
+### U3 — Multipresa Rack 1U
 
-- Ubiquiti UACC-Rack-Panel-Vented-1U
-- Protezione termica per HDD del NAS
+| Spec | Valore |
+|------|--------|
+| Prese | 8x Schuko |
+| Ingresso | IEC C14 (collegata a UPS) |
+| Funzione | Alimentazione dispositivi con spina standard |
+| Dispositivi collegati | Mini PC Lenovo |
 
 ### U2 — QNAP TS-435XeU
 
@@ -127,10 +131,51 @@
 | Zona | Unita' | Strategia |
 |------|--------|-----------|
 | Top (U8) | Mini PC | Massima dissipazione verso l'esterno |
-| U7 | Ventilato #1 | Taglia la risalita di calore dal networking |
+| U7 | Ventilato | Taglia la risalita di calore dal networking |
 | Centro (U4-U6) | Networking + Patch | Calore moderato, buona ventilazione laterale |
-| U3 | Ventilato #2 | Scudo termico per proteggere gli HDD |
+| U3 | Multipresa | Passiva, nessun calore generato |
 | Bottom (U1-U2) | NAS + UPS | Zona piu' fresca, ideale per HDD (< 40C) |
+
+---
+
+## Distribuzione Elettrica
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │           UPS Eaton 5P 650i             │
+                    │              (4x C13)                   │
+                    └─────┬─────┬─────┬─────┬─────────────────┘
+                          │     │     │     │
+                    C13 #1│     │     │     │C13 #4
+                          │     │     │     │
+                          ▼     │     │     ▼
+                      ┌───────┐ │     │ ┌────────────────┐
+                      │  NAS  │ │     │ │ Multipresa 1U  │
+                      │ QNAP  │ │     │ │   (U3)         │
+                      └───────┘ │     │ └───────┬────────┘
+                                │     │         │
+                          C13 #2│     │C13 #3   │ Schuko
+                                │     │         │
+                                ▼     ▼         ▼
+                          ┌───────┐ ┌───────┐ ┌─────────┐
+                          │UDM-SE │ │Switch │ │ Mini PC │
+                          │       │ │  PoE  │ │ Lenovo  │
+                          └───────┘ └───────┘ └─────────┘
+```
+
+| Presa UPS | Dispositivo | Connettore |
+|-----------|-------------|------------|
+| C13 #1 | NAS QNAP | IEC C14 |
+| C13 #2 | UDM-SE | IEC C14 |
+| C13 #3 | Switch PoE | IEC C14 |
+| C13 #4 | Multipresa Rack (U3) | IEC C14 |
+
+| Presa Multipresa | Dispositivo | Note |
+|------------------|-------------|------|
+| Schuko #1 | Mini PC Lenovo | Alimentatore esterno |
+| Schuko #2-8 | Disponibili | Espansioni future |
+
+> **Nota**: Tutti i dispositivi sono protetti da batteria UPS. I dispositivi con connettore IEC vanno direttamente all'UPS, quelli con spina standard passano dalla multipresa.
 
 ---
 
@@ -178,7 +223,8 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 ## Note
 
 - **Rack**: Aperto lateralmente e superiormente (ventilazione passiva ottimale)
-- **Secondo pannello ventilato**: Puo' essere rimosso per guadagnare 1U di espansione
+- **Pannello ventilato**: In U7 per isolare termicamente il Mini PC dal networking
+- **Multipresa rack**: In U3, collegata all'UPS per dispositivi con spina standard
 - **UPS**: Valutare upgrade a 1000-1500VA se si utilizza intensivamente il PoE
 
 ---
