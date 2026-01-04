@@ -111,13 +111,13 @@
 - Assorbe vibrazioni HDD
 - Protegge UPS da calore residuo
 
-### U1 — UPS Riello Vision Rack VSR 800
+### U1 — UPS Eaton 5P 650i Rack G2
 
 | Spec | Valore |
 |------|--------|
-| Potenza | 800VA / 640W |
+| Potenza | 650VA / 420W |
 | Tecnologia | Line-interactive |
-| Autonomia | ~15-20 min (carico medio) |
+| Autonomia | ~10-15 min (carico medio) |
 | Management | USB -> Proxmox (NUT) |
 
 ---
