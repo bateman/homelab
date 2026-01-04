@@ -26,9 +26,9 @@ networks:
 
 # Reusable anchors (duplicated for standalone use, ignored when used with compose.yml)
 x-common-env: &common-env
-  PUID: 1000
-  PGID: 100
-  TZ: Europe/Rome
+  PUID: ${PUID:-1000}
+  PGID: ${PGID:-100}
+  TZ: ${TZ:-Europe/Rome}
   UMASK: 002
 
 x-common-logging: &common-logging
