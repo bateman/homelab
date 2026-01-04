@@ -245,27 +245,56 @@ sudo chmod -R 775 /share/container/mediastack/config
 ## Deploy Docker Stack
 
 ### File Environment
-- [ ] Creare file `.env` in `/share/container/mediastack/`
+
+Il file `.env` deve essere nella cartella `docker/`:
+
 ```bash
-# .env
+cd /share/container/mediastack
+
+# Eseguire setup (crea cartelle config e file .env)
+make setup
+
+# Editare .env con password sicura
+nano docker/.env
+```
+
+Contenuto minimo di `docker/.env`:
+```bash
 PIHOLE_PASSWORD=<password-sicura>
+```
+
+> **Importante**: Genera una password sicura con `openssl rand -base64 24`
+
+### Verifica Porta DNS
+
+Prima di avviare, verificare che la porta 53 non sia già in uso da QTS:
+
+```bash
+# Verificare se porta 53 è occupata
+ss -tulnp | grep :53
+
+# Se occupata, disabilitare DNS locale QTS:
+# Control Panel → Network & Virtual Switch → DNS Server → Disabilita
 ```
 
 ### Primo Avvio
 ```bash
 cd /share/container/mediastack
 
+# Validare configurazione
+make validate
+
 # Pull immagini
-docker compose pull
+make pull
 
 # Avvio stack
-docker compose up -d
+make up
 
 # Verificare status
-docker compose ps
+make status
 
 # Verificare logs per errori
-docker compose logs | grep -i error
+make logs | grep -i error
 ```
 
 ### Verifica Servizi
@@ -298,7 +327,14 @@ docker compose logs | grep -i error
 
 ### qBittorrent
 - [ ] Accedere a `http://192.168.3.10:8080`
-- [ ] Default login: admin / adminadmin (cambiare subito)
+- [ ] **Credenziali primo accesso**:
+  - Username: `admin`
+  - Password: generata casualmente al primo avvio
+  - Recuperare la password dai log:
+    ```bash
+    docker logs qbittorrent 2>&1 | grep -i password
+    # Output: "The WebUI administrator password was not set. A temporary password is provided: XXXXXX"
+    ```
 - [ ] Options → Downloads:
   - Default Save Path: `/data/torrents`
   - Keep incomplete in: disabilitato (usa stesso path)
@@ -379,7 +415,8 @@ docker compose logs | grep -i error
 Test critico per verificare che hardlinking funzioni:
 
 ```bash
-# Via SSH sul NAS
+# Via SSH sul NAS (path host)
+# I container vedono questi path come /data/...
 
 # 1. Creare file di test in torrents
 echo "test hardlink" > /share/data/torrents/movies/test.txt
@@ -399,6 +436,8 @@ ls -li /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 # 4. Cleanup
 rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 ```
+
+> **Nota sui path**: Sul NAS host i path sono `/share/data/...`, mentre i container vedono `/data/...` grazie al mount `-v /share/data:/data`. Entrambi puntano allo stesso filesystem, quindi gli hardlink funzionano.
 
 Se inode diversi: **PROBLEMA** — verificare che entrambi i path siano sullo stesso volume/filesystem.
 
@@ -423,14 +462,62 @@ Se inode diversi: **PROBLEMA** — verificare che entrambi i path siano sullo st
 
 ## Configurazione Recyclarr
 
-- [ ] Verificare file `./config/recyclarr/recyclarr.yml` presente
-- [ ] Inserire API key Sonarr nel file
-- [ ] Inserire API key Radarr nel file
-- [ ] Test sync manuale:
+Recyclarr sincronizza automaticamente i Quality Profiles da [Trash Guides](https://trash-guides.info/).
+
+### Generare Configurazione Base
+
+Al primo avvio, Recyclarr crea un file template. Per generare una configurazione completa:
+
 ```bash
+# Generare template configurazione
+make recyclarr-config
+
+# Oppure manualmente
+docker exec recyclarr recyclarr config create
+```
+
+### Configurare recyclarr.yml
+
+Editare `./config/recyclarr/recyclarr.yml`:
+
+```yaml
+# Esempio configurazione minima
+sonarr:
+  series:
+    base_url: http://sonarr:8989
+    api_key: <API_KEY_SONARR>  # Da Sonarr → Settings → General
+    quality_definition:
+      type: series
+    quality_profiles:
+      - name: WEB-1080p
+
+radarr:
+  movies:
+    base_url: http://radarr:7878
+    api_key: <API_KEY_RADARR>  # Da Radarr → Settings → General
+    quality_definition:
+      type: movie
+    quality_profiles:
+      - name: HD Bluray + WEB
+```
+
+> **Documentazione completa**: https://recyclarr.dev/wiki/yaml/config-reference/
+
+### Sincronizzazione
+
+```bash
+# Sync manuale
+make recyclarr-sync
+
+# Oppure
 docker exec recyclarr recyclarr sync
 ```
-- [ ] Verificare Quality Profiles creati in Sonarr/Radarr
+
+### Verifica
+
+- [ ] Verificare Quality Profiles creati in Sonarr (Settings → Profiles)
+- [ ] Verificare Quality Profiles creati in Radarr (Settings → Profiles)
+- [ ] Verificare Custom Formats importati
 
 ---
 

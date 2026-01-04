@@ -18,8 +18,8 @@
 # Reference to network defined in compose.yml
 networks:
   media_net:
+    name: homelab_media_net
     external: true
-    name: docker_media_net
 
 # Reusable anchors (duplicated for standalone use, ignored when used with compose.yml)
 x-common-env: &common-env
@@ -312,20 +312,20 @@ services:
   # ===========================================================================
 
   huntarr:
-    image: ghcr.io/jordanpottruff/huntarr:latest
+    image: huntarr/huntarr:latest
     container_name: huntarr
     environment:
       TZ: Europe/Rome
     volumes:
       - ./config/huntarr:/config
     ports:
-      - "7500:7500"
+      - "9705:9705"
     networks:
       - media_net
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7500"]
+      test: ["CMD", "curl", "-f", "http://localhost:9705"]
       <<: *common-healthcheck
     deploy:
       resources:

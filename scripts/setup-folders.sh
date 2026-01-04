@@ -94,6 +94,9 @@ mkdir -p "${CONFIG_ROOT}/pihole/etc-pihole"
 mkdir -p "${CONFIG_ROOT}/pihole/etc-dnsmasq.d"
 mkdir -p "${CONFIG_ROOT}/homeassistant"
 mkdir -p "${CONFIG_ROOT}/portainer"
+mkdir -p "${CONFIG_ROOT}/duplicati"
+mkdir -p "${CONFIG_ROOT}/recyclarr"
+mkdir -p "${CONFIG_ROOT}/flaresolverr"
 
 # Permessi
 log_info "Impostazione permessi (PUID=$PUID, PGID=$PGID)..."

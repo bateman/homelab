@@ -186,19 +186,27 @@ Per ogni porta, cliccare → Port Profile → selezionare profilo appropriato
 
 ## Fase 4: Configurazione IP Statici
 
-### 4.1 Fixed IP per NAS QNAP
+> **Nota importante**: Gli IP statici per NAS e Proxmox vengono configurati **direttamente sui dispositivi** durante il loro setup iniziale (vedi [NAS_SETUP.md](NAS_SETUP.md) e [PROXMOX_SETUP.md](PROXMOX_SETUP.md)).
+>
+> Le "Fixed IP" in UniFi sono **opzionali** e servono solo se preferisci usare DHCP con reservation invece di IP statici configurati sui device.
 
-Settings → Client Devices → (cercare QNAP o MAC address)
-→ Settings → Fixed IP Address: `192.168.3.10`
+### 4.1 Opzione A: IP Statici sui Dispositivi (Raccomandato)
 
-### 4.2 Fixed IP per Mini PC Proxmox
+Configurare IP statici direttamente su:
+- **NAS QNAP**: Control Panel → Network → IP statico `192.168.3.10`
+- **Mini PC Proxmox**: Durante installazione, IP `192.168.3.20`
 
-Settings → Client Devices → (cercare Lenovo o MAC address)
-→ Settings → Fixed IP Address: `192.168.3.20`
+### 4.2 Opzione B: DHCP Reservation in UniFi (Alternativa)
+
+Se preferisci gestire gli IP centralmente da UniFi:
+
+1. Collegare temporaneamente i dispositivi per farli apparire in Client Devices
+2. Settings → Client Devices → (cercare per MAC address)
+3. Settings → Fixed IP Address: assegnare IP desiderato
 
 ### 4.3 Fixed IP per Switch
 
-Dovrebbe già avere IP in VLAN Management.
+Lo switch dovrebbe già avere IP in VLAN Management dopo l'adozione.
 Verificare: Settings → Devices → Switch → IP: dovrebbe essere 192.168.2.x
 
 ---
@@ -258,6 +266,12 @@ Settings → Profiles → Port Groups → Create New Group
 ## Fase 6: Regole Firewall
 
 **Riferimento completo:** [`firewall-config.md`](../network/firewall-config.md)
+
+> **Importante**: Questa sezione contiene solo le regole essenziali per iniziare.
+> Per la configurazione completa (13 regole), consulta [`firewall-config.md`](../network/firewall-config.md).
+>
+> Le regole sotto sono un **subset minimo** per far funzionare lo stack media.
+> Aggiungi le regole mancanti da firewall-config.md per una sicurezza completa.
 
 ### 6.1 Ordine Regole (CRITICO)
 

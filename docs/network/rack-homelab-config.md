@@ -159,7 +159,7 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 | Bazarr | 6767 | Sottotitoli automatici |
 | qBittorrent | 8080 | Client torrent |
 | NZBGet | 6789 | Client Usenet |
-| Huntarr | 7500 | Monitoring *arr |
+| Huntarr | 9705 | Monitoring *arr |
 | Cleanuparr | 11011 | Pulizia automatica |
 | Pi-hole | 8081 | DNS ad-blocking |
 | Home Assistant | 8123 | Automazione domotica |

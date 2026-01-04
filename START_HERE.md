@@ -179,21 +179,18 @@ cd /share/container/mediastack
 ### 4.2 Setup Struttura Cartelle
 
 ```bash
-# Rendere eseguibile e lanciare
-chmod +x scripts/setup-folders.sh
-sudo ./scripts/setup-folders.sh
+# Eseguire setup completo (crea cartelle data, config e file .env)
+make setup
 
-# Creare file .env nella cartella docker
-cp docker/.env.example docker/.env
-nano docker/.env  # Impostare PIHOLE_PASSWORD
+# Editare file .env con le password
+nano docker/.env  # Impostare PIHOLE_PASSWORD (obbligatorio)
 ```
+
+> **Nota**: `make setup` esegue automaticamente `scripts/setup-folders.sh` e crea `docker/.env` dal template.
 
 ### 4.3 Avvio Container
 
 ```bash
-# Setup cartelle config
-make setup
-
 # Validare configurazione
 make validate
 
@@ -214,7 +211,7 @@ make status
 make health
 
 # Visualizzare URL servizi
-make urls
+make show-urls
 ```
 
 ---

@@ -50,12 +50,16 @@ Internet
 | VLAN ID | Nome | Subnet | Gateway | DHCP Range | Scopo |
 |---------|------|--------|---------|------------|-------|
 | 2 | Management | 192.168.2.0/24 | 192.168.2.1 | .100-.200 | UDM-SE, Switch, Access Point |
-| 3 | Servers | 192.168.3.0/24 | 192.168.3.1 | Disabilitato | NAS, Proxmox, stampante, PC desktop (IP statici) |
+| 3 | Servers | 192.168.3.0/24 | 192.168.3.1 | Disabilitato* | NAS, Proxmox, stampante, PC desktop (IP statici) |
 | 4 | Media | 192.168.4.0/24 | 192.168.4.1 | .100-.200 | Smart TV, telefoni, tablet |
 | 5 | Guest | 192.168.5.0/24 | 192.168.5.1 | .100-.200 | WiFi ospiti |
 | 6 | IoT | 192.168.6.0/24 | 192.168.6.1 | .100-.200 | Alexa, videocamera nuova, dispositivi smart WiFi |
 
 > **Nota**: La subnet 192.168.1.0/24 NON e' gestita dal UDM-SE. Resta per Iliad Box e dispositivi Vimar legacy collegati allo switch PoE nel quadro elettrico.
+
+> ***DHCP Disabilitato su VLAN 3**: I dispositivi server usano IP statici configurati direttamente su di essi. Se devi collegare temporaneamente un nuovo dispositivo per configurarlo, puoi:
+> 1. Collegarlo prima a un'altra VLAN con DHCP (es. Management), configurare l'IP statico, poi spostarlo
+> 2. Configurare l'IP statico manualmente prima di collegarlo alla rete
 
 ---
 
@@ -176,13 +180,13 @@ Definire in Settings -> Profiles -> Port Groups:
 | DNS | 53 |
 | Plex | 32400 |
 | Plex-Discovery | 32410-32414 |
-| Arr-Stack | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 7500, 11011, 8081, 8191 |
+| Arr-Stack | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8081, 8191 |
 | HomeAssistant | 8123 |
 | Portainer | 9443 |
 | Stampa | 631, 9100 |
 | mDNS | 5353 |
 
-> **Nota**: Arr-Stack include: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (7500), Cleanuparr (11011), Pi-hole (8081), FlareSolverr (8191).
+> **Nota**: Arr-Stack include: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), Pi-hole (8081), FlareSolverr (8191).
 
 ---
 

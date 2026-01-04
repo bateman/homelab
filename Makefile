@@ -5,7 +5,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup up down restart logs pull update status backup clean health show-urls \
+.PHONY: help setup up down restart logs pull update status backup clean health show-urls urls \
         validate check-docker check-compose recyclarr-sync recyclarr-config
 
 # Compose files
@@ -258,7 +258,7 @@ health: check-docker
 	$(call check_service,http://localhost:6767/ping,Bazarr)
 	$(call check_service,http://localhost:8080,qBittorrent)
 	$(call check_service,http://localhost:6789,NZBGet)
-	$(call check_service,http://localhost:7500,Huntarr)
+	$(call check_service,http://localhost:9705,Huntarr)
 	$(call check_service,http://localhost:11011/health,Cleanuparr)
 	$(call check_service,http://localhost:8191/health,FlareSolverr)
 	$(call check_service,http://localhost:8081/admin,Pi-hole)
@@ -294,7 +294,7 @@ show-urls:
 	@echo "  NZBGet:       http://$(HOST_IP):6789"
 	@echo ""
 	@echo "$(GREEN)Monitoring$(NC)"
-	@echo "  Huntarr:      http://$(HOST_IP):7500"
+	@echo "  Huntarr:      http://$(HOST_IP):9705"
 	@echo "  Cleanuparr:   http://$(HOST_IP):11011"
 	@echo ""
 	@echo "$(GREEN)Infrastructure$(NC)"
@@ -303,3 +303,6 @@ show-urls:
 	@echo "  Portainer:    https://$(HOST_IP):9443"
 	@echo "  Duplicati:    http://$(HOST_IP):8200"
 	@echo ""
+
+# Alias for show-urls
+urls: show-urls
