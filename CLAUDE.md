@@ -70,7 +70,7 @@ homelab/
 | Recyclarr | - | Sync profili Trash Guides |
 | Watchtower | - | Auto-update container |
 | Duplicati | 8200 | Backup incrementale con UI |
-| Traefik | 80/443 | Reverse proxy con auto-discovery |
+| Traefik | 80/443/8082 | Reverse proxy con auto-discovery |
 
 ## Comandi Comuni
 

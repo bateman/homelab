@@ -121,220 +121,59 @@ nslookup sonarr.home.local
 
 ## Fase 2: Installazione Traefik (Soluzione Principale)
 
-### 2.1 Aggiungere Traefik a compose.yml
+### 2.1 Configurazione gia' inclusa
 
-Aggiungere il seguente servizio in `docker/compose.yml`:
+Traefik e' gia' configurato in `docker/compose.yml` con:
+- Dashboard su porta **8082** (8080 usata da qBittorrent)
+- Auto-discovery Docker sulla rete `homelab_proxy`
+- Provider file per servizi non-Docker (Home Assistant)
+- Labels Traefik gia' aggiunte a tutti i servizi
 
-```yaml
-  # ============================================
-  # TRAEFIK - Reverse Proxy
-  # ============================================
-  traefik:
-    image: traefik:v3.2
-    container_name: traefik
-    restart: unless-stopped
-    command:
-      # API e Dashboard
-      - --api.dashboard=true
-      - --api.insecure=true
-      # Provider Docker
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --providers.docker.network=proxy
-      # Entrypoints
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      # Redirect HTTP -> HTTPS (opzionale per rete locale)
-      # - --entrypoints.web.http.redirections.entryPoint.to=websecure
-      # Logs
-      - --log.level=INFO
-      - --accesslog=true
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080"  # Dashboard
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /share/container/traefik/config:/etc/traefik
-      - /share/container/traefik/certs:/certs
-    networks:
-      - proxy
-      - default
-    environment:
-      <<: *common-env
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      # Dashboard su traefik.home.local
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.home.local`)"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.entrypoints=web"
-    healthcheck:
-      test: ["CMD", "traefik", "healthcheck"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      <<: *common-logging
-    deploy:
-      resources:
-        limits:
-          memory: 256M
+**Accesso Dashboard**: http://traefik.home.local o http://192.168.3.10:8082
 
-networks:
-  proxy:
-    name: proxy
-    driver: bridge
-```
+### 2.2 Servizi gia' configurati
 
-### 2.2 Aggiungere Labels ai Servizi Esistenti
+Le labels Traefik sono gia' aggiunte a tutti i servizi nei file compose:
 
-Per ogni servizio che vuoi esporre via Traefik, aggiungi le labels. Esempio per Sonarr in `compose.media.yml`:
+| Servizio | URL Traefik | Porta diretta |
+|----------|-------------|---------------|
+| Sonarr | sonarr.home.local | :8989 |
+| Radarr | radarr.home.local | :7878 |
+| Lidarr | lidarr.home.local | :8686 |
+| Prowlarr | prowlarr.home.local | :9696 |
+| Bazarr | bazarr.home.local | :6767 |
+| qBittorrent | qbit.home.local | :8080 |
+| NZBGet | nzbget.home.local | :6789 |
+| Huntarr | huntarr.home.local | :9705 |
+| Cleanuparr | cleanuparr.home.local | :11011 |
+| Pi-hole | pihole.home.local | :8081 |
+| Portainer | portainer.home.local | :9000 |
+| Duplicati | duplicati.home.local | :8200 |
+| Home Assistant | ha.home.local | :8123 |
+| Traefik Dashboard | traefik.home.local | :8082 |
 
-```yaml
-  sonarr:
-    # ... configurazione esistente ...
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      # Traefik
-      - "traefik.enable=true"
-      - "traefik.http.routers.sonarr.rule=Host(`sonarr.home.local`)"
-      - "traefik.http.routers.sonarr.entrypoints=web"
-      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
-    networks:
-      - proxy
-      - default
-```
+### 2.3 Configurazione Home Assistant
 
-### 2.3 Labels per tutti i servizi
+Home Assistant usa `network_mode: host`, quindi non puo' usare le labels Docker.
+La configurazione e' gia' presente in `docker/config/traefik/homeassistant.yml`.
 
-Ecco le labels da aggiungere a ciascun servizio:
-
-**Stack Media (compose.media.yml):**
-
-```yaml
-# Sonarr
-- "traefik.enable=true"
-- "traefik.http.routers.sonarr.rule=Host(`sonarr.home.local`)"
-- "traefik.http.routers.sonarr.entrypoints=web"
-- "traefik.http.services.sonarr.loadbalancer.server.port=8989"
-
-# Radarr
-- "traefik.enable=true"
-- "traefik.http.routers.radarr.rule=Host(`radarr.home.local`)"
-- "traefik.http.routers.radarr.entrypoints=web"
-- "traefik.http.services.radarr.loadbalancer.server.port=7878"
-
-# Lidarr
-- "traefik.enable=true"
-- "traefik.http.routers.lidarr.rule=Host(`lidarr.home.local`)"
-- "traefik.http.routers.lidarr.entrypoints=web"
-- "traefik.http.services.lidarr.loadbalancer.server.port=8686"
-
-# Prowlarr
-- "traefik.enable=true"
-- "traefik.http.routers.prowlarr.rule=Host(`prowlarr.home.local`)"
-- "traefik.http.routers.prowlarr.entrypoints=web"
-- "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
-
-# Bazarr
-- "traefik.enable=true"
-- "traefik.http.routers.bazarr.rule=Host(`bazarr.home.local`)"
-- "traefik.http.routers.bazarr.entrypoints=web"
-- "traefik.http.services.bazarr.loadbalancer.server.port=6767"
-
-# qBittorrent
-- "traefik.enable=true"
-- "traefik.http.routers.qbit.rule=Host(`qbit.home.local`)"
-- "traefik.http.routers.qbit.entrypoints=web"
-- "traefik.http.services.qbit.loadbalancer.server.port=8080"
-
-# NZBGet
-- "traefik.enable=true"
-- "traefik.http.routers.nzbget.rule=Host(`nzbget.home.local`)"
-- "traefik.http.routers.nzbget.entrypoints=web"
-- "traefik.http.services.nzbget.loadbalancer.server.port=6789"
-```
-
-**Stack Infrastruttura (compose.yml):**
-
-```yaml
-# Pi-hole (WebUI)
-- "traefik.enable=true"
-- "traefik.http.routers.pihole.rule=Host(`pihole.home.local`)"
-- "traefik.http.routers.pihole.entrypoints=web"
-- "traefik.http.services.pihole.loadbalancer.server.port=80"
-
-# Portainer
-- "traefik.enable=true"
-- "traefik.http.routers.portainer.rule=Host(`portainer.home.local`)"
-- "traefik.http.routers.portainer.entrypoints=web"
-- "traefik.http.services.portainer.loadbalancer.server.port=9000"
-
-# Duplicati
-- "traefik.enable=true"
-- "traefik.http.routers.duplicati.rule=Host(`duplicati.home.local`)"
-- "traefik.http.routers.duplicati.entrypoints=web"
-- "traefik.http.services.duplicati.loadbalancer.server.port=8200"
-
-# Home Assistant (nota: usa network_mode: host, richiede config manuale)
-# Vedi sezione 2.5 per configurazione file
-```
-
-### 2.4 Creare Directory Config
+### 2.4 Avvio e Verifica
 
 ```bash
-mkdir -p /share/container/traefik/{config,certs}
-```
+# Creare struttura cartelle (include traefik)
+make setup
 
-### 2.5 Configurazione Home Assistant (network_mode: host)
-
-Home Assistant usa `network_mode: host`, quindi non puo' usare le labels Docker. Creare un file di configurazione:
-
-```bash
-cat > /share/container/traefik/config/home-assistant.yml << 'EOF'
-http:
-  routers:
-    homeassistant:
-      rule: "Host(`ha.home.local`)"
-      service: homeassistant
-      entryPoints:
-        - web
-
-  services:
-    homeassistant:
-      loadBalancer:
-        servers:
-          - url: "http://192.168.3.10:8123"
-EOF
-```
-
-Aggiungere a Traefik in compose.yml:
-
-```yaml
-command:
-  # ... altre opzioni ...
-  - --providers.file.directory=/etc/traefik
-  - --providers.file.watch=true
-```
-
-### 2.6 Avvio e Verifica
-
-```bash
-# Creare network proxy
-docker network create proxy
-
-# Riavviare stack
-make restart
+# Avviare stack
+make up
 
 # Verificare Traefik
 docker logs traefik
 
 # Accedere alla dashboard
-# http://traefik.home.local:8080 oppure http://192.168.3.10:8080
+# http://traefik.home.local oppure http://192.168.3.10:8082
 ```
 
-### 2.7 Test Accesso via Nome
+### 2.5 Test Accesso via Nome
 
 ```bash
 # Da browser o curl
@@ -464,7 +303,7 @@ Copiare il file CA (`~/.local/share/mkcert/rootCA.pem`) sui dispositivi client e
 
 | Servizio | URL | Porta diretta (backup) |
 |----------|-----|------------------------|
-| Dashboard Traefik | http://traefik.home.local | :8080 |
+| Dashboard Traefik | http://traefik.home.local | :8082 |
 | Sonarr | http://sonarr.home.local | :8989 |
 | Radarr | http://radarr.home.local | :7878 |
 | Lidarr | http://lidarr.home.local | :8686 |
@@ -472,11 +311,13 @@ Copiare il file CA (`~/.local/share/mkcert/rootCA.pem`) sui dispositivi client e
 | Bazarr | http://bazarr.home.local | :6767 |
 | qBittorrent | http://qbit.home.local | :8080 |
 | NZBGet | http://nzbget.home.local | :6789 |
+| Huntarr | http://huntarr.home.local | :9705 |
+| Cleanuparr | http://cleanuparr.home.local | :11011 |
 | Pi-hole | http://pihole.home.local | :8081 |
 | Home Assistant | http://ha.home.local | :8123 |
-| Portainer | http://portainer.home.local | :9443 |
+| Portainer | http://portainer.home.local | :9000 |
 | Duplicati | http://duplicati.home.local | :8200 |
-| Plex | http://plex.home.local | :32400 |
+| Plex | http://plex.home.local | :32400 (su 192.168.3.20) |
 
 > **Nota**: Gli URL funzionano sia dalla rete locale che da remoto via Tailscale (grazie a Pi-hole come DNS).
 

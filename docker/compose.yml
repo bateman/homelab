@@ -10,11 +10,14 @@
 #   or simply: make up
 # =============================================================================
 
-# Shared network for all services
-# Network name is explicitly set to ensure consistency across compose files
+# Shared networks for all services
+# Network names are explicitly set to ensure consistency across compose files
 networks:
   media_net:
     name: homelab_media_net
+    driver: bridge
+  proxy:
+    name: homelab_proxy
     driver: bridge
 
 # =============================================================================
@@ -67,6 +70,7 @@ services:
       - NET_ADMIN
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -80,6 +84,11 @@ services:
           memory: 128M
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.pihole.rule=Host(`pihole.home.local`)"
+      - "traefik.http.routers.pihole.entrypoints=web"
+      - "traefik.http.services.pihole.loadbalancer.server.port=80"
 
   # ---------------------------------------------------------------------------
   # Home Automation
@@ -126,8 +135,10 @@ services:
       - ./config/portainer:/data
     ports:
       - "9443:9443"
+      - "9000:9000"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -141,6 +152,11 @@ services:
           memory: 64M
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.home.local`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
 
   watchtower:
     image: containrrr/watchtower:latest
@@ -190,6 +206,7 @@ services:
       - "8200:8200"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -203,3 +220,74 @@ services:
           memory: 256M
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.duplicati.rule=Host(`duplicati.home.local`)"
+      - "traefik.http.routers.duplicati.entrypoints=web"
+      - "traefik.http.services.duplicati.loadbalancer.server.port=8200"
+
+  # ---------------------------------------------------------------------------
+  # Reverse Proxy
+  # ---------------------------------------------------------------------------
+  # Traefik: reverse proxy with Docker auto-discovery
+  # Dashboard: http://traefik.home.local or http://192.168.3.10:8082
+  # Docs: https://doc.traefik.io/traefik/
+  #
+  # To expose a service, add these labels to the container:
+  #   - "traefik.enable=true"
+  #   - "traefik.http.routers.<name>.rule=Host(`<name>.home.local`)"
+  #   - "traefik.http.routers.<name>.entrypoints=web"
+  #   - "traefik.http.services.<name>.loadbalancer.server.port=<port>"
+  #
+  # Requires Pi-hole DNS records pointing *.home.local -> 192.168.3.10
+  # See docs/setup/REVERSE_PROXY_SETUP.md for full configuration guide
+  traefik:
+    image: traefik:v3.2
+    container_name: traefik
+    command:
+      # API e Dashboard
+      - --api.dashboard=true
+      - --api.insecure=true
+      # Provider Docker
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=homelab_proxy
+      # Provider file per servizi non-Docker (es. Home Assistant)
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+      # Entrypoints
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      # Logs
+      - --log.level=INFO
+      - --accesslog=true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8082:8080"  # Dashboard (8080 usata da qBittorrent)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config/traefik:/etc/traefik/dynamic
+    networks:
+      - proxy
+      - media_net
+    environment:
+      <<: *common-env
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck"]
+      <<: *common-healthcheck
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      # Dashboard su traefik.home.local
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.home.local`)"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=web"
