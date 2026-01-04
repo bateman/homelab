@@ -2,18 +2,18 @@
 # Recyclarr Configuration - Trash Guides Sync
 # NAS QNAP TS-435XeU - Homelab
 #
-# Documentazione: https://recyclarr.dev/wiki/
+# Documentation: https://recyclarr.dev/wiki/
 # Trash Guides: https://trash-guides.info/
 #
-# SETUP INIZIALE:
-# 1. Copiare questo file in ./config/recyclarr/recyclarr.yml
-# 2. Ottenere API key da Sonarr: Settings -> General -> API Key
-# 3. Ottenere API key da Radarr: Settings -> General -> API Key
-# 4. Sostituire YOUR_SONARR_API_KEY e YOUR_RADARR_API_KEY
-# 5. Eseguire sync manuale: docker exec recyclarr recyclarr sync
+# INITIAL SETUP:
+# 1. Copy this file to ./config/recyclarr/recyclarr.yml
+# 2. Get API key from Sonarr: Settings -> General -> API Key
+# 3. Get API key from Radarr: Settings -> General -> API Key
+# 4. Replace YOUR_SONARR_API_KEY and YOUR_RADARR_API_KEY
+# 5. Run manual sync: docker exec recyclarr recyclarr sync
 #
-# NOTA: Al primo avvio, Recyclarr crea questo file automaticamente.
-#       Puoi anche generare un template con:
+# NOTE: On first start, Recyclarr creates this file automatically.
+#       You can also generate a template with:
 #       docker exec recyclarr recyclarr config create
 # =============================================================================
 
@@ -23,14 +23,14 @@ sonarr:
     base_url: http://sonarr:8989
     api_key: YOUR_SONARR_API_KEY
     
-    # Elimina custom formats/quality profiles non gestiti da Recyclarr
+    # Delete custom formats/quality profiles not managed by Recyclarr
     delete_old_custom_formats: false
     
     # Quality Definition - Trash Guides recommended
     quality_definition:
       type: series
     
-    # Quality Profiles da sincronizzare
+    # Quality Profiles to sync
     quality_profiles:
       - name: WEB-1080p
         reset_unmatched_scores:

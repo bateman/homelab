@@ -245,14 +245,14 @@ services:
     image: traefik:v3.2
     container_name: traefik
     command:
-      # API e Dashboard
+      # API and Dashboard
       - --api.dashboard=true
       - --api.insecure=true
-      # Provider Docker
+      # Docker Provider
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=homelab_proxy
-      # Provider file per servizi non-Docker (es. Home Assistant)
+      # File provider for non-Docker services (e.g., Home Assistant)
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
       # Entrypoints
@@ -264,7 +264,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8082:8080"  # Dashboard (8080 usata da qBittorrent)
+      - "8082:8080"  # Dashboard (8080 used by qBittorrent)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik:/etc/traefik/dynamic
@@ -286,7 +286,7 @@ services:
           memory: 64M
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-      # Dashboard su traefik.home.local
+      # Dashboard on traefik.home.local
       - "traefik.enable=true"
       - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.home.local`)"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
