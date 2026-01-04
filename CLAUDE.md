@@ -14,6 +14,8 @@ Questo repository contiene la configurazione infrastructure-as-code completa per
 - **Access Point**: [Ubiquiti U6-Pro](https://store.ui.com/eu/en/category/wifi-flagship-high-capacity/products/u6-pro) - Wi-Fi 6
 - **UPS**: [Eaton 5P 650i Rack G2](https://www.eaton.com/it/it-it/skuPage.5P650IRG2.html) - Gruppo di continuità
 - **Rack**: 8U con ottimizzazione raffreddamento passivo
+- **PC Desktop**: (192.168.3.40) - Workstation
+- **Stampante**: (192.168.3.30) - Stampante di rete
 
 ### Topologia di Rete
 - **VLAN 2** (192.168.2.0/24): Management - UDM-SE, Switch, AP
@@ -81,8 +83,10 @@ make pull       # Aggiorna immagini Docker
 make logs       # Segui tutti i logs
 make status     # Stato container e utilizzo risorse
 make health     # Health check tutti i servizi
-make backup     # Backup configurazioni
+make backup     # Backup configurazioni (crea tar.gz timestampato)
 make urls       # Mostra tutti gli URL WebUI
+make update     # Aggiorna immagini e restart (pull + restart)
+make clean      # Rimuove container, immagini e volumi orfani
 
 # Recyclarr (sync profili qualita')
 make recyclarr-sync     # Sync manuale profili Trash Guides
@@ -100,20 +104,24 @@ make shell-radarr   # Shell nel container
 - `TZ=Europe/Rome` - Fuso orario
 - `UMASK=002` - Permessi file
 
-### Struttura Cartelle (conforme Trash Guides)
+### Struttura Cartelle NAS
 ```
-/share/data/
-├── torrents/
-│   ├── movies/
-│   ├── tv/
-│   └── music/
-├── usenet/
-│   ├── incomplete/
-│   └── complete/{movies,tv,music}/
-└── media/
-    ├── movies/
-    ├── tv/
-    └── music/
+/share/
+├── data/                           # Dati media (conforme Trash Guides)
+│   ├── torrents/
+│   │   ├── movies/
+│   │   ├── tv/
+│   │   └── music/
+│   ├── usenet/
+│   │   ├── incomplete/
+│   │   └── complete/{movies,tv,music}/
+│   └── media/
+│       ├── movies/
+│       ├── tv/
+│       └── music/
+├── container/                      # Configurazioni container Docker
+│   └── <servizio>/config/
+└── backup/                         # Destinazione backup locali
 ```
 
 **Critico**: Tutti i path sotto `/share/data` devono essere sullo stesso filesystem perche' l'hardlinking funzioni.
@@ -129,7 +137,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 ### Quando modifichi i file compose
 1. `docker/compose.yml` contiene servizi infrastruttura (Pi-hole, Home Assistant, Portainer, Watchtower)
 2. `docker/compose.media.yml` contiene lo stack media (*arr, download clients, monitoring)
-3. Tutti i servizi *arr montano `/share/data:/data` per supporto hardlink
+3. Sonarr/Radarr/Lidarr e download clients (qBittorrent, NZBGet) montano `/share/data:/data` per supporto hardlink; Bazarr monta solo `/share/data/media:/data/media`
 4. Usa anchor YAML (`&common-env`, `&common-logging`, `&common-healthcheck`) per config condivise
 5. Mantieni relazioni `depends_on` tra servizi
 6. Conserva label Watchtower per auto-update
@@ -175,6 +183,7 @@ make backup  # Crea tar.gz in ./backups/
 ```
 
 ### Altri backup
+- **Compose files**: Versionati in Git (questo repository)
 - **Config QTS**: Settimanale via Control Panel -> Backup/Restore
 - **VM Proxmox**: Settimanale su NAS via mount NFS
 
