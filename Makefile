@@ -5,7 +5,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup up down restart logs pull update status backup clean health show-urls urls \
+.PHONY: help setup setup-dry-run up down restart logs pull update status backup clean health show-urls urls \
         validate check-docker check-compose check-curl recyclarr-sync recyclarr-config \
         logs-% shell-%
 
@@ -62,8 +62,9 @@ help:
 	@echo "  $(GREEN)$(BOLD)MEDIA STACK$(NC) - Available commands"
 	@echo ""
 	@echo "  $(PURPLE)Setup & Validation$(NC)"
-	@echo "    $(CYAN)make setup$(NC)       - Create folder structure (run once)"
-	@echo "    $(CYAN)make validate$(NC)    - Verify compose configuration"
+	@echo "    $(CYAN)make setup$(NC)         - Create folder structure (run once)"
+	@echo "    $(CYAN)make setup-dry-run$(NC) - Preview folder structure (no changes)"
+	@echo "    $(CYAN)make validate$(NC)      - Verify compose configuration"
 	@echo ""
 	@echo "  $(PURPLE)Container Management$(NC)"
 	@echo "    $(CYAN)make up$(NC)          - Start all containers"
@@ -101,14 +102,19 @@ setup: check-compose
 		chmod +x scripts/setup-folders.sh; \
 	fi
 	@./scripts/setup-folders.sh
-	@echo ">>> Creating additional config directories..."
-	@mkdir -p ./config/recyclarr ./config/duplicati
 	@if [ ! -f docker/.env ]; then \
 		echo ">>> Creating .env from template..."; \
 		cp docker/.env.example docker/.env 2>/dev/null || echo "PIHOLE_PASSWORD=changeme" > docker/.env; \
 		echo "$(YELLOW)WARNING: Edit docker/.env with your passwords$(NC)"; \
 	fi
 	@echo "$(GREEN)>>> Setup complete$(NC)"
+
+setup-dry-run:
+	@echo ">>> Previewing folder structure (dry-run)..."
+	@if [ ! -x scripts/setup-folders.sh ]; then \
+		chmod +x scripts/setup-folders.sh; \
+	fi
+	@./scripts/setup-folders.sh --dry-run
 
 # =============================================================================
 # Container Management

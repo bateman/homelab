@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Configuration
 DATA_ROOT="/share/data"
 BACKUP_ROOT="/share/backup"
-CONFIG_ROOT="${SCRIPT_DIR}/../docker/config"
+CONFIG_ROOT="${SCRIPT_DIR}/../config"
 DRY_RUN=false
 
 # Default PUID/PGID (can be overridden by .env)
