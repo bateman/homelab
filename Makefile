@@ -3,19 +3,23 @@
 # NAS QNAP TS-435XeU - Homelab
 # =============================================================================
 
-.PHONY: help setup up down restart logs pull update status backup clean health urls \
+.DEFAULT_GOAL := help
+
+.PHONY: help setup up down restart logs pull update status backup clean health show-urls \
         validate check-docker check-compose recyclarr-sync recyclarr-config
 
 # Compose files
 COMPOSE_FILES := -f compose.yml -f compose.media.yml
 COMPOSE_CMD := docker compose $(COMPOSE_FILES)
-BACKUP_DIR := ./backups
 HOST_IP := 192.168.3.10
 
 # Colors for output (if terminal supports it)
 RED := \033[0;31m
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
+CYAN := \033[0;36m
+PURPLE := \033[0;35m
+BOLD := \033[1m
 NC := \033[0m # No Color
 
 # =============================================================================
@@ -47,37 +51,38 @@ validate: check-compose
 # =============================================================================
 
 help:
-	@echo "Media Stack - Available commands:"
 	@echo ""
-	@echo "  $(GREEN)Setup & Validation$(NC)"
-	@echo "    make setup       - Create folder structure (run once)"
-	@echo "    make validate    - Verify compose configuration"
+	@echo "  $(GREEN)$(BOLD)MEDIA STACK$(NC) - Available commands"
 	@echo ""
-	@echo "  $(GREEN)Container Management$(NC)"
-	@echo "    make up          - Start all containers"
-	@echo "    make down        - Stop all containers"
-	@echo "    make restart     - Full restart"
-	@echo "    make pull        - Update Docker images"
-	@echo "    make update      - Pull images and restart (pull + restart)"
+	@echo "  $(PURPLE)Setup & Validation$(NC)"
+	@echo "    $(CYAN)make setup$(NC)       - Create folder structure (run once)"
+	@echo "    $(CYAN)make validate$(NC)    - Verify compose configuration"
 	@echo ""
-	@echo "  $(GREEN)Monitoring$(NC)"
-	@echo "    make logs        - Show logs (follow)"
-	@echo "    make status      - Container status and resources"
-	@echo "    make health      - Health check all services"
-	@echo "    make urls        - Show WebUI URLs"
+	@echo "  $(PURPLE)Container Management$(NC)"
+	@echo "    $(CYAN)make up$(NC)          - Start all containers"
+	@echo "    $(CYAN)make down$(NC)        - Stop all containers"
+	@echo "    $(CYAN)make restart$(NC)     - Full restart"
+	@echo "    $(CYAN)make pull$(NC)        - Update Docker images"
+	@echo "    $(CYAN)make update$(NC)      - Pull images and restart (pull + restart)"
 	@echo ""
-	@echo "  $(GREEN)Backup$(NC)"
-	@echo "    make backup      - Quick config backup (local tar.gz, before changes)"
-	@echo "    Duplicati WebUI  - http://$(HOST_IP):8200 (scheduled backups)"
+	@echo "  $(PURPLE)Monitoring$(NC)"
+	@echo "    $(CYAN)make logs$(NC)        - Show logs (follow)"
+	@echo "    $(CYAN)make status$(NC)      - Container status and resources"
+	@echo "    $(CYAN)make health$(NC)      - Health check all services"
+	@echo "    $(CYAN)make show-urls$(NC)   - Show WebUI URLs"
 	@echo ""
-	@echo "  $(GREEN)Utilities$(NC)"
-	@echo "    make clean       - Remove orphan Docker resources"
-	@echo "    make recyclarr-sync   - Manual Trash Guides profile sync"
-	@echo "    make recyclarr-config - Generate Recyclarr config template"
+	@echo "  $(PURPLE)Backup$(NC)"
+	@echo "    $(CYAN)make backup$(NC)      - Trigger Duplicati backup on demand"
+	@echo "    $(CYAN)Duplicati WebUI$(NC)  - http://$(HOST_IP):8200 (configuration & scheduled backups)"
 	@echo ""
-	@echo "  $(GREEN)Per service$(NC)"
-	@echo "    make logs-SERVICE  - Single service logs (e.g.: make logs-sonarr)"
-	@echo "    make shell-SERVICE - Shell into container (e.g.: make shell-radarr)"
+	@echo "  $(PURPLE)Utilities$(NC)"
+	@echo "    $(CYAN)make clean$(NC)       - Remove orphan Docker resources"
+	@echo "    $(CYAN)make recyclarr-sync$(NC)   - Manual Trash Guides profile sync"
+	@echo "    $(CYAN)make recyclarr-config$(NC) - Generate Recyclarr config template"
+	@echo ""
+	@echo "  $(PURPLE)Per service$(NC)"
+	@echo "    $(CYAN)make logs-SERVICE$(NC)  - Single service logs (e.g.: make logs-sonarr)"
+	@echo "    $(CYAN)make shell-SERVICE$(NC) - Shell into container (e.g.: make shell-radarr)"
 
 # =============================================================================
 # Setup
@@ -175,18 +180,20 @@ shell-%: check-compose
 	}
 
 backup: check-docker
-	@echo ">>> Backing up configurations..."
-	@mkdir -p $(BACKUP_DIR)
-	@if [ ! -d ./config ]; then \
-		echo "$(RED)Error: config directory not found$(NC)"; \
-		exit 1; \
-	fi
-	@BACKUP_NAME="config-backup-$$(date +%Y%m%d-%H%M%S).tar.gz"; \
-	if tar -czf "$(BACKUP_DIR)/$$BACKUP_NAME" ./config; then \
-		echo "$(GREEN)>>> Backup created: $(BACKUP_DIR)/$$BACKUP_NAME$(NC)"; \
-		ls -lh "$(BACKUP_DIR)/$$BACKUP_NAME"; \
+	@echo ">>> Triggering Duplicati backup..."
+	@if docker ps --format '{{.Names}}' | grep -q '^duplicati$$'; then \
+		BACKUP_ID=$$(curl -s http://localhost:8200/api/v1/backups 2>/dev/null | grep -o '"ID":"[^"]*"' | head -1 | cut -d'"' -f4); \
+		if [ -n "$$BACKUP_ID" ]; then \
+			curl -s -X POST "http://localhost:8200/api/v1/backup/$$BACKUP_ID/run" >/dev/null && \
+			echo "$(GREEN)>>> Backup started (ID: $$BACKUP_ID)$(NC)" && \
+			echo "Monitor progress at http://$(HOST_IP):8200"; \
+		else \
+			echo "$(YELLOW)No backup job configured yet$(NC)"; \
+			echo "Configure backup via http://$(HOST_IP):8200"; \
+		fi; \
 	else \
-		echo "$(RED)>>> Error creating backup$(NC)"; \
+		echo "$(RED)Error: duplicati container not running$(NC)"; \
+		echo "Run 'make up' first"; \
 		exit 1; \
 	fi
 
@@ -272,7 +279,7 @@ health: check-docker
 # Quick Reference
 # =============================================================================
 
-urls:
+show-urls:
 	@echo "=== Web UI URLs ==="
 	@echo ""
 	@echo "$(GREEN)Media Stack$(NC)"

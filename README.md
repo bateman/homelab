@@ -27,22 +27,6 @@ Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox c
 - **Portainer** (9443) - Gestione Docker
 - **Duplicati** (8200) - Backup automatizzati
 
-## Quick Start
-
-```bash
-# Setup iniziale (una sola volta)
-make setup
-
-# Avvia stack
-make up
-
-# Stato servizi
-make status
-
-# URL WebUI
-make urls
-```
-
 ## Struttura Cartelle
 
 Configurato per supporto hardlinking secondo [Trash Guides](https://trash-guides.info/):
@@ -78,13 +62,51 @@ Configurato per supporto hardlinking secondo [Trash Guides](https://trash-guides
 
 ## Comandi Utili
 
-```bash
-make logs           # Tutti i logs
-make logs-sonarr    # Log specifico
-make health         # Health check
-make backup         # Backup config
-make pull           # Aggiorna immagini
-```
+Tutti i comandi vanno eseguiti nella directory `/share/container/mediastack` sul NAS.
+
+### Setup e Validazione
+
+| Comando | Descrizione |
+|---------|-------------|
+| `make setup` | Crea struttura cartelle e file `.env` (eseguire una sola volta all'installazione) |
+| `make validate` | Verifica sintassi dei file compose prima dell'avvio |
+
+### Gestione Container
+
+| Comando | Descrizione |
+|---------|-------------|
+| `make up` | Avvia tutti i container (valida config automaticamente) |
+| `make down` | Ferma tutti i container |
+| `make restart` | Restart completo (down + up) |
+| `make pull` | Scarica versioni aggiornate delle immagini Docker |
+| `make update` | Aggiorna e riavvia in un comando (pull + restart) |
+
+### Monitoraggio
+
+| Comando | Descrizione |
+|---------|-------------|
+| `make status` | Mostra stato container, uso risorse CPU/RAM e spazio disco |
+| `make logs` | Segui i log di tutti i container in tempo reale |
+| `make logs-<servizio>` | Log di un singolo servizio (es: `make logs-sonarr`) |
+| `make health` | Health check HTTP di tutti i servizi |
+| `make show-urls` | Elenca URL di accesso a tutti i servizi (Sonarr, Radarr, Pi-hole, ecc.) |
+
+### Backup
+
+| Comando | Descrizione |
+|---------|-------------|
+| `make backup` | Avvia backup Duplicati on-demand |
+| Duplicati WebUI | http://192.168.3.10:8200 - configurazione e backup schedulati |
+
+### Utility
+
+| Comando | Descrizione |
+|---------|-------------|
+| `make shell-<servizio>` | Apre shell nel container (es: `make shell-radarr`) |
+| `make clean` | Rimuove risorse Docker orfane (chiede conferma) |
+| `make recyclarr-sync` | Sync manuale profili qualità Trash Guides |
+| `make recyclarr-config` | Genera template configurazione Recyclarr |
+| `make help` | Mostra tutti i comandi disponibili |
 
 ## Requisiti
 

@@ -119,23 +119,35 @@ vzdump <vmid> --storage backup-nas --compress zstd --mode snapshot
 
 ### 4. Backup Offsite (Cloud)
 
-**Opzione A: Rclone verso cloud storage**
+**Opzione A: Duplicati verso Dropbox o Google Drive (consigliato)**
+
+Duplicati ha supporto integrato per Dropbox e Google Drive:
+
+1. Accedere a `http://192.168.3.10:8200`
+2. Add backup → Destinazione: **Google Drive** o **Dropbox**
+3. Autenticarsi con OAuth (link nel wizard)
+4. Cartella remota: `homelab-backup`
+5. Sorgente: `/source/config`
+6. Schedule: giornaliero
+7. Retention: Smart (7 daily, 4 weekly, 3 monthly)
+
+**Opzione B: Rclone verso cloud storage**
 ```bash
 # Installare rclone sul NAS
 # https://rclone.org/install/
 
-# Configurare remote (esempio: Backblaze B2)
+# Configurare remote (esempio: Google Drive)
 rclone config
-# Seguire wizard per creare remote "b2-backup"
+# Seguire wizard per creare remote "gdrive-backup"
 
 # Sync backup folder
-rclone sync /share/backup b2-backup:homelab-backup --progress
+rclone sync /share/backup gdrive-backup:homelab-backup --progress
 
 # Automatizzare via cron (domenica alle 04:00)
-0 4 * * 0 rclone sync /share/backup b2-backup:homelab-backup --log-file=/var/log/rclone-backup.log
+0 4 * * 0 rclone sync /share/backup gdrive-backup:homelab-backup --log-file=/var/log/rclone-backup.log
 ```
 
-**Opzione B: Sync via Tailscale verso altro dispositivo**
+**Opzione C: Sync via Tailscale verso altro dispositivo**
 ```bash
 # Se hai un secondo NAS/server raggiungibile via Tailscale
 rsync -avz --delete /share/backup/ user@100.x.x.x:/backup/homelab/
@@ -250,8 +262,10 @@ Prerequisiti: backup offsite disponibile (cloud o secondo sito)
 
 **Fase 3: Restore da offsite**
 ```bash
-# Scaricare backup da cloud
-rclone copy b2-backup:homelab-backup /share/backup --progress
+# Scaricare backup da cloud (Google Drive)
+rclone copy gdrive-backup:homelab-backup /share/backup --progress
+
+# Oppure restore diretto da Duplicati WebUI se configurato
 
 # Oppure da Tailscale remote
 rsync -avz user@100.x.x.x:/backup/homelab/ /share/backup/
@@ -283,7 +297,7 @@ rsync -avz user@100.x.x.x:/backup/homelab/ /share/backup/
 | Backup Proxmox esiste | `ls /mnt/nas-backup/` (su Proxmox) | File ultima settimana |
 | Integrità Docker backup | `tar -tzf /share/backup/docker-config-$(date +%Y%m%d).tar.gz > /dev/null && echo OK` | OK |
 | Spazio disco backup | `df -h /share/backup` | < 80% usage |
-| Sync offsite OK | `rclone check /share/backup b2-backup:homelab-backup` | 0 differences |
+| Sync offsite OK | `rclone check /share/backup gdrive-backup:homelab-backup` | 0 differences |
 
 **Test restore trimestrale:**
 
