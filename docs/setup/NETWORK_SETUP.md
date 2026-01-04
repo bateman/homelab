@@ -251,9 +251,8 @@ Settings → Profiles → Port Groups → Create New Group
   - `7878` (Radarr)
   - `8686` (Lidarr)
   - `6767` (Bazarr)
-  - `32400` (Plex)
 
-> **Nota**: qBittorrent (8080) e NZBGet (6789) non sono inclusi - i client media non devono accedere direttamente ai download client.
+> **Nota**: Plex (32400) non è incluso perché gira sul Mini PC, non sul NAS. qBittorrent (8080) e NZBGet (6789) non sono inclusi - i client media non devono accedere direttamente ai download client.
 
 **Gruppo: Infrastructure Ports**
 - Ports:
@@ -440,7 +439,7 @@ nslookup google.com 192.168.3.10
                            │ Trunk (All VLANs)
                     ┌──────┴──────┐
                     │   Switch    │
-                    │USW-8-PoE    │
+                    │USW-Ent-8-PoE│
                     └┬─────┬─────┬┘
                      │     │     │
             ┌────────┘     │     └────────┐
