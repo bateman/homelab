@@ -253,7 +253,7 @@ Settings → Profiles → Port Groups → Create New Group
   - `6767` (Bazarr)
   - `32400` (Plex)
 
-> **Nota**: qBittorrent (8080) e SABnzbd (8085) non sono inclusi - i client media non devono accedere direttamente ai download client.
+> **Nota**: qBittorrent (8080) e NZBGet (6789) non sono inclusi - i client media non devono accedere direttamente ai download client.
 
 **Gruppo: Infrastructure Ports**
 - Ports:
