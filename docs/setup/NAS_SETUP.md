@@ -168,9 +168,15 @@ Per ogni folder:
   - container: RW
   - backup: RO
 
+### Abilitare SSH
+- [ ] Control Panel → Network Services → Telnet/SSH
+- [ ] Enable SSH service: **On**
+- [ ] Port: 22 (default)
+- [ ] Apply
+
 ### Verificare PUID/PGID
 ```bash
-# Via SSH (abilitare in Control Panel → Network Services → Telnet/SSH)
+# Connettersi via SSH
 ssh admin@192.168.3.10
 
 # Verificare ID utente
@@ -231,54 +237,18 @@ cd mediastack
 # Oppure usare File Station per upload dei file
 ```
 
-#### Eseguire Setup Iniziale
-
-```bash
-cd /share/container/mediastack
-
-# Eseguire setup
-chmod +x scripts/setup-folders.sh
-sudo ./scripts/setup-folders.sh
-```
-
-Verificare struttura creata:
-- [ ] `/share/data/torrents/movies` esiste
-- [ ] `/share/data/torrents/tv` esiste
-- [ ] `/share/data/torrents/music` esiste
-- [ ] `/share/data/usenet/incomplete` esiste
-- [ ] `/share/data/usenet/complete/movies` esiste
-- [ ] `/share/data/usenet/complete/tv` esiste
-- [ ] `/share/data/usenet/complete/music` esiste
-- [ ] `/share/data/media/movies` esiste
-- [ ] `/share/data/media/tv` esiste
-- [ ] `/share/data/media/music` esiste
-- [ ] `./config/` con tutte le sottocartelle esiste
-
-### Permessi Cartelle
-```bash
-# Verificare ownership
-ls -la /share/data
-# Dovrebbe mostrare 1000:100 (o PUID:PGID configurati)
-
-# Se necessario correggere
-sudo chown -R 1000:100 /share/data
-sudo chown -R 1000:100 /share/container/mediastack/config
-sudo chmod -R 775 /share/data
-sudo chmod -R 775 /share/container/mediastack/config
-```
-
 ---
 
 ## Deploy Docker Stack
 
-### File Environment
+### Setup Iniziale e Configurazione .env
 
-Il file `.env` contiene le variabili di configurazione per tutti i container. **Deve essere configurato prima del primo avvio.**
+Il comando `make setup` crea la struttura cartelle e il file `.env`. **Deve essere eseguito prima del primo avvio.**
 
 ```bash
 cd /share/container/mediastack
 
-# Eseguire setup (crea cartelle config e copia .env.example → .env)
+# Eseguire setup (crea cartelle data, config e .env da template)
 make setup
 
 # Editare .env con i valori corretti
@@ -302,6 +272,36 @@ PIHOLE_PASSWORD=<password-sicura>
 ```
 
 > **Critico**: Se PUID/PGID non corrispondono all'utente proprietario di `/share/data`, i container non avranno i permessi corretti per scrivere i file e l'hardlinking non funzionerà.
+
+### Verifica Struttura e Permessi
+
+Dopo `make setup`, verificare che la struttura sia stata creata:
+
+```bash
+# Verificare cartelle data
+ls -la /share/data/
+# Deve contenere: torrents/, usenet/, media/
+
+# Verificare cartelle config
+ls -la ./config/
+# Deve contenere sottocartelle per ogni servizio
+
+# Verificare ownership (deve corrispondere a PUID:PGID configurati)
+ls -ln /share/data
+# Esempio output per PUID=1000 PGID=100:
+# drwxrwxr-x 1000 100 ... media
+# drwxrwxr-x 1000 100 ... torrents
+# drwxrwxr-x 1000 100 ... usenet
+```
+
+Se i permessi non sono corretti:
+```bash
+# Sostituire 1000:100 con i tuoi PUID:PGID da .env
+sudo chown -R 1000:100 /share/data
+sudo chown -R 1000:100 /share/container/mediastack/config
+sudo chmod -R 775 /share/data
+sudo chmod -R 775 /share/container/mediastack/config
+```
 
 ### Verifica Porta DNS
 
@@ -584,11 +584,12 @@ make backup
 
 | Problema | Causa Probabile | Soluzione |
 |----------|-----------------|-----------|
-| Container non parte | Permessi cartelle | `chown -R 1000:100 ./config` |
+| Container non parte | Permessi cartelle | `chown -R $PUID:$PGID ./config` (usa valori da .env) |
 | Hardlink non funziona | Path su filesystem diversi | Verificare mount points |
 | qBittorrent "stalled" | Porta non raggiungibile | Verificare port forwarding 50413 |
 | Pi-hole non risolve | Porta 53 in uso | Verificare altri servizi DNS su NAS |
 | WebUI non risponde | Container crashed | `docker compose logs <service>` |
+| Permessi errati sui file | PUID/PGID non corrispondono | Verificare `id dockeruser` e aggiornare .env |
 
 ---
 
