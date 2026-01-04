@@ -176,9 +176,11 @@ ssh admin@192.168.3.10
 # Verificare ID utente
 id dockeruser
 # Output atteso: uid=1000(dockeruser) gid=100(everyone) ...
-
-# Se UID diverso, annotare e aggiornare docker-compose.yml
+#                     ^^^^          ^^^
+#                     PUID          PGID
 ```
+
+> **Importante**: Annota questi valori! Serviranno per configurare il file `.env` dopo aver clonato il repository.
 
 ---
 
@@ -271,24 +273,35 @@ sudo chmod -R 775 /share/container/mediastack/config
 
 ### File Environment
 
-Il file `.env` deve essere nella cartella `docker/`:
+Il file `.env` contiene le variabili di configurazione per tutti i container. **Deve essere configurato prima del primo avvio.**
 
 ```bash
 cd /share/container/mediastack
 
-# Eseguire setup (crea cartelle config e file .env)
+# Eseguire setup (crea cartelle config e copia .env.example → .env)
 make setup
 
-# Editare .env con password sicura
+# Editare .env con i valori corretti
 nano docker/.env
 ```
 
-Contenuto minimo di `docker/.env`:
+Configurazione **obbligatoria** in `docker/.env`:
+
 ```bash
+# PUID e PGID devono corrispondere all'utente dockeruser creato in precedenza
+# Ottieni i valori con: id dockeruser
+# Esempio output: uid=1000(dockeruser) gid=100(everyone)
+PUID=1000    # ← sostituisci con uid di dockeruser
+PGID=100     # ← sostituisci con gid di dockeruser
+
+# Timezone
+TZ=Europe/Rome
+
+# Password per Pi-hole (genera con: openssl rand -base64 24)
 PIHOLE_PASSWORD=<password-sicura>
 ```
 
-> **Importante**: Genera una password sicura con `openssl rand -base64 24`
+> **Critico**: Se PUID/PGID non corrispondono all'utente proprietario di `/share/data`, i container non avranno i permessi corretti per scrivere i file e l'hardlinking non funzionerà.
 
 ### Verifica Porta DNS
 
