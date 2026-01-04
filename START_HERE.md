@@ -24,6 +24,7 @@ Prima di iniziare, assicurati di avere:
 | 3 | Setup NAS QNAP | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) |
 | 4 | Deploy Stack Docker | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md), [`Makefile`](Makefile) |
 | 5 | Configurazione Servizi | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) |
+| 5b | Reverse Proxy *(opzionale)* | [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) |
 | 6 | Setup Proxmox/Plex | [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) |
 | 7 | Configurazione Backup | [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) |
 | 8 | Verifica Finale | Questa guida |
@@ -149,7 +150,7 @@ Seguire la checklist completa. Punti chiave:
 
 ### Verifica Fase 3
 
-- [ ] QTS accessibile: `https://192.168.3.10:5000`
+- [ ] QTS accessibile: `http://192.168.3.10:8080` (o `https://192.168.3.10:8443`)
 - [ ] SSH funzionante
 - [ ] Docker installato
 - [ ] Shared folders create
@@ -182,11 +183,47 @@ cd /share/container/mediastack
 # Eseguire setup completo (crea cartelle data, config e file .env)
 make setup
 
-# Editare file .env con le password
-nano docker/.env  # Impostare PIHOLE_PASSWORD (obbligatorio)
+# Editare file .env con i valori corretti
+nano docker/.env
 ```
 
-> **Nota**: `make setup` esegue automaticamente `scripts/setup-folders.sh` e crea `docker/.env` dal template.
+**Configurazione obbligatoria in `.env`:**
+
+```bash
+# Verificare prima PUID/PGID dell'utente dockeruser creato in Fase 3
+ssh admin@192.168.3.10 "id dockeruser"
+# Output: uid=1000(dockeruser) gid=100(everyone)
+
+# Impostare in docker/.env:
+PUID=1000          # ← valore uid da comando id
+PGID=100           # ← valore gid da comando id
+TZ=Europe/Rome
+PIHOLE_PASSWORD=<password-sicura>
+```
+
+> **Critico**: Se PUID/PGID non corrispondono all'utente proprietario delle cartelle, i container non avranno permessi di scrittura.
+
+### 4.2.1 Verifica Permessi
+
+```bash
+# Verificare ownership cartelle (deve corrispondere a PUID:PGID)
+ls -ln /share/data
+
+# Se necessario, correggere permessi:
+sudo chown -R 1000:100 /share/data
+sudo chown -R 1000:100 ./config
+```
+
+### 4.2.2 Verifica Porta DNS
+
+Prima di avviare lo stack, verificare che la porta 53 non sia già in uso:
+
+```bash
+ss -tulnp | grep :53
+
+# Se occupata, disabilitare DNS locale QTS:
+# Control Panel → Network & Virtual Switch → DNS Server → Disabilita
+```
 
 ### 4.3 Avvio Container
 
@@ -211,7 +248,7 @@ make status
 make health
 
 # Visualizzare URL servizi
-make show-urls
+make urls
 ```
 
 ---
@@ -238,6 +275,20 @@ Seguire esattamente questo ordine per le dipendenze:
 ```
 
 > **Nota**: Prowlarr si configura per primo, poi i download client, poi le app *arr che li collegano tutti insieme.
+
+### Primo Accesso qBittorrent
+
+qBittorrent genera una password casuale al primo avvio. Per recuperarla:
+
+```bash
+# Recuperare password temporanea dai log
+docker logs qbittorrent 2>&1 | grep -i password
+# Output: "The WebUI administrator password was not set. A temporary password is provided: XXXXXX"
+```
+
+- Username: `admin`
+- Password: dal log sopra
+- Dopo il login: Options → WebUI → cambiare password
 
 ### Configurazioni Critiche
 
@@ -390,10 +441,12 @@ make backup      # Backup manuale aggiuntivo
 | Problema | Soluzione Rapida |
 |----------|------------------|
 | Container non parte | `docker compose logs <servizio>` |
-| Permessi negati | `sudo chown -R 1000:100 ./config` |
+| Permessi negati | `sudo chown -R $PUID:$PGID ./config` (usa valori da .env) |
 | Hardlink fallisce | Verificare stesso filesystem |
 | Servizio non raggiungibile | Verificare regole firewall |
-| Pi-hole non risolve | Verificare porta 53 libera |
+| Pi-hole non risolve | Verificare porta 53 libera (`ss -tulnp \| grep :53`) |
+| qBittorrent login fallisce | Recuperare password: `docker logs qbittorrent 2>&1 \| grep password` |
+| PUID/PGID errati | Verificare con `id dockeruser` e aggiornare docker/.env |
 
 Per problemi specifici, consultare la sezione Troubleshooting in [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md).
 
@@ -410,3 +463,4 @@ Per problemi specifici, consultare la sezione Troubleshooting in [`docs/setup/NA
 | [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) | Procedure backup e restore |
 | [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) | Setup rete UniFi |
 | [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) | Setup Proxmox e Plex |
+| [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) | Traefik, Nginx Proxy Manager, DNS Tailscale |
