@@ -15,10 +15,13 @@
 #   or simply: make up
 # =============================================================================
 
-# Reference to network defined in compose.yml
+# Reference to networks defined in compose.yml
 networks:
   media_net:
     name: homelab_media_net
+    external: true
+  proxy:
+    name: homelab_proxy
     external: true
 
 # Reusable anchors (duplicated for standalone use, ignored when used with compose.yml)
@@ -60,6 +63,7 @@ services:
       - "8080:8080"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -73,6 +77,11 @@ services:
           memory: 256M
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.qbit.rule=Host(`qbit.home.local`)"
+      - "traefik.http.routers.qbit.entrypoints=web"
+      - "traefik.http.services.qbit.loadbalancer.server.port=8080"
 
   nzbget:
     image: lscr.io/linuxserver/nzbget:latest
@@ -86,6 +95,7 @@ services:
       - "6789:6789"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -99,6 +109,11 @@ services:
           memory: 128M
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.nzbget.rule=Host(`nzbget.home.local`)"
+      - "traefik.http.routers.nzbget.entrypoints=web"
+      - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
 
   # ===========================================================================
   # INDEXER MANAGEMENT
@@ -115,6 +130,7 @@ services:
       - "9696:9696"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -128,6 +144,11 @@ services:
           memory: 128M
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.home.local`)"
+      - "traefik.http.routers.prowlarr.entrypoints=web"
+      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -169,6 +190,7 @@ services:
       - "8989:8989"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -186,6 +208,11 @@ services:
       - prowlarr
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.home.local`)"
+      - "traefik.http.routers.sonarr.entrypoints=web"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -199,6 +226,7 @@ services:
       - "7878:7878"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -216,6 +244,11 @@ services:
       - prowlarr
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.home.local`)"
+      - "traefik.http.routers.radarr.entrypoints=web"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
 
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
@@ -229,6 +262,7 @@ services:
       - "8686:8686"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -246,6 +280,11 @@ services:
       - prowlarr
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.lidarr.rule=Host(`lidarr.home.local`)"
+      - "traefik.http.routers.lidarr.entrypoints=web"
+      - "traefik.http.services.lidarr.loadbalancer.server.port=8686"
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -259,6 +298,7 @@ services:
       - "6767:6767"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -275,6 +315,11 @@ services:
       - radarr
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.bazarr.rule=Host(`bazarr.home.local`)"
+      - "traefik.http.routers.bazarr.entrypoints=web"
+      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
 
   # ===========================================================================
   # QUALITY PROFILE SYNC
@@ -322,6 +367,7 @@ services:
       - "9705:9705"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -335,6 +381,11 @@ services:
           memory: 128M
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.huntarr.rule=Host(`huntarr.home.local`)"
+      - "traefik.http.routers.huntarr.entrypoints=web"
+      - "traefik.http.services.huntarr.loadbalancer.server.port=9705"
 
   cleanuparr:
     image: ghcr.io/cleanuparr/cleanuparr:latest
@@ -348,6 +399,7 @@ services:
       - "11011:11011"
     networks:
       - media_net
+      - proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -366,3 +418,8 @@ services:
       - qbittorrent
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.cleanuparr.rule=Host(`cleanuparr.home.local`)"
+      - "traefik.http.routers.cleanuparr.entrypoints=web"
+      - "traefik.http.services.cleanuparr.loadbalancer.server.port=11011"

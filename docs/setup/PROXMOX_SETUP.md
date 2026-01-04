@@ -612,39 +612,16 @@ Container/VM → Backup → Backup now
 
 ## Fase 8: Configurazione Opzionale
 
-### 8.1 Nginx Proxy Manager (Opzionale)
+### 8.1 Reverse Proxy (Opzionale)
 
-Per reverse proxy con SSL automatico:
+Per accedere ai servizi con nomi leggibili (es. `sonarr.home.local`) invece di IP:porta, configurare un reverse proxy.
 
-```bash
-# Creare altro LXC container (ID 101)
-# Installare Docker
-apt update && apt install docker.io docker-compose -y
+> **Guida completa**: Vedi [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md)
 
-# Creare directory
-mkdir -p /opt/npm && cd /opt/npm
-
-# docker-compose.yml per NPM
-cat > docker-compose.yml << 'EOF'
-version: '3'
-services:
-  npm:
-    image: 'jc21/nginx-proxy-manager:latest'
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '81:81'
-      - '443:443'
-    volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
-EOF
-
-docker-compose up -d
-```
-
-Accedere: `http://192.168.3.22:81`
-Default login: admin@example.com / changeme
+La guida documenta:
+- **Traefik** (raccomandato): auto-discovery Docker, configurazione via labels
+- **Nginx Proxy Manager** (alternativa): configurazione via WebUI
+- **Pi-hole + Tailscale DNS**: stesso URL da locale e remoto
 
 ### 8.2 GPU Passthrough Intel Quick Sync per LXC
 

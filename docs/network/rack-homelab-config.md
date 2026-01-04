@@ -49,7 +49,7 @@
 | Storage | 1TB M.2 NVMe PCIe Gen4 |
 | Network | 1x 2.5GbE RJ45 |
 | OS | Proxmox VE |
-| Services | Plex, Docker, Tailscale, Nginx Proxy Manager |
+| Services | Plex, Docker, Tailscale |
 | IP | 192.168.3.20 |
 
 ### U7 — Pannello Ventilato #1
@@ -164,13 +164,13 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 | Pi-hole | 8081 | DNS ad-blocking |
 | Home Assistant | 8123 | Automazione domotica |
 | Portainer | 9443 | Gestione Docker |
+| Traefik | 80/443/8082 | Reverse proxy |
 
 ### Mini PC Proxmox (192.168.3.20)
 
 | Servizio | Porta | Descrizione |
 |----------|-------|-------------|
 | Plex | 32400 | Media server |
-| Nginx Proxy Manager | 81/443 | Reverse proxy |
 | Tailscale | — | VPN mesh |
 
 ---
@@ -233,7 +233,7 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (VLAN segmentate)
 |-------------|-----|------|
 | Gateway (UDM-SE) | 192.168.3.1 | — |
 | NAS QNAP | 192.168.3.10 | Media stack, Pi-hole |
-| Mini PC Proxmox | 192.168.3.20 | Plex, Tailscale, Nginx Proxy Manager |
+| Mini PC Proxmox | 192.168.3.20 | Plex, Tailscale |
 | Stampante | 192.168.3.30 | Stampa |
 | PC Desktop | 192.168.3.40 | Workstation |
 

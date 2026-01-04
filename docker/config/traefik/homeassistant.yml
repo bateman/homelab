@@ -1,0 +1,23 @@
+# =============================================================================
+# Traefik dynamic configuration for Home Assistant
+# =============================================================================
+# Home Assistant uses network_mode: host, so it cannot use Docker labels.
+# This file provides manual routing configuration.
+#
+# Access: http://ha.home.local
+# Requires Pi-hole DNS record: ha.home.local -> 192.168.3.10
+# =============================================================================
+
+http:
+  routers:
+    homeassistant:
+      rule: "Host(`ha.home.local`)"
+      service: homeassistant
+      entryPoints:
+        - web
+
+  services:
+    homeassistant:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.3.10:8123"

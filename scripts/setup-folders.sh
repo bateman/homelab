@@ -97,6 +97,7 @@ mkdir -p "${CONFIG_ROOT}/portainer"
 mkdir -p "${CONFIG_ROOT}/duplicati"
 mkdir -p "${CONFIG_ROOT}/recyclarr"
 mkdir -p "${CONFIG_ROOT}/flaresolverr"
+mkdir -p "${CONFIG_ROOT}/traefik"
 
 # Permessi
 log_info "Impostazione permessi (PUID=$PUID, PGID=$PGID)..."
