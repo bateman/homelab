@@ -282,7 +282,9 @@ Aprire browser: `http://192.168.3.21:32400/web`
 
 ---
 
-## Fase 5: Configurazione Plex
+## Fase 5: Configurazione Plex (Trash Guides)
+
+> Questa sezione segue le [raccomandazioni ufficiali di Trash Guides](https://trash-guides.info/Plex/Tips/Plex-media-server/) per ottimizzare Plex Media Server.
 
 ### 5.1 Setup Iniziale
 
@@ -305,19 +307,208 @@ Add Library → Music:
 - Name: Musica
 - Folders: /media/music
 
-### 5.3 Impostazioni Consigliate
+### 5.3 Impostazioni Libreria (Settings → Library)
 
-Settings → Library:
-- [ ] Scan my library automatically: Enabled
-- [ ] Run a partial scan when changes are detected: Enabled
+> **Filosofia Trash Guides**: Plex non dovrebbe mai modificare i tuoi file media. Usa Sonarr/Radarr per gestire la libreria. Per sicurezza extra, configura Plex con accesso **Read Only** alla libreria media.
 
-Settings → Transcoder:
-- [ ] Transcoder temporary directory: /tmp (o SSD dedicato)
-- [ ] Hardware acceleration: (se GPU supportata)
+| Impostazione | Valore | Motivazione |
+|--------------|--------|-------------|
+| Scan my library automatically | ✅ Enabled | Rileva automaticamente modifiche nelle cartelle sorgente |
+| Run a partial scan when changes are detected | ✅ Enabled | Scansiona solo la cartella modificata, non l'intera libreria |
+| Run scanner tasks at a lower priority | ✅ Enabled | Riduce impatto su sistemi con risorse limitate |
+| Empty trash automatically after every scan | ✅ Enabled | Rimuove file eliminati dalla libreria alla scansione successiva |
+| Allow media deletion | ❌ Disabled | **Critico**: Plex non deve gestire i file, usa Radarr/Sonarr |
+| Generate video preview thumbnails | ❌ Never | Usa molto spazio disco e I/O senza benefici significativi |
+| Generate intro video markers | As scheduled task | Abilita funzione "Salta Intro" |
+| Generate credits video markers | As scheduled task | Abilita funzione "Salta Crediti" |
+| Generate chapter thumbnails | As scheduled task | Impatto storage minimo, funzionalità utile |
 
-Settings → Network:
-- [ ] Enable Relay: Disabled (useremo Tailscale)
-- [ ] Secure connections: Preferred
+**Database Cache Size** (impostazioni avanzate):
+- Per collezioni grandi (centinaia di migliaia di elementi): `1024-2048 MB`
+- Default sufficiente per la maggior parte degli utenti
+
+### 5.4 Impostazioni Transcoder (Settings → Transcoder)
+
+| Impostazione | Valore | Motivazione |
+|--------------|--------|-------------|
+| Transcoder quality | Automatic | Consigliato per la maggior parte degli utenti |
+| Transcoder temporary directory | `/tmp/plex` o RAM disk | Riduce I/O; **MAI usare share di rete** |
+| Enable HDR tone mapping | Dipende dal setup | Richiede risorse significative per contenuti 4K |
+| Tone mapping algorithm | Hable | Preserva meglio dettagli in zone chiare e scure |
+| Use hardware acceleration when available | ✅ Enabled | Migliora significativamente le performance |
+| Use hardware-accelerated video encoding | ✅ Enabled | Riduce carico CPU (richiede Plex Pass) |
+| Maximum simultaneous video transcode | In base all'hardware | 2-4 per CPU moderne con Quick Sync |
+
+#### Configurare Directory Temporanea su RAM
+
+Per prestazioni ottimali di transcoding, usa un RAM disk:
+
+```bash
+# Nel container Plex (pct enter 100)
+
+# Creare directory per transcoding
+mkdir -p /tmp/plex
+
+# Opzionale: mount tmpfs dedicato (persiste fino a reboot)
+mount -t tmpfs -o size=2G tmpfs /tmp/plex
+
+# Per rendere permanente, aggiungere a /etc/fstab:
+echo "tmpfs /tmp/plex tmpfs size=2G,mode=1777 0 0" >> /etc/fstab
+```
+
+> **Nota**: Il transcoding su RAM riduce l'usura degli SSD e velocizza le operazioni, dato che i dati di transcode sono temporanei.
+
+### 5.5 Impostazioni Rete (Settings → Network)
+
+| Impostazione | Valore | Motivazione |
+|--------------|--------|-------------|
+| Enable IPv6 support | ❌ Disabled | Abilitare solo se la rete supporta completamente IPv6 |
+| Secure connections | Preferred | Accetta e preferisce connessioni sicure quando disponibili |
+| Enable local network discovery (GDM) | ✅ Enabled | Permette discovery automatico server/app sulla rete locale |
+| Enable Relay | ❌ Disabled | Limitato a ~2 Mbps, causa problemi di riproduzione. Useremo Tailscale |
+| Custom server access URLs | (vuoto) | Configurare se usi reverse proxy |
+| LAN Networks | `192.168.3.0/24,192.168.4.0/24` | **Importante**: Specifica le reti locali per evitare che dispositivi LAN appaiano come remoti |
+| Treat WAN IP As LAN Bandwidth | ✅ Enabled | Utile se hai protezione DNS rebinding attiva |
+
+> **Critico**: Se i tuoi dispositivi locali vengono visti come "remoti", configura correttamente **LAN Networks** con le tue subnet.
+
+### 5.6 Impostazioni Librerie Specifiche
+
+#### Per Libreria Film
+
+Edit Library → Advanced:
+
+| Impostazione | Valore | Motivazione |
+|--------------|--------|-------------|
+| Scanner | Plex Movie | Scanner nativo, più veloce |
+| Agent | Plex Movie | Recupero metadata più rapido |
+| Prefer local metadata | ✅ Enabled | Usa file locali (poster, fanart) se disponibili |
+| Use local assets | ✅ Enabled | Priorità a artwork locale |
+| Prefer embedded tags | ❌ Disabled | Evita convenzioni di naming indesiderate |
+| Enable credits detection | ✅ Enabled | Funzione salta crediti |
+| Collections | Create automatically (2+ items) | Organizza contenuti in collezioni logiche |
+
+#### Per Libreria Serie TV
+
+Edit Library → Advanced:
+
+| Impostazione | Valore | Motivazione |
+|--------------|--------|-------------|
+| Scanner | Plex TV Series | Scanner nativo ottimizzato |
+| Agent | Plex TV Series | Recupero metadata più rapido |
+| Prefer local metadata | ✅ Enabled | Usa file locali se disponibili |
+| Episode sorting | Library default | O in base alle preferenze |
+| Enable intro detection | ✅ Enabled | Funzione "Salta Intro" |
+| Enable credits detection | ✅ Enabled | Funzione "Salta Crediti" |
+
+### 5.7 Impostazioni Client Raccomandate
+
+> Riferimento: [Media Clients Wiki](https://mediaclients.wiki/Plex) per impostazioni specifiche per dispositivo.
+
+#### Impostazioni Universali Client
+
+Per ogni client Plex (TV, telefono, tablet, web):
+
+**Quality → Video:**
+
+| Scenario | Impostazione | Valore |
+|----------|--------------|--------|
+| Home Streaming | Quality | Maximum / Original |
+| Remote Streaming | Quality | Maximum / Original (con buona connessione) |
+| Limit remote quality | Dipende | Solo se banda limitata |
+
+**Importante**: Impostare qualità su "Original" o "Maximum" per evitare transcoding non necessario e preservare la qualità.
+
+**Player Settings:**
+- [ ] Direct Play: ✅ Enabled
+- [ ] Direct Stream: ✅ Enabled
+- [ ] Auto Adjust Quality: ❌ Disabled (se connessione stabile)
+
+**Subtitles:**
+- [ ] Burn subtitles: Only image formats (evita transcoding per SRT/ASS)
+- [ ] Subtitle size: Medium
+- [ ] Subtitle position: Bottom
+
+### 5.8 Prevenzione Transcoding 4K (Opzionale)
+
+> Il transcoding di contenuti 4K/HDR è molto pesante e può degradare la qualità. È meglio prevenirlo.
+
+#### Perché Prevenire il Transcoding 4K
+
+- Richiede **enormi risorse** CPU/GPU
+- **Degrada la qualità** HDR → SDR
+- Può causare **stuttering e buffering**
+- I dispositivi che non supportano 4K dovrebbero usare una versione 1080p separata
+
+#### Soluzione: Tautulli + JBOPS (richiede Plex Pass)
+
+1. **Installare Tautulli** (monitoring Plex)
+2. **Configurare script JBOPS** per bloccare transcoding 4K
+3. Il sistema **termina automaticamente** stream 4K che richiedono transcoding
+
+Guida completa: [Trash Guides - 4K Transcoding Prevention](https://trash-guides.info/Plex/)
+
+#### Approccio Alternativo: Librerie Separate
+
+Creare librerie separate per 4K:
+
+```
+/media/
+├── movies/           # Film 1080p
+├── movies-4k/        # Film 4K (libreria separata)
+├── tv/               # Serie TV 1080p
+└── tv-4k/            # Serie TV 4K (libreria separata)
+```
+
+Poi in Plex:
+- Libreria "Film" → /media/movies
+- Libreria "Film 4K" → /media/movies-4k
+- Condividere solo "Film" con utenti che non hanno dispositivi 4K
+
+### 5.9 Ottimizzazioni Aggiuntive
+
+#### Accesso Read-Only per Sicurezza
+
+Per maggiore sicurezza, configura Plex con accesso sola lettura ai media:
+
+```bash
+# Sul NAS, esportare con opzione ro (read-only)
+# In /etc/exports (se NFS diretto) o nelle impostazioni NFS QNAP
+/share/data/media 192.168.3.21(ro,sync,no_subtree_check)
+```
+
+#### Scheduled Tasks
+
+Settings → Scheduled Tasks:
+- [ ] **Perform extensive media analysis during maintenance**: Considera di disabilitare se causa rallentamenti
+- [ ] **Backup database every three days**: ✅ Enabled
+- [ ] **Optimize database every week**: ✅ Enabled
+- [ ] **Remove old bundles every week**: ✅ Enabled
+- [ ] **Remove old cache files every week**: ✅ Enabled
+
+Orario manutenzione: Impostare nelle ore notturne (es. 02:00-05:00)
+
+### 5.10 Verifica Configurazione
+
+Checklist post-configurazione:
+
+- [ ] Librerie aggiunte e scansione completata
+- [ ] Direct Play funzionante su client locale
+- [ ] LAN Networks configurato correttamente (dispositivi non appaiono come "remoti")
+- [ ] Hardware transcoding attivo (verifica con `intel_gpu_top` durante transcoding)
+- [ ] Relay disabilitato
+- [ ] Transcoder temporary directory su RAM/SSD locale
+
+#### Test Direct Play
+
+1. Riprodurre un file su client locale
+2. Dashboard → Now Playing
+3. Verificare che mostri "Direct Play" e non "Transcoding"
+
+Se mostra "Transcoding":
+- Verificare impostazioni qualità client
+- Controllare codec compatibilità
+- Verificare sottotitoli (image subs forzano transcoding)
 
 ---
 
