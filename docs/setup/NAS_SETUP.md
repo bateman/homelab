@@ -197,17 +197,42 @@ id dockeruser
 - [ ] Verificare versione Docker: `docker version`
 
 ### Struttura Cartelle Media Stack
+
+> **Nota**: Il repository homelab va clonato/copiato **solo sul NAS**, non su Proxmox.
+> Proxmox ospita solo il container Plex che accede ai media via NFS.
+
+#### Opzione A: Clone Git (consigliato)
+
 ```bash
-# Via SSH
+# Via SSH sul NAS
+ssh admin@192.168.3.10
+
+# Installare git se non presente (App Center -> Git)
+# Oppure via Entware: opkg install git
+
+cd /share/container
+git clone https://github.com/<tuo-username>/homelab.git mediastack
+cd mediastack
+```
+
+#### Opzione B: Copia manuale (se git non disponibile)
+
+```bash
+# Via SSH sul NAS
 cd /share/container
 mkdir -p mediastack
 cd mediastack
 
-# Copiare i file dal repository
-# (via SCP, SFTP, o File Station):
-# - docker/compose.yml, docker/compose.media.yml
-# - scripts/setup-folders.sh
-# - Makefile
+# Da un PC con il repository clonato, copiare via SCP:
+# scp -r docker/ scripts/ Makefile admin@192.168.3.10:/share/container/mediastack/
+
+# Oppure usare File Station per upload dei file
+```
+
+#### Eseguire Setup Iniziale
+
+```bash
+cd /share/container/mediastack
 
 # Eseguire setup
 chmod +x scripts/setup-folders.sh
