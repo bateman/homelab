@@ -6,11 +6,26 @@
 
 set -euo pipefail
 
+# Script directory (for relative paths)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Configuration
 DATA_ROOT="/share/data"
-CONFIG_ROOT="./config"
+BACKUP_ROOT="/share/backup"
+CONFIG_ROOT="${SCRIPT_DIR}/../config"
+DRY_RUN=false
+
+# Default PUID/PGID (can be overridden by .env)
 PUID=1000
 PGID=100
+
+# Load from .env if present
+ENV_FILE="${SCRIPT_DIR}/../docker/.env"
+if [[ -f "$ENV_FILE" ]]; then
+    # shellcheck source=/dev/null
+    PUID=$(grep -E "^PUID=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2 || echo "$PUID")
+    PGID=$(grep -E "^PGID=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2 || echo "$PGID")
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -30,9 +45,61 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Usage help
+usage() {
+    cat << EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Setup Trash Guides compliant folder structure for homelab media stack.
+
+OPTIONS:
+    -h, --help      Show this help message
+    -n, --dry-run   Show what would be done without making changes
+
+CONFIGURATION:
+    DATA_ROOT:   ${DATA_ROOT}
+    BACKUP_ROOT: ${BACKUP_ROOT}
+    CONFIG_ROOT: ${CONFIG_ROOT}
+    PUID/PGID:   ${PUID}/${PGID}
+
+EOF
+    exit 0
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            usage
+            ;;
+        -n|--dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            usage
+            ;;
+    esac
+done
+
+# Wrapper for mkdir that respects DRY_RUN
+make_dir() {
+    if [[ "$DRY_RUN" == true ]]; then
+        log_info "[DRY-RUN] Would create: $1"
+    else
+        mkdir -p "$1"
+    fi
+}
+
 # Check prerequisites
 check_prerequisites() {
     log_info "Checking prerequisites..."
+
+    if [[ "$DRY_RUN" == true ]]; then
+        log_info "[DRY-RUN] Skipping prerequisite checks"
+        return 0
+    fi
 
     # Check if running as root (required for chown)
     if [[ $EUID -ne 0 ]]; then
@@ -67,62 +134,93 @@ check_prerequisites
 # Main data structure (for hardlinking)
 log_info "Creating data structure in $DATA_ROOT..."
 
-mkdir -p "${DATA_ROOT}/torrents/movies"
-mkdir -p "${DATA_ROOT}/torrents/tv"
-mkdir -p "${DATA_ROOT}/torrents/music"
-mkdir -p "${DATA_ROOT}/usenet/incomplete"
-mkdir -p "${DATA_ROOT}/usenet/complete/movies"
-mkdir -p "${DATA_ROOT}/usenet/complete/tv"
-mkdir -p "${DATA_ROOT}/usenet/complete/music"
-mkdir -p "${DATA_ROOT}/media/movies"
-mkdir -p "${DATA_ROOT}/media/tv"
-mkdir -p "${DATA_ROOT}/media/music"
+make_dir "${DATA_ROOT}/torrents/movies"
+make_dir "${DATA_ROOT}/torrents/tv"
+make_dir "${DATA_ROOT}/torrents/music"
+make_dir "${DATA_ROOT}/usenet/incomplete"
+make_dir "${DATA_ROOT}/usenet/complete/movies"
+make_dir "${DATA_ROOT}/usenet/complete/tv"
+make_dir "${DATA_ROOT}/usenet/complete/music"
+make_dir "${DATA_ROOT}/media/movies"
+make_dir "${DATA_ROOT}/media/tv"
+make_dir "${DATA_ROOT}/media/music"
+
+# Backup destination (for Duplicati)
+log_info "Creating backup destination in $BACKUP_ROOT..."
+
+make_dir "${BACKUP_ROOT}"
 
 # Config folders for each service
 log_info "Creating config folders in $CONFIG_ROOT..."
 
-mkdir -p "${CONFIG_ROOT}/sonarr"
-mkdir -p "${CONFIG_ROOT}/radarr"
-mkdir -p "${CONFIG_ROOT}/lidarr"
-mkdir -p "${CONFIG_ROOT}/prowlarr"
-mkdir -p "${CONFIG_ROOT}/bazarr"
-mkdir -p "${CONFIG_ROOT}/qbittorrent"
-mkdir -p "${CONFIG_ROOT}/nzbget"
-mkdir -p "${CONFIG_ROOT}/huntarr"
-mkdir -p "${CONFIG_ROOT}/cleanuparr"
-mkdir -p "${CONFIG_ROOT}/pihole/etc-pihole"
-mkdir -p "${CONFIG_ROOT}/pihole/etc-dnsmasq.d"
-mkdir -p "${CONFIG_ROOT}/homeassistant"
-mkdir -p "${CONFIG_ROOT}/portainer"
-mkdir -p "${CONFIG_ROOT}/duplicati"
-mkdir -p "${CONFIG_ROOT}/recyclarr"
-mkdir -p "${CONFIG_ROOT}/flaresolverr"
-mkdir -p "${CONFIG_ROOT}/traefik"
+# Media stack (*arr apps)
+make_dir "${CONFIG_ROOT}/sonarr"
+make_dir "${CONFIG_ROOT}/radarr"
+make_dir "${CONFIG_ROOT}/lidarr"
+make_dir "${CONFIG_ROOT}/prowlarr"
+make_dir "${CONFIG_ROOT}/bazarr"
+make_dir "${CONFIG_ROOT}/recyclarr"
+
+# Download clients
+make_dir "${CONFIG_ROOT}/qbittorrent"
+make_dir "${CONFIG_ROOT}/nzbget"
+
+# Monitoring/automation
+make_dir "${CONFIG_ROOT}/huntarr"
+make_dir "${CONFIG_ROOT}/cleanuparr"
+
+# Infrastructure services
+make_dir "${CONFIG_ROOT}/pihole/etc-pihole"
+make_dir "${CONFIG_ROOT}/pihole/etc-dnsmasq.d"
+make_dir "${CONFIG_ROOT}/homeassistant"
+make_dir "${CONFIG_ROOT}/portainer"
+make_dir "${CONFIG_ROOT}/duplicati"
+make_dir "${CONFIG_ROOT}/traefik"
 
 # Permissions
 log_info "Setting permissions (PUID=$PUID, PGID=$PGID)..."
 
-if [[ $EUID -eq 0 ]]; then
+if [[ "$DRY_RUN" == true ]]; then
+    log_info "[DRY-RUN] Would set ownership ${PUID}:${PGID} on ${DATA_ROOT}, ${BACKUP_ROOT}, ${CONFIG_ROOT}"
+    log_info "[DRY-RUN] Would set permissions 775 on ${DATA_ROOT}, ${BACKUP_ROOT}, ${CONFIG_ROOT}"
+elif [[ $EUID -eq 0 ]]; then
     chown -R "${PUID}:${PGID}" "${DATA_ROOT}"
+    chown -R "${PUID}:${PGID}" "${BACKUP_ROOT}"
     chown -R "${PUID}:${PGID}" "${CONFIG_ROOT}"
     chmod -R 775 "${DATA_ROOT}"
+    chmod -R 775 "${BACKUP_ROOT}"
     chmod -R 775 "${CONFIG_ROOT}"
     log_info "Permissions set correctly"
 else
     log_warn "Skipping chown (not root). Run manually:"
-    log_warn "  sudo chown -R ${PUID}:${PGID} ${DATA_ROOT} ${CONFIG_ROOT}"
-    log_warn "  sudo chmod -R 775 ${DATA_ROOT} ${CONFIG_ROOT}"
+    log_warn "  sudo chown -R ${PUID}:${PGID} ${DATA_ROOT} ${BACKUP_ROOT} ${CONFIG_ROOT}"
+    log_warn "  sudo chmod -R 775 ${DATA_ROOT} ${BACKUP_ROOT} ${CONFIG_ROOT}"
 fi
 
 echo ""
-log_info "=== Structure created ==="
+if [[ "$DRY_RUN" == true ]]; then
+    log_info "=== DRY-RUN complete (no changes made) ==="
+else
+    log_info "=== Structure created ==="
+fi
 echo ""
 
 # Show created structure
-if command -v tree &> /dev/null; then
-    tree -L 3 "${DATA_ROOT}"
-else
-    find "${DATA_ROOT}" -type d | head -20
+if [[ "$DRY_RUN" != true ]]; then
+    echo "--- Data Structure (${DATA_ROOT}) ---"
+    if command -v tree &> /dev/null; then
+        tree -L 3 "${DATA_ROOT}"
+    else
+        find "${DATA_ROOT}" -type d | head -20
+    fi
+
+    echo ""
+    echo "--- Config Structure (${CONFIG_ROOT}) ---"
+    if command -v tree &> /dev/null; then
+        tree -L 2 "${CONFIG_ROOT}"
+    else
+        find "${CONFIG_ROOT}" -type d | head -20
+    fi
 fi
 
 echo ""
