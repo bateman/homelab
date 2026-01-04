@@ -164,7 +164,7 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 | Pi-hole | 8081 | DNS ad-blocking |
 | Home Assistant | 8123 | Automazione domotica |
 | Portainer | 9443 | Gestione Docker |
-| Traefik | 80/443/8080 | Reverse proxy |
+| Traefik | 80/443/8082 | Reverse proxy |
 
 ### Mini PC Proxmox (192.168.3.20)
 
