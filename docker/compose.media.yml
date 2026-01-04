@@ -58,8 +58,8 @@ services:
       - ./config/qbittorrent:/config
       - /share/data:/data
     ports:
-      - "50413:50413"
-      - "50413:50413/udp"
+      - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}"
+      - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}/udp"
       - "8080:8080"
     networks:
       - media_net
@@ -328,9 +328,9 @@ services:
   recyclarr:
     image: ghcr.io/recyclarr/recyclarr:latest
     container_name: recyclarr
-    user: 1000:100
+    user: ${PUID:-1000}:${PGID:-100}
     environment:
-      TZ: Europe/Rome
+      TZ: ${TZ:-Europe/Rome}
       RECYCLARR_CREATE_CONFIG: "true"
     volumes:
       - ./config/recyclarr:/config
@@ -338,8 +338,12 @@ services:
       - media_net
     restart: unless-stopped
     logging: *common-logging
-    # Recyclarr runs sync on internal schedule, no HTTP healthcheck needed
-    # Manual sync: docker exec recyclarr recyclarr sync
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f recyclarr || test -f /config/recyclarr.yml"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -360,7 +364,7 @@ services:
     image: huntarr/huntarr:latest
     container_name: huntarr
     environment:
-      TZ: Europe/Rome
+      <<: *common-env
     volumes:
       - ./config/huntarr:/config
     ports:
