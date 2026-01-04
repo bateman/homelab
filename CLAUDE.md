@@ -41,7 +41,8 @@ homelab/
     ├── setup/                      # Guide setup iniziale
     │   ├── NETWORK_SETUP.md        # Setup rete UniFi e VLAN
     │   ├── NAS_SETUP.md            # Setup NAS QNAP e Docker
-    │   └── PROXMOX_SETUP.md        # Setup Proxmox e Plex
+    │   ├── PROXMOX_SETUP.md        # Setup Proxmox e Plex
+    │   └── REVERSE_PROXY_SETUP.md  # Traefik, NPM, Pi-hole DNS Tailscale
     ├── network/                    # Config rete
     │   ├── firewall-config.md      # Regole firewall UDM-SE e config VLAN
     │   └── rack-homelab-config.md  # Layout rack hardware e piano IP
@@ -69,6 +70,7 @@ homelab/
 | Recyclarr | - | Sync profili Trash Guides |
 | Watchtower | - | Auto-update container |
 | Duplicati | 8200 | Backup incrementale con UI |
+| Traefik | 80/443 | Reverse proxy con auto-discovery |
 
 ## Comandi Comuni
 
