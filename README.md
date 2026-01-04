@@ -2,8 +2,6 @@
 
 Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox con stack media completo.
 
-> **Nuova installazione?** Inizia da [`START_HERE.md`](START_HERE.md) per una guida passo-passo completa.
-
 ## Hardware
 
 | Dispositivo | Ruolo | IP |
