@@ -191,7 +191,7 @@ services:
   # WebUI: http://192.168.3.10:8200
   # Recommended configuration:
   #   - Daily backup /source/config -> /backups (local)
-  #   - Weekly backup -> Backblaze B2 (offsite)
+  #   - Daily backup -> Google Drive or Dropbox (offsite)
   #   - Retention: 7 daily, 4 weekly, 3 monthly
   duplicati:
     image: lscr.io/linuxserver/duplicati:latest

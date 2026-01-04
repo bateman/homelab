@@ -10,7 +10,7 @@ Prima di iniziare, assicurati di avere:
 
 - [ ] Tutto l'hardware elencato in [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md)
 - [ ] Accesso alla rete locale e a un computer per la configurazione
-- [ ] Account per servizi cloud (opzionale: Backblaze B2 per backup offsite)
+- [ ] Account per servizi cloud (opzionale: Google Drive o Dropbox per backup offsite)
 - [ ] Abbonamenti indexer/Usenet (per lo stack media)
 
 ---
@@ -149,7 +149,7 @@ Seguire la checklist completa. Punti chiave:
 
 ### Verifica Fase 3
 
-- [ ] QTS accessibile: `http://192.168.3.10:8080`
+- [ ] QTS accessibile: `https://192.168.3.10:5000`
 - [ ] SSH funzionante
 - [ ] Docker installato
 - [ ] Shared folders create
@@ -311,7 +311,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 2. [ ] Configurare backup job:
    - Sorgente: `/source/config`
    - Destinazione locale: `/backups`
-   - Destinazione cloud: Backblaze B2 (opzionale)
+   - Destinazione cloud: Google Drive o Dropbox (opzionale)
 3. [ ] Impostare schedule: giornaliero
 4. [ ] Retention: 7 daily, 4 weekly, 3 monthly
 

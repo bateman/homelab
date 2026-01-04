@@ -85,7 +85,7 @@ make pull       # Aggiorna immagini Docker
 make logs       # Segui tutti i logs
 make status     # Stato container e utilizzo risorse
 make health     # Health check tutti i servizi
-make backup     # Backup configurazioni (crea tar.gz timestampato)
+make backup     # Trigger backup Duplicati on-demand
 make urls       # Mostra tutti gli URL WebUI
 make update     # Aggiorna immagini e restart (pull + restart)
 make clean      # Rimuove container, immagini e volumi orfani
@@ -176,7 +176,7 @@ Container dedicato con WebUI per backup automatizzati:
 - **URL**: http://192.168.3.10:8200
 - **Sorgente**: `/source/config` (tutte le config dei servizi)
 - **Destinazione locale**: `/backups` -> `/share/backup`
-- **Destinazione offsite**: Backblaze B2 (configurare via WebUI)
+- **Destinazione offsite**: Google Drive o Dropbox (configurare via WebUI)
 - **Retention consigliata**: 7 daily, 4 weekly, 3 monthly
 
 ### Backup rapido manuale

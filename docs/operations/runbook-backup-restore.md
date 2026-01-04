@@ -10,41 +10,62 @@ La strategia segue la regola **3-2-1**: tre copie dei dati, su due tipi di stora
 
 | Componente | Dati | Frequenza | Destinazione | Retention |
 |------------|------|-----------|--------------|-----------|
-| Docker configs | ./config/* | Giornaliero | NAS + Cloud | 30 giorni |
-| Docker compose | docker-compose.yml, .env | Ad ogni modifica | Git + NAS | Illimitato |
+| Docker configs | ./config/* (include *arr, Traefik, Pi-hole, etc.) | Giornaliero | NAS + Cloud | 30 giorni |
+| Docker compose | compose.yml, compose.media.yml, .env | Ad ogni modifica | Git + NAS | Illimitato |
 | QNAP config | Sistema QTS | Settimanale | USB + Cloud | 5 versioni |
 | Proxmox VMs | Tutte le VM | Settimanale | NAS | 4 versioni |
 | Media library | /share/data/media | Mai (ricostruibile) | — | — |
 | Database *arr | SQLite in ./config | Giornaliero | Incluso in Docker configs | 30 giorni |
 
+> **Nota**: La cartella `./config` contiene le configurazioni di tutti i servizi Docker: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr, qBittorrent, NZBGet, Pi-hole, Home Assistant, Portainer, Duplicati, Recyclarr, Traefik, Huntarr, Cleanuparr.
+
 ---
 
 ## Procedure di Backup
 
-### 1. Backup Configurazioni Docker (Automatico)
+### 1. Backup Configurazioni Docker (Duplicati - Raccomandato)
 
-Il Makefile include già `make backup`. Per automatizzare:
+Il container Duplicati gestisce backup automatici con deduplicazione e cifratura.
+
+**Configurazione iniziale:**
+
+1. Accedere a `http://192.168.3.10:8200`
+2. Add backup → Configurare:
+   - **Nome**: `docker-configs-local`
+   - **Destinazione**: Folder path → `/backups`
+   - **Sorgente**: `/source/config`
+   - **Schedule**: Giornaliero alle 02:00
+   - **Retention**: Smart backup retention (7 daily, 4 weekly, 3 monthly)
+   - **Encryption**: Opzionale ma consigliato per backup offsite
+
+**Trigger backup manuale:**
+```bash
+make backup  # Triggera Duplicati via API
+```
+
+**Verifica backup:**
+- Accedere a Duplicati WebUI → Selezionare backup → "Show log"
+- Oppure: Restore → Browse per verificare contenuti
+
+#### Alternativa: Backup manuale con cron
+
+Se preferisci backup tar.gz manuali senza Duplicati:
 
 ```bash
-# Creare cron job sul NAS
-# Accedere via SSH: ssh admin@192.168.3.10
-
-# Editare crontab
+# Creare cron job sul NAS (ssh admin@192.168.3.10)
 crontab -e
 
-# Aggiungere (backup alle 02:00 ogni notte)
-0 2 * * * cd /share/container/mediastack && /usr/local/bin/docker compose stop && tar -czf /share/backup/docker-config-$(date +\%Y\%m\%d).tar.gz ./config && /usr/local/bin/docker compose start
+# Backup alle 02:00 (richiede downtime ~1 minuto)
+# Nota: adattare il path alla propria installazione
+0 2 * * * cd /share/container/homelab && make down && tar -czf /share/backup/docker-config-$(date +\%Y\%m\%d).tar.gz ./config && make up
 
 # Pulizia backup vecchi (mantieni ultimi 30)
 0 3 * * * find /share/backup -name "docker-config-*.tar.gz" -mtime +30 -delete
 ```
 
-**Verifica backup:**
+**Verifica backup tar.gz:**
 ```bash
-# Listar backup disponibili
 ls -lah /share/backup/docker-config-*.tar.gz
-
-# Verificare integrità
 tar -tzf /share/backup/docker-config-YYYYMMDD.tar.gz | head -20
 ```
 
@@ -52,7 +73,7 @@ tar -tzf /share/backup/docker-config-YYYYMMDD.tar.gz | head -20
 
 **Via interfaccia web (raccomandato):**
 
-1. Accedere a `http://192.168.3.10:8080`
+1. Accedere a `https://192.168.3.10:5000` (porta HTTPS di QTS, la 8080 è usata da qBittorrent)
 2. Control Panel → System → Backup/Restore
 3. Backup System Settings → Create Backup
 4. Salvare il file `.bin` generato
@@ -161,8 +182,9 @@ rsync -avz --delete /share/backup/ user@100.x.x.x:/backup/homelab/
 
 **Scenario: Corruzione config singolo servizio**
 ```bash
-# Fermare il servizio
-docker compose stop sonarr
+# Fermare il servizio (dalla directory del progetto)
+make logs-sonarr  # Prima verificare i log per capire il problema
+docker compose -f docker/compose.yml -f docker/compose.media.yml stop sonarr
 
 # Backup config corrotta (per analisi)
 mv ./config/sonarr ./config/sonarr.corrupted
@@ -171,29 +193,37 @@ mv ./config/sonarr ./config/sonarr.corrupted
 tar -xzf /share/backup/docker-config-YYYYMMDD.tar.gz ./config/sonarr
 
 # Riavviare
-docker compose start sonarr
+docker compose -f docker/compose.yml -f docker/compose.media.yml start sonarr
 
 # Verificare logs
-docker compose logs -f sonarr
+make logs-sonarr
 ```
 
 **Scenario: Reinstallazione completa NAS**
 ```bash
 # 1. Reinstallare Container Station su QTS
-# 2. Ricreare struttura cartelle
+# 2. Clonare repository
+git clone <repo-url> /share/container/homelab
+cd /share/container/homelab
+
+# 3. Ricreare struttura cartelle
 ./scripts/setup-folders.sh
 
-# 3. Restore tutte le config
-tar -xzf /share/backup/docker-config-YYYYMMDD.tar.gz -C /share/container/mediastack/
+# 4. Restore tutte le config
+tar -xzf /share/backup/docker-config-YYYYMMDD.tar.gz -C .
 
-# 4. Verificare permessi
-chown -R 1000:100 ./config
-chmod -R 775 ./config
+# 5. Verificare permessi
+sudo chown -R 1000:100 ./config
+sudo chmod -R 775 ./config
 
-# 5. Avviare stack
-docker compose up -d
+# 6. Copiare .env
+cp docker/.env.example docker/.env
+# Editare docker/.env con le password corrette
 
-# 6. Verificare tutti i servizi
+# 7. Avviare stack
+make up
+
+# 8. Verificare tutti i servizi
 make health
 ```
 
@@ -201,7 +231,7 @@ make health
 
 **Via interfaccia web:**
 
-1. Dopo reinstallazione QTS, accedere a `http://<ip>:8080`
+1. Dopo reinstallazione QTS, accedere a `https://<ip>:5000`
 2. Control Panel → System → Backup/Restore
 3. Restore System Settings
 4. Caricare il file `.bin` di backup
@@ -228,7 +258,9 @@ make health
 **Via CLI:**
 ```bash
 # Listare backup disponibili
-qmrestore --list backup-nas
+ls -la /mnt/nas-backup/
+# oppure
+pvesm list backup-nas
 
 # Restore VM
 qmrestore /mnt/nas-backup/vzdump-qemu-<vmid>-<date>.vma.zst <new-vmid> --storage local-lvm
@@ -290,14 +322,25 @@ rsync -avz user@100.x.x.x:/backup/homelab/ /share/backup/
 
 **Checklist mensile:**
 
-| Verifica | Comando | Expected |
-|----------|---------|----------|
-| Backup Docker esistono | `ls -la /share/backup/docker-config-*.tar.gz \| tail -5` | File ultimi 5 giorni |
-| Backup QTS esiste | `ls -la /share/backup/qts-config/` | File ultima settimana |
-| Backup Proxmox esiste | `ls /mnt/nas-backup/` (su Proxmox) | File ultima settimana |
-| Integrità Docker backup | `tar -tzf /share/backup/docker-config-$(date +%Y%m%d).tar.gz > /dev/null && echo OK` | OK |
-| Spazio disco backup | `df -h /share/backup` | < 80% usage |
-| Sync offsite OK | `rclone check /share/backup gdrive-backup:homelab-backup` | 0 differences |
+```bash
+# 1. Verificare esistenza backup Docker (ultimi 5 giorni)
+ls -la /share/backup/docker-config-*.tar.gz | tail -5
+
+# 2. Verificare esistenza backup QTS (ultima settimana)
+ls -la /share/backup/qts-config/
+
+# 3. Verificare esistenza backup Proxmox (su Proxmox, ultima settimana)
+ls /mnt/nas-backup/
+
+# 4. Verificare integrità backup Docker
+tar -tzf /share/backup/docker-config-$(date +%Y%m%d).tar.gz > /dev/null && echo "OK"
+
+# 5. Verificare spazio disco (< 80%)
+df -h /share/backup
+
+# 6. Verificare sync offsite (se configurato rclone)
+rclone check /share/backup gdrive-backup:homelab-backup
+```
 
 **Test restore trimestrale:**
 
@@ -325,4 +368,5 @@ Ogni 3 mesi, eseguire restore di test:
 
 | Data | Modifica |
 |------|----------|
+| 2025-01-04 | Revisione: Duplicati come metodo primario, fix comandi docker compose, chiarimenti porte QTS |
 | 2025-01-02 | Creazione documento |
