@@ -1,6 +1,16 @@
 # Homelab Infrastructure
 
+> **Prima installazione?** Vai direttamente a [`START_HERE.md`](START_HERE.md) per la guida passo-passo completa.
+
 Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox con stack media completo.
+
+**Cosa fa questo progetto:**
+- Gestione automatizzata di serie TV, film e musica (Sonarr, Radarr, Lidarr)
+- Download da torrent e Usenet con supporto hardlinking
+- DNS ad-blocking per tutta la rete (Pi-hole)
+- Streaming media locale e remoto (Plex)
+- Backup automatizzati locali e cloud
+- Segmentazione rete con VLAN per sicurezza
 
 ## Hardware
 
@@ -40,11 +50,17 @@ Configurato per supporto hardlinking secondo [Trash Guides](https://trash-guides
 
 ## Rete
 
-- **VLAN 2**: Management
-- **VLAN 3**: Servers
-- **VLAN 4**: Media (TV, dispositivi streaming)
-- **VLAN 5**: Guest
-- **VLAN 6**: IoT
+La rete è segmentata in VLAN per isolare il traffico e migliorare la sicurezza:
+
+| VLAN | Subnet | Uso |
+|------|--------|-----|
+| 2 | 192.168.2.0/24 | Management (switch, router, AP) |
+| 3 | 192.168.3.0/24 | Servers (NAS, Proxmox) |
+| 4 | 192.168.4.0/24 | Media (TV, dispositivi streaming) |
+| 5 | 192.168.5.0/24 | Guest (accesso internet isolato) |
+| 6 | 192.168.6.0/24 | IoT (dispositivi smart) |
+
+Dettagli in [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md).
 
 ## Documentazione
 
@@ -89,7 +105,7 @@ Tutti i comandi vanno eseguiti nella directory `/share/container/mediastack` sul
 | `make logs` | Segui i log di tutti i container in tempo reale |
 | `make logs-<servizio>` | Log di un singolo servizio (es: `make logs-sonarr`) |
 | `make health` | Health check HTTP di tutti i servizi |
-| `make show-urls` | Elenca URL di accesso a tutti i servizi (Sonarr, Radarr, Pi-hole, ecc.) |
+| `make urls` | Elenca URL di accesso a tutti i servizi (Sonarr, Radarr, Pi-hole, ecc.) |
 
 ### Backup
 
@@ -110,6 +126,11 @@ Tutti i comandi vanno eseguiti nella directory `/share/container/mediastack` sul
 
 ## Requisiti
 
-- QNAP con Container Station 3
-- Docker Compose v2
-- Rete UniFi con VLAN configurate
+Prima di iniziare, assicurati di avere:
+
+- **NAS QNAP** con Container Station 3 installato (fornisce Docker)
+- **Docker Compose v2** (incluso in Container Station 3)
+- **Rete UniFi** (UDM-SE o simile) per gestione VLAN
+- **Abbonamenti** indexer/Usenet per lo stack media (opzionale ma consigliato)
+
+Per la lista completa dell'hardware e i dettagli, vedi [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md).
