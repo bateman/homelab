@@ -490,6 +490,9 @@ Se inode diversi: **PROBLEMA** — verificare che entrambi i path siano sullo st
   - Interface: rispondere su tutte le interfacce
 - [ ] Adlists → Aggiungere liste aggiuntive (opzionale):
   - `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts`
+  - `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/multi.txt` (Hagezi Multi - consigliata)
+  - `https://small.oisd.nl/domainswild` (OISD - blocklist unificata)
+  - `https://v.firebog.net/hosts/lists.php?type=tick` (Firebog Ticked - curate dalla community)
 
 ### Configurare UDM-SE per usare Pi-hole
 - [ ] UDM-SE → Settings → Networks → (ogni VLAN)
