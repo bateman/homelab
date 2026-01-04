@@ -33,7 +33,10 @@ homelab/
 ├── rack-homelab-config.md  # Layout rack hardware e piano IP
 ├── firewall-config.md      # Regole firewall UDM-SE e config VLAN
 ├── runbook-backup-restore.md       # Procedure backup/restore
-└── checklist-qnap-deployment.md    # Checklist deployment iniziale
+└── docs/
+    ├── NETWORK_SETUP.md            # Setup rete UniFi e VLAN
+    ├── NAS_SETUP.md                # Setup NAS QNAP e Docker
+    └── PROXMOX_SETUP.md            # Setup Proxmox e Plex
 ```
 
 ## Servizi Docker (su NAS 192.168.3.10)

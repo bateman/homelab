@@ -10,8 +10,8 @@ Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox c
 |-------------|-------|-----|
 | QNAP TS-435XeU | NAS + Docker stack media | 192.168.3.10 |
 | Lenovo IdeaCentre | Proxmox + Plex | 192.168.3.20 |
-| UniFi UDM-SE | Router/Firewall | 192.168.2.1 |
-| USW-Enterprise-8-PoE | Switch | 192.168.2.10 |
+| Ubiquiti UniFi UDM-SE | Router/Firewall | 192.168.2.1 |
+| Ubiquiti USW-Enterprise-8-PoE | Switch | 192.168.2.10 |
 
 ## Stack Docker (NAS)
 
@@ -67,8 +67,8 @@ Configurato per supporto hardlinking secondo [Trash Guides](https://trash-guides
 ### Guide Installazione
 - [`START_HERE.md`](START_HERE.md) - **Guida installazione completa (inizia qui)**
 - [`docs/NETWORK_SETUP.md`](docs/NETWORK_SETUP.md) - Setup rete UniFi e VLAN
+- [`docs/NAS_SETUP.md`](docs/NAS_SETUP.md) - Setup NAS QNAP e Docker
 - [`docs/PROXMOX_SETUP.md`](docs/PROXMOX_SETUP.md) - Setup Proxmox e Plex
-- [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md) - Checklist deployment QNAP
 
 ### Riferimenti
 - [`CLAUDE.md`](CLAUDE.md) - Guida completa progetto e sviluppo
