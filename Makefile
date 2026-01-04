@@ -6,7 +6,8 @@
 .DEFAULT_GOAL := help
 
 .PHONY: help setup up down restart logs pull update status backup clean health show-urls urls \
-        validate check-docker check-compose recyclarr-sync recyclarr-config
+        validate check-docker check-compose check-curl recyclarr-sync recyclarr-config \
+        logs-% shell-%
 
 # Compose files
 COMPOSE_FILES := -f docker/compose.yml -f docker/compose.media.yml
@@ -35,6 +36,12 @@ check-docker:
 check-compose: check-docker
 	@docker compose version >/dev/null 2>&1 || { \
 		echo "$(RED)Error: docker compose not available. Docker Compose v2 required.$(NC)"; \
+		exit 1; \
+	}
+
+check-curl:
+	@command -v curl >/dev/null 2>&1 || { \
+		echo "$(RED)Error: curl not found. Install curl before continuing.$(NC)"; \
 		exit 1; \
 	}
 
@@ -109,14 +116,10 @@ setup: check-compose
 
 up: validate
 	@echo ">>> Starting stack..."
-	@$(COMPOSE_CMD) up -d
-	@if [ $$? -eq 0 ]; then \
-		echo "$(GREEN)>>> Stack started$(NC)"; \
-		$(MAKE) --no-print-directory status; \
-	else \
-		echo "$(RED)>>> Error starting stack$(NC)"; \
-		exit 1; \
-	fi
+	@$(COMPOSE_CMD) up -d && \
+		echo "$(GREEN)>>> Stack started$(NC)" && \
+		$(MAKE) --no-print-directory status || \
+		{ echo "$(RED)>>> Error starting stack$(NC)"; exit 1; }
 
 down: check-compose
 	@echo ">>> Stopping stack..."
@@ -127,13 +130,9 @@ restart: down up
 
 pull: check-compose
 	@echo ">>> Pulling updated images..."
-	@$(COMPOSE_CMD) pull
-	@if [ $$? -eq 0 ]; then \
-		echo "$(GREEN)>>> Pull complete. Run 'make restart' to apply$(NC)"; \
-	else \
-		echo "$(RED)>>> Error pulling images$(NC)"; \
-		exit 1; \
-	fi
+	@$(COMPOSE_CMD) pull && \
+		echo "$(GREEN)>>> Pull complete. Run 'make restart' to apply$(NC)" || \
+		{ echo "$(RED)>>> Error pulling images$(NC)"; exit 1; }
 
 update: pull restart
 	@echo "$(GREEN)>>> Update complete$(NC)"
@@ -179,7 +178,7 @@ shell-%: check-compose
 		exit 1; \
 	}
 
-backup: check-docker
+backup: check-docker check-curl
 	@echo ">>> Triggering Duplicati backup..."
 	@if docker ps --format '{{.Names}}' | grep -q '^duplicati$$'; then \
 		BACKUP_ID=$$(curl -s http://localhost:8200/api/v1/backups 2>/dev/null | grep -o '"ID":"[^"]*"' | head -1 | cut -d'"' -f4); \
@@ -248,7 +247,7 @@ define check_service
 	fi
 endef
 
-health: check-docker
+health: check-docker check-curl
 	@echo "=== Health Check ==="
 	@echo ""
 	$(call check_service,http://localhost:8989/ping,Sonarr)
@@ -264,6 +263,8 @@ health: check-docker
 	$(call check_service,http://localhost:8081/admin,Pi-hole)
 	$(call check_service,http://localhost:8123/api/,HomeAssistant)
 	$(call check_service,http://localhost:8200,Duplicati)
+	$(call check_service,http://localhost:8383/v1/metrics,Watchtower)
+	$(call check_service,http://localhost:80,Traefik)
 	@# Portainer uses HTTPS
 	@STATUS=$$(curl -sk -o /dev/null -w '%{http_code}' --max-time 5 https://localhost:9443 2>/dev/null); \
 	if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "303" ]; then \
@@ -292,16 +293,19 @@ show-urls:
 	@echo "$(GREEN)Download$(NC)"
 	@echo "  qBittorrent:  http://$(HOST_IP):8080"
 	@echo "  NZBGet:       http://$(HOST_IP):6789"
+	@echo "  FlareSolverr: http://$(HOST_IP):8191"
 	@echo ""
 	@echo "$(GREEN)Monitoring$(NC)"
 	@echo "  Huntarr:      http://$(HOST_IP):9705"
 	@echo "  Cleanuparr:   http://$(HOST_IP):11011"
+	@echo "  Watchtower:   http://$(HOST_IP):8383/v1/metrics"
 	@echo ""
 	@echo "$(GREEN)Infrastructure$(NC)"
 	@echo "  Pi-hole:      http://$(HOST_IP):8081/admin"
 	@echo "  Home Assist:  http://$(HOST_IP):8123"
 	@echo "  Portainer:    https://$(HOST_IP):9443"
 	@echo "  Duplicati:    http://$(HOST_IP):8200"
+	@echo "  Traefik:      http://traefik.home.local (requires DNS)"
 	@echo ""
 
 # Alias for show-urls
