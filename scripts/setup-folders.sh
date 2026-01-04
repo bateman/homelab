@@ -6,13 +6,13 @@
 
 set -euo pipefail
 
-# Configurazione
+# Configuration
 DATA_ROOT="/share/data"
 CONFIG_ROOT="./config"
 PUID=1000
 PGID=100
 
-# Colori per output
+# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -30,42 +30,42 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Verifica prerequisiti
+# Check prerequisites
 check_prerequisites() {
-    log_info "Verifica prerequisiti..."
-    
-    # Verifica se eseguito come root (necessario per chown)
+    log_info "Checking prerequisites..."
+
+    # Check if running as root (required for chown)
     if [[ $EUID -ne 0 ]]; then
-        log_warn "Script non eseguito come root. chown potrebbe fallire."
-        log_warn "Esegui con: sudo ./setup-folders.sh"
+        log_warn "Script not running as root. chown may fail."
+        log_warn "Run with: sudo ./setup-folders.sh"
     fi
-    
-    # Verifica esistenza DATA_ROOT o possibilita' di crearlo
+
+    # Check if DATA_ROOT exists or can be created
     if [[ ! -d "$DATA_ROOT" ]]; then
-        log_warn "Directory $DATA_ROOT non esiste. Tento di crearla..."
+        log_warn "Directory $DATA_ROOT does not exist. Attempting to create..."
         if ! mkdir -p "$DATA_ROOT" 2>/dev/null; then
-            log_error "Impossibile creare $DATA_ROOT. Verifica i permessi."
+            log_error "Cannot create $DATA_ROOT. Check permissions."
             exit 1
         fi
     fi
-    
-    # Verifica scrittura
+
+    # Check write access
     if ! touch "$DATA_ROOT/.write_test" 2>/dev/null; then
-        log_error "Impossibile scrivere in $DATA_ROOT. Verifica i permessi."
+        log_error "Cannot write to $DATA_ROOT. Check permissions."
         exit 1
     fi
     rm -f "$DATA_ROOT/.write_test"
-    
-    log_info "Prerequisiti OK"
+
+    log_info "Prerequisites OK"
 }
 
-echo "=== Creazione struttura cartelle Trash Guides ==="
+echo "=== Creating Trash Guides folder structure ==="
 echo ""
 
 check_prerequisites
 
-# Struttura dati principale (per hardlinking)
-log_info "Creazione struttura dati in $DATA_ROOT..."
+# Main data structure (for hardlinking)
+log_info "Creating data structure in $DATA_ROOT..."
 
 mkdir -p "${DATA_ROOT}/torrents/movies"
 mkdir -p "${DATA_ROOT}/torrents/tv"
@@ -78,8 +78,8 @@ mkdir -p "${DATA_ROOT}/media/movies"
 mkdir -p "${DATA_ROOT}/media/tv"
 mkdir -p "${DATA_ROOT}/media/music"
 
-# Cartelle config per ogni servizio
-log_info "Creazione cartelle config in $CONFIG_ROOT..."
+# Config folders for each service
+log_info "Creating config folders in $CONFIG_ROOT..."
 
 mkdir -p "${CONFIG_ROOT}/sonarr"
 mkdir -p "${CONFIG_ROOT}/radarr"
@@ -99,26 +99,26 @@ mkdir -p "${CONFIG_ROOT}/recyclarr"
 mkdir -p "${CONFIG_ROOT}/flaresolverr"
 mkdir -p "${CONFIG_ROOT}/traefik"
 
-# Permessi
-log_info "Impostazione permessi (PUID=$PUID, PGID=$PGID)..."
+# Permissions
+log_info "Setting permissions (PUID=$PUID, PGID=$PGID)..."
 
 if [[ $EUID -eq 0 ]]; then
     chown -R "${PUID}:${PGID}" "${DATA_ROOT}"
     chown -R "${PUID}:${PGID}" "${CONFIG_ROOT}"
     chmod -R 775 "${DATA_ROOT}"
     chmod -R 775 "${CONFIG_ROOT}"
-    log_info "Permessi impostati correttamente"
+    log_info "Permissions set correctly"
 else
-    log_warn "Skippo chown (non root). Esegui manualmente:"
+    log_warn "Skipping chown (not root). Run manually:"
     log_warn "  sudo chown -R ${PUID}:${PGID} ${DATA_ROOT} ${CONFIG_ROOT}"
     log_warn "  sudo chmod -R 775 ${DATA_ROOT} ${CONFIG_ROOT}"
 fi
 
 echo ""
-log_info "=== Struttura creata ==="
+log_info "=== Structure created ==="
 echo ""
 
-# Mostra struttura creata
+# Show created structure
 if command -v tree &> /dev/null; then
     tree -L 3 "${DATA_ROOT}"
 else
@@ -127,16 +127,16 @@ fi
 
 echo ""
 echo "============================================================================="
-echo "                           PROSSIMI PASSI"
+echo "                              NEXT STEPS"
 echo "============================================================================="
 echo ""
-echo "1. CONFIGURA qBittorrent (http://192.168.3.10:8080)"
+echo "1. CONFIGURE qBittorrent (http://192.168.3.10:8080)"
 echo "   -----------------------------------------------------------------------------"
 echo "   Options -> Saving Management -> Default Torrent Management Mode: Automatic"
 echo "   Default Save Path: /data/torrents"
-echo "   Categories: movies, tv, music (path relativi, es: 'movies' non '/data/torrents/movies')"
+echo "   Categories: movies, tv, music (relative paths, e.g., 'movies' not '/data/torrents/movies')"
 echo ""
-echo "2. CONFIGURA NZBGet (http://192.168.3.10:6789)"
+echo "2. CONFIGURE NZBGet (http://192.168.3.10:6789)"
 echo "   -----------------------------------------------------------------------------"
 echo "   Settings -> Paths:"
 echo "     MainDir: /data/usenet"
@@ -147,15 +147,15 @@ echo "     movies -> DestDir: movies"
 echo "     tv     -> DestDir: tv"
 echo "     music  -> DestDir: music"
 echo ""
-echo "3. CONFIGURA Sonarr/Radarr/Lidarr"
+echo "3. CONFIGURE Sonarr/Radarr/Lidarr"
 echo "   -----------------------------------------------------------------------------"
-echo "   Root Folder: /data/media/tv (o movies, music)"
+echo "   Root Folder: /data/media/tv (or movies, music)"
 echo "   Settings -> Media Management -> Use Hardlinks instead of Copy: ON"
-echo "   Download Client path mapping NON necessario (stesso mount)"
+echo "   Download Client path mapping NOT required (same mount)"
 echo ""
-echo "4. VERIFICA hardlinking"
+echo "4. VERIFY hardlinking"
 echo "   -----------------------------------------------------------------------------"
 echo "   ls -li /data/torrents/movies/file.mkv /data/media/movies/Film/file.mkv"
-echo "   (stesso inode = hardlink funzionante)"
+echo "   (same inode = hardlink working)"
 echo ""
 echo "============================================================================="
