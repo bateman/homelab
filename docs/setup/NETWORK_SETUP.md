@@ -205,7 +205,7 @@ Verificare: Settings → Devices → Switch → IP: dovrebbe essere 192.168.2.x
 
 ## Fase 5: Gruppi IP e Porte
 
-> Necessari per le regole firewall. Vedi [`firewall-config.md`](../firewall-config.md) per la lista completa.
+> Necessari per le regole firewall. Vedi [`firewall-config.md`](../network/firewall-config.md) per la lista completa.
 
 ### 5.1 Creare Gruppi IP
 
@@ -257,7 +257,7 @@ Settings → Profiles → Port Groups → Create New Group
 
 ## Fase 6: Regole Firewall
 
-**Riferimento completo:** [`firewall-config.md`](../firewall-config.md)
+**Riferimento completo:** [`firewall-config.md`](../network/firewall-config.md)
 
 ### 6.1 Ordine Regole (CRITICO)
 
@@ -444,5 +444,5 @@ nslookup google.com 192.168.3.10
 
 Dopo aver completato il setup di rete:
 
-1. → Procedere con [Setup NAS QNAP](../checklist-qnap-deployment.md)
-2. → Tornare a [START_HERE.md](../START_HERE.md) Fase 3
+1. → Procedere con [Setup NAS QNAP](NAS_SETUP.md)
+2. → Tornare a [START_HERE.md](../../START_HERE.md) Fase 3

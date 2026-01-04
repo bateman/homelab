@@ -8,7 +8,7 @@
 
 Prima di iniziare, assicurati di avere:
 
-- [ ] Tutto l'hardware elencato in [`rack-homelab-config.md`](rack-homelab-config.md)
+- [ ] Tutto l'hardware elencato in [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md)
 - [ ] Accesso alla rete locale e a un computer per la configurazione
 - [ ] Account per servizi cloud (opzionale: Backblaze B2 per backup offsite)
 - [ ] Abbonamenti indexer/Usenet (per lo stack media)
@@ -19,20 +19,20 @@ Prima di iniziare, assicurati di avere:
 
 | Fase | Descrizione | Documenti di Riferimento |
 |------|-------------|--------------------------|
-| 1 | Installazione Hardware | [`rack-homelab-config.md`](rack-homelab-config.md) |
-| 2 | Setup Rete UniFi | [`docs/NETWORK_SETUP.md`](docs/NETWORK_SETUP.md) |
-| 3 | Setup NAS QNAP | [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md) |
-| 4 | Deploy Stack Docker | [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md), [`Makefile`](Makefile) |
-| 5 | Configurazione Servizi | [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md) |
-| 6 | Setup Proxmox/Plex | [`docs/PROXMOX_SETUP.md`](docs/PROXMOX_SETUP.md) |
-| 7 | Configurazione Backup | [`runbook-backup-restore.md`](runbook-backup-restore.md) |
+| 1 | Installazione Hardware | [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) |
+| 2 | Setup Rete UniFi | [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) |
+| 3 | Setup NAS QNAP | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) |
+| 4 | Deploy Stack Docker | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md), [`Makefile`](Makefile) |
+| 5 | Configurazione Servizi | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) |
+| 6 | Setup Proxmox/Plex | [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) |
+| 7 | Configurazione Backup | [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) |
 | 8 | Verifica Finale | Questa guida |
 
 ---
 
 ## Fase 1: Installazione Hardware
 
-**Riferimento:** [`rack-homelab-config.md`](rack-homelab-config.md)
+**Riferimento:** [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md)
 
 ### Layout Rack (dal basso verso l'alto)
 
@@ -65,7 +65,7 @@ Prima di iniziare, assicurati di avere:
 
 ## Fase 2: Setup Rete UniFi
 
-**Riferimento:** [`docs/NETWORK_SETUP.md`](docs/NETWORK_SETUP.md)
+**Riferimento:** [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md)
 
 > ⚠️ Completare questa fase PRIMA di configurare qualsiasi altro dispositivo
 
@@ -98,7 +98,7 @@ Creare le seguenti reti in **Settings → Networks**:
 
 ### 2.4 Regole Firewall
 
-**Riferimento:** [`firewall-config.md`](firewall-config.md)
+**Riferimento:** [`docs/network/firewall-config.md`](docs/network/firewall-config.md)
 
 1. [ ] Creare gruppi IP (vedi `firewall-config.md` sezione "IP Groups")
 2. [ ] Creare gruppi porte (vedi `firewall-config.md` sezione "Port Groups")
@@ -117,7 +117,7 @@ ping 192.168.2.1    # Management VLAN (dovrebbe funzionare)
 
 ## Fase 3: Setup NAS QNAP
 
-**Riferimento:** [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md)
+**Riferimento:** [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md)
 
 Seguire la checklist completa. Punti chiave:
 
@@ -169,23 +169,23 @@ mkdir -p /share/container/mediastack
 cd /share/container/mediastack
 
 # Copiare i file dal repository (via SCP o SFTP):
-# - compose.yml
-# - compose.media.yml
+# - docker/compose.yml
+# - docker/compose.media.yml
 # - Makefile
-# - setup-folders.sh
-# - .env.example
+# - scripts/setup-folders.sh
+# - docker/.env.example
 ```
 
 ### 4.2 Setup Struttura Cartelle
 
 ```bash
 # Rendere eseguibile e lanciare
-chmod +x setup-folders.sh
-sudo ./setup-folders.sh
+chmod +x scripts/setup-folders.sh
+sudo ./scripts/setup-folders.sh
 
-# Creare file .env
-cp .env.example .env
-nano .env  # Impostare PIHOLE_PASSWORD
+# Creare file .env nella cartella docker
+cp docker/.env.example docker/.env
+nano docker/.env  # Impostare PIHOLE_PASSWORD
 ```
 
 ### 4.3 Avvio Container
@@ -221,7 +221,7 @@ make urls
 
 ## Fase 5: Configurazione Servizi
 
-**Riferimento:** [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md) sezione "Configurazione Servizi *arr"
+**Riferimento:** [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) sezione "Configurazione Servizi *arr"
 
 ### Ordine di Configurazione (IMPORTANTE)
 
@@ -275,7 +275,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 
 ## Fase 6: Setup Proxmox/Plex
 
-**Riferimento:** [`docs/PROXMOX_SETUP.md`](docs/PROXMOX_SETUP.md)
+**Riferimento:** [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md)
 
 ### 6.1 Installazione Proxmox
 
@@ -306,7 +306,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 
 ## Fase 7: Configurazione Backup
 
-**Riferimento:** [`runbook-backup-restore.md`](runbook-backup-restore.md)
+**Riferimento:** [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md)
 
 ### 7.1 Duplicati (Container)
 
@@ -398,7 +398,7 @@ make backup      # Backup manuale aggiuntivo
 | Servizio non raggiungibile | Verificare regole firewall |
 | Pi-hole non risolve | Verificare porta 53 libera |
 
-Per problemi specifici, consultare la sezione Troubleshooting in [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md).
+Per problemi specifici, consultare la sezione Troubleshooting in [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md).
 
 ---
 
@@ -407,9 +407,9 @@ Per problemi specifici, consultare la sezione Troubleshooting in [`checklist-qna
 | Documento | Contenuto |
 |-----------|-----------|
 | [`CLAUDE.md`](CLAUDE.md) | Guida completa progetto e linee guida sviluppo |
-| [`rack-homelab-config.md`](rack-homelab-config.md) | Layout hardware e piano IP |
-| [`firewall-config.md`](firewall-config.md) | Regole firewall complete |
-| [`checklist-qnap-deployment.md`](checklist-qnap-deployment.md) | Checklist dettagliata QNAP |
-| [`runbook-backup-restore.md`](runbook-backup-restore.md) | Procedure backup e restore |
-| [`docs/NETWORK_SETUP.md`](docs/NETWORK_SETUP.md) | Setup rete UniFi |
-| [`docs/PROXMOX_SETUP.md`](docs/PROXMOX_SETUP.md) | Setup Proxmox e Plex |
+| [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) | Layout hardware e piano IP |
+| [`docs/network/firewall-config.md`](docs/network/firewall-config.md) | Regole firewall complete |
+| [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) | Checklist dettagliata QNAP |
+| [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) | Procedure backup e restore |
+| [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) | Setup rete UniFi |
+| [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) | Setup Proxmox e Plex |

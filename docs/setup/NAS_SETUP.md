@@ -203,12 +203,15 @@ cd /share/container
 mkdir -p mediastack
 cd mediastack
 
-# Copiare docker-compose.yml e setup-folders.sh
-# (via SCP, SFTP, o File Station)
+# Copiare i file dal repository
+# (via SCP, SFTP, o File Station):
+# - docker/compose.yml, docker/compose.media.yml
+# - scripts/setup-folders.sh
+# - Makefile
 
 # Eseguire setup
-chmod +x setup-folders.sh
-sudo ./setup-folders.sh
+chmod +x scripts/setup-folders.sh
+sudo ./scripts/setup-folders.sh
 ```
 
 Verificare struttura creata:

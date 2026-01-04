@@ -24,19 +24,24 @@ Questo repository contiene la configurazione infrastructure-as-code completa per
 
 ```
 homelab/
-├── compose.yml             # Stack infrastruttura (Pi-hole, HA, Portainer, Duplicati)
-├── compose.media.yml       # Stack media (*arr, download clients, monitoring)
-├── Makefile                # Comandi gestione stack
-├── setup-folders.sh        # Creazione struttura cartelle iniziale
-├── .env.example            # Template variabili ambiente
-├── recyclarr.yml           # Esempio config profili qualita' Trash Guides
-├── rack-homelab-config.md  # Layout rack hardware e piano IP
-├── firewall-config.md      # Regole firewall UDM-SE e config VLAN
-├── runbook-backup-restore.md       # Procedure backup/restore
-└── docs/
-    ├── NETWORK_SETUP.md            # Setup rete UniFi e VLAN
-    ├── NAS_SETUP.md                # Setup NAS QNAP e Docker
-    └── PROXMOX_SETUP.md            # Setup Proxmox e Plex
+├── Makefile                        # Comandi gestione stack
+├── docker/                         # Stack Docker
+│   ├── compose.yml                 # Stack infrastruttura (Pi-hole, HA, Portainer, Duplicati)
+│   ├── compose.media.yml           # Stack media (*arr, download clients, monitoring)
+│   ├── .env.example                # Template variabili ambiente
+│   └── recyclarr.yml               # Esempio config profili qualita' Trash Guides
+├── scripts/                        # Script operativi
+│   └── setup-folders.sh            # Creazione struttura cartelle iniziale
+└── docs/                           # Documentazione
+    ├── setup/                      # Guide setup iniziale
+    │   ├── NETWORK_SETUP.md        # Setup rete UniFi e VLAN
+    │   ├── NAS_SETUP.md            # Setup NAS QNAP e Docker
+    │   └── PROXMOX_SETUP.md        # Setup Proxmox e Plex
+    ├── network/                    # Config rete
+    │   ├── firewall-config.md      # Regole firewall UDM-SE e config VLAN
+    │   └── rack-homelab-config.md  # Layout rack hardware e piano IP
+    └── operations/                 # Runbook operativi
+        └── runbook-backup-restore.md   # Procedure backup/restore
 ```
 
 ## Servizi Docker (su NAS 192.168.3.10)
@@ -119,8 +124,8 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 ## Linee Guida Sviluppo
 
 ### Quando modifichi i file compose
-1. `compose.yml` contiene servizi infrastruttura (Pi-hole, Home Assistant, Portainer, Watchtower)
-2. `compose.media.yml` contiene lo stack media (*arr, download clients, monitoring)
+1. `docker/compose.yml` contiene servizi infrastruttura (Pi-hole, Home Assistant, Portainer, Watchtower)
+2. `docker/compose.media.yml` contiene lo stack media (*arr, download clients, monitoring)
 3. Tutti i servizi *arr montano `/share/data:/data` per supporto hardlink
 4. Usa anchor YAML (`&common-env`, `&common-logging`, `&common-healthcheck`) per config condivise
 5. Mantieni relazioni `depends_on` tra servizi
@@ -135,12 +140,12 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 5. Termina con catch-all "Block All Inter-VLAN"
 
 ### Quando aggiungi nuovi servizi
-1. Aggiungi a `compose.yml` (infrastruttura) o `compose.media.yml` (media stack)
+1. Aggiungi a `docker/compose.yml` (infrastruttura) o `docker/compose.media.yml` (media stack)
 2. Includi: healthcheck, logging, deploy.resources, labels watchtower
-3. Aggiorna `setup-folders.sh` se servono nuove directory config
+3. Aggiorna `scripts/setup-folders.sh` se servono nuove directory config
 4. Aggiungi endpoint health check al target health del `Makefile`
 5. Aggiorna target urls del `Makefile` con nuova WebUI
-6. Documenta nella tabella servizi sopra e in `rack-homelab-config.md`
+6. Documenta nella tabella servizi sopra e in `docs/network/rack-homelab-config.md`
 7. Aggiungi regole firewall se serve accesso inter-VLAN
 
 ## Posizione API Key
@@ -149,7 +154,7 @@ Le API key sono salvate nella config di ogni servizio e vanno recuperate da:
 - Sonarr/Radarr/Lidarr/Prowlarr: Settings -> General -> API Key
 - qBittorrent: Settings -> WebUI -> Authentication
 - NZBGet: Settings -> Security -> ControlUsername/ControlPassword
-- Password Pi-hole: file `.env` (`PIHOLE_PASSWORD`)
+- Password Pi-hole: file `docker/.env` (`PIHOLE_PASSWORD`)
 
 ## Strategia Backup
 
@@ -170,7 +175,7 @@ make backup  # Crea tar.gz in ./backups/
 - **Config QTS**: Settimanale via Control Panel -> Backup/Restore
 - **VM Proxmox**: Settimanale su NAS via mount NFS
 
-Vedi `runbook-backup-restore.md` per procedure dettagliate.
+Vedi `docs/operations/runbook-backup-restore.md` per procedure dettagliate.
 
 ## Troubleshooting
 
@@ -192,7 +197,7 @@ chown -R 1000:100 ./config/<service>
 - Testa con `ping` dalla VLAN rilevante
 
 ### Servizio non accessibile da altra VLAN
-- Controlla regole firewall in `firewall-config.md`
+- Controlla regole firewall in `docs/network/firewall-config.md`
 - Verifica che mDNS reflection sia abilitato se necessario
 - Verifica che il gruppo porte includa la porta del servizio
 

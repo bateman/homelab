@@ -207,7 +207,7 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (VLAN segmentate)
 
 ### Indirizzi IP
 
-> Vedi `firewall-config.md` e `switch-config.md` per la configurazione VLAN completa.
+> Vedi `firewall-config.md` per la configurazione VLAN completa.
 
 #### Rete Legacy — Iliad/Vimar (192.168.1.0/24)
 
@@ -264,4 +264,4 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (VLAN segmentate)
 - **Double NAT**: Tecnicamente presente, ma irrilevante per homelab
 - **Accesso Iliad**: Disponibile su 192.168.1.254 dalla rete (routing attraverso WAN)
 - **Telefonia**: Funziona perche' Iliad resta in modalita' router
-- **Documentazione VLAN**: Vedi `firewall-config.md` e `switch-config.md`
+- **Documentazione VLAN**: Vedi `firewall-config.md`

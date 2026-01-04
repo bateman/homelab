@@ -9,7 +9,7 @@
         validate check-docker check-compose recyclarr-sync recyclarr-config
 
 # Compose files
-COMPOSE_FILES := -f compose.yml -f compose.media.yml
+COMPOSE_FILES := -f docker/compose.yml -f docker/compose.media.yml
 COMPOSE_CMD := docker compose $(COMPOSE_FILES)
 HOST_IP := 192.168.3.10
 
@@ -73,16 +73,16 @@ help:
 	@echo ""
 	@echo "  $(PURPLE)Backup$(NC)"
 	@echo "    $(CYAN)make backup$(NC)      - Trigger Duplicati backup on demand"
-	@echo "    $(CYAN)Duplicati WebUI$(NC)  - http://$(HOST_IP):8200 (configuration & scheduled backups)"
+	@echo "                        Duplicati WebUI: http://$(HOST_IP):8200"
 	@echo ""
 	@echo "  $(PURPLE)Utilities$(NC)"
-	@echo "    $(CYAN)make clean$(NC)       - Remove orphan Docker resources"
+	@echo "    $(CYAN)make clean$(NC)            - Remove orphan Docker resources"
 	@echo "    $(CYAN)make recyclarr-sync$(NC)   - Manual Trash Guides profile sync"
 	@echo "    $(CYAN)make recyclarr-config$(NC) - Generate Recyclarr config template"
 	@echo ""
 	@echo "  $(PURPLE)Per service$(NC)"
-	@echo "    $(CYAN)make logs-SERVICE$(NC)  - Single service logs (e.g.: make logs-sonarr)"
-	@echo "    $(CYAN)make shell-SERVICE$(NC) - Shell into container (e.g.: make shell-radarr)"
+	@echo "    $(CYAN)make logs-SERVICE$(NC)  - Single service logs (e.g., make logs-sonarr)"
+	@echo "    $(CYAN)make shell-SERVICE$(NC) - Shell into container (e.g., make shell-radarr)"
 
 # =============================================================================
 # Setup
@@ -90,16 +90,16 @@ help:
 
 setup: check-compose
 	@echo ">>> Creating folder structure..."
-	@if [ ! -x setup-folders.sh ]; then \
-		chmod +x setup-folders.sh; \
+	@if [ ! -x scripts/setup-folders.sh ]; then \
+		chmod +x scripts/setup-folders.sh; \
 	fi
-	@./setup-folders.sh
+	@./scripts/setup-folders.sh
 	@echo ">>> Creating additional config directories..."
 	@mkdir -p ./config/recyclarr ./config/duplicati
-	@if [ ! -f .env ]; then \
+	@if [ ! -f docker/.env ]; then \
 		echo ">>> Creating .env from template..."; \
-		cp .env.example .env 2>/dev/null || echo "PIHOLE_PASSWORD=changeme" > .env; \
-		echo "$(YELLOW)WARNING: Edit .env with your passwords$(NC)"; \
+		cp docker/.env.example docker/.env 2>/dev/null || echo "PIHOLE_PASSWORD=changeme" > docker/.env; \
+		echo "$(YELLOW)WARNING: Edit docker/.env with your passwords$(NC)"; \
 	fi
 	@echo "$(GREEN)>>> Setup complete$(NC)"
 

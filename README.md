@@ -50,15 +50,15 @@ Configurato per supporto hardlinking secondo [Trash Guides](https://trash-guides
 
 ### Guide Installazione
 - [`START_HERE.md`](START_HERE.md) - **Guida installazione completa (inizia qui)**
-- [`docs/NETWORK_SETUP.md`](docs/NETWORK_SETUP.md) - Setup rete UniFi e VLAN
-- [`docs/NAS_SETUP.md`](docs/NAS_SETUP.md) - Setup NAS QNAP e Docker
-- [`docs/PROXMOX_SETUP.md`](docs/PROXMOX_SETUP.md) - Setup Proxmox e Plex
+- [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) - Setup rete UniFi e VLAN
+- [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) - Setup NAS QNAP e Docker
+- [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) - Setup Proxmox e Plex
 
 ### Riferimenti
 - [`CLAUDE.md`](CLAUDE.md) - Guida completa progetto e sviluppo
-- [`rack-homelab-config.md`](rack-homelab-config.md) - Layout hardware e piano IP
-- [`firewall-config.md`](firewall-config.md) - Regole firewall UDM-SE
-- [`runbook-backup-restore.md`](runbook-backup-restore.md) - Procedure backup/restore
+- [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) - Layout hardware e piano IP
+- [`docs/network/firewall-config.md`](docs/network/firewall-config.md) - Regole firewall UDM-SE
+- [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) - Procedure backup/restore
 
 ## Comandi Utili
 

@@ -181,7 +181,7 @@ docker compose logs -f sonarr
 ```bash
 # 1. Reinstallare Container Station su QTS
 # 2. Ricreare struttura cartelle
-./setup-folders.sh
+./scripts/setup-folders.sh
 
 # 3. Restore tutte le config
 tar -xzf /share/backup/docker-config-YYYYMMDD.tar.gz -C /share/container/mediastack/
@@ -273,7 +273,7 @@ rsync -avz user@100.x.x.x:/backup/homelab/ /share/backup/
 
 **Fase 4: Restore componenti**
 1. Restore QTS config (procedura sopra)
-2. Ricreare struttura cartelle: `./setup-folders.sh`
+2. Ricreare struttura cartelle: `./scripts/setup-folders.sh`
 3. Restore Docker configs
 4. Restore VM Proxmox
 

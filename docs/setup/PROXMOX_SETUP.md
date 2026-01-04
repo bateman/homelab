@@ -644,5 +644,5 @@ df -h | grep nfs
 
 Dopo aver completato il setup Proxmox:
 
-1. → Procedere con [Configurazione Backup](../runbook-backup-restore.md)
-2. → Tornare a [START_HERE.md](../START_HERE.md) Fase 7
+1. → Procedere con [Configurazione Backup](../operations/runbook-backup-restore.md)
+2. → Tornare a [START_HERE.md](../../START_HERE.md) Fase 7
