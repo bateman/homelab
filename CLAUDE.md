@@ -68,9 +68,9 @@ homelab/
 | Portainer | 9443 | Gestione Docker |
 | FlareSolverr | 8191 | Bypass Cloudflare |
 | Recyclarr | - | Sync profili Trash Guides |
-| Watchtower | - | Auto-update container |
+| Watchtower | 8383 | Auto-update container (metriche API) |
 | Duplicati | 8200 | Backup incrementale con UI |
-| Traefik | 80/443/8082 | Reverse proxy con auto-discovery |
+| Traefik | 80/443 | Reverse proxy con auto-discovery |
 
 ## Comandi Comuni
 
@@ -179,9 +179,9 @@ Container dedicato con WebUI per backup automatizzati:
 - **Destinazione offsite**: Google Drive o Dropbox (configurare via WebUI)
 - **Retention consigliata**: 7 daily, 4 weekly, 3 monthly
 
-### Backup rapido manuale
+### Backup on-demand via Makefile
 ```bash
-make backup  # Crea tar.gz in ./backups/
+make backup  # Avvia backup Duplicati (richiede job configurato in WebUI)
 ```
 
 ### Altri backup
