@@ -55,9 +55,9 @@ services:
     container_name: pihole
     hostname: pihole
     environment:
-      TZ: Europe/Rome
+      TZ: ${TZ:-Europe/Rome}
       WEBPASSWORD: ${PIHOLE_PASSWORD:-changeme}
-      FTLCONF_LOCAL_IPV4: 192.168.3.10
+      FTLCONF_LOCAL_IPV4: ${NAS_IP:-192.168.3.10}
       PIHOLE_DNS_: 1.1.1.1;1.0.0.1
     volumes:
       - ./config/pihole/etc-pihole:/etc/pihole
@@ -104,7 +104,7 @@ services:
     image: ghcr.io/home-assistant/home-assistant:stable
     container_name: homeassistant
     environment:
-      TZ: Europe/Rome
+      TZ: ${TZ:-Europe/Rome}
     volumes:
       - ./config/homeassistant:/config
       - /run/dbus:/run/dbus:ro
@@ -112,7 +112,7 @@ services:
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8123/api/"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8123/api/"]
       <<: *common-healthcheck
     deploy:
       resources:
@@ -135,7 +135,6 @@ services:
       - ./config/portainer:/data
     ports:
       - "9443:9443"
-      - "9000:9000"
     networks:
       - media_net
       - proxy
@@ -162,20 +161,24 @@ services:
     image: containrrr/watchtower:latest
     container_name: watchtower
     environment:
-      TZ: Europe/Rome
+      TZ: ${TZ:-Europe/Rome}
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_LABEL_ENABLE: "true"
       WATCHTOWER_SCHEDULE: "0 0 4 * * *"
       WATCHTOWER_ROLLING_RESTART: "true"
       WATCHTOWER_TIMEOUT: 30s
+      WATCHTOWER_HTTP_API_METRICS: "true"
+      WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_API_TOKEN:-watchtower}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "8383:8080"
     networks:
       - media_net
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD", "pgrep", "-f", "watchtower"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/v1/metrics || exit 0"]
       <<: *common-healthcheck
     deploy:
       resources:
@@ -230,7 +233,8 @@ services:
   # Reverse Proxy
   # ---------------------------------------------------------------------------
   # Traefik: reverse proxy with Docker auto-discovery
-  # Dashboard: http://traefik.home.local or http://192.168.3.10:8082
+  # Dashboard: http://traefik.home.local (protected with basic auth)
+  # Default credentials: admin / admin (change via TRAEFIK_DASHBOARD_AUTH in .env)
   # Docs: https://doc.traefik.io/traefik/
   #
   # To expose a service, add these labels to the container:
@@ -245,9 +249,8 @@ services:
     image: traefik:v3.2
     container_name: traefik
     command:
-      # API and Dashboard
+      # API and Dashboard (secured via middleware, not insecure mode)
       - --api.dashboard=true
-      - --api.insecure=true
       # Docker Provider
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
@@ -264,7 +267,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8082:8080"  # Dashboard (8080 used by qBittorrent)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik:/etc/traefik/dynamic
@@ -286,8 +288,11 @@ services:
           memory: 64M
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-      # Dashboard on traefik.home.local
+      # Dashboard on traefik.home.local with basic auth
+      # Generate password hash: echo $(htpasswd -nB admin) | sed -e s/\\$/\\$\\$/g
       - "traefik.enable=true"
       - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.home.local`)"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
       - "traefik.http.routers.traefik-dashboard.entrypoints=web"
+      - "traefik.http.routers.traefik-dashboard.middlewares=traefik-auth"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH:-admin:$$2y$$05$$ZLF0pOQD6RCnPw.FpOYAduCMDFxpxL8e4R1Y1B0enMqQKMc2K.Wje}"
