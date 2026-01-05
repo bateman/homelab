@@ -57,7 +57,7 @@ crontab -e
 
 # Backup alle 02:00 (richiede downtime ~1 minuto)
 # Nota: adattare il path alla propria installazione
-0 2 * * * cd /share/container/homelab && make down && tar -czf /share/backup/docker-config-$(date +\%Y\%m\%d).tar.gz ./config && make up
+0 2 * * * cd /share/container/mediastack && make down && tar -czf /share/backup/docker-config-$(date +\%Y\%m\%d).tar.gz ./config && make up
 
 # Pulizia backup vecchi (mantieni ultimi 30)
 0 3 * * * find /share/backup -name "docker-config-*.tar.gz" -mtime +30 -delete

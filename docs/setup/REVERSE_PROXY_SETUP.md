@@ -124,12 +124,12 @@ nslookup sonarr.home.local
 ### 2.1 Configurazione gia' inclusa
 
 Traefik e' gia' configurato in `docker/compose.yml` con:
-- Dashboard su porta **8082** (8080 usata da qBittorrent)
+- Dashboard accessibile via reverse proxy su `traefik.home.local`
 - Auto-discovery Docker sulla rete `homelab_proxy`
 - Provider file per servizi non-Docker (Home Assistant)
 - Labels Traefik gia' aggiunte a tutti i servizi
 
-**Accesso Dashboard**: http://traefik.home.local o http://192.168.3.10:8082
+**Accesso Dashboard**: http://traefik.home.local (richiede DNS Pi-hole configurato)
 
 ### 2.2 Servizi gia' configurati
 
@@ -147,10 +147,10 @@ Le labels Traefik sono gia' aggiunte a tutti i servizi nei file compose:
 | Huntarr | huntarr.home.local | :9705 |
 | Cleanuparr | cleanuparr.home.local | :11011 |
 | Pi-hole | pihole.home.local | :8081 |
-| Portainer | portainer.home.local | :9000 |
+| Portainer | portainer.home.local | :9443 (HTTPS) |
 | Duplicati | duplicati.home.local | :8200 |
 | Home Assistant | ha.home.local | :8123 |
-| Traefik Dashboard | traefik.home.local | :8082 |
+| Traefik Dashboard | traefik.home.local | (via reverse proxy) |
 
 ### 2.3 Configurazione Home Assistant
 
@@ -169,8 +169,8 @@ make up
 # Verificare Traefik
 docker logs traefik
 
-# Accedere alla dashboard
-# http://traefik.home.local oppure http://192.168.3.10:8082
+# Accedere alla dashboard (richiede DNS Pi-hole configurato)
+# http://traefik.home.local
 ```
 
 ### 2.5 Test Accesso via Nome
@@ -303,7 +303,7 @@ Copiare il file CA (`~/.local/share/mkcert/rootCA.pem`) sui dispositivi client e
 
 | Servizio | URL | Porta diretta (backup) |
 |----------|-----|------------------------|
-| Dashboard Traefik | http://traefik.home.local | :8082 |
+| Dashboard Traefik | http://traefik.home.local | (via reverse proxy) |
 | Sonarr | http://sonarr.home.local | :8989 |
 | Radarr | http://radarr.home.local | :7878 |
 | Lidarr | http://lidarr.home.local | :8686 |
@@ -315,7 +315,7 @@ Copiare il file CA (`~/.local/share/mkcert/rootCA.pem`) sui dispositivi client e
 | Cleanuparr | http://cleanuparr.home.local | :11011 |
 | Pi-hole | http://pihole.home.local | :8081 |
 | Home Assistant | http://ha.home.local | :8123 |
-| Portainer | http://portainer.home.local | :9000 |
+| Portainer | http://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | http://duplicati.home.local | :8200 |
 | Plex | http://plex.home.local | :32400 (su 192.168.3.20) |
 

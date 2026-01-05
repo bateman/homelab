@@ -32,10 +32,16 @@ Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox c
 - **Bazarr** (6767) - Sottotitoli
 - **qBittorrent** (8080) - Torrent
 - **NZBGet** (6789) - Usenet
+- **Recyclarr** - Sync profili Trash Guides
+- **Huntarr** (9705) - Monitoring *arr
+- **Cleanuparr** (11011) - Pulizia automatica
+- **FlareSolverr** (8191) - Bypass Cloudflare
 - **Pi-hole** (8081) - DNS/Ad-blocking
 - **Home Assistant** (8123) - Domotica
 - **Portainer** (9443) - Gestione Docker
 - **Duplicati** (8200) - Backup automatizzati
+- **Watchtower** (8383) - Auto-update container
+- **Traefik** (80/443) - Reverse proxy
 
 ## Struttura Cartelle
 
@@ -44,7 +50,9 @@ Configurato per supporto hardlinking secondo [Trash Guides](https://trash-guides
 ```
 /share/data/
 ├── torrents/{movies,tv,music}/
-├── usenet/complete/{movies,tv,music}/
+├── usenet/
+│   ├── incomplete/
+│   └── complete/{movies,tv,music}/
 └── media/{movies,tv,music}/
 ```
 

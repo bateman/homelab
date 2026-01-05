@@ -40,7 +40,7 @@ Prima di iniziare, assicurati di avere:
 1. [ ] **U1**: UPS (peso in basso, minima generazione calore)
 2. [ ] **Isolante**: Neoprene 5mm tra UPS e NAS
 3. [ ] **U2**: QNAP TS-435XeU (zona fresca per HDD)
-4. [ ] **U3**: Pannello ventilato (protezione termica HDD)
+4. [ ] **U3**: Multipresa rack (alimentazione dispositivi)
 5. [ ] **U4**: Patch panel (passivo, buffer termico)
 6. [ ] **U5**: UDM-SE
 7. [ ] **U6**: USW-Enterprise-8-PoE

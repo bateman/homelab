@@ -40,7 +40,7 @@
 
 ## Dettaglio Componenti
 
-### U8 — Lenovo IdeaCentre Mini Gen 10
+### U8 — Lenovo IdeaCentre Mini 5i Gen 7
 
 | Spec | Valore |
 |------|--------|
@@ -204,12 +204,16 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 | Bazarr | 6767 | Sottotitoli automatici |
 | qBittorrent | 8080 | Client torrent |
 | NZBGet | 6789 | Client Usenet |
+| Recyclarr | - | Sync profili Trash Guides |
 | Huntarr | 9705 | Monitoring *arr |
 | Cleanuparr | 11011 | Pulizia automatica |
+| FlareSolverr | 8191 | Bypass Cloudflare |
 | Pi-hole | 8081 | DNS ad-blocking |
 | Home Assistant | 8123 | Automazione domotica |
 | Portainer | 9443 | Gestione Docker |
-| Traefik | 80/443/8082 | Reverse proxy |
+| Duplicati | 8200 | Backup incrementale |
+| Watchtower | 8383 | Auto-update container |
+| Traefik | 80/443 | Reverse proxy (dashboard via traefik.home.local) |
 
 ### Mini PC Proxmox (192.168.3.20)
 
