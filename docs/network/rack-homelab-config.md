@@ -224,11 +224,11 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 
 | Colore | Uso | Esempio |
 |--------|-----|---------|
-| Giallo | Rack interno | NAS, Mini PC |
-| Blu | Dispositivi stanze | Camera, Studio, Soggiorno |
-| Arancione | PoE | Access Point, telecamere future |
-| Bianco | Management / Uplink | UDM-SE, Switch |
-| Grigio | Spare | Non assegnati |
+| 🟡 Giallo | Rack interno | NAS, Mini PC |
+| 🔵 Blu | Dispositivi stanze | Camera, Studio, Soggiorno |
+| 🟠 Arancione | PoE | Access Point, telecamere future |
+| ⚪ Bianco | Management / Uplink | UDM-SE, Switch |
+| 🔘 Grigio | Spare | Non assegnati |
 
 > **Etichettatura**: Ogni cavo deve avere etichetta su entrambe le estremita' con: colore + numero + destinazione (es. "BLU-01 Studio/PC")
 
