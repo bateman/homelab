@@ -43,7 +43,7 @@ Prima di iniziare, assicurati di avere:
 4. [ ] **U3**: Multipresa rack (alimentazione dispositivi)
 5. [ ] **U4**: Patch panel (passivo, buffer termico)
 6. [ ] **U5**: UDM-SE
-7. [ ] **U6**: USW-Enterprise-8-PoE
+7. [ ] **U6**: USW-Pro-Max-16-PoE
 8. [ ] **U7**: Pannello ventilato (isolamento termico)
 9. [ ] **U8**: Lenovo Mini PC (top, dissipazione verso l'alto)
 

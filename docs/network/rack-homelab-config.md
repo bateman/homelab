@@ -12,7 +12,7 @@
 ┃ U7  │ 🌀 Pannello ventilato #1                                                ┃
 ┃     │   • Isola termicamente il Mini PC dal resto del rack                    ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ U6  │ 🔀 Switch PoE 2.5G                                                      ┃
+┃ U6  │ 🔀 Switch PoE (USW-Pro-Max-16-PoE)                                        ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ U5  │ 🌐 UDM-SE                                                               ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
@@ -58,15 +58,16 @@
 - Ubiquiti UACC-Rack-Panel-Vented-1U
 - Isolamento termico tra Mini PC e networking
 
-### U6 — UniFi USW-Enterprise-8-PoE
+### U6 — UniFi USW-Pro-Max-16-PoE
 
 | Spec | Valore |
 |------|--------|
-| Porte RJ45 | 8x 2.5GbE (PoE+) |
+| Porte RJ45 GbE | 12x 1GbE (PoE+) |
+| Porte RJ45 2.5GbE | 4x 2.5GbE (PoE++) |
 | Porte SFP+ | 2x 10GbE |
 | SFP+ Port 1 | Uplink a UDM-SE |
 | SFP+ Port 2 | QNAP NAS |
-| Budget PoE | 120W |
+| Budget PoE | 180W |
 | IP | 192.168.2.10 |
 
 ### U5 — UniFi Dream Machine SE (UDM-SE-EU)
@@ -289,7 +290,7 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (VLAN segmentate)
 | Dispositivo | IP | Note |
 |-------------|-----|------|
 | Gateway (UDM-SE) | 192.168.2.1 | Controller UniFi |
-| Switch UniFi | 192.168.2.10 | USW-Enterprise-8-PoE |
+| Switch UniFi | 192.168.2.10 | USW-Pro-Max-16-PoE |
 | Access Point | 192.168.2.20 | U6-Pro |
 
 #### VLAN 3 — Servers (192.168.3.0/24)

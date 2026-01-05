@@ -7,7 +7,7 @@
 ## Prerequisiti
 
 - [ ] UDM-SE montato in rack e alimentato
-- [ ] USW-Enterprise-8-PoE montato e alimentato
+- [ ] USW-Pro-Max-16-PoE montato e alimentato
 - [ ] Cavo ethernet da UDM-SE porta WAN a Iliad Box LAN
 - [ ] Cavo ethernet da UDM-SE porta 1 a Switch porta 1
 - [ ] PC collegato a una porta LAN del UDM-SE
@@ -137,14 +137,14 @@ IoT         192.168.6.0/24  VLAN 6
 ### 3.1 Adozione Switch
 
 1. [ ] Collegare switch a UDM-SE porta 1
-2. [ ] UniFi Devices → dovrebbe apparire "USW-Enterprise-8-PoE"
+2. [ ] UniFi Devices → dovrebbe apparire "USW-Pro-Max-16-PoE"
 3. [ ] Cliccare "Adopt"
 4. [ ] Attendere provisioning (~2 minuti)
 5. [ ] Aggiornare firmware se disponibile
 
 ### 3.2 Configurazione Porte Switch
 
-Settings → Devices → USW-Enterprise-8-PoE → Ports
+Settings → Devices → USW-Pro-Max-16-PoE → Ports
 
 | Porta | Profilo | VLAN | Dispositivo |
 |-------|---------|------|-------------|
@@ -439,7 +439,7 @@ nslookup google.com 192.168.3.10
                            │ Trunk (All VLANs)
                     ┌──────┴──────┐
                     │   Switch    │
-                    │USW-Ent-8-PoE│
+                    │USW-Pro-Max  │
                     └┬─────┬─────┬┘
                      │     │     │
             ┌────────┘     │     └────────┐

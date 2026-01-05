@@ -10,7 +10,7 @@ Questo repository contiene la configurazione infrastructure-as-code completa per
 - **NAS**: [QNAP TS-435XeU](https://www.qnap.com/it-it/product/ts-435xeu) (192.168.3.10) - Esegue lo stack Docker media
 - **Mini PC**: [Lenovo ThinkCentre neo 50q Gen 4](https://www.lenovo.com/it/it/p/desktops/thinkcentre/thinkcentre-neo-series/thinkcentre-neo-50q-gen-4-tiny-(intel)/12lmcto1wwit1) (192.168.3.20) - Esegue Proxmox con Plex
 - **Router**: [Ubiquiti UniFi Dream Machine SE](https://store.ui.com/eu/en/category/cloud-gateways-large-scale/products/udm-se) (192.168.2.1) - Router/Firewall
-- **Switch**: [Ubiquiti USW-Enterprise-8-PoE](https://store.ui.com/eu/en/category/switching-enterprise/products/usw-enterprise-8-poe) (192.168.2.10) - Switch PoE gestito
+- **Switch**: [Ubiquiti USW-Pro-Max-16-PoE](https://eu.store.ui.com/eu/en/products/usw-pro-max-16-poe) (192.168.2.10) - Switch PoE gestito
 - **Access Point**: [Ubiquiti U6-Pro](https://store.ui.com/eu/en/category/wifi-flagship-high-capacity/products/u6-pro) - Wi-Fi 6
 - **UPS**: [Eaton 5P 650i Rack G2](https://www.eaton.com/it/it-it/skuPage.5P650IRG2.html) - Gruppo di continuità
 - **Rack**: 8U con ottimizzazione raffreddamento passivo

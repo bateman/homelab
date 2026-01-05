@@ -38,8 +38,8 @@ Internet
          │ SFP+ 10G
          ▼
 ┌─────────────────┐
-│ USW-Enterprise  │
-│   -8-PoE        │
+│ USW-Pro-Max     │
+│   -16-PoE       │
 └─────────────────┘
 ```
 
@@ -80,7 +80,7 @@ Internet
 | Dispositivo | IP | Note |
 |-------------|-----|------|
 | Gateway (UDM-SE) | 192.168.2.1 | Controller UniFi integrato |
-| USW-Enterprise-8-PoE | 192.168.2.10 | Switch managed |
+| USW-Pro-Max-16-PoE | 192.168.2.10 | Switch managed |
 | U6-Pro Access Point | 192.168.2.20 | WiFi |
 
 ### VLAN 3 — Servers (192.168.3.0/24)
