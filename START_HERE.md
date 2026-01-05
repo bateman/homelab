@@ -52,7 +52,7 @@ Prima di iniziare, assicurati di avere:
 - [ ] Collegare UDM-SE porta WAN → Iliad Box LAN
 - [ ] Collegare UDM-SE porta 1 → Switch porta 1 (trunk VLAN)
 - [ ] Collegare Switch porta SFP+ → NAS porta SFP+ (10GbE)
-- [ ] Collegare Switch porta 2 → Mini PC (2.5GbE)
+- [ ] Collegare Switch porta 2 → Mini PC (2.5GbE via adattatore USB-C)
 - [ ] Collegare tutti i dispositivi a UPS
 
 ### Verifica

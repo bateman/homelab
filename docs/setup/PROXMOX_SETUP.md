@@ -1,4 +1,4 @@
-# Proxmox Setup - Mini PC Lenovo IdeaCentre
+# Proxmox Setup - Lenovo ThinkCentre neo 50q Gen 4
 
 > Guida per installare Proxmox VE sul Mini PC e configurare Plex con accesso remoto via Tailscale
 
@@ -6,7 +6,7 @@
 
 ## Prerequisiti
 
-- [ ] Mini PC Lenovo IdeaCentre montato in rack
+- [ ] Mini PC Lenovo ThinkCentre neo 50q Gen 4 montato in rack
 - [ ] Collegato a switch porta VLAN 3 (Servers)
 - [ ] Monitor e tastiera per installazione iniziale
 - [ ] Chiavetta USB (8GB+) per ISO Proxmox
@@ -764,7 +764,7 @@ ssh admin@100.x.x.x "wakeonlan AA:BB:CC:DD:EE:FF"
 
 ### 8.3 GPU Passthrough Intel Quick Sync per LXC
 
-Il Mini PC Lenovo ha CPU Intel i5-1240H con iGPU integrata che supporta Quick Sync
+Il Mini PC Lenovo ThinkCentre neo 50q Gen 4 ha CPU Intel i5-13420H con iGPU integrata che supporta Quick Sync
 per hardware transcoding in Plex. Questo riduce drasticamente il carico CPU.
 
 #### 8.3.1 Verificare iGPU su Host Proxmox
@@ -857,7 +857,7 @@ vainfo
 # Output atteso con elenco profili supportati (H.264, HEVC, VP9, AV1)
 ```
 
-Output esempio `vainfo` per i5-1240H:
+Output esempio `vainfo` per i5-13420H:
 ```
 libva info: VA-API version 1.17.0
 libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so

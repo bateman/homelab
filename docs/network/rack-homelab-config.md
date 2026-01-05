@@ -40,14 +40,15 @@
 
 ## Dettaglio Componenti
 
-### U8 — Lenovo IdeaCentre Mini 5i Gen 7
+### U8 — Lenovo ThinkCentre neo 50q Gen 4
 
 | Spec | Valore |
 |------|--------|
-| CPU | Intel Core i5-1240H (Quick Sync) |
+| CPU | Intel Core i5-13420H (Quick Sync) |
 | RAM | 16GB DDR5 |
-| Storage | 1TB M.2 NVMe PCIe Gen4 |
-| Network | 1x 2.5GbE RJ45 |
+| Storage | 1TB M.2 NVMe PCIe Gen4 (Opal 2.0) |
+| Network | 1x 1GbE RJ45 (integrata) + 1x 2.5GbE USB-C (adattatore) |
+| Adattatore | StarTech US2GC30 (USB-C 3.0 to 2.5GbE) |
 | OS | Proxmox VE |
 | Services | Plex, Docker, Tailscale |
 | IP | 192.168.3.20 |
