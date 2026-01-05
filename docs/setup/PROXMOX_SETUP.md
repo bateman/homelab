@@ -623,12 +623,151 @@ La guida documenta:
 - **Nginx Proxy Manager** (alternativa): configurazione via WebUI
 - **Pi-hole + Tailscale DNS**: stesso URL da locale e remoto
 
-### 8.2 GPU Passthrough Intel Quick Sync per LXC
+### 8.2 Wake-on-LAN (WOL)
+
+Il Mini PC può essere acceso da remoto tramite Wake-on-LAN, utile per risparmiare energia
+quando Plex non è in uso e accenderlo solo quando necessario.
+
+#### 8.2.1 Abilitare WOL nel BIOS
+
+1. Accendere il Mini PC e premere F1 (o F2) per entrare nel BIOS
+2. Navigare a: Power → Wake on LAN
+3. Impostare su **Enabled** (o "Primary" se disponibile)
+4. Salvare e uscire (F10)
+
+#### 8.2.2 Configurare WOL Permanente su Proxmox
+
+```bash
+# SSH nel Proxmox
+ssh root@192.168.3.20
+
+# Installare strumenti WOL
+apt install -y ethtool wakeonlan
+
+# Identificare interfaccia di rete (di solito enp* o eth0)
+ip link show
+# Annotare il nome dell'interfaccia (es. enp2s0)
+
+# Verificare stato WOL attuale
+ethtool enp2s0 | grep Wake-on
+# Output: Wake-on: d (disabled) o g (enabled)
+
+# Abilitare WOL (sostituire enp2s0 con la tua interfaccia)
+ethtool -s enp2s0 wol g
+```
+
+#### 8.2.3 Rendere WOL Persistente al Reboot
+
+Creare un file di configurazione systemd-networkd:
+
+```bash
+# Identificare il nome corretto dell'interfaccia
+IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(enp|eth)' | head -1)
+echo "Interfaccia rilevata: $IFACE"
+
+# Creare configurazione WOL persistente
+cat > /etc/systemd/network/99-wol.link << EOF
+[Match]
+Name=$IFACE
+
+[Link]
+WakeOnLan=magic
+EOF
+
+# Riavviare networking
+systemctl restart systemd-networkd
+
+# Verificare configurazione applicata
+ethtool $IFACE | grep Wake-on
+# Dovrebbe mostrare: Wake-on: g
+```
+
+#### 8.2.4 Annotare MAC Address
+
+```bash
+# Ottenere MAC address per WOL
+ip link show $IFACE | grep ether
+# Output esempio: link/ether AA:BB:CC:DD:EE:FF brd ff:ff:ff:ff:ff:ff
+
+# Annotare il MAC address (AA:BB:CC:DD:EE:FF)
+```
+
+Salva il MAC address in un posto sicuro - servirà per inviare il magic packet.
+
+#### 8.2.5 Testare Wake-on-LAN
+
+**Da un altro dispositivo sulla stessa rete (es. NAS o PC Desktop):**
+
+```bash
+# Installare wakeonlan se non presente
+apt install -y wakeonlan  # Debian/Ubuntu
+# oppure
+brew install wakeonlan    # macOS
+
+# Spegnere il Mini PC
+ssh root@192.168.3.20 "shutdown -h now"
+
+# Attendere 30 secondi che si spenga completamente
+
+# Inviare magic packet (sostituire con il tuo MAC)
+wakeonlan AA:BB:CC:DD:EE:FF
+
+# Verificare che si accenda
+ping 192.168.3.20
+```
+
+#### 8.2.6 WOL da iPhone con Shortcuts
+
+Puoi creare una scorciatoia iOS per accendere il Mini PC e aprire Plex:
+
+1. Aprire app **Shortcuts** (Comandi Rapidi)
+2. Creare nuova scorciatoia
+
+**Azione 1: Esegui script SSH** (richiede server SSH accessibile, es. NAS)
+- Host: 192.168.3.10 (NAS)
+- User: admin
+- Script: `wakeonlan AA:BB:CC:DD:EE:FF`
+
+**Azione 2: Attendi** 30 secondi
+
+**Azione 3: Apri URL**
+- URL: `plex://` (apre app Plex)
+
+**Alternativa senza SSH**: Usa app dedicate come "Wake On Lan" o "Mocha WOL" dall'App Store.
+
+#### 8.2.7 WOL via Tailscale (Remoto)
+
+Per accendere il Mini PC quando sei fuori casa:
+
+1. Il NAS (192.168.3.10) deve essere sempre acceso
+2. Installa Tailscale sul NAS
+3. Da remoto, connettiti via Tailscale al NAS
+4. Esegui: `wakeonlan AA:BB:CC:DD:EE:FF`
+
+```bash
+# Esempio da terminale remoto via Tailscale
+ssh admin@100.x.x.x "wakeonlan AA:BB:CC:DD:EE:FF"
+```
+
+#### 8.2.8 Troubleshooting WOL
+
+| Problema | Causa | Soluzione |
+|----------|-------|-----------|
+| WOL non funziona | Non abilitato nel BIOS | Verificare impostazioni BIOS |
+| Wake-on: d dopo reboot | Config non persistente | Verificare 99-wol.link |
+| Funziona solo a volte | Fast Startup Windows | Non applicabile (Proxmox) |
+| Non funziona da altra VLAN | Broadcast non passa | Inviare da stessa VLAN |
+| Non funziona via Tailscale | Magic packet non routato | Usare dispositivo sulla LAN |
+
+> **Nota**: Il magic packet WOL è broadcast Layer 2, quindi deve essere inviato
+> da un dispositivo sulla stessa VLAN/subnet del Mini PC.
+
+### 8.3 GPU Passthrough Intel Quick Sync per LXC
 
 Il Mini PC Lenovo ha CPU Intel i5-1240H con iGPU integrata che supporta Quick Sync
 per hardware transcoding in Plex. Questo riduce drasticamente il carico CPU.
 
-#### 8.2.1 Verificare iGPU su Host Proxmox
+#### 8.3.1 Verificare iGPU su Host Proxmox
 
 ```bash
 # SSH nel Proxmox
@@ -648,7 +787,7 @@ lspci -k | grep -A 3 VGA
 # Dovrebbe mostrare "Kernel driver in use: i915"
 ```
 
-#### 8.2.2 Caricare Moduli Kernel (se necessario)
+#### 8.3.2 Caricare Moduli Kernel (se necessario)
 
 ```bash
 # Verificare che i915 sia caricato
@@ -661,7 +800,7 @@ modprobe i915
 echo "i915" >> /etc/modules
 ```
 
-#### 8.2.3 Configurare Permessi Device
+#### 8.3.3 Configurare Permessi Device
 
 ```bash
 # Identificare GID del gruppo render e video
@@ -671,7 +810,7 @@ getent group render video
 # Annotare i numeri (108 e 44 nell'esempio)
 ```
 
-#### 8.2.4 Configurare LXC per GPU Passthrough
+#### 8.3.4 Configurare LXC per GPU Passthrough
 
 **IMPORTANTE**: Fermare il container prima di modificare la configurazione.
 
@@ -697,7 +836,7 @@ lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,creat
 > **Nota**: `c 226:0` è card0, `c 226:128` è renderD128. Il major number 226
 > è standard per device DRI su Linux.
 
-#### 8.2.5 Avviare Container e Verificare
+#### 8.3.5 Avviare Container e Verificare
 
 ```bash
 # Avviare container
@@ -734,7 +873,7 @@ vainfo: Supported profile and entrypoints
       ...
 ```
 
-#### 8.2.6 Configurare Plex per Hardware Transcoding
+#### 8.3.6 Configurare Plex per Hardware Transcoding
 
 1. Accedere a Plex: `http://192.168.3.21:32400/web`
 2. Settings → Transcoder
@@ -742,7 +881,7 @@ vainfo: Supported profile and entrypoints
 4. [ ] **Use hardware acceleration when available**: Checked
 5. [ ] **Use hardware-accelerated video encoding**: Checked
 
-#### 8.2.7 Verificare Hardware Transcoding Attivo
+#### 8.3.7 Verificare Hardware Transcoding Attivo
 
 Durante la riproduzione con transcoding:
 
@@ -756,7 +895,7 @@ intel_gpu_top
 Oppure in Plex Dashboard → Now Playing, verificare che mostri "(hw)" accanto
 al codec durante il transcoding.
 
-#### 8.2.8 Troubleshooting GPU
+#### 8.3.8 Troubleshooting GPU
 
 | Problema | Causa | Soluzione |
 |----------|-------|-----------|
