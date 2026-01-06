@@ -306,41 +306,6 @@ rsync -avz user@100.x.x.x:/backup/homelab/ /share/backup/
 
 ---
 
-## Verifica Periodica Backup
-
-**Checklist mensile:**
-
-```bash
-# 1. Verificare esistenza backup Docker (ultimi 5 giorni)
-ls -la /share/backup/docker-config-*.tar.gz | tail -5
-
-# 2. Verificare esistenza backup QTS (ultima settimana)
-ls -la /share/backup/qts-config/
-
-# 3. Verificare esistenza backup Proxmox (su Proxmox, ultima settimana)
-ls /mnt/nas-backup/
-
-# 4. Verificare integrità backup Docker
-tar -tzf /share/backup/docker-config-$(date +%Y%m%d).tar.gz > /dev/null && echo "OK"
-
-# 5. Verificare spazio disco (< 80%)
-df -h /share/backup
-
-# 6. Verificare sync offsite (se configurato rclone)
-rclone check /share/backup gdrive-backup:homelab-backup
-```
-
-**Test restore trimestrale:**
-
-Ogni 3 mesi, eseguire restore di test:
-1. Restore config Sonarr in directory temporanea
-2. Verificare che database SQLite sia leggibile
-3. Restore VM Proxmox con nuovo VMID temporaneo
-4. Verificare boot e funzionamento
-5. Eliminare VM di test
-
----
-
 ## Verifica Automatica Backup
 
 ### Script Implementato
