@@ -54,6 +54,8 @@ services:
     image: pihole/pihole:latest
     container_name: pihole
     hostname: pihole
+    env_file:
+      - .env.secrets
     environment:
       TZ: ${TZ:-Europe/Rome}
       WEBPASSWORD: ${PIHOLE_PASSWORD:-changeme}
@@ -163,6 +165,8 @@ services:
   watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
+    env_file:
+      - .env.secrets
     environment:
       TZ: ${TZ:-Europe/Rome}
       WATCHTOWER_CLEANUP: "true"
@@ -238,13 +242,13 @@ services:
   # ---------------------------------------------------------------------------
   # Traefik: reverse proxy with Docker auto-discovery
   # Dashboard: http://traefik.home.local (protected with basic auth)
-  # Default credentials: admin / admin (change via TRAEFIK_DASHBOARD_AUTH in .env)
+  # Default credentials: admin / admin (change via TRAEFIK_DASHBOARD_AUTH in .env.secrets)
   # Docs: https://doc.traefik.io/traefik/
   #
   # To expose a service, add these labels to the container:
   #   - "traefik.enable=true"
   #   - "traefik.http.routers.<name>.rule=Host(`<name>.home.local`)"
-  #   - "traefik.http.routers.<name>.entrypoints=web"
+  #   - "traefik.http.routers.<name>.entrypoints=websecure"
   #   - "traefik.http.services.<name>.loadbalancer.server.port=<port>"
   #
   # Requires Pi-hole DNS records pointing *.home.local -> 192.168.3.10
@@ -252,6 +256,8 @@ services:
   traefik:
     image: traefik:v3.2
     container_name: traefik
+    env_file:
+      - .env.secrets
     command:
       # API and Dashboard (secured via middleware, not insecure mode)
       - --api.dashboard=true

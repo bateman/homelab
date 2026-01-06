@@ -104,8 +104,12 @@ setup: check-compose
 	@./scripts/setup-folders.sh
 	@if [ ! -f docker/.env ]; then \
 		echo ">>> Creating .env from template..."; \
-		cp docker/.env.example docker/.env 2>/dev/null || echo "PIHOLE_PASSWORD=changeme" > docker/.env; \
-		echo "$(YELLOW)WARNING: Edit docker/.env with your passwords$(NC)"; \
+		cp docker/.env.example docker/.env; \
+	fi
+	@if [ ! -f docker/.env.secrets ]; then \
+		echo ">>> Creating .env.secrets from template..."; \
+		cp docker/.env.secrets.example docker/.env.secrets; \
+		echo "$(YELLOW)WARNING: Edit docker/.env.secrets with your passwords$(NC)"; \
 	fi
 	@echo "$(GREEN)>>> Setup complete$(NC)"
 

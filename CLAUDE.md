@@ -33,7 +33,8 @@ homelab/
 ├── docker/                         # Stack Docker
 │   ├── compose.yml                 # Stack infrastruttura (Pi-hole, HA, Portainer, Duplicati)
 │   ├── compose.media.yml           # Stack media (*arr, download clients, monitoring)
-│   ├── .env.example                # Template variabili ambiente
+│   ├── .env.example                # Template config non sensibile
+│   ├── .env.secrets.example        # Template credenziali (gitignored dopo copia)
 │   └── recyclarr.yml               # Esempio config profili qualita' Trash Guides
 ├── scripts/                        # Script operativi
 │   ├── setup-folders.sh            # Creazione struttura cartelle iniziale
@@ -163,13 +164,23 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 6. Documenta nella tabella servizi sopra e in `docs/network/rack-homelab-config.md`
 7. Aggiungi regole firewall se serve accesso inter-VLAN
 
-## Posizione API Key
+## Gestione Secrets
+
+Le credenziali sono separate dalla configurazione:
+- **`docker/.env`** - Configurazione non sensibile (PUID, PGID, TZ, porte)
+- **`docker/.env.secrets`** - Password e API key (gitignored)
+
+### Posizione API Key
 
 Le API key sono salvate nella config di ogni servizio e vanno recuperate da:
 - Sonarr/Radarr/Lidarr/Prowlarr: Settings -> General -> API Key
 - qBittorrent: Settings -> WebUI -> Authentication
 - NZBGet: Settings -> Security -> ControlUsername/ControlPassword
-- Password Pi-hole: file `docker/.env` (`PIHOLE_PASSWORD`)
+
+Le password di sistema vanno in `docker/.env.secrets`:
+- `PIHOLE_PASSWORD` - Password Pi-hole
+- `TRAEFIK_DASHBOARD_AUTH` - Basic auth Traefik (hash bcrypt)
+- `WATCHTOWER_API_TOKEN` - Token API Watchtower
 
 ## Strategia Backup
 
