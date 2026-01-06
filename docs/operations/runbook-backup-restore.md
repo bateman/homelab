@@ -353,6 +353,93 @@ Ogni 3 mesi, eseguire restore di test:
 
 ---
 
+## Limitazione: Nessun Test Automatico di Restore
+
+### Problema
+
+Attualmente il test di restore e' **completamente manuale**:
+- Dipende dalla disciplina dell'operatore
+- Nessun alert se i backup sono corrotti
+- Si scopre che il restore non funziona solo durante un'emergenza
+- Il test trimestrale viene spesso rimandato o dimenticato
+
+### Impatto
+
+| Rischio | Probabilita' | Impatto |
+|---------|--------------|---------|
+| Backup corrotto non rilevato | Media | **Critico** - Perdita dati |
+| Restore fallisce durante DR | Bassa-Media | **Critico** - Downtime prolungato |
+| Incompatibilita' versione dopo update | Bassa | Alto - Richiede troubleshooting |
+
+### Raccomandazioni (Non Implementate)
+
+**Opzione 1: Script di verifica automatica (minimo)**
+
+```bash
+#!/bin/bash
+# verify-backup.sh - Eseguire settimanalmente via cron
+# Verifica che il backup sia estraibile e i DB SQLite leggibili
+
+BACKUP_DIR="/share/backup"
+LATEST=$(ls -t $BACKUP_DIR/docker-config-*.tar.gz 2>/dev/null | head -1)
+TEMP_DIR=$(mktemp -d)
+ERRORS=0
+
+# Test estrazione
+if ! tar -xzf "$LATEST" -C "$TEMP_DIR" 2>/dev/null; then
+    echo "ERRORE: Backup non estraibile: $LATEST"
+    ERRORS=$((ERRORS + 1))
+fi
+
+# Test SQLite databases
+for db in sonarr/sonarr.db radarr/radarr.db lidarr/lidarr.db; do
+    if [ -f "$TEMP_DIR/config/$db" ]; then
+        if ! sqlite3 "$TEMP_DIR/config/$db" "SELECT 1" >/dev/null 2>&1; then
+            echo "ERRORE: Database corrotto: $db"
+            ERRORS=$((ERRORS + 1))
+        fi
+    fi
+done
+
+rm -rf "$TEMP_DIR"
+
+if [ $ERRORS -gt 0 ]; then
+    # Inviare notifica (webhook, email, etc.)
+    echo "Verifica backup fallita con $ERRORS errori"
+    exit 1
+fi
+
+echo "Verifica backup OK: $LATEST"
+```
+
+**Opzione 2: Duplicati Verify (integrato)**
+
+Duplicati ha una funzione "Verify" che controlla l'integrita' dei backup:
+1. WebUI → Selezionare backup
+2. Operazioni → "Verify files"
+3. Schedulare via Advanced options → `--backup-test-samples=5`
+
+**Opzione 3: Restore automatico in ambiente isolato (completo)**
+
+Per homelab avanzati:
+1. VM Proxmox dedicata per test restore
+2. Script che ogni settimana:
+   - Restore config in directory temporanea
+   - Avvia container in rete isolata
+   - Verifica healthcheck
+   - Elimina e notifica risultato
+
+### Accettazione del Rischio
+
+Per questo homelab, il rischio e' **parzialmente accettato**:
+- La verifica manuale mensile (`ls`, `tar -tzf`) rileva corruzioni evidenti
+- Duplicati ha checksum integrati che rilevano bit rot
+- I dati media sono ricostruibili (non critici)
+
+**Mitigazione consigliata**: Implementare almeno lo script di verifica automatica (Opzione 1) con notifica in caso di errore.
+
+---
+
 ## Contatti e Escalation
 
 | Risorsa | Contatto |
