@@ -95,6 +95,7 @@ Accedere a Pi-hole: `http://192.168.3.10:8081`
 | `ha.home.local` | 192.168.3.10 |
 | `portainer.home.local` | 192.168.3.10 |
 | `duplicati.home.local` | 192.168.3.10 |
+| `uptime.home.local` | 192.168.3.10 |
 | `plex.home.local` | 192.168.3.20 |
 
 ### 1.4 Verifica
@@ -151,6 +152,7 @@ Le labels Traefik sono gia' aggiunte a tutti i servizi nei file compose:
 | Pi-hole | https://pihole.home.local | :8081 |
 | Portainer | https://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | https://duplicati.home.local | :8200 |
+| Uptime Kuma | https://uptime.home.local | :3001 |
 | Home Assistant | https://ha.home.local | :8123 |
 | Traefik Dashboard | https://traefik.home.local | (via reverse proxy) |
 
@@ -346,6 +348,7 @@ make restart
 | Home Assistant | https://ha.home.local | :8123 |
 | Portainer | https://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | https://duplicati.home.local | :8200 |
+| Uptime Kuma | https://uptime.home.local | :3001 |
 | Plex | https://plex.home.local | :32400 (su 192.168.3.20) |
 
 > **Nota**: Gli URL funzionano sia dalla rete locale che da remoto via Tailscale (grazie a Pi-hole come DNS).

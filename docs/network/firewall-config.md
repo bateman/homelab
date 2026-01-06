@@ -89,7 +89,7 @@ Internet
 |-------------|-----|------|
 | Gateway (UDM-SE) | 192.168.3.1 | — |
 | NAS QNAP | 192.168.3.10 | Media stack, Pi-hole |
-| Mini PC Proxmox | 192.168.3.20 | Plex, Tailscale, Nginx Proxy Manager |
+| Mini PC Proxmox | 192.168.3.20 | Plex, Tailscale |
 | Stampante | 192.168.3.30 | Stampa da PC e dispositivi Media |
 | PC Desktop | 192.168.3.40 | Workstation principale |
 
@@ -180,13 +180,13 @@ Definire in Settings -> Profiles -> Port Groups:
 | DNS | 53 |
 | Plex | 32400 |
 | Plex-Discovery | 32410-32414 |
-| Arr-Stack | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8081, 8191 |
+| Arr-Stack | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8081, 8191, 8200, 3001 |
 | HomeAssistant | 8123 |
 | Portainer | 9443 |
 | Stampa | 631, 9100 |
 | mDNS | 5353 |
 
-> **Nota**: Arr-Stack include: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), Pi-hole (8081), FlareSolverr (8191).
+> **Nota**: Arr-Stack include: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), Pi-hole (8081), FlareSolverr (8191), Duplicati (8200), Uptime Kuma (3001).
 
 ---
 
