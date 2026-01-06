@@ -40,6 +40,7 @@ Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox c
 - **Home Assistant** (8123) - Domotica
 - **Portainer** (9443) - Gestione Docker
 - **Duplicati** (8200) - Backup automatizzati
+- **Uptime Kuma** (3001) - Monitoring e alerting
 - **Watchtower** (8383) - Auto-update container
 - **Traefik** (80/443) - Reverse proxy
 

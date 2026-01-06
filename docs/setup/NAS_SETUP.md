@@ -346,6 +346,8 @@ make logs | grep -i error
 - [ ] Pi-hole: `http://192.168.3.10:8081/admin` risponde
 - [ ] Home Assistant: `http://192.168.3.10:8123` risponde
 - [ ] Portainer: `https://192.168.3.10:9443` risponde
+- [ ] Uptime Kuma: `http://192.168.3.10:3001` risponde
+- [ ] Duplicati: `http://192.168.3.10:8200` risponde
 
 ---
 

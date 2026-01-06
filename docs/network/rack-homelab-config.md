@@ -214,6 +214,7 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 | Home Assistant | 8123 | Automazione domotica |
 | Portainer | 9443 | Gestione Docker |
 | Duplicati | 8200 | Backup incrementale |
+| Uptime Kuma | 3001 | Monitoring e alerting |
 | Watchtower | 8383 | Auto-update container |
 | Traefik | 80/443 | Reverse proxy (dashboard via traefik.home.local) |
 
