@@ -25,24 +25,24 @@ Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox c
 
 ## Stack Docker (NAS)
 
-- **Sonarr** (8989) - Serie TV
-- **Radarr** (7878) - Film
-- **Lidarr** (8686) - Musica
-- **Prowlarr** (9696) - Indexer
-- **Bazarr** (6767) - Sottotitoli
-- **qBittorrent** (8080) - Torrent
-- **NZBGet** (6789) - Usenet
-- **Recyclarr** - Sync profili Trash Guides
-- **Huntarr** (9705) - Monitoring *arr
-- **Cleanuparr** (11011) - Pulizia automatica
-- **FlareSolverr** (8191) - Bypass Cloudflare
-- **Pi-hole** (8081) - DNS/Ad-blocking
-- **Home Assistant** (8123) - Domotica
-- **Portainer** (9443) - Gestione Docker
-- **Duplicati** (8200) - Backup automatizzati
-- **Uptime Kuma** (3001) - Monitoring e alerting
-- **Watchtower** (8383) - Auto-update container
-- **Traefik** (80/443) - Reverse proxy
+- **[Sonarr](https://sonarr.tv/)** (8989) - Serie TV
+- **[Radarr](https://radarr.video/)** (7878) - Film
+- **[Lidarr](https://lidarr.audio/)** (8686) - Musica
+- **[Prowlarr](https://prowlarr.com/)** (9696) - Indexer
+- **[Bazarr](https://www.bazarr.media/)** (6767) - Sottotitoli
+- **[qBittorrent](https://www.qbittorrent.org/)** (8080) - Torrent
+- **[NZBGet](https://nzbget.com/)** (6789) - Usenet
+- **[Recyclarr](https://recyclarr.dev/)** - Sync profili Trash Guides
+- **[Huntarr](https://github.com/plexguide/Huntarr.io)** (9705) - Monitoring *arr
+- **[Cleanuparr](https://github.com/Cleanuparr/Cleanuparr)** (11011) - Pulizia automatica
+- **[FlareSolverr](https://github.com/FlareSolverr/FlareSolverr)** (8191) - Bypass Cloudflare
+- **[Pi-hole](https://pi-hole.net/)** (8081) - DNS/Ad-blocking
+- **[Home Assistant](https://www.home-assistant.io/)** (8123) - Domotica
+- **[Portainer](https://www.portainer.io/)** (9443) - Gestione Docker
+- **[Duplicati](https://www.duplicati.com/)** (8200) - Backup automatizzati
+- **[Uptime Kuma](https://github.com/louislam/uptime-kuma)** (3001) - Monitoring e alerting
+- **[Watchtower](https://containrrr.dev/watchtower/)** (8383) - Auto-update container
+- **[Traefik](https://traefik.io/traefik/)** (80/443) - Reverse proxy
 
 ## Struttura Cartelle
 
