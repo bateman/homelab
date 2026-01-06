@@ -34,7 +34,7 @@ Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox c
 - **[NZBGet](https://nzbget.com/)** (6789) - Usenet
 - **[Recyclarr](https://recyclarr.dev/)** - Sync profili Trash Guides
 - **[Huntarr](https://github.com/plexguide/Huntarr.io)** (9705) - Monitoring *arr
-- **[Cleanuparr](https://github.com/flmedicin/Cleanuparr)** (11011) - Pulizia automatica
+- **[Cleanuparr](https://github.com/Cleanuparr/Cleanuparr)** (11011) - Pulizia automatica
 - **[FlareSolverr](https://github.com/FlareSolverr/FlareSolverr)** (8191) - Bypass Cloudflare
 - **[Pi-hole](https://pi-hole.net/)** (8081) - DNS/Ad-blocking
 - **[Home Assistant](https://www.home-assistant.io/)** (8123) - Domotica
