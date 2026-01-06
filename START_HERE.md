@@ -347,7 +347,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 ### Verifica Fase 6
 
 - [ ] Proxmox accessibile: `https://192.168.3.20:8006`
-- [ ] Plex accessibile: `http://192.168.3.20:32400/web`
+- [ ] Plex accessibile: `http://192.168.3.21:32400/web` (container LXC)
 - [ ] Tailscale connesso
 
 ---

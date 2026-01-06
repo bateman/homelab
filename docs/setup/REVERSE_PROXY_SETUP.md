@@ -96,7 +96,7 @@ Accedere a Pi-hole: `http://192.168.3.10:8081`
 | `portainer.home.local` | 192.168.3.10 |
 | `duplicati.home.local` | 192.168.3.10 |
 | `uptime.home.local` | 192.168.3.10 |
-| `plex.home.local` | 192.168.3.20 |
+| `plex.home.local` | 192.168.3.21 |
 
 ### 1.4 Verifica
 
@@ -349,7 +349,7 @@ make restart
 | Portainer | https://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | https://duplicati.home.local | :8200 |
 | Uptime Kuma | https://uptime.home.local | :3001 |
-| Plex | https://plex.home.local | :32400 (su 192.168.3.20) |
+| Plex | https://plex.home.local | :32400 (su 192.168.3.21) |
 
 > **Nota**: Gli URL funzionano sia dalla rete locale che da remoto via Tailscale (grazie a Pi-hole come DNS).
 > HTTP (porta 80) viene automaticamente reindirizzato a HTTPS (porta 443).

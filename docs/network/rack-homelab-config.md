@@ -220,10 +220,10 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 
 ### Mini PC Proxmox (192.168.3.20)
 
-| Servizio | Porta | Descrizione |
-|----------|-------|-------------|
-| Plex | 32400 | Media server |
-| Tailscale | — | VPN mesh |
+| Servizio | Porta | IP | Descrizione |
+|----------|-------|-----|-------------|
+| Plex | 32400 | 192.168.3.21 | Media server (container LXC) |
+| Tailscale | — | 192.168.3.20 | VPN mesh (host) |
 
 ---
 
