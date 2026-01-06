@@ -150,7 +150,7 @@ vzdump <vmid> --storage backup-nas --compress zstd --mode snapshot
 
 ### 4. Backup Offsite (Cloud)
 
-**Opzione A: Duplicati verso Dropbox o Google Drive (consigliato)**
+**Duplicati verso Dropbox o Google Drive**
 
 Duplicati ha supporto integrato per Dropbox e Google Drive:
 
@@ -161,28 +161,6 @@ Duplicati ha supporto integrato per Dropbox e Google Drive:
 5. Sorgente: `/source/config`
 6. Schedule: giornaliero
 7. Retention: Smart (7 daily, 4 weekly, 3 monthly)
-
-**Opzione B: Rclone verso cloud storage**
-```bash
-# Installare rclone sul NAS
-# https://rclone.org/install/
-
-# Configurare remote (esempio: Google Drive)
-rclone config
-# Seguire wizard per creare remote "gdrive-backup"
-
-# Sync backup folder
-rclone sync /share/backup gdrive-backup:homelab-backup --progress
-
-# Automatizzare via cron (domenica alle 04:00)
-0 4 * * 0 rclone sync /share/backup gdrive-backup:homelab-backup --log-file=/var/log/rclone-backup.log
-```
-
-**Opzione C: Sync via Tailscale verso altro dispositivo**
-```bash
-# Se hai un secondo NAS/server raggiungibile via Tailscale
-rsync -avz --delete /share/backup/ user@100.x.x.x:/backup/homelab/
-```
 
 ---
 
