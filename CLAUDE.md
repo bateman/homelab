@@ -249,6 +249,7 @@ Il Docker socket (`/var/run/docker.sock`) e' un vettore di attacco critico: un c
 ## Note Importanti
 
 - **HTTPS abilitato**: Tutti i servizi sono accessibili via HTTPS (certificato self-signed). HTTP viene reindirizzato automaticamente a HTTPS
+- **DNS con fallback**: Pi-hole e' DNS primario, Cloudflare (1.1.1.1) come fallback. Se Pi-hole e' down, `*.home.local` non risolve ma internet funziona. Vedi `docs/network/firewall-config.md` per configurazione DHCP.
 - Home Assistant usa `network_mode: host` per discovery dispositivi
 - Iliad Box (192.168.1.254) resta come router upstream (double NAT)
 - Tailscale su Mini PC fornisce accesso remoto senza port forwarding

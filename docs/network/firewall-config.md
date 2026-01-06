@@ -411,6 +411,66 @@ Percorso: Settings -> Traffic Management -> Traffic Rules
 
 ---
 
+## Configurazione DNS (DHCP)
+
+### Architettura DNS
+
+Pi-hole (192.168.3.10) e' il DNS primario per tutte le VLAN, fornendo ad-blocking e risoluzione nomi locali (`*.home.local`). Per evitare Single Point of Failure, configurare un DNS di fallback.
+
+### Configurazione per VLAN
+
+Percorso: Settings -> Networks -> (seleziona VLAN) -> DHCP -> DHCP DNS Server
+
+| VLAN | DNS Primario | DNS Secondario | Note |
+|------|--------------|----------------|------|
+| 2 (Management) | 192.168.3.10 | 1.1.1.1 | Pi-hole + fallback Cloudflare |
+| 3 (Servers) | N/A | N/A | IP statici, DNS configurato su ogni host |
+| 4 (Media) | 192.168.3.10 | 1.1.1.1 | Pi-hole + fallback Cloudflare |
+| 5 (Guest) | 1.1.1.1 | 1.0.0.1 | Solo Cloudflare (no Pi-hole) |
+| 6 (IoT) | 192.168.3.10 | 1.1.1.1 | Pi-hole + fallback Cloudflare |
+
+> **Nota VLAN 5 (Guest)**: Gli ospiti usano direttamente Cloudflare per evitare che vedano i record DNS locali (`*.home.local`).
+
+### Comportamento Fallback
+
+- **Normale**: Client usano Pi-hole (192.168.3.10) per tutte le query
+- **Pi-hole down**: Client fallback su Cloudflare (1.1.1.1) automaticamente
+- **Durante fallback**: Ad-blocking disattivato, nomi `*.home.local` non risolvono
+
+### Verifica Configurazione
+
+```bash
+# Da un client DHCP (es. telefono su VLAN Media)
+# Verificare che riceva entrambi i DNS
+# Android: Impostazioni -> WiFi -> Dettagli rete
+# iOS: Impostazioni -> WiFi -> (i) -> DNS
+
+# Test fallback (dal PC desktop)
+# 1. Fermare Pi-hole
+docker stop pihole
+
+# 2. Verificare che DNS funzioni ancora (usa fallback)
+nslookup google.com
+# Deve funzionare via 1.1.1.1
+
+# 3. Verificare che *.home.local NON funziona (normale durante fallback)
+nslookup sonarr.home.local
+# Fallisce - usare IP diretto o riavviare Pi-hole
+
+# 4. Riavviare Pi-hole
+docker start pihole
+```
+
+### Limitazioni del Fallback DNS
+
+- **Nomi locali**: `*.home.local` non risolvono durante outage Pi-hole
+- **Ad-blocking**: Disattivato durante fallback
+- **Workaround**: Accedere ai servizi via IP diretto (es. `https://192.168.3.10:8989`)
+
+> **Per ridondanza completa con ad-blocking**: Installare secondo Pi-hole su Proxmox con Gravity Sync. Vedere documentazione Gravity Sync: https://github.com/vmstan/gravity-sync
+
+---
+
 ## Port Forwarding
 
 Per l'accesso remoto tramite Tailscale, non e' necessario port forwarding: Tailscale usa NAT traversal.
