@@ -594,10 +594,65 @@ Per questo homelab, il rischio e' accettato perche':
 
 ---
 
+## Double NAT (Limitazione Nota)
+
+### Architettura Attuale
+
+```
+Internet
+    │
+    ▼
+┌─────────────────┐
+│   Iliad Box     │  ◄── NAT #1 (ISP)
+│  192.168.1.254  │
+│   (router mode) │
+└────────┬────────┘
+         │ 192.168.1.1
+         ▼
+┌─────────────────┐
+│    UDM-SE       │  ◄── NAT #2 (Homelab)
+│   WAN: .1.1     │
+│   LAN: .2-6.x   │
+└─────────────────┘
+```
+
+### Impatto
+
+| Funzionalita' | Impatto | Workaround |
+|---------------|---------|------------|
+| **Port forwarding** | Non funziona | Tailscale (gia' implementato) |
+| **UPnP/NAT-PMP** | Non funziona | Configurazione manuale non possibile |
+| **Gaming online** | Possibili problemi NAT strict | Usare Tailscale o tollerare |
+| **VoIP/SIP** | Possibili problemi | Non usato in questo homelab |
+| **Latenza** | +1-2ms teorici | Trascurabile |
+| **Throughput** | Nessun impatto | - |
+
+### Perche' non e' risolto
+
+1. **Iliad Box non supporta bridge mode**: L'ISP Iliad non permette di mettere il router in bridge/modem-only mode
+2. **ONT separato non disponibile**: Iliad usa router integrato, non fornisce ONT standalone
+3. **DMZ attiva**: Iliad Box ha DMZ verso UDM-SE (192.168.1.1), mitiga parzialmente il problema
+
+### Mitigazioni Implementate
+
+- **Tailscale**: Accesso remoto senza port forwarding (NAT traversal)
+- **DMZ su Iliad Box**: Tutto il traffico inoltrato a UDM-SE
+- **Servizi interni**: Tutti i servizi homelab funzionano correttamente sulla rete locale
+
+### Soluzione Definitiva (Non Implementata)
+
+Per eliminare il Double NAT:
+1. Cambiare ISP con uno che fornisce ONT separato o bridge mode
+2. Usare PPPoE diretto su UDM-SE (richiede credenziali ISP)
+
+> **Accettazione**: Per questo homelab il Double NAT e' accettato. Tailscale risolve l'accesso remoto e i servizi interni non sono impattati.
+
+---
+
 ## Note
 
 - **Rete Legacy**: La subnet 192.168.1.0/24 resta per Iliad Box e dispositivi Vimar. Non e' gestita dal UDM-SE.
-- **Double NAT**: Presente con Iliad Box in modalita' router. Non impatta le prestazioni per uso homelab.
+- **Double NAT**: Vedi sezione dedicata sopra.
 - **Tailscale**: Installato su Mini PC Proxmox, fornisce accesso VPN mesh senza port forwarding.
 - **Home Assistant**: Accessibile da VLAN Media (telefoni/tablet) e VLAN IoT (dispositivi smart).
 - **Backup config**: Esportare regolarmente da Settings -> System -> Backup.
