@@ -135,14 +135,14 @@ Dopo aver modificato il file, riavvia Home Assistant:
 2. Vai in **Settings** (icona ingranaggio) → **Notifications**
 3. Clicca **Setup Notification**
 4. Configura:
-   - **Notification Type**: `Home Assistant`
+   - **Notification Type**: `Webhook`
    - **Friendly Name**: `Home Assistant iOS`
-   - **Home Assistant URL**: `http://localhost:8123`
-   - **Webhook URL path**: `/api/webhook/uptime-kuma-alert`
+   - **Post URL**: `http://192.168.3.10:8123/api/webhook/uptime-kuma-alert`
+   - **Request Body**: `application/json`
 5. Clicca **Test** per verificare
 6. Se il test funziona, clicca **Save**
 
-> **Nota**: Si usa `localhost` perche' Home Assistant gira in `network_mode: host` sullo stesso NAS di Uptime Kuma.
+> **Nota**: Si usa l'IP `192.168.3.10` (non `localhost`) perche' Uptime Kuma gira in rete Docker mentre Home Assistant e' in `network_mode: host`. L'IP dell'host e' necessario per la comunicazione.
 
 ### Associare la Notifica ai Monitor
 
