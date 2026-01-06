@@ -18,6 +18,8 @@
 #
 # Cron example (domenica alle 03:00):
 #   0 3 * * 0 /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
+#
+# Note: Compatible with QNAP BusyBox environment
 # =============================================================================
 
 set -euo pipefail
@@ -109,12 +111,13 @@ notify_ha() {
 
 check_qnap() {
     # Verify we're running on QNAP NAS
-    if [ ! -f /etc/config/qpkg.conf ] && [ ! -d /share ]; then
+    # Check for QNAP-specific paths (either qpkg.conf or /share should exist)
+    if [ ! -f /etc/config/qpkg.conf ] && [ ! -d /share/CACHEDEV1_DATA ]; then
         log "${RED}ERRORE: Questo script deve essere eseguito su un NAS QNAP${NC}"
         return 1
     fi
 
-    # Check if config_util exists
+    # Check if config_util exists and is executable
     if [ ! -x /sbin/config_util ]; then
         log "${RED}ERRORE: /sbin/config_util non trovato${NC}"
         log "Assicurati di eseguire come admin/root"
@@ -161,9 +164,9 @@ create_backup() {
 cleanup_old_backups() {
     log "Pulizia backup vecchi (mantengo ultimi ${RETENTION_COUNT})..."
 
-    # Count existing backups
+    # Count existing backups (BusyBox compatible)
     local count
-    count=$(find "$BACKUP_DIR" -name "qts-config-*.bin" -type f 2>/dev/null | wc -l)
+    count=$(ls -1 "$BACKUP_DIR"/qts-config-*.bin 2>/dev/null | wc -l)
 
     if [ "$count" -le "$RETENTION_COUNT" ]; then
         log_verbose "Nessuna pulizia necessaria ($count backup presenti)"
@@ -171,17 +174,15 @@ cleanup_old_backups() {
     fi
 
     # Remove oldest backups beyond retention count
+    # Using ls -t (sort by modification time, newest first) - BusyBox compatible
     local to_delete
     to_delete=$((count - RETENTION_COUNT))
 
-    find "$BACKUP_DIR" -name "qts-config-*.bin" -type f -printf '%T@ %p\n' 2>/dev/null | \
-        sort -n | \
-        head -n "$to_delete" | \
-        cut -d' ' -f2- | \
-        while read -r file; do
-            log_verbose "Rimozione: $(basename "$file")"
-            rm -f "$file"
-        done
+    # Get oldest files and delete them
+    ls -1t "$BACKUP_DIR"/qts-config-*.bin 2>/dev/null | tail -n "$to_delete" | while read -r file; do
+        log_verbose "Rimozione: $(basename "$file")"
+        rm -f "$file"
+    done
 
     log "${GREEN}Rimossi $to_delete backup vecchi${NC}"
 }
@@ -191,15 +192,16 @@ list_backups() {
     log "Backup disponibili:"
 
     if [ -d "$BACKUP_DIR" ]; then
-        find "$BACKUP_DIR" -name "qts-config-*.bin" -type f -printf '%T@ %p\n' 2>/dev/null | \
-            sort -rn | \
-            head -10 | \
-            while read -r timestamp file; do
-                local date_str size
-                date_str=$(date -d "@${timestamp%.*}" '+%Y-%m-%d %H:%M' 2>/dev/null || echo "unknown")
-                size=$(du -h "$file" | cut -f1)
-                echo "  - $(basename "$file") ($size, $date_str)"
-            done
+        # BusyBox compatible listing (ls -lt sorts by time, newest first)
+        ls -lh "$BACKUP_DIR"/qts-config-*.bin 2>/dev/null | head -10 | while read -r line; do
+            # Extract filename and size from ls -lh output
+            local filename size
+            filename=$(echo "$line" | awk '{print $NF}')
+            size=$(echo "$line" | awk '{print $5}')
+            if [ -n "$filename" ]; then
+                echo "  - $(basename "$filename") ($size)"
+            fi
+        done || echo "  Nessun backup trovato"
     else
         echo "  Nessun backup trovato"
     fi
