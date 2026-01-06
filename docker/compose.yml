@@ -249,7 +249,7 @@ services:
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/v1/metrics || exit 0"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/v1/metrics"]
       <<: *common-healthcheck
     deploy:
       resources:
