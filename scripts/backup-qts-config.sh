@@ -22,7 +22,8 @@
 # Note: Compatible with QNAP BusyBox environment
 # =============================================================================
 
-set -euo pipefail
+set -uo pipefail
+# Note: -e disabled because we handle errors manually and need glob failures to not exit
 
 # -----------------------------------------------------------------------------
 # Configuration
@@ -52,7 +53,7 @@ fi
 VERBOSE=false
 NOTIFY=false
 
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
     case $1 in
         --verbose|-v)
             VERBOSE=true
@@ -165,8 +166,10 @@ cleanup_old_backups() {
     log "Pulizia backup vecchi (mantengo ultimi ${RETENTION_COUNT})..."
 
     # Count existing backups (BusyBox compatible)
+    # Using find to avoid glob expansion issues when no files exist
     local count
-    count=$(ls -1 "$BACKUP_DIR"/qts-config-*.bin 2>/dev/null | wc -l)
+    count=$(find "$BACKUP_DIR" -maxdepth 1 -name "qts-config-*.bin" -type f 2>/dev/null | wc -l)
+    count=${count:-0}
 
     if [ "$count" -le "$RETENTION_COUNT" ]; then
         log_verbose "Nessuna pulizia necessaria ($count backup presenti)"
@@ -179,6 +182,7 @@ cleanup_old_backups() {
     to_delete=$((count - RETENTION_COUNT))
 
     # Get oldest files and delete them
+    # shellcheck disable=SC2012
     ls -1t "$BACKUP_DIR"/qts-config-*.bin 2>/dev/null | tail -n "$to_delete" | while read -r file; do
         log_verbose "Rimozione: $(basename "$file")"
         rm -f "$file"
@@ -192,8 +196,18 @@ list_backups() {
     log "Backup disponibili:"
 
     if [ -d "$BACKUP_DIR" ]; then
+        # Check if any backup files exist using find (avoids glob issues)
+        local file_count
+        file_count=$(find "$BACKUP_DIR" -maxdepth 1 -name "qts-config-*.bin" -type f 2>/dev/null | wc -l)
+
+        if [ "${file_count:-0}" -eq 0 ]; then
+            echo "  Nessun backup trovato"
+            return 0
+        fi
+
         # BusyBox compatible listing (ls -lt sorts by time, newest first)
-        ls -lh "$BACKUP_DIR"/qts-config-*.bin 2>/dev/null | head -10 | while read -r line; do
+        # shellcheck disable=SC2012
+        ls -lht "$BACKUP_DIR"/qts-config-*.bin 2>/dev/null | head -10 | while read -r line; do
             # Extract filename and size from ls -lh output
             local filename size
             filename=$(echo "$line" | awk '{print $NF}')
@@ -201,7 +215,7 @@ list_backups() {
             if [ -n "$filename" ]; then
                 echo "  - $(basename "$filename") ($size)"
             fi
-        done || echo "  Nessun backup trovato"
+        done
     else
         echo "  Nessun backup trovato"
     fi
