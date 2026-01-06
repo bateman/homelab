@@ -90,6 +90,7 @@ make logs       # Segui tutti i logs
 make status     # Stato container e utilizzo risorse
 make health     # Health check tutti i servizi
 make backup     # Trigger backup Duplicati on-demand
+make verify-backup  # Verifica integrita' backup (estrazione + SQLite)
 make urls       # Mostra tutti gli URL WebUI
 make update     # Aggiorna immagini e restart (pull + restart)
 make clean      # Rimuove container, immagini e volumi orfani

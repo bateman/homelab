@@ -353,73 +353,72 @@ Ogni 3 mesi, eseguire restore di test:
 
 ---
 
-## Limitazione: Nessun Test Automatico di Restore
+## Verifica Automatica Backup
 
-### Problema
+### Script Implementato
 
-Attualmente il test di restore e' **completamente manuale**:
-- Dipende dalla disciplina dell'operatore
-- Nessun alert se i backup sono corrotti
-- Si scopre che il restore non funziona solo durante un'emergenza
-- Il test trimestrale viene spesso rimandato o dimenticato
+Lo script `scripts/verify-backup.sh` verifica automaticamente l'integrita' dei backup:
 
-### Impatto
+1. **Estrazione archivio**: Verifica che il tar.gz sia leggibile
+2. **Integrita' SQLite**: Controlla i database di Sonarr, Radarr, Lidarr, Prowlarr, Bazarr
+3. **Eta' backup**: Warning se piu' vecchio di 7 giorni
+4. **File critici**: Verifica presenza configurazioni Traefik
 
-| Rischio | Probabilita' | Impatto |
-|---------|--------------|---------|
-| Backup corrotto non rilevato | Media | **Critico** - Perdita dati |
-| Restore fallisce durante DR | Bassa-Media | **Critico** - Downtime prolungato |
-| Incompatibilita' versione dopo update | Bassa | Alto - Richiede troubleshooting |
-
-### Raccomandazioni (Non Implementate)
-
-**Opzione 1: Script di verifica automatica (minimo)**
+### Utilizzo
 
 ```bash
-#!/bin/bash
-# verify-backup.sh - Eseguire settimanalmente via cron
-# Verifica che il backup sia estraibile e i DB SQLite leggibili
+# Verifica manuale (verbose)
+make verify-backup
 
-BACKUP_DIR="/share/backup"
-LATEST=$(ls -t $BACKUP_DIR/docker-config-*.tar.gz 2>/dev/null | head -1)
-TEMP_DIR=$(mktemp -d)
-ERRORS=0
+# Oppure direttamente
+./scripts/verify-backup.sh --verbose
 
-# Test estrazione
-if ! tar -xzf "$LATEST" -C "$TEMP_DIR" 2>/dev/null; then
-    echo "ERRORE: Backup non estraibile: $LATEST"
-    ERRORS=$((ERRORS + 1))
-fi
-
-# Test SQLite databases
-for db in sonarr/sonarr.db radarr/radarr.db lidarr/lidarr.db; do
-    if [ -f "$TEMP_DIR/config/$db" ]; then
-        if ! sqlite3 "$TEMP_DIR/config/$db" "SELECT 1" >/dev/null 2>&1; then
-            echo "ERRORE: Database corrotto: $db"
-            ERRORS=$((ERRORS + 1))
-        fi
-    fi
-done
-
-rm -rf "$TEMP_DIR"
-
-if [ $ERRORS -gt 0 ]; then
-    # Inviare notifica (webhook, email, etc.)
-    echo "Verifica backup fallita con $ERRORS errori"
-    exit 1
-fi
-
-echo "Verifica backup OK: $LATEST"
+# Con notifica Home Assistant (richiede HA_WEBHOOK_URL)
+./scripts/verify-backup.sh --notify
 ```
 
-**Opzione 2: Duplicati Verify (integrato)**
+### Automazione con Cron
+
+Per verifica automatica settimanale (consigliato):
+
+```bash
+# Sul NAS, aggiungere a crontab
+crontab -e
+
+# Domenica alle 05:00, dopo il backup notturno
+0 5 * * 0 /share/container/homelab/scripts/verify-backup.sh --notify >> /var/log/verify-backup.log 2>&1
+```
+
+### Notifiche Home Assistant (Opzionale)
+
+Per ricevere alert in caso di errori:
+
+1. Creare automazione webhook in Home Assistant
+2. Impostare variabile ambiente:
+   ```bash
+   # In docker/.env.secrets
+   HA_WEBHOOK_URL=http://192.168.3.10:8123/api/webhook/backup-verify
+   ```
+3. Eseguire con `--notify`
+
+### Exit Codes
+
+| Codice | Significato |
+|--------|-------------|
+| 0 | Verifica OK |
+| 1 | Errori rilevati (backup corrotto) |
+| 2 | Nessun backup trovato |
+
+### Opzioni Avanzate (Non Implementate)
+
+**Duplicati Verify (integrato)**
 
 Duplicati ha una funzione "Verify" che controlla l'integrita' dei backup:
 1. WebUI → Selezionare backup
 2. Operazioni → "Verify files"
 3. Schedulare via Advanced options → `--backup-test-samples=5`
 
-**Opzione 3: Restore automatico in ambiente isolato (completo)**
+**Restore automatico in ambiente isolato**
 
 Per homelab avanzati:
 1. VM Proxmox dedicata per test restore
@@ -428,15 +427,6 @@ Per homelab avanzati:
    - Avvia container in rete isolata
    - Verifica healthcheck
    - Elimina e notifica risultato
-
-### Accettazione del Rischio
-
-Per questo homelab, il rischio e' **parzialmente accettato**:
-- La verifica manuale mensile (`ls`, `tar -tzf`) rileva corruzioni evidenti
-- Duplicati ha checksum integrati che rilevano bit rot
-- I dati media sono ricostruibili (non critici)
-
-**Mitigazione consigliata**: Implementare almeno lo script di verifica automatica (Opzione 1) con notifica in caso di errore.
 
 ---
 

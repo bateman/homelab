@@ -5,7 +5,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup setup-dry-run up down restart logs pull update status backup clean health show-urls urls \
+.PHONY: help setup setup-dry-run up down restart logs pull update status backup verify-backup clean health show-urls urls \
         validate check-docker check-compose check-curl recyclarr-sync recyclarr-config \
         logs-% shell-%
 
@@ -80,8 +80,9 @@ help:
 	@echo "    $(CYAN)make show-urls$(NC)   - Show WebUI URLs"
 	@echo ""
 	@echo "  $(PURPLE)Backup$(NC)"
-	@echo "    $(CYAN)make backup$(NC) - Trigger Duplicati backup on demand"
-	@echo "                   Duplicati WebUI: http://$(HOST_IP):8200"
+	@echo "    $(CYAN)make backup$(NC)        - Trigger Duplicati backup on demand"
+	@echo "    $(CYAN)make verify-backup$(NC) - Verify backup integrity (extraction + SQLite)"
+	@echo "                         Duplicati WebUI: http://$(HOST_IP):8200"
 	@echo ""
 	@echo "  $(PURPLE)Utilities$(NC)"
 	@echo "    $(CYAN)make clean$(NC)            - Remove orphan Docker resources"
@@ -205,6 +206,13 @@ backup: check-docker check-curl
 		echo "Run 'make up' first"; \
 		exit 1; \
 	fi
+
+verify-backup:
+	@echo ">>> Verifying backup integrity..."
+	@if [ ! -x scripts/verify-backup.sh ]; then \
+		chmod +x scripts/verify-backup.sh; \
+	fi
+	@./scripts/verify-backup.sh --verbose
 
 clean: check-docker
 	@echo ">>> Cleaning orphan Docker resources..."
