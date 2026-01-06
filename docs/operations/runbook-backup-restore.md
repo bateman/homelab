@@ -71,12 +71,7 @@ tar -tzf /share/backup/docker-config-YYYYMMDD.tar.gz | head -20
 
 ### 2. Backup Configurazione QNAP QTS
 
-**Via interfaccia web (raccomandato):**
-
-1. Accedere a `https://192.168.3.10:5000` (porta HTTPS di QTS, la 8080 è usata da qBittorrent)
-2. Control Panel → System → Backup/Restore
-3. Backup System Settings → Create Backup
-4. Salvare il file `.bin` generato
+Lo script `scripts/backup-qts-config.sh` automatizza il backup della configurazione QTS.
 
 **Contenuto del backup QTS:**
 - Configurazione utenti e gruppi
@@ -85,23 +80,38 @@ tar -tzf /share/backup/docker-config-YYYYMMDD.tar.gz | head -20
 - App installate e relative configurazioni
 - Scheduled tasks
 
-**Automazione con script:**
+**Backup manuale:**
 ```bash
-#!/bin/bash
-# backup-qts-config.sh
-# Eseguire sul NAS via SSH
-
-BACKUP_DIR="/share/backup/qts-config"
-DATE=$(date +%Y%m%d)
-
-mkdir -p "$BACKUP_DIR"
-
-# Backup configurazione sistema (richiede admin)
-/sbin/config_util -e "$BACKUP_DIR/qts-config-$DATE.bin"
-
-# Mantieni ultime 5 versioni
-ls -t "$BACKUP_DIR"/qts-config-*.bin | tail -n +6 | xargs -r rm
+make backup-qts  # Esegue backup e mostra output dettagliato
 ```
+
+**Automazione con cron (consigliato):**
+```bash
+# Sul NAS, aggiungere a crontab (ssh admin@192.168.3.10)
+crontab -e
+
+# Domenica alle 03:00
+0 3 * * 0 /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
+```
+
+**Parametri configurabili (variabili ambiente):**
+| Variabile | Default | Descrizione |
+|-----------|---------|-------------|
+| `QTS_BACKUP_DIR` | `/share/backup/qts-config` | Directory destinazione backup |
+| `QTS_BACKUP_RETENTION` | `5` | Numero backup da mantenere |
+| `HA_WEBHOOK_URL` | - | URL webhook Home Assistant per notifiche |
+
+**Verifica backup disponibili:**
+```bash
+ls -la /share/backup/qts-config/
+```
+
+**Backup manuale via interfaccia web (alternativa):**
+
+1. Accedere a `https://192.168.3.10:5000` (porta HTTPS di QTS)
+2. Control Panel → System → Backup/Restore
+3. Backup System Settings → Create Backup
+4. Salvare il file `.bin` generato
 
 ### 3. Backup VM Proxmox
 
@@ -445,5 +455,6 @@ Per homelab avanzati:
 
 | Data | Modifica |
 |------|----------|
+| 2026-01-06 | Aggiunto script backup-qts-config.sh per automazione backup QTS |
 | 2025-01-04 | Revisione: Duplicati come metodo primario, fix comandi docker compose, chiarimenti porte QTS |
 | 2025-01-02 | Creazione documento |
