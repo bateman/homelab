@@ -71,12 +71,7 @@ tar -tzf /share/backup/docker-config-YYYYMMDD.tar.gz | head -20
 
 ### 2. Backup Configurazione QNAP QTS
 
-**Via interfaccia web (raccomandato):**
-
-1. Accedere a `https://192.168.3.10:5000` (porta HTTPS di QTS, la 8080 è usata da qBittorrent)
-2. Control Panel → System → Backup/Restore
-3. Backup System Settings → Create Backup
-4. Salvare il file `.bin` generato
+Lo script `scripts/backup-qts-config.sh` automatizza il backup della configurazione QTS.
 
 **Contenuto del backup QTS:**
 - Configurazione utenti e gruppi
@@ -85,23 +80,38 @@ tar -tzf /share/backup/docker-config-YYYYMMDD.tar.gz | head -20
 - App installate e relative configurazioni
 - Scheduled tasks
 
-**Automazione con script:**
+**Backup manuale:**
 ```bash
-#!/bin/bash
-# backup-qts-config.sh
-# Eseguire sul NAS via SSH
-
-BACKUP_DIR="/share/backup/qts-config"
-DATE=$(date +%Y%m%d)
-
-mkdir -p "$BACKUP_DIR"
-
-# Backup configurazione sistema (richiede admin)
-/sbin/config_util -e "$BACKUP_DIR/qts-config-$DATE.bin"
-
-# Mantieni ultime 5 versioni
-ls -t "$BACKUP_DIR"/qts-config-*.bin | tail -n +6 | xargs -r rm
+make backup-qts  # Esegue backup e mostra output dettagliato
 ```
+
+**Automazione con cron (consigliato):**
+```bash
+# Sul NAS, aggiungere a crontab (ssh admin@192.168.3.10)
+crontab -e
+
+# Domenica alle 03:00
+0 3 * * 0 /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
+```
+
+**Parametri configurabili (variabili ambiente):**
+| Variabile | Default | Descrizione |
+|-----------|---------|-------------|
+| `QTS_BACKUP_DIR` | `/share/backup/qts-config` | Directory destinazione backup |
+| `QTS_BACKUP_RETENTION` | `5` | Numero backup da mantenere |
+| `HA_WEBHOOK_URL` | - | URL webhook Home Assistant per notifiche |
+
+**Verifica backup disponibili:**
+```bash
+ls -la /share/backup/qts-config/
+```
+
+**Backup manuale via interfaccia web (alternativa):**
+
+1. Accedere a `https://192.168.3.10:5000` (porta HTTPS di QTS)
+2. Control Panel → System → Backup/Restore
+3. Backup System Settings → Create Backup
+4. Salvare il file `.bin` generato
 
 ### 3. Backup VM Proxmox
 
@@ -140,7 +150,7 @@ vzdump <vmid> --storage backup-nas --compress zstd --mode snapshot
 
 ### 4. Backup Offsite (Cloud)
 
-**Opzione A: Duplicati verso Dropbox o Google Drive (consigliato)**
+**Duplicati verso Dropbox o Google Drive**
 
 Duplicati ha supporto integrato per Dropbox e Google Drive:
 
@@ -151,28 +161,6 @@ Duplicati ha supporto integrato per Dropbox e Google Drive:
 5. Sorgente: `/source/config`
 6. Schedule: giornaliero
 7. Retention: Smart (7 daily, 4 weekly, 3 monthly)
-
-**Opzione B: Rclone verso cloud storage**
-```bash
-# Installare rclone sul NAS
-# https://rclone.org/install/
-
-# Configurare remote (esempio: Google Drive)
-rclone config
-# Seguire wizard per creare remote "gdrive-backup"
-
-# Sync backup folder
-rclone sync /share/backup gdrive-backup:homelab-backup --progress
-
-# Automatizzare via cron (domenica alle 04:00)
-0 4 * * 0 rclone sync /share/backup gdrive-backup:homelab-backup --log-file=/var/log/rclone-backup.log
-```
-
-**Opzione C: Sync via Tailscale verso altro dispositivo**
-```bash
-# Se hai un secondo NAS/server raggiungibile via Tailscale
-rsync -avz --delete /share/backup/ user@100.x.x.x:/backup/homelab/
-```
 
 ---
 
@@ -318,41 +306,6 @@ rsync -avz user@100.x.x.x:/backup/homelab/ /share/backup/
 
 ---
 
-## Verifica Periodica Backup
-
-**Checklist mensile:**
-
-```bash
-# 1. Verificare esistenza backup Docker (ultimi 5 giorni)
-ls -la /share/backup/docker-config-*.tar.gz | tail -5
-
-# 2. Verificare esistenza backup QTS (ultima settimana)
-ls -la /share/backup/qts-config/
-
-# 3. Verificare esistenza backup Proxmox (su Proxmox, ultima settimana)
-ls /mnt/nas-backup/
-
-# 4. Verificare integrità backup Docker
-tar -tzf /share/backup/docker-config-$(date +%Y%m%d).tar.gz > /dev/null && echo "OK"
-
-# 5. Verificare spazio disco (< 80%)
-df -h /share/backup
-
-# 6. Verificare sync offsite (se configurato rclone)
-rclone check /share/backup gdrive-backup:homelab-backup
-```
-
-**Test restore trimestrale:**
-
-Ogni 3 mesi, eseguire restore di test:
-1. Restore config Sonarr in directory temporanea
-2. Verificare che database SQLite sia leggibile
-3. Restore VM Proxmox con nuovo VMID temporaneo
-4. Verificare boot e funzionamento
-5. Eliminare VM di test
-
----
-
 ## Verifica Automatica Backup
 
 ### Script Implementato
@@ -445,5 +398,6 @@ Per homelab avanzati:
 
 | Data | Modifica |
 |------|----------|
+| 2026-01-06 | Aggiunto script backup-qts-config.sh per automazione backup QTS |
 | 2025-01-04 | Revisione: Duplicati come metodo primario, fix comandi docker compose, chiarimenti porte QTS |
 | 2025-01-02 | Creazione documento |

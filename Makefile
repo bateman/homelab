@@ -5,7 +5,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup setup-dry-run up down restart logs pull update status backup verify-backup clean health show-urls urls \
+.PHONY: help setup setup-dry-run up down restart logs pull update status backup backup-qts verify-backup clean health show-urls urls \
         validate check-docker check-compose check-curl recyclarr-sync recyclarr-config \
         logs-% shell-%
 
@@ -81,6 +81,7 @@ help:
 	@echo ""
 	@echo "  $(PURPLE)Backup$(NC)"
 	@echo "    $(CYAN)make backup$(NC)        - Trigger Duplicati backup on demand"
+	@echo "    $(CYAN)make backup-qts$(NC)    - Backup QNAP QTS system configuration"
 	@echo "    $(CYAN)make verify-backup$(NC) - Verify backup integrity (extraction + SQLite)"
 	@echo "                         Duplicati WebUI: http://$(HOST_IP):8200"
 	@echo ""
@@ -213,6 +214,13 @@ verify-backup:
 		chmod +x scripts/verify-backup.sh; \
 	fi
 	@./scripts/verify-backup.sh --verbose
+
+backup-qts:
+	@echo ">>> Backing up QNAP QTS configuration..."
+	@if [ ! -x scripts/backup-qts-config.sh ]; then \
+		chmod +x scripts/backup-qts-config.sh; \
+	fi
+	@./scripts/backup-qts-config.sh --verbose
 
 clean: check-docker
 	@echo ">>> Cleaning orphan Docker resources..."

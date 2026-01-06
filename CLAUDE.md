@@ -38,7 +38,9 @@ homelab/
 │   └── recyclarr.yml               # Esempio config profili qualita' Trash Guides
 ├── scripts/                        # Script operativi
 │   ├── setup-folders.sh            # Creazione struttura cartelle iniziale
-│   └── generate-certs.sh           # Generazione certificati HTTPS self-signed
+│   ├── generate-certs.sh           # Generazione certificati HTTPS self-signed
+│   ├── backup-qts-config.sh        # Backup automatico configurazione QNAP QTS
+│   └── verify-backup.sh            # Verifica integrita' backup Docker
 └── docs/                           # Documentazione
     ├── setup/                      # Guide setup iniziale
     │   ├── NETWORK_SETUP.md        # Setup rete UniFi e VLAN
@@ -92,6 +94,7 @@ make logs       # Segui tutti i logs
 make status     # Stato container e utilizzo risorse
 make health     # Health check tutti i servizi
 make backup     # Trigger backup Duplicati on-demand
+make backup-qts # Backup configurazione QNAP QTS
 make verify-backup  # Verifica integrita' backup (estrazione + SQLite)
 make urls       # Mostra tutti gli URL WebUI
 make update     # Aggiorna immagini e restart (pull + restart)
