@@ -67,12 +67,13 @@ homelab/
 | Cleanuparr | 11011 | Pulizia automatica |
 | Pi-hole | 8081 | DNS ad-blocking |
 | Home Assistant | 8123 | Automazione domotica |
-| Portainer | 9443 | Gestione Docker |
+| Portainer | 9443 | Gestione Docker (accesso socket diretto) |
 | FlareSolverr | 8191 | Bypass Cloudflare |
 | Recyclarr | - | Sync profili Trash Guides |
-| Watchtower | 8383 | Auto-update container (metriche API) |
+| Watchtower | 8383 | Auto-update container (via socket proxy) |
 | Duplicati | 8200 | Backup incrementale con UI |
-| Traefik | 80/443 | Reverse proxy HTTPS con auto-discovery |
+| Traefik | 80/443 | Reverse proxy HTTPS (via socket proxy) |
+| Socket Proxy | - | Proxy sicuro Docker socket (interno) |
 
 ## Comandi Comuni
 
@@ -227,6 +228,23 @@ chown -R 1000:100 ./config/<service>
 - Controlla regole firewall in `docs/network/firewall-config.md`
 - Verifica che mDNS reflection sia abilitato se necessario
 - Verifica che il gruppo porte includa la porta del servizio
+
+## Sicurezza Docker Socket
+
+Il Docker socket (`/var/run/docker.sock`) e' un vettore di attacco critico: un container compromesso con accesso al socket puo' ottenere controllo completo dell'host.
+
+**Architettura implementata**:
+- **Socket Proxy** (tecnativa/docker-socket-proxy): espone solo le API Docker necessarie su rete interna
+- **Traefik**: usa socket proxy (solo lettura container/network)
+- **Watchtower**: usa socket proxy (lettura + restart container)
+- **Portainer**: accesso diretto al socket (richiede API complete)
+
+**Perche' Portainer non usa il proxy**: Portainer necessita di EXEC, VOLUMES, BUILD e altre API per funzionalita' complete (console, gestione volumi). Il proxy blocca queste API per sicurezza.
+
+**Mitigazione rischio Portainer**:
+- Accessibile solo via HTTPS con autenticazione
+- Limitare accesso a utenti fidati
+- In ambienti ad alta sicurezza: rimuovere Portainer e usare solo CLI
 
 ## Note Importanti
 

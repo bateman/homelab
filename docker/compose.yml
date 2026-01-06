@@ -19,6 +19,10 @@ networks:
   proxy:
     name: homelab_proxy
     driver: bridge
+  socket_proxy:
+    name: homelab_socket_proxy
+    driver: bridge
+    internal: true  # No external access - only container to container
 
 # =============================================================================
 # Reusable YAML Anchors
@@ -47,6 +51,58 @@ x-common-healthcheck: &common-healthcheck
 # =============================================================================
 
 services:
+  # ---------------------------------------------------------------------------
+  # Docker Socket Proxy (Security Layer)
+  # ---------------------------------------------------------------------------
+  # Exposes limited Docker API to Traefik and Watchtower instead of raw socket
+  # This prevents container escape attacks via unrestricted socket access
+  # Docs: https://github.com/Tecnativa/docker-socket-proxy
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: socket-proxy
+    privileged: true
+    environment:
+      # Granted permissions (read-only where possible)
+      CONTAINERS: 1      # Traefik needs this for auto-discovery
+      NETWORKS: 1        # Traefik needs this for network info
+      SERVICES: 1        # Traefik needs this for swarm (optional)
+      TASKS: 1           # Traefik needs this for swarm (optional)
+      IMAGES: 1          # Watchtower needs this to check updates
+      INFO: 1            # General Docker info
+      VERSION: 1         # Docker version info
+      # Watchtower needs POST for container operations
+      POST: 1            # Required for Watchtower to restart containers
+      # Explicitly denied (security)
+      AUTH: 0
+      SECRETS: 0
+      BUILD: 0
+      COMMIT: 0
+      CONFIGS: 0
+      DISTRIBUTION: 0
+      EXEC: 0
+      GRPC: 0
+      NODES: 0
+      PLUGINS: 0
+      SESSION: 0
+      SWARM: 0
+      SYSTEM: 0
+      VOLUMES: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - socket_proxy
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:2375/version"]
+      <<: *common-healthcheck
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 16M
+
   # ---------------------------------------------------------------------------
   # DNS / Ad-blocking
   # ---------------------------------------------------------------------------
@@ -129,6 +185,12 @@ services:
   # ---------------------------------------------------------------------------
   # Container Management
   # ---------------------------------------------------------------------------
+  # SECURITY NOTE: Portainer requires direct Docker socket access for full
+  # functionality (exec, logs, console, volume management). Unlike Traefik and
+  # Watchtower which only need read access, Portainer needs write operations.
+  # The socket-proxy doesn't support Portainer's requirements (EXEC, VOLUMES, etc).
+  # Risk mitigation: Portainer is only accessible via HTTPS with authentication.
+  # If Portainer is compromised, attacker has full Docker control on this host.
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
@@ -165,10 +227,13 @@ services:
   watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
+    depends_on:
+      - socket-proxy
     env_file:
       - .env.secrets
     environment:
       TZ: ${TZ:-Europe/Rome}
+      DOCKER_HOST: tcp://socket-proxy:2375
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_LABEL_ENABLE: "true"
       WATCHTOWER_SCHEDULE: "0 0 4 * * *"
@@ -176,12 +241,11 @@ services:
       WATCHTOWER_TIMEOUT: 30s
       WATCHTOWER_HTTP_API_METRICS: "true"
       WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_API_TOKEN:-watchtower}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "8383:8080"
     networks:
       - media_net
+      - socket_proxy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -256,13 +320,16 @@ services:
   traefik:
     image: traefik:v3.2
     container_name: traefik
+    depends_on:
+      - socket-proxy
     env_file:
       - .env.secrets
     command:
       # API and Dashboard (secured via middleware, not insecure mode)
       - --api.dashboard=true
-      # Docker Provider
+      # Docker Provider (via socket proxy for security)
       - --providers.docker=true
+      - --providers.docker.endpoint=tcp://socket-proxy:2375
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=homelab_proxy
       # File provider for non-Docker services (e.g., Home Assistant) and TLS config
@@ -280,12 +347,12 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik:/etc/traefik/dynamic
       - ./config/traefik/certs:/etc/traefik/certs:ro
     networks:
       - proxy
       - media_net
+      - socket_proxy
     environment:
       <<: *common-env
     restart: unless-stopped
