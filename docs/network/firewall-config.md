@@ -543,6 +543,57 @@ cat /sys/class/net/br0/bridge/vlan_filtering
 
 ---
 
+## Considerazioni Sicurezza Rete Legacy (192.168.1.0/24)
+
+La rete 192.168.1.0/24 non e' gestita dal UDM-SE e rappresenta un potenziale vettore di attacco.
+
+### Architettura
+
+```
+Internet
+    │
+    ▼
+┌─────────────────────────────────────┐
+│         Iliad Box                   │
+│       192.168.1.254                 │
+│                                     │
+│   ┌─────────────┐  ┌─────────────┐  │
+│   │ Switch PoE  │  │  UDM-SE WAN │  │
+│   │   Vimar     │  │ 192.168.1.1 │  │
+│   └──────┬──────┘  └──────┬──────┘  │
+│          │                │         │
+│    Dispositivi       DMZ (tutto)    │
+│    Vimar .1.x                       │
+└─────────────────────────────────────┘
+```
+
+### Rischi Teorici
+
+| Rischio | Probabilita' | Impatto | Mitigazione |
+|---------|--------------|---------|-------------|
+| Dispositivo Vimar compromesso attacca UDM-SE WAN | Bassa | Media | UDM-SE protetto di default |
+| Lateral movement da 192.168.1.x a VLAN interne | Molto bassa | Alta | No route, UDM-SE blocca |
+| Attacco a Iliad Box | Bassa | Media | Dispositivo gestito da ISP |
+
+### Mitigazioni Esistenti
+
+1. **UDM-SE WAN protection**: Traffico WAN→LAN bloccato di default
+2. **No routing**: Dispositivi 192.168.1.x non hanno route verso 192.168.2-6.x
+3. **Threat Management**: IDS/IPS attivo su UDM-SE rileva anomalie
+4. **Dispositivi trusted**: Vimar installati professionalmente, non IoT consumer
+
+### Accettazione del Rischio
+
+Per questo homelab, il rischio e' accettato perche':
+- Vimar sono dispositivi professionali con firmware controllato
+- Richiedono compromissione fisica o vulnerabilita' 0-day specifica
+- L'alternativa (ricablaggio completo) ha costo sproporzionato al beneficio
+- UDM-SE offre protezione adeguata sull'interfaccia WAN
+
+> **Miglioramento futuro (opzionale)**: Aggiungere regola WAN Local su UDM-SE per bloccare accesso alla gestione (porta 443) dalla subnet 192.168.1.0/24 eccetto 192.168.1.254 (Iliad Box).
+
+---
+
 ## Note
 
 - **Rete Legacy**: La subnet 192.168.1.0/24 resta per Iliad Box e dispositivi Vimar. Non e' gestita dal UDM-SE.
