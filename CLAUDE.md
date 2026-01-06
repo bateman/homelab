@@ -72,6 +72,7 @@ homelab/
 | Recyclarr | - | Sync profili Trash Guides |
 | Watchtower | 8383 | Auto-update container (via socket proxy) |
 | Duplicati | 8200 | Backup incrementale con UI |
+| Uptime Kuma | 3001 | Monitoring e alerting (notifiche via HA webhook/email) |
 | Traefik | 80/443 | Reverse proxy HTTPS (via socket proxy) |
 | Socket Proxy | - | Proxy sicuro Docker socket (interno) |
 

@@ -281,6 +281,7 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:8081/admin,Pi-hole)
 	$(call check_service,http://localhost:8123/api/,HomeAssistant)
 	$(call check_service,http://localhost:8200,Duplicati)
+	$(call check_service,http://localhost:3001,UptimeKuma)
 	$(call check_service,http://localhost:8383/v1/metrics,Watchtower)
 	$(call check_service,http://localhost:80,Traefik)
 	@# Portainer uses HTTPS
@@ -314,6 +315,7 @@ show-urls:
 	@echo "  FlareSolverr: http://$(HOST_IP):8191"
 	@echo ""
 	@echo "$(GREEN)Monitoring$(NC)"
+	@echo "  Uptime Kuma:  http://$(HOST_IP):3001"
 	@echo "  Huntarr:      http://$(HOST_IP):9705"
 	@echo "  Cleanuparr:   http://$(HOST_IP):11011"
 	@echo "  Watchtower:   http://$(HOST_IP):8383/v1/metrics"
