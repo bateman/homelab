@@ -43,6 +43,7 @@ homelab/
     ├── setup/                      # Guide setup iniziale
     │   ├── NETWORK_SETUP.md        # Setup rete UniFi e VLAN
     │   ├── NAS_SETUP.md            # Setup NAS QNAP e Docker
+    │   ├── NOTIFICATIONS_SETUP.md  # Setup notifiche Uptime Kuma via HA
     │   ├── PROXMOX_SETUP.md        # Setup Proxmox e Plex
     │   └── REVERSE_PROXY_SETUP.md  # Traefik, NPM, Pi-hole DNS Tailscale
     ├── network/                    # Config rete
@@ -72,7 +73,7 @@ homelab/
 | Recyclarr | - | Sync profili Trash Guides |
 | Watchtower | 8383 | Auto-update container (via socket proxy) |
 | Duplicati | 8200 | Backup incrementale con UI |
-| Uptime Kuma | 3001 | Monitoring e alerting (notifiche via HA webhook/email) |
+| Uptime Kuma | 3001 | Monitoring e alerting (vedi `docs/setup/NOTIFICATIONS_SETUP.md`) |
 | Traefik | 80/443 | Reverse proxy HTTPS (via socket proxy) |
 | Socket Proxy | - | Proxy sicuro Docker socket (interno) |
 
