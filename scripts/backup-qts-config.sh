@@ -167,9 +167,9 @@ cleanup_old_backups() {
 
     # Count existing backups (BusyBox compatible)
     # Using find to avoid glob expansion issues when no files exist
+    # Using arithmetic expansion to strip whitespace from wc output
     local count
-    count=$(find "$BACKUP_DIR" -maxdepth 1 -name "qts-config-*.bin" -type f 2>/dev/null | wc -l)
-    count=${count:-0}
+    count=$(($(find "$BACKUP_DIR" -maxdepth 1 -name "qts-config-*.bin" -type f 2>/dev/null | wc -l) + 0))
 
     if [ "$count" -le "$RETENTION_COUNT" ]; then
         log_verbose "Nessuna pulizia necessaria ($count backup presenti)"
@@ -197,10 +197,11 @@ list_backups() {
 
     if [ -d "$BACKUP_DIR" ]; then
         # Check if any backup files exist using find (avoids glob issues)
+        # Using arithmetic expansion to strip whitespace from wc output
         local file_count
-        file_count=$(find "$BACKUP_DIR" -maxdepth 1 -name "qts-config-*.bin" -type f 2>/dev/null | wc -l)
+        file_count=$(($(find "$BACKUP_DIR" -maxdepth 1 -name "qts-config-*.bin" -type f 2>/dev/null | wc -l) + 0))
 
-        if [ "${file_count:-0}" -eq 0 ]; then
+        if [ "$file_count" -eq 0 ]; then
             echo "  Nessun backup trovato"
             return 0
         fi
