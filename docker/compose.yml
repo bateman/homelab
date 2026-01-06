@@ -87,7 +87,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.pihole.rule=Host(`pihole.home.local`)"
-      - "traefik.http.routers.pihole.entrypoints=web"
+      - "traefik.http.routers.pihole.entrypoints=websecure"
+      - "traefik.http.routers.pihole.tls=true"
       - "traefik.http.services.pihole.loadbalancer.server.port=80"
 
   # ---------------------------------------------------------------------------
@@ -154,7 +155,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.portainer.rule=Host(`portainer.home.local`)"
-      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls=true"
       - "traefik.http.services.portainer.loadbalancer.server.port=9443"
       - "traefik.http.services.portainer.loadbalancer.server.scheme=https"
 
@@ -227,7 +229,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.duplicati.rule=Host(`duplicati.home.local`)"
-      - "traefik.http.routers.duplicati.entrypoints=web"
+      - "traefik.http.routers.duplicati.entrypoints=websecure"
+      - "traefik.http.routers.duplicati.tls=true"
       - "traefik.http.services.duplicati.loadbalancer.server.port=8200"
 
   # ---------------------------------------------------------------------------
@@ -256,11 +259,13 @@ services:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=homelab_proxy
-      # File provider for non-Docker services (e.g., Home Assistant)
+      # File provider for non-Docker services (e.g., Home Assistant) and TLS config
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
       # Entrypoints
       - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entrypoints.websecure.address=:443
       # Logs
       - --log.level=INFO
@@ -271,6 +276,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik:/etc/traefik/dynamic
+      - ./config/traefik/certs:/etc/traefik/certs:ro
     networks:
       - proxy
       - media_net
@@ -294,6 +300,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.home.local`)"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
-      - "traefik.http.routers.traefik-dashboard.entrypoints=web"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls=true"
       - "traefik.http.routers.traefik-dashboard.middlewares=traefik-auth"
       - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH:-admin:$$2y$$05$$ZLF0pOQD6RCnPw.FpOYAduCMDFxpxL8e4R1Y1B0enMqQKMc2K.Wje}"

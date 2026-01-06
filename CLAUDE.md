@@ -36,7 +36,8 @@ homelab/
 │   ├── .env.example                # Template variabili ambiente
 │   └── recyclarr.yml               # Esempio config profili qualita' Trash Guides
 ├── scripts/                        # Script operativi
-│   └── setup-folders.sh            # Creazione struttura cartelle iniziale
+│   ├── setup-folders.sh            # Creazione struttura cartelle iniziale
+│   └── generate-certs.sh           # Generazione certificati HTTPS self-signed
 └── docs/                           # Documentazione
     ├── setup/                      # Guide setup iniziale
     │   ├── NETWORK_SETUP.md        # Setup rete UniFi e VLAN
@@ -70,13 +71,14 @@ homelab/
 | Recyclarr | - | Sync profili Trash Guides |
 | Watchtower | 8383 | Auto-update container (metriche API) |
 | Duplicati | 8200 | Backup incrementale con UI |
-| Traefik | 80/443 | Reverse proxy con auto-discovery |
+| Traefik | 80/443 | Reverse proxy HTTPS con auto-discovery |
 
 ## Comandi Comuni
 
 ```bash
 # Gestione stack (via Makefile)
 make setup      # Crea struttura cartelle (eseguire una volta)
+./scripts/generate-certs.sh  # Genera certificati HTTPS (eseguire una volta)
 make validate   # Verifica configurazione compose
 make up         # Avvia tutti i container
 make down       # Ferma tutti i container
@@ -173,7 +175,7 @@ Le API key sono salvate nella config di ogni servizio e vanno recuperate da:
 
 ### Duplicati (consigliato)
 Container dedicato con WebUI per backup automatizzati:
-- **URL**: http://192.168.3.10:8200
+- **URL**: https://duplicati.home.local (o http://192.168.3.10:8200)
 - **Sorgente**: `/source/config` (tutte le config dei servizi)
 - **Destinazione locale**: `/backups` -> `/share/backup`
 - **Destinazione offsite**: Google Drive o Dropbox (configurare via WebUI)
@@ -217,6 +219,7 @@ chown -R 1000:100 ./config/<service>
 
 ## Note Importanti
 
+- **HTTPS abilitato**: Tutti i servizi sono accessibili via HTTPS (certificato self-signed). HTTP viene reindirizzato automaticamente a HTTPS
 - Home Assistant usa `network_mode: host` per discovery dispositivi
 - Iliad Box (192.168.1.254) resta come router upstream (double NAT)
 - Tailscale su Mini PC fornisce accesso remoto senza port forwarding
