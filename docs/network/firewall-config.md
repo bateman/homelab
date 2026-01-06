@@ -357,15 +357,20 @@ Le regole sono processate in ordine, dalla prima all'ultima. L'ordine e' importa
 
 Percorso: Settings -> Networks -> (seleziona VLAN) -> Advanced -> Multicast DNS
 
-Abilitare mDNS reflection tra VLAN 3 (Servers) e VLAN 4 (Media) per permettere il discovery automatico della stampante e altri servizi Bonjour.
+Abilitare mDNS reflection per permettere il discovery automatico tra VLAN:
+- **Stampante**: discovery da dispositivi Media
+- **Home Assistant**: discovery dispositivi IoT (Alexa, smart devices)
+- **Chromecast/AirPlay**: streaming da telefoni a TV
 
-| VLAN | mDNS Enabled |
-|------|--------------|
-| 2 (Management) | No |
-| 3 (Servers) | Si |
-| 4 (Media) | Si |
-| 5 (Guest) | No |
-| 6 (IoT) | No |
+| VLAN | mDNS Enabled | Motivo |
+|------|--------------|--------|
+| 2 (Management) | No | Solo gestione, no discovery necessario |
+| 3 (Servers) | Si | HA discovery, stampante |
+| 4 (Media) | Si | Chromecast, AirPlay, stampante |
+| 5 (Guest) | No | Isolamento completo |
+| 6 (IoT) | Si | HA discovery dispositivi smart |
+
+> **Nota sicurezza**: mDNS reflection espone solo i nomi dei servizi (es. "Stampante._ipp._tcp.local"), non fornisce accesso. Il firewall continua a bloccare il traffico non autorizzato tra VLAN.
 
 ---
 
@@ -492,7 +497,7 @@ Se in futuro servisse aprire porte specifiche (es. per Plex remoto senza Tailsca
 3. [ ] Creare IP Groups in Settings -> Profiles
 4. [ ] Creare Port Groups in Settings -> Profiles
 5. [ ] Configurare regole firewall in ordine
-6. [ ] Abilitare mDNS reflection su VLAN 3 e 4
+6. [ ] Abilitare mDNS reflection su VLAN 3, 4 e 6
 7. [ ] Configurare Threat Management
 8. [ ] Creare SSID WiFi (Casa-Media, Casa-Guest, Casa-IoT)
 9. [ ] Assegnare IP statici ai dispositivi Servers
