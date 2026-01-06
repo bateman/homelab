@@ -33,10 +33,12 @@ homelab/
 ├── docker/                         # Stack Docker
 │   ├── compose.yml                 # Stack infrastruttura (Pi-hole, HA, Portainer, Duplicati)
 │   ├── compose.media.yml           # Stack media (*arr, download clients, monitoring)
-│   ├── .env.example                # Template variabili ambiente
+│   ├── .env.example                # Template config non sensibile
+│   ├── .env.secrets.example        # Template credenziali (gitignored dopo copia)
 │   └── recyclarr.yml               # Esempio config profili qualita' Trash Guides
 ├── scripts/                        # Script operativi
-│   └── setup-folders.sh            # Creazione struttura cartelle iniziale
+│   ├── setup-folders.sh            # Creazione struttura cartelle iniziale
+│   └── generate-certs.sh           # Generazione certificati HTTPS self-signed
 └── docs/                           # Documentazione
     ├── setup/                      # Guide setup iniziale
     │   ├── NETWORK_SETUP.md        # Setup rete UniFi e VLAN
@@ -65,18 +67,21 @@ homelab/
 | Cleanuparr | 11011 | Pulizia automatica |
 | Pi-hole | 8081 | DNS ad-blocking |
 | Home Assistant | 8123 | Automazione domotica |
-| Portainer | 9443 | Gestione Docker |
+| Portainer | 9443 | Gestione Docker (accesso socket diretto) |
 | FlareSolverr | 8191 | Bypass Cloudflare |
 | Recyclarr | - | Sync profili Trash Guides |
-| Watchtower | 8383 | Auto-update container (metriche API) |
+| Watchtower | 8383 | Auto-update container (via socket proxy) |
 | Duplicati | 8200 | Backup incrementale con UI |
-| Traefik | 80/443 | Reverse proxy con auto-discovery |
+| Uptime Kuma | 3001 | Monitoring e alerting (notifiche via HA webhook/email) |
+| Traefik | 80/443 | Reverse proxy HTTPS (via socket proxy) |
+| Socket Proxy | - | Proxy sicuro Docker socket (interno) |
 
 ## Comandi Comuni
 
 ```bash
 # Gestione stack (via Makefile)
 make setup      # Crea struttura cartelle (eseguire una volta)
+./scripts/generate-certs.sh  # Genera certificati HTTPS (eseguire una volta)
 make validate   # Verifica configurazione compose
 make up         # Avvia tutti i container
 make down       # Ferma tutti i container
@@ -86,6 +91,7 @@ make logs       # Segui tutti i logs
 make status     # Stato container e utilizzo risorse
 make health     # Health check tutti i servizi
 make backup     # Trigger backup Duplicati on-demand
+make verify-backup  # Verifica integrita' backup (estrazione + SQLite)
 make urls       # Mostra tutti gli URL WebUI
 make update     # Aggiorna immagini e restart (pull + restart)
 make clean      # Rimuove container, immagini e volumi orfani
@@ -161,19 +167,29 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 6. Documenta nella tabella servizi sopra e in `docs/network/rack-homelab-config.md`
 7. Aggiungi regole firewall se serve accesso inter-VLAN
 
-## Posizione API Key
+## Gestione Secrets
+
+Le credenziali sono separate dalla configurazione:
+- **`docker/.env`** - Configurazione non sensibile (PUID, PGID, TZ, porte)
+- **`docker/.env.secrets`** - Password e API key (gitignored)
+
+### Posizione API Key
 
 Le API key sono salvate nella config di ogni servizio e vanno recuperate da:
 - Sonarr/Radarr/Lidarr/Prowlarr: Settings -> General -> API Key
 - qBittorrent: Settings -> WebUI -> Authentication
 - NZBGet: Settings -> Security -> ControlUsername/ControlPassword
-- Password Pi-hole: file `docker/.env` (`PIHOLE_PASSWORD`)
+
+Le password di sistema vanno in `docker/.env.secrets`:
+- `PIHOLE_PASSWORD` - Password Pi-hole
+- `TRAEFIK_DASHBOARD_AUTH` - Basic auth Traefik (hash bcrypt)
+- `WATCHTOWER_API_TOKEN` - Token API Watchtower
 
 ## Strategia Backup
 
 ### Duplicati (consigliato)
 Container dedicato con WebUI per backup automatizzati:
-- **URL**: http://192.168.3.10:8200
+- **URL**: https://duplicati.home.local (o http://192.168.3.10:8200)
 - **Sorgente**: `/source/config` (tutte le config dei servizi)
 - **Destinazione locale**: `/backups` -> `/share/backup`
 - **Destinazione offsite**: Google Drive o Dropbox (configurare via WebUI)
@@ -215,8 +231,27 @@ chown -R 1000:100 ./config/<service>
 - Verifica che mDNS reflection sia abilitato se necessario
 - Verifica che il gruppo porte includa la porta del servizio
 
+## Sicurezza Docker Socket
+
+Il Docker socket (`/var/run/docker.sock`) e' un vettore di attacco critico: un container compromesso con accesso al socket puo' ottenere controllo completo dell'host.
+
+**Architettura implementata**:
+- **Socket Proxy** (tecnativa/docker-socket-proxy): espone solo le API Docker necessarie su rete interna
+- **Traefik**: usa socket proxy (solo lettura container/network)
+- **Watchtower**: usa socket proxy (lettura + restart container)
+- **Portainer**: accesso diretto al socket (richiede API complete)
+
+**Perche' Portainer non usa il proxy**: Portainer necessita di EXEC, VOLUMES, BUILD e altre API per funzionalita' complete (console, gestione volumi). Il proxy blocca queste API per sicurezza.
+
+**Mitigazione rischio Portainer**:
+- Accessibile solo via HTTPS con autenticazione
+- Limitare accesso a utenti fidati
+- In ambienti ad alta sicurezza: rimuovere Portainer e usare solo CLI
+
 ## Note Importanti
 
+- **HTTPS abilitato**: Tutti i servizi sono accessibili via HTTPS (certificato self-signed). HTTP viene reindirizzato automaticamente a HTTPS
+- **DNS con fallback**: Pi-hole e' DNS primario, Cloudflare (1.1.1.1) come fallback. Se Pi-hole e' down, `*.home.local` non risolve ma internet funziona. Vedi `docs/network/firewall-config.md` per configurazione DHCP.
 - Home Assistant usa `network_mode: host` per discovery dispositivi
 - Iliad Box (192.168.1.254) resta come router upstream (double NAT)
 - Tailscale su Mini PC fornisce accesso remoto senza port forwarding

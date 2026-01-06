@@ -357,15 +357,20 @@ Le regole sono processate in ordine, dalla prima all'ultima. L'ordine e' importa
 
 Percorso: Settings -> Networks -> (seleziona VLAN) -> Advanced -> Multicast DNS
 
-Abilitare mDNS reflection tra VLAN 3 (Servers) e VLAN 4 (Media) per permettere il discovery automatico della stampante e altri servizi Bonjour.
+Abilitare mDNS reflection per permettere il discovery automatico tra VLAN:
+- **Stampante**: discovery da dispositivi Media
+- **Home Assistant**: discovery dispositivi IoT (Alexa, smart devices)
+- **Chromecast/AirPlay**: streaming da telefoni a TV
 
-| VLAN | mDNS Enabled |
-|------|--------------|
-| 2 (Management) | No |
-| 3 (Servers) | Si |
-| 4 (Media) | Si |
-| 5 (Guest) | No |
-| 6 (IoT) | No |
+| VLAN | mDNS Enabled | Motivo |
+|------|--------------|--------|
+| 2 (Management) | No | Solo gestione, no discovery necessario |
+| 3 (Servers) | Si | HA discovery, stampante |
+| 4 (Media) | Si | Chromecast, AirPlay, stampante |
+| 5 (Guest) | No | Isolamento completo |
+| 6 (IoT) | Si | HA discovery dispositivi smart |
+
+> **Nota sicurezza**: mDNS reflection espone solo i nomi dei servizi (es. "Stampante._ipp._tcp.local"), non fornisce accesso. Il firewall continua a bloccare il traffico non autorizzato tra VLAN.
 
 ---
 
@@ -411,6 +416,66 @@ Percorso: Settings -> Traffic Management -> Traffic Rules
 
 ---
 
+## Configurazione DNS (DHCP)
+
+### Architettura DNS
+
+Pi-hole (192.168.3.10) e' il DNS primario per tutte le VLAN, fornendo ad-blocking e risoluzione nomi locali (`*.home.local`). Per evitare Single Point of Failure, configurare un DNS di fallback.
+
+### Configurazione per VLAN
+
+Percorso: Settings -> Networks -> (seleziona VLAN) -> DHCP -> DHCP DNS Server
+
+| VLAN | DNS Primario | DNS Secondario | Note |
+|------|--------------|----------------|------|
+| 2 (Management) | 192.168.3.10 | 1.1.1.1 | Pi-hole + fallback Cloudflare |
+| 3 (Servers) | N/A | N/A | IP statici, DNS configurato su ogni host |
+| 4 (Media) | 192.168.3.10 | 1.1.1.1 | Pi-hole + fallback Cloudflare |
+| 5 (Guest) | 1.1.1.1 | 1.0.0.1 | Solo Cloudflare (no Pi-hole) |
+| 6 (IoT) | 192.168.3.10 | 1.1.1.1 | Pi-hole + fallback Cloudflare |
+
+> **Nota VLAN 5 (Guest)**: Gli ospiti usano direttamente Cloudflare per evitare che vedano i record DNS locali (`*.home.local`).
+
+### Comportamento Fallback
+
+- **Normale**: Client usano Pi-hole (192.168.3.10) per tutte le query
+- **Pi-hole down**: Client fallback su Cloudflare (1.1.1.1) automaticamente
+- **Durante fallback**: Ad-blocking disattivato, nomi `*.home.local` non risolvono
+
+### Verifica Configurazione
+
+```bash
+# Da un client DHCP (es. telefono su VLAN Media)
+# Verificare che riceva entrambi i DNS
+# Android: Impostazioni -> WiFi -> Dettagli rete
+# iOS: Impostazioni -> WiFi -> (i) -> DNS
+
+# Test fallback (dal PC desktop)
+# 1. Fermare Pi-hole
+docker stop pihole
+
+# 2. Verificare che DNS funzioni ancora (usa fallback)
+nslookup google.com
+# Deve funzionare via 1.1.1.1
+
+# 3. Verificare che *.home.local NON funziona (normale durante fallback)
+nslookup sonarr.home.local
+# Fallisce - usare IP diretto o riavviare Pi-hole
+
+# 4. Riavviare Pi-hole
+docker start pihole
+```
+
+### Limitazioni del Fallback DNS
+
+- **Nomi locali**: `*.home.local` non risolvono durante outage Pi-hole
+- **Ad-blocking**: Disattivato durante fallback
+- **Workaround**: Accedere ai servizi via IP diretto (es. `https://192.168.3.10:8989`)
+
+> **Per ridondanza completa con ad-blocking**: Installare secondo Pi-hole su Proxmox con Gravity Sync. Vedere documentazione Gravity Sync: https://github.com/vmstan/gravity-sync
+
+---
+
 ## Port Forwarding
 
 Per l'accesso remoto tramite Tailscale, non e' necessario port forwarding: Tailscale usa NAT traversal.
@@ -432,7 +497,7 @@ Se in futuro servisse aprire porte specifiche (es. per Plex remoto senza Tailsca
 3. [ ] Creare IP Groups in Settings -> Profiles
 4. [ ] Creare Port Groups in Settings -> Profiles
 5. [ ] Configurare regole firewall in ordine
-6. [ ] Abilitare mDNS reflection su VLAN 3 e 4
+6. [ ] Abilitare mDNS reflection su VLAN 3, 4 e 6
 7. [ ] Configurare Threat Management
 8. [ ] Creare SSID WiFi (Casa-Media, Casa-Guest, Casa-IoT)
 9. [ ] Assegnare IP statici ai dispositivi Servers
@@ -478,10 +543,116 @@ cat /sys/class/net/br0/bridge/vlan_filtering
 
 ---
 
+## Considerazioni Sicurezza Rete Legacy (192.168.1.0/24)
+
+La rete 192.168.1.0/24 non e' gestita dal UDM-SE e rappresenta un potenziale vettore di attacco.
+
+### Architettura
+
+```
+Internet
+    │
+    ▼
+┌─────────────────────────────────────┐
+│         Iliad Box                   │
+│       192.168.1.254                 │
+│                                     │
+│   ┌─────────────┐  ┌─────────────┐  │
+│   │ Switch PoE  │  │  UDM-SE WAN │  │
+│   │   Vimar     │  │ 192.168.1.1 │  │
+│   └──────┬──────┘  └──────┬──────┘  │
+│          │                │         │
+│    Dispositivi       DMZ (tutto)    │
+│    Vimar .1.x                       │
+└─────────────────────────────────────┘
+```
+
+### Rischi Teorici
+
+| Rischio | Probabilita' | Impatto | Mitigazione |
+|---------|--------------|---------|-------------|
+| Dispositivo Vimar compromesso attacca UDM-SE WAN | Bassa | Media | UDM-SE protetto di default |
+| Lateral movement da 192.168.1.x a VLAN interne | Molto bassa | Alta | No route, UDM-SE blocca |
+| Attacco a Iliad Box | Bassa | Media | Dispositivo gestito da ISP |
+
+### Mitigazioni Esistenti
+
+1. **UDM-SE WAN protection**: Traffico WAN→LAN bloccato di default
+2. **No routing**: Dispositivi 192.168.1.x non hanno route verso 192.168.2-6.x
+3. **Threat Management**: IDS/IPS attivo su UDM-SE rileva anomalie
+4. **Dispositivi trusted**: Vimar installati professionalmente, non IoT consumer
+
+### Accettazione del Rischio
+
+Per questo homelab, il rischio e' accettato perche':
+- Vimar sono dispositivi professionali con firmware controllato
+- Richiedono compromissione fisica o vulnerabilita' 0-day specifica
+- L'alternativa (ricablaggio completo) ha costo sproporzionato al beneficio
+- UDM-SE offre protezione adeguata sull'interfaccia WAN
+
+> **Miglioramento futuro (opzionale)**: Aggiungere regola WAN Local su UDM-SE per bloccare accesso alla gestione (porta 443) dalla subnet 192.168.1.0/24 eccetto 192.168.1.254 (Iliad Box).
+
+---
+
+## Double NAT (Limitazione Nota)
+
+### Architettura Attuale
+
+```
+Internet
+    │
+    ▼
+┌─────────────────┐
+│   Iliad Box     │  ◄── NAT #1 (ISP)
+│  192.168.1.254  │
+│   (router mode) │
+└────────┬────────┘
+         │ 192.168.1.1
+         ▼
+┌─────────────────┐
+│    UDM-SE       │  ◄── NAT #2 (Homelab)
+│   WAN: .1.1     │
+│   LAN: .2-6.x   │
+└─────────────────┘
+```
+
+### Impatto
+
+| Funzionalita' | Impatto | Workaround |
+|---------------|---------|------------|
+| **Port forwarding** | Non funziona | Tailscale (gia' implementato) |
+| **UPnP/NAT-PMP** | Non funziona | Configurazione manuale non possibile |
+| **Gaming online** | Possibili problemi NAT strict | Usare Tailscale o tollerare |
+| **VoIP/SIP** | Possibili problemi | Non usato in questo homelab |
+| **Latenza** | +1-2ms teorici | Trascurabile |
+| **Throughput** | Nessun impatto | - |
+
+### Perche' non e' risolto
+
+1. **Iliad Box non supporta bridge mode**: L'ISP Iliad non permette di mettere il router in bridge/modem-only mode
+2. **ONT separato non disponibile**: Iliad usa router integrato, non fornisce ONT standalone
+3. **DMZ attiva**: Iliad Box ha DMZ verso UDM-SE (192.168.1.1), mitiga parzialmente il problema
+
+### Mitigazioni Implementate
+
+- **Tailscale**: Accesso remoto senza port forwarding (NAT traversal)
+- **DMZ su Iliad Box**: Tutto il traffico inoltrato a UDM-SE
+- **Servizi interni**: Tutti i servizi homelab funzionano correttamente sulla rete locale
+
+### Soluzione Definitiva (Non Implementata)
+
+Per eliminare il Double NAT:
+1. Cambiare ISP con uno che fornisce ONT separato o bridge mode
+2. Usare PPPoE diretto su UDM-SE (richiede credenziali ISP)
+
+> **Accettazione**: Per questo homelab il Double NAT e' accettato. Tailscale risolve l'accesso remoto e i servizi interni non sono impattati.
+
+---
+
 ## Note
 
 - **Rete Legacy**: La subnet 192.168.1.0/24 resta per Iliad Box e dispositivi Vimar. Non e' gestita dal UDM-SE.
-- **Double NAT**: Presente con Iliad Box in modalita' router. Non impatta le prestazioni per uso homelab.
+- **Double NAT**: Vedi sezione dedicata sopra.
 - **Tailscale**: Installato su Mini PC Proxmox, fornisce accesso VPN mesh senza port forwarding.
 - **Home Assistant**: Accessibile da VLAN Media (telefoni/tablet) e VLAN IoT (dispositivi smart).
 - **Backup config**: Esportare regolarmente da Settings -> System -> Backup.

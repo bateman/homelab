@@ -1,0 +1,40 @@
+# =============================================================================
+# Homelab - Git Ignore
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Secrets e Configurazioni Locali
+# -----------------------------------------------------------------------------
+# File con credenziali - MAI committare!
+docker/.env
+docker/.env.secrets
+
+# Certificati TLS generati localmente
+docker/config/traefik/certs/
+
+# -----------------------------------------------------------------------------
+# Configurazioni Servizi (generate a runtime)
+# -----------------------------------------------------------------------------
+# Le config dei servizi contengono API key e dati sensibili
+# Vengono backuppate via Duplicati, non via Git
+docker/config/*/
+
+# Eccezione: mantieni i file di configurazione Traefik statici
+!docker/config/traefik/
+docker/config/traefik/certs/
+
+# -----------------------------------------------------------------------------
+# File di Sistema
+# -----------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# -----------------------------------------------------------------------------
+# Log e Cache
+# -----------------------------------------------------------------------------
+*.log
+*.cache
+__pycache__/

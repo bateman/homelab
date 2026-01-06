@@ -124,44 +124,66 @@ nslookup sonarr.home.local
 ### 2.1 Configurazione gia' inclusa
 
 Traefik e' gia' configurato in `docker/compose.yml` con:
+- **HTTPS attivo** con certificato self-signed per `*.home.local`
+- Redirect automatico HTTP → HTTPS
 - Dashboard accessibile via reverse proxy su `traefik.home.local`
 - Auto-discovery Docker sulla rete `homelab_proxy`
 - Provider file per servizi non-Docker (Home Assistant)
 - Labels Traefik gia' aggiunte a tutti i servizi
 
-**Accesso Dashboard**: http://traefik.home.local (richiede DNS Pi-hole configurato)
+**Accesso Dashboard**: https://traefik.home.local (richiede DNS Pi-hole configurato)
 
 ### 2.2 Servizi gia' configurati
 
 Le labels Traefik sono gia' aggiunte a tutti i servizi nei file compose:
 
-| Servizio | URL Traefik | Porta diretta |
-|----------|-------------|---------------|
-| Sonarr | sonarr.home.local | :8989 |
-| Radarr | radarr.home.local | :7878 |
-| Lidarr | lidarr.home.local | :8686 |
-| Prowlarr | prowlarr.home.local | :9696 |
-| Bazarr | bazarr.home.local | :6767 |
-| qBittorrent | qbit.home.local | :8080 |
-| NZBGet | nzbget.home.local | :6789 |
-| Huntarr | huntarr.home.local | :9705 |
-| Cleanuparr | cleanuparr.home.local | :11011 |
-| Pi-hole | pihole.home.local | :8081 |
-| Portainer | portainer.home.local | :9443 (HTTPS) |
-| Duplicati | duplicati.home.local | :8200 |
-| Home Assistant | ha.home.local | :8123 |
-| Traefik Dashboard | traefik.home.local | (via reverse proxy) |
+| Servizio | URL Traefik (HTTPS) | Porta diretta (HTTP) |
+|----------|---------------------|----------------------|
+| Sonarr | https://sonarr.home.local | :8989 |
+| Radarr | https://radarr.home.local | :7878 |
+| Lidarr | https://lidarr.home.local | :8686 |
+| Prowlarr | https://prowlarr.home.local | :9696 |
+| Bazarr | https://bazarr.home.local | :6767 |
+| qBittorrent | https://qbit.home.local | :8080 |
+| NZBGet | https://nzbget.home.local | :6789 |
+| Huntarr | https://huntarr.home.local | :9705 |
+| Cleanuparr | https://cleanuparr.home.local | :11011 |
+| Pi-hole | https://pihole.home.local | :8081 |
+| Portainer | https://portainer.home.local | :9443 (HTTPS) |
+| Duplicati | https://duplicati.home.local | :8200 |
+| Home Assistant | https://ha.home.local | :8123 |
+| Traefik Dashboard | https://traefik.home.local | (via reverse proxy) |
 
 ### 2.3 Configurazione Home Assistant
 
 Home Assistant usa `network_mode: host`, quindi non puo' usare le labels Docker.
 La configurazione e' gia' presente in `docker/config/traefik/homeassistant.yml`.
 
-### 2.4 Avvio e Verifica
+### 2.4 Generazione Certificati HTTPS
+
+Prima di avviare lo stack, generare i certificati self-signed:
+
+```bash
+# Generare certificato wildcard per *.home.local
+./scripts/generate-certs.sh
+
+# I certificati vengono creati in:
+# - docker/config/traefik/certs/home.local.crt
+# - docker/config/traefik/certs/home.local.key
+```
+
+Il certificato e' valido 10 anni e copre:
+- `*.home.local` (tutti i sottodomini)
+- `home.local` (dominio base)
+
+### 2.5 Avvio e Verifica
 
 ```bash
 # Creare struttura cartelle (include traefik)
 make setup
+
+# Generare certificati HTTPS
+./scripts/generate-certs.sh
 
 # Avviare stack
 make up
@@ -170,17 +192,19 @@ make up
 docker logs traefik
 
 # Accedere alla dashboard (richiede DNS Pi-hole configurato)
-# http://traefik.home.local
+# https://traefik.home.local
 ```
 
-### 2.5 Test Accesso via Nome
+### 2.6 Test Accesso via Nome
 
 ```bash
-# Da browser o curl
-curl http://sonarr.home.local
-curl http://radarr.home.local
-curl http://pihole.home.local
+# Da browser o curl (-k ignora certificato self-signed)
+curl -k https://sonarr.home.local
+curl -k https://radarr.home.local
+curl -k https://pihole.home.local
 ```
+
+> **Nota**: Il browser mostrera' un warning al primo accesso perche' il certificato e' self-signed. E' normale e sicuro per uso interno. Accetta il certificato una volta e il warning non apparira' piu'.
 
 ---
 
@@ -244,82 +268,88 @@ Per ogni servizio:
 
 ---
 
-## Fase 3: HTTPS con Certificati Locali (Opzionale)
+## Fase 3: Accettare il Certificato Self-Signed
 
-Per HTTPS in rete locale senza dominio pubblico, usare certificati self-signed o mkcert.
+HTTPS e' abilitato di default con certificati self-signed. Il traffico e' cifrato, ma i browser mostreranno un warning perche' il certificato non e' emesso da una CA pubblica.
 
-### 3.1 Generare Certificati con mkcert
+### 3.1 Accettare nel Browser (Metodo Semplice)
+
+Al primo accesso a ogni servizio:
+
+1. Il browser mostra "La connessione non e' privata" (o simile)
+2. Click su **Avanzate** → **Procedi comunque**
+3. Il certificato viene memorizzato e il warning non appare piu'
+
+### 3.2 Importare il Certificato (Metodo Permanente)
+
+Per eliminare il warning su tutti i servizi, importare il certificato come attendibile.
+
+**Esportare il certificato dal NAS:**
+```bash
+# Il certificato e' in:
+# docker/config/traefik/certs/home.local.crt
+```
+
+**Windows:**
+1. Copiare `home.local.crt` sul PC
+2. Doppio click → **Installa certificato**
+3. Selezionare **Computer locale** → **Avanti**
+4. **Colloca tutti i certificati nel seguente archivio** → **Sfoglia**
+5. Selezionare **Autorita' di certificazione radice attendibili**
+6. **Fine** → Riavviare browser
+
+**macOS:**
+```bash
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain home.local.crt
+```
+
+**Linux (Chrome/Chromium):**
+```bash
+certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Homelab" -i home.local.crt
+```
+
+**Firefox (tutti i sistemi):**
+1. Impostazioni → Privacy e sicurezza → Certificati → Mostra certificati
+2. Tab **Autorita'** → **Importa**
+3. Selezionare `home.local.crt`
+4. Selezionare **Considera attendibile per identificare siti web**
+
+### 3.3 Rigenerare i Certificati
+
+Se i certificati scadono o vuoi rigenerarli:
 
 ```bash
-# Installare mkcert
-apt install libnss3-tools
-wget -O mkcert https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64
-chmod +x mkcert && mv mkcert /usr/local/bin/
-
-# Creare CA locale
-mkcert -install
-
-# Generare certificato wildcard
-mkcert -cert-file /share/container/traefik/certs/local.crt \
-       -key-file /share/container/traefik/certs/local.key \
-       "*.home.local" "home.local"
+./scripts/generate-certs.sh
+# Rispondere 'y' per sovrascrivere
+make restart
 ```
-
-### 3.2 Configurare Traefik per HTTPS
-
-Aggiungere a `command` in compose.yml:
-
-```yaml
-command:
-  # ... altre opzioni ...
-  # Certificato locale
-  - --entrypoints.websecure.http.tls=true
-  - --providers.file.filename=/etc/traefik/tls.yml
-```
-
-Creare `/share/container/traefik/config/tls.yml`:
-
-```yaml
-tls:
-  certificates:
-    - certFile: /certs/local.crt
-      keyFile: /certs/local.key
-  stores:
-    default:
-      defaultCertificate:
-        certFile: /certs/local.crt
-        keyFile: /certs/local.key
-```
-
-### 3.3 Installare CA sui Client
-
-Copiare il file CA (`~/.local/share/mkcert/rootCA.pem`) sui dispositivi client e installarlo come certificato attendibile.
 
 ---
 
 ## Riepilogo Accessi
 
-### Con Traefik configurato
+### Con Traefik configurato (HTTPS)
 
-| Servizio | URL | Porta diretta (backup) |
-|----------|-----|------------------------|
-| Dashboard Traefik | http://traefik.home.local | (via reverse proxy) |
-| Sonarr | http://sonarr.home.local | :8989 |
-| Radarr | http://radarr.home.local | :7878 |
-| Lidarr | http://lidarr.home.local | :8686 |
-| Prowlarr | http://prowlarr.home.local | :9696 |
-| Bazarr | http://bazarr.home.local | :6767 |
-| qBittorrent | http://qbit.home.local | :8080 |
-| NZBGet | http://nzbget.home.local | :6789 |
-| Huntarr | http://huntarr.home.local | :9705 |
-| Cleanuparr | http://cleanuparr.home.local | :11011 |
-| Pi-hole | http://pihole.home.local | :8081 |
-| Home Assistant | http://ha.home.local | :8123 |
-| Portainer | http://portainer.home.local | :9443 (HTTPS) |
-| Duplicati | http://duplicati.home.local | :8200 |
-| Plex | http://plex.home.local | :32400 (su 192.168.3.20) |
+| Servizio | URL (HTTPS) | Porta diretta (HTTP, backup) |
+|----------|-------------|------------------------------|
+| Dashboard Traefik | https://traefik.home.local | (via reverse proxy) |
+| Sonarr | https://sonarr.home.local | :8989 |
+| Radarr | https://radarr.home.local | :7878 |
+| Lidarr | https://lidarr.home.local | :8686 |
+| Prowlarr | https://prowlarr.home.local | :9696 |
+| Bazarr | https://bazarr.home.local | :6767 |
+| qBittorrent | https://qbit.home.local | :8080 |
+| NZBGet | https://nzbget.home.local | :6789 |
+| Huntarr | https://huntarr.home.local | :9705 |
+| Cleanuparr | https://cleanuparr.home.local | :11011 |
+| Pi-hole | https://pihole.home.local | :8081 |
+| Home Assistant | https://ha.home.local | :8123 |
+| Portainer | https://portainer.home.local | :9443 (HTTPS) |
+| Duplicati | https://duplicati.home.local | :8200 |
+| Plex | https://plex.home.local | :32400 (su 192.168.3.20) |
 
 > **Nota**: Gli URL funzionano sia dalla rete locale che da remoto via Tailscale (grazie a Pi-hole come DNS).
+> HTTP (porta 80) viene automaticamente reindirizzato a HTTPS (porta 443).
 
 ---
 

@@ -175,6 +175,7 @@ make_dir "${CONFIG_ROOT}/pihole/etc-dnsmasq.d"
 make_dir "${CONFIG_ROOT}/homeassistant"
 make_dir "${CONFIG_ROOT}/portainer"
 make_dir "${CONFIG_ROOT}/duplicati"
+make_dir "${CONFIG_ROOT}/uptime-kuma"
 make_dir "${CONFIG_ROOT}/traefik"
 
 # Permissions

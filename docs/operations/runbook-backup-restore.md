@@ -353,6 +353,83 @@ Ogni 3 mesi, eseguire restore di test:
 
 ---
 
+## Verifica Automatica Backup
+
+### Script Implementato
+
+Lo script `scripts/verify-backup.sh` verifica automaticamente l'integrita' dei backup:
+
+1. **Estrazione archivio**: Verifica che il tar.gz sia leggibile
+2. **Integrita' SQLite**: Controlla i database di Sonarr, Radarr, Lidarr, Prowlarr, Bazarr
+3. **Eta' backup**: Warning se piu' vecchio di 7 giorni
+4. **File critici**: Verifica presenza configurazioni Traefik
+
+### Utilizzo
+
+```bash
+# Verifica manuale (verbose)
+make verify-backup
+
+# Oppure direttamente
+./scripts/verify-backup.sh --verbose
+
+# Con notifica Home Assistant (richiede HA_WEBHOOK_URL)
+./scripts/verify-backup.sh --notify
+```
+
+### Automazione con Cron
+
+Per verifica automatica settimanale (consigliato):
+
+```bash
+# Sul NAS, aggiungere a crontab
+crontab -e
+
+# Domenica alle 05:00, dopo il backup notturno
+0 5 * * 0 /share/container/homelab/scripts/verify-backup.sh --notify >> /var/log/verify-backup.log 2>&1
+```
+
+### Notifiche Home Assistant (Opzionale)
+
+Per ricevere alert in caso di errori:
+
+1. Creare automazione webhook in Home Assistant
+2. Impostare variabile ambiente:
+   ```bash
+   # In docker/.env.secrets
+   HA_WEBHOOK_URL=http://192.168.3.10:8123/api/webhook/backup-verify
+   ```
+3. Eseguire con `--notify`
+
+### Exit Codes
+
+| Codice | Significato |
+|--------|-------------|
+| 0 | Verifica OK |
+| 1 | Errori rilevati (backup corrotto) |
+| 2 | Nessun backup trovato |
+
+### Opzioni Avanzate (Non Implementate)
+
+**Duplicati Verify (integrato)**
+
+Duplicati ha una funzione "Verify" che controlla l'integrita' dei backup:
+1. WebUI → Selezionare backup
+2. Operazioni → "Verify files"
+3. Schedulare via Advanced options → `--backup-test-samples=5`
+
+**Restore automatico in ambiente isolato**
+
+Per homelab avanzati:
+1. VM Proxmox dedicata per test restore
+2. Script che ogni settimana:
+   - Restore config in directory temporanea
+   - Avvia container in rete isolata
+   - Verifica healthcheck
+   - Elimina e notifica risultato
+
+---
+
 ## Contatti e Escalation
 
 | Risorsa | Contatto |

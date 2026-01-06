@@ -80,7 +80,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.qbit.rule=Host(`qbit.home.local`)"
-      - "traefik.http.routers.qbit.entrypoints=web"
+      - "traefik.http.routers.qbit.entrypoints=websecure"
+      - "traefik.http.routers.qbit.tls=true"
       - "traefik.http.services.qbit.loadbalancer.server.port=8080"
 
   nzbget:
@@ -112,7 +113,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.nzbget.rule=Host(`nzbget.home.local`)"
-      - "traefik.http.routers.nzbget.entrypoints=web"
+      - "traefik.http.routers.nzbget.entrypoints=websecure"
+      - "traefik.http.routers.nzbget.tls=true"
       - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
 
   # ===========================================================================
@@ -147,7 +149,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.home.local`)"
-      - "traefik.http.routers.prowlarr.entrypoints=web"
+      - "traefik.http.routers.prowlarr.entrypoints=websecure"
+      - "traefik.http.routers.prowlarr.tls=true"
       - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
 
   flaresolverr:
@@ -211,7 +214,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.sonarr.rule=Host(`sonarr.home.local`)"
-      - "traefik.http.routers.sonarr.entrypoints=web"
+      - "traefik.http.routers.sonarr.entrypoints=websecure"
+      - "traefik.http.routers.sonarr.tls=true"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
 
   radarr:
@@ -247,7 +251,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.radarr.rule=Host(`radarr.home.local`)"
-      - "traefik.http.routers.radarr.entrypoints=web"
+      - "traefik.http.routers.radarr.entrypoints=websecure"
+      - "traefik.http.routers.radarr.tls=true"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
 
   lidarr:
@@ -283,7 +288,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.lidarr.rule=Host(`lidarr.home.local`)"
-      - "traefik.http.routers.lidarr.entrypoints=web"
+      - "traefik.http.routers.lidarr.entrypoints=websecure"
+      - "traefik.http.routers.lidarr.tls=true"
       - "traefik.http.services.lidarr.loadbalancer.server.port=8686"
 
   bazarr:
@@ -318,7 +324,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.bazarr.rule=Host(`bazarr.home.local`)"
-      - "traefik.http.routers.bazarr.entrypoints=web"
+      - "traefik.http.routers.bazarr.entrypoints=websecure"
+      - "traefik.http.routers.bazarr.tls=true"
       - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
 
   # ===========================================================================
@@ -388,7 +395,8 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.huntarr.rule=Host(`huntarr.home.local`)"
-      - "traefik.http.routers.huntarr.entrypoints=web"
+      - "traefik.http.routers.huntarr.entrypoints=websecure"
+      - "traefik.http.routers.huntarr.tls=true"
       - "traefik.http.services.huntarr.loadbalancer.server.port=9705"
 
   cleanuparr:
@@ -425,5 +433,6 @@ services:
       # Traefik
       - "traefik.enable=true"
       - "traefik.http.routers.cleanuparr.rule=Host(`cleanuparr.home.local`)"
-      - "traefik.http.routers.cleanuparr.entrypoints=web"
+      - "traefik.http.routers.cleanuparr.entrypoints=websecure"
+      - "traefik.http.routers.cleanuparr.tls=true"
       - "traefik.http.services.cleanuparr.loadbalancer.server.port=11011"

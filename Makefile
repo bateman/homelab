@@ -5,7 +5,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup setup-dry-run up down restart logs pull update status backup clean health show-urls urls \
+.PHONY: help setup setup-dry-run up down restart logs pull update status backup verify-backup clean health show-urls urls \
         validate check-docker check-compose check-curl recyclarr-sync recyclarr-config \
         logs-% shell-%
 
@@ -80,8 +80,9 @@ help:
 	@echo "    $(CYAN)make show-urls$(NC)   - Show WebUI URLs"
 	@echo ""
 	@echo "  $(PURPLE)Backup$(NC)"
-	@echo "    $(CYAN)make backup$(NC) - Trigger Duplicati backup on demand"
-	@echo "                   Duplicati WebUI: http://$(HOST_IP):8200"
+	@echo "    $(CYAN)make backup$(NC)        - Trigger Duplicati backup on demand"
+	@echo "    $(CYAN)make verify-backup$(NC) - Verify backup integrity (extraction + SQLite)"
+	@echo "                         Duplicati WebUI: http://$(HOST_IP):8200"
 	@echo ""
 	@echo "  $(PURPLE)Utilities$(NC)"
 	@echo "    $(CYAN)make clean$(NC)            - Remove orphan Docker resources"
@@ -104,8 +105,12 @@ setup: check-compose
 	@./scripts/setup-folders.sh
 	@if [ ! -f docker/.env ]; then \
 		echo ">>> Creating .env from template..."; \
-		cp docker/.env.example docker/.env 2>/dev/null || echo "PIHOLE_PASSWORD=changeme" > docker/.env; \
-		echo "$(YELLOW)WARNING: Edit docker/.env with your passwords$(NC)"; \
+		cp docker/.env.example docker/.env; \
+	fi
+	@if [ ! -f docker/.env.secrets ]; then \
+		echo ">>> Creating .env.secrets from template..."; \
+		cp docker/.env.secrets.example docker/.env.secrets; \
+		echo "$(YELLOW)WARNING: Edit docker/.env.secrets with your passwords$(NC)"; \
 	fi
 	@echo "$(GREEN)>>> Setup complete$(NC)"
 
@@ -202,6 +207,13 @@ backup: check-docker check-curl
 		exit 1; \
 	fi
 
+verify-backup:
+	@echo ">>> Verifying backup integrity..."
+	@if [ ! -x scripts/verify-backup.sh ]; then \
+		chmod +x scripts/verify-backup.sh; \
+	fi
+	@./scripts/verify-backup.sh --verbose
+
 clean: check-docker
 	@echo ">>> Cleaning orphan Docker resources..."
 	@echo "$(YELLOW)WARNING: This will remove unused containers, images and volumes$(NC)"
@@ -269,6 +281,7 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:8081/admin,Pi-hole)
 	$(call check_service,http://localhost:8123/api/,HomeAssistant)
 	$(call check_service,http://localhost:8200,Duplicati)
+	$(call check_service,http://localhost:3001,UptimeKuma)
 	$(call check_service,http://localhost:8383/v1/metrics,Watchtower)
 	$(call check_service,http://localhost:80,Traefik)
 	@# Portainer uses HTTPS
@@ -302,6 +315,7 @@ show-urls:
 	@echo "  FlareSolverr: http://$(HOST_IP):8191"
 	@echo ""
 	@echo "$(GREEN)Monitoring$(NC)"
+	@echo "  Uptime Kuma:  http://$(HOST_IP):3001"
 	@echo "  Huntarr:      http://$(HOST_IP):9705"
 	@echo "  Cleanuparr:   http://$(HOST_IP):11011"
 	@echo "  Watchtower:   http://$(HOST_IP):8383/v1/metrics"
