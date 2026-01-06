@@ -17,7 +17,7 @@ La strategia segue la regola **3-2-1**: tre copie dei dati, su due tipi di stora
 | Media library | /share/data/media | Mai (ricostruibile) | — | — |
 | Database *arr | SQLite in ./config | Giornaliero | Incluso in Docker configs | 30 giorni |
 
-> **Nota**: La cartella `./config` contiene le configurazioni di tutti i servizi Docker: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr, qBittorrent, NZBGet, Pi-hole, Home Assistant, Portainer, Duplicati, Recyclarr, Traefik, Huntarr, Cleanuparr.
+> **Nota**: La cartella `./config` contiene le configurazioni di tutti i servizi Docker: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr, qBittorrent, NZBGet, Pi-hole, Home Assistant, Portainer, Duplicati, Uptime Kuma, Recyclarr, Traefik, Huntarr, Cleanuparr.
 
 ---
 

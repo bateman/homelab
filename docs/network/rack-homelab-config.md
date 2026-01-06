@@ -214,15 +214,16 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 | Home Assistant | 8123 | Automazione domotica |
 | Portainer | 9443 | Gestione Docker |
 | Duplicati | 8200 | Backup incrementale |
+| Uptime Kuma | 3001 | Monitoring e alerting |
 | Watchtower | 8383 | Auto-update container |
 | Traefik | 80/443 | Reverse proxy (dashboard via traefik.home.local) |
 
 ### Mini PC Proxmox (192.168.3.20)
 
-| Servizio | Porta | Descrizione |
-|----------|-------|-------------|
-| Plex | 32400 | Media server |
-| Tailscale | — | VPN mesh |
+| Servizio | Porta | IP | Descrizione |
+|----------|-------|-----|-------------|
+| Plex | 32400 | 192.168.3.21 | Media server (container LXC) |
+| Tailscale | — | 192.168.3.20 | VPN mesh (host) |
 
 ---
 
