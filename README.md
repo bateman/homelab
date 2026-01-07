@@ -1,6 +1,6 @@
 # Homelab Infrastructure
 
-> **Prima installazione?** Vai direttamente a [`START_HERE.md`](START_HERE.md) per la guida passo-passo completa.
+> **Prima installazione**: Vai direttamente a [`START_HERE.md`](START_HERE.md) per la guida passo-passo completa.
 
 Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox con stack media completo.
 
