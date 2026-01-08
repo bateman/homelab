@@ -33,15 +33,7 @@ This guide explains how to configure **Gluetun** as a VPN container to route dow
 
 ### VPN Account
 
-You need an account with a VPN provider supported by Gluetun. Recommended providers:
-
-| Provider | Port Forwarding | Price | Notes |
-|----------|-----------------|-------|-------|
-| [NordVPN](https://nordvpn.com/) | No | €3-5/month | Popular, many servers, fast |
-| [ProtonVPN](https://protonvpn.com/) | Yes (Plus) | €5-10/month | Swiss, open source |
-| [AirVPN](https://airvpn.org/) | Yes | €7/month | Great for P2P, port forwarding included |
-| [Private Internet Access](https://www.privateinternetaccess.com/) | Yes | €2-3/month | Affordable, good P2P support |
-| [Mullvad](https://mullvad.net/) | No (removed 2023) | €5/month | Privacy-first, no email required |
+You need an account with a VPN provider supported by Gluetun.
 
 > **Port forwarding** is important for optimal torrent speeds. It allows incoming connections from peers. If your provider doesn't support it (e.g., Mullvad), torrents will still work but may be slower.
 
