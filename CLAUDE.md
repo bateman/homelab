@@ -47,7 +47,8 @@ homelab/
     │   ├── NAS_SETUP.md            # Setup NAS QNAP e Docker
     │   ├── NOTIFICATIONS_SETUP.md  # Setup notifiche Uptime Kuma via HA
     │   ├── PROXMOX_SETUP.md        # Setup Proxmox e Plex
-    │   └── REVERSE_PROXY_SETUP.md  # Traefik, NPM, Pi-hole DNS Tailscale
+    │   ├── REVERSE_PROXY_SETUP.md  # Traefik, NPM, Pi-hole DNS Tailscale
+    │   └── VPN_SETUP.md            # Protezione VPN per download clients (Gluetun)
     ├── network/                    # Config rete
     │   ├── firewall-config.md      # Regole firewall UDM-SE e config VLAN
     │   └── rack-homelab-config.md  # Layout rack hardware e piano IP
@@ -64,8 +65,9 @@ homelab/
 | Lidarr | 8686 | Gestione musica |
 | Prowlarr | 9696 | Gestione indexer |
 | Bazarr | 6767 | Gestione sottotitoli |
-| qBittorrent | 8080 | Client torrent |
+| qBittorrent | 8080 | Client torrent (protezione VPN opzionale, vedi `docs/setup/VPN_SETUP.md`) |
 | NZBGet | 6789 | Client Usenet |
+| Gluetun | - | Container VPN per protezione download clients (opzionale) |
 | Huntarr | 9705 | Monitoring *arr |
 | Cleanuparr | 11011 | Pulizia automatica |
 | Pi-hole | 8081 | DNS ad-blocking |
