@@ -1,234 +1,234 @@
 # Proxmox Setup - Lenovo ThinkCentre neo 50q Gen 4
 
-> Guida per installare Proxmox VE sul Mini PC e configurare Plex con accesso remoto via Tailscale
+> Guide for installing Proxmox VE on the Mini PC and configuring Plex with remote access via Tailscale
 
 ---
 
-## Prerequisiti
+## Prerequisites
 
-- [ ] Mini PC Lenovo ThinkCentre neo 50q Gen 4 montato in rack
-- [ ] Collegato a switch porta VLAN 3 (Servers)
-- [ ] Monitor e tastiera per installazione iniziale
-- [ ] Chiavetta USB (8GB+) per ISO Proxmox
-- [ ] VLAN 3 configurata (vedi [NETWORK_SETUP.md](NETWORK_SETUP.md))
+- [ ] Lenovo ThinkCentre neo 50q Gen 4 Mini PC rack-mounted
+- [ ] Connected to switch port VLAN 3 (Servers)
+- [ ] Monitor and keyboard for initial installation
+- [ ] USB drive (8GB+) for Proxmox ISO
+- [ ] VLAN 3 configured (see [NETWORK_SETUP.md](NETWORK_SETUP.md))
 
 ---
 
-## Fase 1: Preparazione USB Avviabile
+## Phase 1: Bootable USB Preparation
 
-### 1.1 Download ISO Proxmox
+### 1.1 Download Proxmox ISO
 
-1. Scaricare da: https://www.proxmox.com/en/downloads
-2. Selezionare: Proxmox VE ISO Installer (ultima versione stabile)
-3. Verificare checksum SHA256
+1. Download from: https://www.proxmox.com/en/downloads
+2. Select: Proxmox VE ISO Installer (latest stable version)
+3. Verify SHA256 checksum
 
-### 1.2 Creare USB Avviabile
+### 1.2 Create Bootable USB
 
 **Linux/macOS:**
 ```bash
-# Identificare device USB
+# Identify USB device
 lsblk
 
-# Scrivere ISO (sostituire /dev/sdX con device corretto)
+# Write ISO (replace /dev/sdX with correct device)
 sudo dd bs=4M if=proxmox-ve_*.iso of=/dev/sdX conv=fsync status=progress
 ```
 
 **Windows:**
-- Usare Rufus o balenaEtcher
-- Selezionare ISO Proxmox
+- Use Rufus or balenaEtcher
+- Select Proxmox ISO
 - Mode: DD Image
 
 ---
 
-## Fase 2: Installazione Proxmox
+## Phase 2: Proxmox Installation
 
-### 2.1 Boot da USB
+### 2.1 Boot from USB
 
-1. [ ] Inserire USB nel Mini PC
-2. [ ] Accendere e premere F12 (o tasto boot menu Lenovo)
-3. [ ] Selezionare USB come boot device
-4. [ ] Selezionare "Install Proxmox VE"
+1. [ ] Insert USB into Mini PC
+2. [ ] Power on and press F12 (or Lenovo boot menu key)
+3. [ ] Select USB as boot device
+4. [ ] Select "Install Proxmox VE"
 
-### 2.2 Wizard Installazione
+### 2.2 Installation Wizard
 
-1. [ ] Accettare EULA
-2. [ ] Selezionare disco per installazione
-   - Selezionare SSD NVMe
-   - **Filesystem: ext4** (consigliato per NVMe singolo)
+1. [ ] Accept EULA
+2. [ ] Select installation disk
+   - Select NVMe SSD
+   - **Filesystem: ext4** (recommended for single NVMe)
 
-   > **Nota**: ZFS richiede almeno 8GB RAM dedicata e offre vantaggi (snapshot,
-   > integrity) principalmente con configurazioni multi-disco. Per NVMe singolo,
-   > ext4 è più efficiente in termini di risorse.
+   > **Note**: ZFS requires at least 8GB dedicated RAM and offers advantages (snapshots,
+   > integrity) mainly with multi-disk configurations. For single NVMe,
+   > ext4 is more resource-efficient.
 
-3. [ ] Impostazioni locali:
+3. [ ] Locale settings:
    - Country: Italy
    - Timezone: Europe/Rome
    - Keyboard: Italian
 
-### 2.3 Configurazione Rete
+### 2.3 Network Configuration
 
-| Campo | Valore |
+| Field | Value |
 |-------|--------|
-| Management Interface | eth0 (o interfaccia principale) |
+| Management Interface | eth0 (or main interface) |
 | Hostname (FQDN) | proxmox.servers.local |
 | IP Address | 192.168.3.20 |
 | Netmask | 255.255.255.0 (/24) |
 | Gateway | 192.168.3.1 |
-| DNS Server | 192.168.3.1 (o 1.1.1.1) |
+| DNS Server | 192.168.3.1 (or 1.1.1.1) |
 
-### 2.4 Credenziali
+### 2.4 Credentials
 
-- [ ] Impostare password root sicura
-- [ ] Email: tua@email.com (per notifiche)
+- [ ] Set secure root password
+- [ ] Email: your@email.com (for notifications)
 
-### 2.5 Completare Installazione
+### 2.5 Complete Installation
 
-1. [ ] Verificare riepilogo configurazione
-2. [ ] Cliccare "Install"
-3. [ ] Attendere completamento (~5-10 minuti)
-4. [ ] Rimuovere USB al riavvio
-5. [ ] Sistema avvia in Proxmox
+1. [ ] Review configuration summary
+2. [ ] Click "Install"
+3. [ ] Wait for completion (~5-10 minutes)
+4. [ ] Remove USB on reboot
+5. [ ] System boots into Proxmox
 
-### Verifica Installazione
+### Verify Installation
 
 ```bash
-# Da un PC sulla stessa VLAN
+# From a PC on the same VLAN
 ping 192.168.3.20
 ```
 
-Aprire browser: `https://192.168.3.20:8006`
-- Accettare certificato self-signed
-- Login: root / password impostata
+Open browser: `https://192.168.3.20:8006`
+- Accept self-signed certificate
+- Login: root / password set
 
 ---
 
-## Fase 3: Configurazione Post-Installazione
+## Phase 3: Post-Installation Configuration
 
-### 3.1 Disabilitare Repository Enterprise
+### 3.1 Disable Enterprise Repository
 
 ```bash
-# SSH nel Proxmox
+# SSH into Proxmox
 ssh root@192.168.3.20
 
-# Commentare repo enterprise
+# Comment out enterprise repo
 sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/pve-enterprise.list
 
-# Aggiungere repo no-subscription
+# Add no-subscription repo
 echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
 ```
 
-### 3.2 Aggiornare Sistema
+### 3.2 Update System
 
 ```bash
 apt update && apt full-upgrade -y
 reboot
 ```
 
-### 3.3 Rimuovere Popup Subscription
+### 3.3 Remove Subscription Popup
 
 ```bash
-# Opzionale - rimuove popup licenza nella WebUI
+# Optional - removes license popup in WebUI
 sed -Ezi.bak "s/(Ext.Msg.show\(\{[^}]*license[^}]*\}\);)/void(0);/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
 systemctl restart pveproxy
 ```
 
-### 3.4 Configurare Storage NFS dal NAS
+### 3.4 Configure NFS Storage from NAS
 
-#### Prerequisito: Abilitare NFS Export su QNAP
+#### Prerequisite: Enable NFS Export on QNAP
 
-Prima di configurare NFS su Proxmox, abilitare l'export NFS sul NAS:
+Before configuring NFS on Proxmox, enable NFS export on the NAS:
 
-1. Accedere a QTS: `https://192.168.3.10:5000`
+1. Access QTS: `https://192.168.3.10:5000`
 2. Control Panel → Network & File Services → NFS Service
-3. [ ] Enable NFS v3 e/o NFS v4 Service
+3. [ ] Enable NFS v3 and/or NFS v4 Service
 4. Control Panel → Shared Folders
-5. Per ogni folder da esportare (data, backup):
-   - Selezionare folder → Edit → NFS Permissions → Add
+5. For each folder to export (data, backup):
+   - Select folder → Edit → NFS Permissions → Add
    - Host/IP: `192.168.3.20` (Proxmox)
    - Permission: `read/write`
-   - Squash: `no_root_squash` (per backup)
+   - Squash: `no_root_squash` (for backup)
    - Apply
 
-Verificare export disponibili:
+Verify available exports:
 ```bash
-# Da Proxmox
+# From Proxmox
 showmount -e 192.168.3.10
-# Dovrebbe mostrare /share/data/media e /share/backup
+# Should show /share/data/media and /share/backup
 ```
 
-#### Aggiungere Storage NFS in Proxmox
+#### Add NFS Storage in Proxmox
 
 Datacenter → Storage → Add → NFS
 
-| Campo | Valore |
+| Field | Value |
 |-------|--------|
 | ID | nas-media |
 | Server | 192.168.3.10 |
 | Export | /share/data/media |
 | Content | Disk image, Container |
 
-Aggiungere anche storage per backup:
+Also add storage for backup:
 
-| Campo | Valore |
+| Field | Value |
 |-------|--------|
 | ID | nas-backup |
 | Server | 192.168.3.10 |
 | Export | /share/backup |
 | Content | VZDump backup file |
 
-> **Troubleshooting**: Se NFS mount fallisce, verificare che il firewall QNAP permetta connessioni da 192.168.3.20 e che i servizi NFS siano attivi.
+> **Troubleshooting**: If NFS mount fails, verify that the QNAP firewall allows connections from 192.168.3.20 and that NFS services are active.
 
 ---
 
-## Fase 4: Creazione LXC Container per Plex
+## Phase 4: Creating LXC Container for Plex
 
-> LXC è più leggero di una VM completa e sufficiente per Plex
+> LXC is lighter than a full VM and sufficient for Plex
 
 ### 4.1 Download Template
 
 Datacenter → proxmox → local → CT Templates → Templates
 
-Scaricare: `debian-12-standard` (Bookworm)
+Download: `debian-12-standard` (Bookworm)
 
-> **Perché Debian invece di Ubuntu?**
-> - Footprint ridotto (~150MB vs ~400MB immagine base)
-> - Minore consumo RAM (~50-80MB idle vs ~150-200MB)
-> - Aggiornamenti meno frequenti/più stabili
-> - Stessa base di Proxmox (compatibilità ottimale)
-> - Sufficiente per Plex che ha dipendenze minime
+> **Why Debian instead of Ubuntu?**
+> - Reduced footprint (~150MB vs ~400MB base image)
+> - Lower RAM consumption (~50-80MB idle vs ~150-200MB)
+> - Less frequent/more stable updates
+> - Same base as Proxmox (optimal compatibility)
+> - Sufficient for Plex which has minimal dependencies
 
-### 4.2 Creare Container
+### 4.2 Create Container
 
 Datacenter → proxmox → Create CT
 
 **Tab General:**
-| Campo | Valore |
+| Field | Value |
 |-------|--------|
 | CT ID | 100 |
 | Hostname | plex |
-| Password | (password sicura) |
-| SSH Public Key | (opzionale) |
+| Password | (secure password) |
+| SSH Public Key | (optional) |
 
 **Tab Template:**
 - Template: debian-12-standard
 
 **Tab Disks:**
-| Campo | Valore |
+| Field | Value |
 |-------|--------|
 | Storage | local-lvm |
 | Disk size | 16 GB |
 
 **Tab CPU:**
-- Cores: 4 (o quanti disponibili)
+- Cores: 4 (or as available)
 
 **Tab Memory:**
-| Campo | Valore |
+| Field | Value |
 |-------|--------|
 | Memory | 4096 MB |
 | Swap | 512 MB |
 
 **Tab Network:**
-| Campo | Valore |
+| Field | Value |
 |-------|--------|
 | Bridge | vmbr0 |
 | IPv4 | Static |
@@ -236,365 +236,365 @@ Datacenter → proxmox → Create CT
 | Gateway | 192.168.3.1 |
 
 **Tab DNS:**
-- Usa impostazioni host (default)
+- Use host settings (default)
 
-### 4.3 Configurare Mount Point NFS
+### 4.3 Configure NFS Mount Point
 
-Prima di avviare, aggiungere mount point per media:
+Before starting, add mount point for media:
 
 ```bash
-# Sul host Proxmox
+# On Proxmox host
 pct set 100 -mp0 /mnt/nas-media,mp=/media
 ```
 
-Oppure via WebUI:
+Or via WebUI:
 Container 100 → Resources → Add → Mount Point
 - Storage: nas-media
 - Mount Point: /media
 
-### 4.4 Avviare Container e Installare Plex
+### 4.4 Start Container and Install Plex
 
 ```bash
-# Avviare container
+# Start container
 pct start 100
 
-# Entrare nel container
+# Enter container
 pct enter 100
 
-# Aggiornare sistema
+# Update system
 apt update && apt upgrade -y
 
-# Aggiungere repository Plex
+# Add Plex repository
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | gpg --dearmor -o /usr/share/keyrings/plex-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/plex-archive-keyring.gpg] https://downloads.plex.tv/repo/deb public main" > /etc/apt/sources.list.d/plexmediaserver.list
 
-# Installare Plex
+# Install Plex
 apt update
 apt install plexmediaserver -y
 
-# Verificare stato
+# Verify status
 systemctl status plexmediaserver
 ```
 
-### Verifica Plex
+### Verify Plex
 
-Aprire browser: `http://192.168.3.21:32400/web`
+Open browser: `http://192.168.3.21:32400/web`
 
 ---
 
-## Fase 5: Configurazione Plex (Trash Guides)
+## Phase 5: Plex Configuration (Trash Guides)
 
-> Questa sezione segue le [raccomandazioni ufficiali di Trash Guides](https://trash-guides.info/Plex/Tips/Plex-media-server/) per ottimizzare Plex Media Server.
+> This section follows the [official Trash Guides recommendations](https://trash-guides.info/Plex/Tips/Plex-media-server/) to optimize Plex Media Server.
 
-### 5.1 Setup Iniziale
+### 5.1 Initial Setup
 
-1. [ ] Accedere a `http://192.168.3.21:32400/web`
-2. [ ] Login con account Plex (o crearne uno)
-3. [ ] Dare nome al server: "Homelab Plex"
-4. [ ] Configurazione iniziale guidata
+1. [ ] Access `http://192.168.3.21:32400/web`
+2. [ ] Login with Plex account (or create one)
+3. [ ] Name the server: "Homelab Plex"
+4. [ ] Guided initial configuration
 
-### 5.2 Aggiungere Librerie
+### 5.2 Add Libraries
 
 Add Library → Movies:
-- Name: Film
+- Name: Movies
 - Folders: /media/movies
 
 Add Library → TV Shows:
-- Name: Serie TV
+- Name: TV Shows
 - Folders: /media/tv
 
 Add Library → Music:
-- Name: Musica
+- Name: Music
 - Folders: /media/music
 
-### 5.3 Impostazioni Libreria (Settings → Library)
+### 5.3 Library Settings (Settings → Library)
 
-> **Filosofia Trash Guides**: Plex non dovrebbe mai modificare i tuoi file media. Usa Sonarr/Radarr per gestire la libreria. Per sicurezza extra, configura Plex con accesso **Read Only** alla libreria media.
+> **Trash Guides Philosophy**: Plex should never modify your media files. Use Sonarr/Radarr to manage the library. For extra security, configure Plex with **Read Only** access to the media library.
 
-| Impostazione | Valore | Motivazione |
-|--------------|--------|-------------|
-| Scan my library automatically | ✅ Enabled | Rileva automaticamente modifiche nelle cartelle sorgente |
-| Run a partial scan when changes are detected | ✅ Enabled | Scansiona solo la cartella modificata, non l'intera libreria |
-| Run scanner tasks at a lower priority | ✅ Enabled | Riduce impatto su sistemi con risorse limitate |
-| Empty trash automatically after every scan | ✅ Enabled | Rimuove file eliminati dalla libreria alla scansione successiva |
-| Allow media deletion | ❌ Disabled | **Critico**: Plex non deve gestire i file, usa Radarr/Sonarr |
-| Generate video preview thumbnails | ❌ Never | Usa molto spazio disco e I/O senza benefici significativi |
-| Generate intro video markers | As scheduled task | Abilita funzione "Salta Intro" |
-| Generate credits video markers | As scheduled task | Abilita funzione "Salta Crediti" |
-| Generate chapter thumbnails | As scheduled task | Impatto storage minimo, funzionalità utile |
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| Scan my library automatically | ✅ Enabled | Automatically detects changes in source folders |
+| Run a partial scan when changes are detected | ✅ Enabled | Scans only the modified folder, not the entire library |
+| Run scanner tasks at a lower priority | ✅ Enabled | Reduces impact on resource-limited systems |
+| Empty trash automatically after every scan | ✅ Enabled | Removes deleted files from library on next scan |
+| Allow media deletion | ❌ Disabled | **Critical**: Plex must not manage files, use Radarr/Sonarr |
+| Generate video preview thumbnails | ❌ Never | Uses lots of disk space and I/O without significant benefits |
+| Generate intro video markers | As scheduled task | Enables "Skip Intro" feature |
+| Generate credits video markers | As scheduled task | Enables "Skip Credits" feature |
+| Generate chapter thumbnails | As scheduled task | Minimal storage impact, useful functionality |
 
-**Database Cache Size** (impostazioni avanzate):
-- Per collezioni grandi (centinaia di migliaia di elementi): `1024-2048 MB`
-- Default sufficiente per la maggior parte degli utenti
+**Database Cache Size** (advanced settings):
+- For large collections (hundreds of thousands of items): `1024-2048 MB`
+- Default sufficient for most users
 
-### 5.4 Impostazioni Transcoder (Settings → Transcoder)
+### 5.4 Transcoder Settings (Settings → Transcoder)
 
-| Impostazione | Valore | Motivazione |
-|--------------|--------|-------------|
-| Transcoder quality | Automatic | Consigliato per la maggior parte degli utenti |
-| Transcoder temporary directory | `/tmp/plex` o RAM disk | Riduce I/O; **MAI usare share di rete** |
-| Enable HDR tone mapping | Dipende dal setup | Richiede risorse significative per contenuti 4K |
-| Tone mapping algorithm | Hable | Preserva meglio dettagli in zone chiare e scure |
-| Use hardware acceleration when available | ✅ Enabled | Migliora significativamente le performance |
-| Use hardware-accelerated video encoding | ✅ Enabled | Riduce carico CPU (richiede Plex Pass) |
-| Maximum simultaneous video transcode | In base all'hardware | 2-4 per CPU moderne con Quick Sync |
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| Transcoder quality | Automatic | Recommended for most users |
+| Transcoder temporary directory | `/tmp/plex` or RAM disk | Reduces I/O; **NEVER use network share** |
+| Enable HDR tone mapping | Depends on setup | Requires significant resources for 4K content |
+| Tone mapping algorithm | Hable | Better preserves details in bright and dark areas |
+| Use hardware acceleration when available | ✅ Enabled | Significantly improves performance |
+| Use hardware-accelerated video encoding | ✅ Enabled | Reduces CPU load (requires Plex Pass) |
+| Maximum simultaneous video transcode | Based on hardware | 2-4 for modern CPUs with Quick Sync |
 
-#### Configurare Directory Temporanea su RAM
+#### Configure Temporary Directory on RAM
 
-Per prestazioni ottimali di transcoding, usa un RAM disk:
+For optimal transcoding performance, use a RAM disk:
 
 ```bash
-# Nel container Plex (pct enter 100)
+# In Plex container (pct enter 100)
 
-# Creare directory per transcoding
+# Create directory for transcoding
 mkdir -p /tmp/plex
 
-# Opzionale: mount tmpfs dedicato (persiste fino a reboot)
+# Optional: dedicated tmpfs mount (persists until reboot)
 mount -t tmpfs -o size=2G tmpfs /tmp/plex
 
-# Per rendere permanente, aggiungere a /etc/fstab:
+# To make permanent, add to /etc/fstab:
 echo "tmpfs /tmp/plex tmpfs size=2G,mode=1777 0 0" >> /etc/fstab
 ```
 
-> **Nota**: Il transcoding su RAM riduce l'usura degli SSD e velocizza le operazioni, dato che i dati di transcode sono temporanei.
+> **Note**: Transcoding on RAM reduces SSD wear and speeds up operations, since transcode data is temporary.
 
-### 5.5 Impostazioni Rete (Settings → Network)
+### 5.5 Network Settings (Settings → Network)
 
-| Impostazione | Valore | Motivazione |
-|--------------|--------|-------------|
-| Enable IPv6 support | ❌ Disabled | Abilitare solo se la rete supporta completamente IPv6 |
-| Secure connections | Preferred | Accetta e preferisce connessioni sicure quando disponibili |
-| Enable local network discovery (GDM) | ✅ Enabled | Permette discovery automatico server/app sulla rete locale |
-| Enable Relay | ❌ Disabled | Limitato a ~2 Mbps, causa problemi di riproduzione. Useremo Tailscale |
-| Custom server access URLs | (vuoto) | Configurare se usi reverse proxy |
-| LAN Networks | `192.168.3.0/24,192.168.4.0/24` | **Importante**: Specifica le reti locali per evitare che dispositivi LAN appaiano come remoti |
-| Treat WAN IP As LAN Bandwidth | ✅ Enabled | Utile se hai protezione DNS rebinding attiva |
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| Enable IPv6 support | ❌ Disabled | Enable only if network fully supports IPv6 |
+| Secure connections | Preferred | Accepts and prefers secure connections when available |
+| Enable local network discovery (GDM) | ✅ Enabled | Allows automatic server/app discovery on local network |
+| Enable Relay | ❌ Disabled | Limited to ~2 Mbps, causes playback issues. We'll use Tailscale |
+| Custom server access URLs | (empty) | Configure if using reverse proxy |
+| LAN Networks | `192.168.3.0/24,192.168.4.0/24` | **Important**: Specify local networks to prevent LAN devices from appearing as remote |
+| Treat WAN IP As LAN Bandwidth | ✅ Enabled | Useful if you have DNS rebinding protection active |
 
-> **Critico**: Se i tuoi dispositivi locali vengono visti come "remoti", configura correttamente **LAN Networks** con le tue subnet.
+> **Critical**: If your local devices are seen as "remote", properly configure **LAN Networks** with your subnets.
 
-### 5.6 Impostazioni Librerie Specifiche
+### 5.6 Specific Library Settings
 
-#### Per Libreria Film
-
-Edit Library → Advanced:
-
-| Impostazione | Valore | Motivazione |
-|--------------|--------|-------------|
-| Scanner | Plex Movie | Scanner nativo, più veloce |
-| Agent | Plex Movie | Recupero metadata più rapido |
-| Prefer local metadata | ✅ Enabled | Usa file locali (poster, fanart) se disponibili |
-| Use local assets | ✅ Enabled | Priorità a artwork locale |
-| Prefer embedded tags | ❌ Disabled | Evita convenzioni di naming indesiderate |
-| Enable credits detection | ✅ Enabled | Funzione salta crediti |
-| Collections | Create automatically (2+ items) | Organizza contenuti in collezioni logiche |
-
-#### Per Libreria Serie TV
+#### For Movie Library
 
 Edit Library → Advanced:
 
-| Impostazione | Valore | Motivazione |
-|--------------|--------|-------------|
-| Scanner | Plex TV Series | Scanner nativo ottimizzato |
-| Agent | Plex TV Series | Recupero metadata più rapido |
-| Prefer local metadata | ✅ Enabled | Usa file locali se disponibili |
-| Episode sorting | Library default | O in base alle preferenze |
-| Enable intro detection | ✅ Enabled | Funzione "Salta Intro" |
-| Enable credits detection | ✅ Enabled | Funzione "Salta Crediti" |
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| Scanner | Plex Movie | Native scanner, faster |
+| Agent | Plex Movie | Faster metadata retrieval |
+| Prefer local metadata | ✅ Enabled | Uses local files (poster, fanart) if available |
+| Use local assets | ✅ Enabled | Priority to local artwork |
+| Prefer embedded tags | ❌ Disabled | Avoids unwanted naming conventions |
+| Enable credits detection | ✅ Enabled | Skip credits feature |
+| Collections | Create automatically (2+ items) | Organizes content into logical collections |
 
-### 5.7 Impostazioni Client Raccomandate
+#### For TV Show Library
 
-> Riferimento: [Media Clients Wiki](https://mediaclients.wiki/Plex) per impostazioni specifiche per dispositivo.
+Edit Library → Advanced:
 
-#### Impostazioni Universali Client
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| Scanner | Plex TV Series | Optimized native scanner |
+| Agent | Plex TV Series | Faster metadata retrieval |
+| Prefer local metadata | ✅ Enabled | Uses local files if available |
+| Episode sorting | Library default | Or based on preferences |
+| Enable intro detection | ✅ Enabled | "Skip Intro" feature |
+| Enable credits detection | ✅ Enabled | "Skip Credits" feature |
 
-Per ogni client Plex (TV, telefono, tablet, web):
+### 5.7 Recommended Client Settings
+
+> Reference: [Media Clients Wiki](https://mediaclients.wiki/Plex) for device-specific settings.
+
+#### Universal Client Settings
+
+For each Plex client (TV, phone, tablet, web):
 
 **Quality → Video:**
 
-| Scenario | Impostazione | Valore |
-|----------|--------------|--------|
+| Scenario | Setting | Value |
+|----------|---------|-------|
 | Home Streaming | Quality | Maximum / Original |
-| Remote Streaming | Quality | Maximum / Original (con buona connessione) |
-| Limit remote quality | Dipende | Solo se banda limitata |
+| Remote Streaming | Quality | Maximum / Original (with good connection) |
+| Limit remote quality | Depends | Only if limited bandwidth |
 
-**Importante**: Impostare qualità su "Original" o "Maximum" per evitare transcoding non necessario e preservare la qualità.
+**Important**: Set quality to "Original" or "Maximum" to avoid unnecessary transcoding and preserve quality.
 
 **Player Settings:**
 - [ ] Direct Play: ✅ Enabled
 - [ ] Direct Stream: ✅ Enabled
-- [ ] Auto Adjust Quality: ❌ Disabled (se connessione stabile)
+- [ ] Auto Adjust Quality: ❌ Disabled (if stable connection)
 
 **Subtitles:**
-- [ ] Burn subtitles: Only image formats (evita transcoding per SRT/ASS)
+- [ ] Burn subtitles: Only image formats (avoids transcoding for SRT/ASS)
 - [ ] Subtitle size: Medium
 - [ ] Subtitle position: Bottom
 
-### 5.8 Prevenzione Transcoding 4K (Opzionale)
+### 5.8 4K Transcoding Prevention (Optional)
 
-> Il transcoding di contenuti 4K/HDR è molto pesante e può degradare la qualità. È meglio prevenirlo.
+> Transcoding 4K/HDR content is very resource-intensive and can degrade quality. It's better to prevent it.
 
-#### Perché Prevenire il Transcoding 4K
+#### Why Prevent 4K Transcoding
 
-- Richiede **enormi risorse** CPU/GPU
-- **Degrada la qualità** HDR → SDR
-- Può causare **stuttering e buffering**
-- I dispositivi che non supportano 4K dovrebbero usare una versione 1080p separata
+- Requires **enormous** CPU/GPU resources
+- **Degrades quality** HDR → SDR
+- Can cause **stuttering and buffering**
+- Devices that don't support 4K should use a separate 1080p version
 
-#### Soluzione: Tautulli + JBOPS (richiede Plex Pass)
+#### Solution: Tautulli + JBOPS (requires Plex Pass)
 
-1. **Installare Tautulli** (monitoring Plex)
-2. **Configurare script JBOPS** per bloccare transcoding 4K
-3. Il sistema **termina automaticamente** stream 4K che richiedono transcoding
+1. **Install Tautulli** (Plex monitoring)
+2. **Configure JBOPS script** to block 4K transcoding
+3. The system **automatically terminates** 4K streams requiring transcoding
 
-Guida completa: [Trash Guides - 4K Transcoding Prevention](https://trash-guides.info/Plex/)
+Complete guide: [Trash Guides - 4K Transcoding Prevention](https://trash-guides.info/Plex/)
 
-#### Approccio Alternativo: Librerie Separate
+#### Alternative Approach: Separate Libraries
 
-Creare librerie separate per 4K:
+Create separate libraries for 4K:
 
 ```
 /media/
-├── movies/           # Film 1080p
-├── movies-4k/        # Film 4K (libreria separata)
-├── tv/               # Serie TV 1080p
-└── tv-4k/            # Serie TV 4K (libreria separata)
+├── movies/           # 1080p Movies
+├── movies-4k/        # 4K Movies (separate library)
+├── tv/               # 1080p TV Shows
+└── tv-4k/            # 4K TV Shows (separate library)
 ```
 
-Poi in Plex:
-- Libreria "Film" → /media/movies
-- Libreria "Film 4K" → /media/movies-4k
-- Condividere solo "Film" con utenti che non hanno dispositivi 4K
+Then in Plex:
+- Library "Movies" → /media/movies
+- Library "Movies 4K" → /media/movies-4k
+- Share only "Movies" with users who don't have 4K devices
 
-### 5.9 Ottimizzazioni Aggiuntive
+### 5.9 Additional Optimizations
 
-#### Accesso Read-Only per Sicurezza
+#### Read-Only Access for Security
 
-Per maggiore sicurezza, configura Plex con accesso sola lettura ai media:
+For greater security, configure Plex with read-only access to media:
 
 ```bash
-# Sul NAS, esportare con opzione ro (read-only)
-# In /etc/exports (se NFS diretto) o nelle impostazioni NFS QNAP
+# On NAS, export with ro (read-only) option
+# In /etc/exports (if direct NFS) or in QNAP NFS settings
 /share/data/media 192.168.3.21(ro,sync,no_subtree_check)
 ```
 
 #### Scheduled Tasks
 
 Settings → Scheduled Tasks:
-- [ ] **Perform extensive media analysis during maintenance**: Considera di disabilitare se causa rallentamenti
+- [ ] **Perform extensive media analysis during maintenance**: Consider disabling if causing slowdowns
 - [ ] **Backup database every three days**: ✅ Enabled
 - [ ] **Optimize database every week**: ✅ Enabled
 - [ ] **Remove old bundles every week**: ✅ Enabled
 - [ ] **Remove old cache files every week**: ✅ Enabled
 
-Orario manutenzione: Impostare nelle ore notturne (es. 02:00-05:00)
+Maintenance schedule: Set during nighttime hours (e.g., 02:00-05:00)
 
-### 5.10 Verifica Configurazione
+### 5.10 Configuration Verification
 
-Checklist post-configurazione:
+Post-configuration checklist:
 
-- [ ] Librerie aggiunte e scansione completata
-- [ ] Direct Play funzionante su client locale
-- [ ] LAN Networks configurato correttamente (dispositivi non appaiono come "remoti")
-- [ ] Hardware transcoding attivo (verifica con `intel_gpu_top` durante transcoding)
-- [ ] Relay disabilitato
-- [ ] Transcoder temporary directory su RAM/SSD locale
+- [ ] Libraries added and scan completed
+- [ ] Direct Play working on local client
+- [ ] LAN Networks configured correctly (devices don't appear as "remote")
+- [ ] Hardware transcoding active (verify with `intel_gpu_top` during transcoding)
+- [ ] Relay disabled
+- [ ] Transcoder temporary directory on RAM/local SSD
 
 #### Test Direct Play
 
-1. Riprodurre un file su client locale
+1. Play a file on local client
 2. Dashboard → Now Playing
-3. Verificare che mostri "Direct Play" e non "Transcoding"
+3. Verify it shows "Direct Play" and not "Transcoding"
 
-Se mostra "Transcoding":
-- Verificare impostazioni qualità client
-- Controllare codec compatibilità
-- Verificare sottotitoli (image subs forzano transcoding)
+If it shows "Transcoding":
+- Check client quality settings
+- Check codec compatibility
+- Check subtitles (image subs force transcoding)
 
 ---
 
-## Fase 6: Installazione Tailscale
+## Phase 6: Tailscale Installation
 
-> Tailscale fornisce accesso remoto sicuro senza port forwarding
+> Tailscale provides secure remote access without port forwarding
 
-### 6.1 Installare su Host Proxmox
+### 6.1 Install on Proxmox Host
 
 ```bash
-# SSH nel Proxmox
+# SSH into Proxmox
 ssh root@192.168.3.20
 
-# Installare Tailscale
+# Install Tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 
-# Avviare e autenticare
+# Start and authenticate
 tailscale up
 
-# Seguire link per autenticazione nel browser
+# Follow link for browser authentication
 ```
 
-### 6.2 Configurare come Subnet Router
+### 6.2 Configure as Subnet Router
 
-Per accedere a tutta la rete locale via Tailscale:
+To access the entire local network via Tailscale:
 
 ```bash
-# Abilitare IP forwarding
+# Enable IP forwarding
 echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
 echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
 sysctl -p
 
-# Riavviare Tailscale come subnet router
+# Restart Tailscale as subnet router
 tailscale up --advertise-routes=192.168.3.0/24,192.168.4.0/24
 ```
 
-### 6.3 Approvare Route in Tailscale Admin
+### 6.3 Approve Routes in Tailscale Admin
 
-1. Accedere a https://login.tailscale.com/admin/machines
-2. Trovare "proxmox"
-3. Cliccare "..." → Edit route settings
-4. Approvare le subnet routes advertised
+1. Access https://login.tailscale.com/admin/machines
+2. Find "proxmox"
+3. Click "..." → Edit route settings
+4. Approve the advertised subnet routes
 
-### 6.4 Installare Tailscale nel Container Plex (Alternativa)
+### 6.4 Install Tailscale in Plex Container (Alternative)
 
-Se preferisci accesso diretto solo a Plex:
+If you prefer direct access only to Plex:
 
 ```bash
-# Entrare nel container
+# Enter container
 pct enter 100
 
-# Installare Tailscale
+# Install Tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 tailscale up
 ```
 
-### Verifica Tailscale
+### Verify Tailscale
 
 ```bash
-# Sul Proxmox
+# On Proxmox
 tailscale status
 
-# Da dispositivo remoto con Tailscale
-ping 192.168.3.20  # Dovrebbe funzionare via Tailscale
+# From remote device with Tailscale
+ping 192.168.3.20  # Should work via Tailscale
 ```
 
 ---
 
-## Fase 7: Configurazione Backup Proxmox
+## Phase 7: Proxmox Backup Configuration
 
-### 7.1 Aggiungere Storage Backup
+### 7.1 Add Backup Storage
 
-Se non già fatto:
+If not already done:
 Datacenter → Storage → Add → NFS
 - ID: nas-backup
 - Server: 192.168.3.10
 - Export: /share/backup
 - Content: VZDump backup file
 
-> **Nota**: I backup Proxmox verranno salvati in una sottocartella automatica (`dump/`).
+> **Note**: Proxmox backups will be saved in an automatic subfolder (`dump/`).
 
-### 7.2 Creare Backup Job Schedulato
+### 7.2 Create Scheduled Backup Job
 
 Datacenter → Backup → Add
 
-| Campo | Valore |
+| Field | Value |
 |-------|--------|
 | Storage | nas-backup |
 | Schedule | Weekly (Sun 02:00) |
@@ -603,69 +603,69 @@ Datacenter → Backup → Add
 | Compression | ZSTD |
 | Retention | Keep Last: 4 |
 
-### 7.3 Backup Manuale
+### 7.3 Manual Backup
 
-Per backup immediato:
+For immediate backup:
 Container/VM → Backup → Backup now
 
 ---
 
-## Fase 8: Configurazione Opzionale
+## Phase 8: Optional Configuration
 
-### 8.1 Reverse Proxy (Opzionale)
+### 8.1 Reverse Proxy (Optional)
 
-Per accedere ai servizi con nomi leggibili (es. `sonarr.home.local`) invece di IP:porta, configurare un reverse proxy.
+To access services with readable names (e.g., `sonarr.home.local`) instead of IP:port, configure a reverse proxy.
 
-> **Guida completa**: Vedi [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md)
+> **Complete guide**: See [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md)
 
-La guida documenta:
-- **Traefik** (raccomandato): auto-discovery Docker, configurazione via labels
-- **Nginx Proxy Manager** (alternativa): configurazione via WebUI
-- **Pi-hole + Tailscale DNS**: stesso URL da locale e remoto
+The guide documents:
+- **Traefik** (recommended): Docker auto-discovery, configuration via labels
+- **Nginx Proxy Manager** (alternative): configuration via WebUI
+- **Pi-hole + Tailscale DNS**: same URL from local and remote
 
 ### 8.2 Wake-on-LAN (WOL)
 
-Il Mini PC può essere acceso da remoto tramite Wake-on-LAN, utile per risparmiare energia
-quando Plex non è in uso e accenderlo solo quando necessario.
+The Mini PC can be powered on remotely via Wake-on-LAN, useful for saving energy
+when Plex is not in use and powering it on only when needed.
 
-#### 8.2.1 Abilitare WOL nel BIOS
+#### 8.2.1 Enable WOL in BIOS
 
-1. Accendere il Mini PC e premere F1 (o F2) per entrare nel BIOS
-2. Navigare a: Power → Wake on LAN
-3. Impostare su **Enabled** (o "Primary" se disponibile)
-4. Salvare e uscire (F10)
+1. Power on the Mini PC and press F1 (or F2) to enter BIOS
+2. Navigate to: Power → Wake on LAN
+3. Set to **Enabled** (or "Primary" if available)
+4. Save and exit (F10)
 
-#### 8.2.2 Configurare WOL Permanente su Proxmox
+#### 8.2.2 Configure Persistent WOL on Proxmox
 
 ```bash
-# SSH nel Proxmox
+# SSH into Proxmox
 ssh root@192.168.3.20
 
-# Installare strumenti WOL
+# Install WOL tools
 apt install -y ethtool wakeonlan
 
-# Identificare interfaccia di rete (di solito enp* o eth0)
+# Identify network interface (usually enp* or eth0)
 ip link show
-# Annotare il nome dell'interfaccia (es. enp2s0)
+# Note the interface name (e.g., enp2s0)
 
-# Verificare stato WOL attuale
+# Check current WOL status
 ethtool enp2s0 | grep Wake-on
-# Output: Wake-on: d (disabled) o g (enabled)
+# Output: Wake-on: d (disabled) or g (enabled)
 
-# Abilitare WOL (sostituire enp2s0 con la tua interfaccia)
+# Enable WOL (replace enp2s0 with your interface)
 ethtool -s enp2s0 wol g
 ```
 
-#### 8.2.3 Rendere WOL Persistente al Reboot
+#### 8.2.3 Make WOL Persistent on Reboot
 
-Creare un file di configurazione systemd-networkd:
+Create a systemd-networkd configuration file:
 
 ```bash
-# Identificare il nome corretto dell'interfaccia
+# Identify the correct interface name
 IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(enp|eth)' | head -1)
-echo "Interfaccia rilevata: $IFACE"
+echo "Detected interface: $IFACE"
 
-# Creare configurazione WOL persistente
+# Create persistent WOL configuration
 cat > /etc/systemd/network/99-wol.link << EOF
 [Match]
 Name=$IFACE
@@ -674,158 +674,158 @@ Name=$IFACE
 WakeOnLan=magic
 EOF
 
-# Riavviare networking
+# Restart networking
 systemctl restart systemd-networkd
 
-# Verificare configurazione applicata
+# Verify applied configuration
 ethtool $IFACE | grep Wake-on
-# Dovrebbe mostrare: Wake-on: g
+# Should show: Wake-on: g
 ```
 
-#### 8.2.4 Annotare MAC Address
+#### 8.2.4 Note MAC Address
 
 ```bash
-# Ottenere MAC address per WOL
+# Get MAC address for WOL
 ip link show $IFACE | grep ether
-# Output esempio: link/ether AA:BB:CC:DD:EE:FF brd ff:ff:ff:ff:ff:ff
+# Example output: link/ether AA:BB:CC:DD:EE:FF brd ff:ff:ff:ff:ff:ff
 
-# Annotare il MAC address (AA:BB:CC:DD:EE:FF)
+# Note the MAC address (AA:BB:CC:DD:EE:FF)
 ```
 
-Salva il MAC address in un posto sicuro - servirà per inviare il magic packet.
+Save the MAC address in a safe place - you'll need it to send the magic packet.
 
-#### 8.2.5 Testare Wake-on-LAN
+#### 8.2.5 Test Wake-on-LAN
 
-**Da un altro dispositivo sulla stessa rete (es. NAS o PC Desktop):**
+**From another device on the same network (e.g., NAS or Desktop PC):**
 
 ```bash
-# Installare wakeonlan se non presente
+# Install wakeonlan if not present
 apt install -y wakeonlan  # Debian/Ubuntu
-# oppure
+# or
 brew install wakeonlan    # macOS
 
-# Spegnere il Mini PC
+# Shut down the Mini PC
 ssh root@192.168.3.20 "shutdown -h now"
 
-# Attendere 30 secondi che si spenga completamente
+# Wait 30 seconds for complete shutdown
 
-# Inviare magic packet (sostituire con il tuo MAC)
+# Send magic packet (replace with your MAC)
 wakeonlan AA:BB:CC:DD:EE:FF
 
-# Verificare che si accenda
+# Verify it powers on
 ping 192.168.3.20
 ```
 
-#### 8.2.6 WOL da iPhone con Shortcuts
+#### 8.2.6 WOL from iPhone with Shortcuts
 
-Puoi creare una scorciatoia iOS per accendere il Mini PC e aprire Plex:
+You can create an iOS shortcut to power on the Mini PC and open Plex:
 
-1. Aprire app **Shortcuts** (Comandi Rapidi)
-2. Creare nuova scorciatoia
+1. Open **Shortcuts** app
+2. Create new shortcut
 
-**Azione 1: Esegui script SSH** (richiede server SSH accessibile, es. NAS)
+**Action 1: Run SSH script** (requires accessible SSH server, e.g., NAS)
 - Host: 192.168.3.10 (NAS)
 - User: admin
 - Script: `wakeonlan AA:BB:CC:DD:EE:FF`
 
-**Azione 2: Attendi** 30 secondi
+**Action 2: Wait** 30 seconds
 
-**Azione 3: Apri URL**
-- URL: `plex://` (apre app Plex)
+**Action 3: Open URL**
+- URL: `plex://` (opens Plex app)
 
-**Alternativa senza SSH**: Usa app dedicate come "Wake On Lan" o "Mocha WOL" dall'App Store.
+**Alternative without SSH**: Use dedicated apps like "Wake On Lan" or "Mocha WOL" from the App Store.
 
-#### 8.2.7 WOL via Tailscale (Remoto)
+#### 8.2.7 WOL via Tailscale (Remote)
 
-Per accendere il Mini PC quando sei fuori casa:
+To power on the Mini PC when away from home:
 
-1. Il NAS (192.168.3.10) deve essere sempre acceso
-2. Installa Tailscale sul NAS
-3. Da remoto, connettiti via Tailscale al NAS
-4. Esegui: `wakeonlan AA:BB:CC:DD:EE:FF`
+1. The NAS (192.168.3.10) must be always on
+2. Install Tailscale on the NAS
+3. From remote, connect via Tailscale to the NAS
+4. Execute: `wakeonlan AA:BB:CC:DD:EE:FF`
 
 ```bash
-# Esempio da terminale remoto via Tailscale
+# Example from remote terminal via Tailscale
 ssh admin@100.x.x.x "wakeonlan AA:BB:CC:DD:EE:FF"
 ```
 
-#### 8.2.8 Troubleshooting WOL
+#### 8.2.8 WOL Troubleshooting
 
-| Problema | Causa | Soluzione |
-|----------|-------|-----------|
-| WOL non funziona | Non abilitato nel BIOS | Verificare impostazioni BIOS |
-| Wake-on: d dopo reboot | Config non persistente | Verificare 99-wol.link |
-| Funziona solo a volte | Fast Startup Windows | Non applicabile (Proxmox) |
-| Non funziona da altra VLAN | Broadcast non passa | Inviare da stessa VLAN |
-| Non funziona via Tailscale | Magic packet non routato | Usare dispositivo sulla LAN |
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| WOL doesn't work | Not enabled in BIOS | Verify BIOS settings |
+| Wake-on: d after reboot | Config not persistent | Verify 99-wol.link |
+| Works only sometimes | Fast Startup Windows | Not applicable (Proxmox) |
+| Doesn't work from another VLAN | Broadcast doesn't pass | Send from same VLAN |
+| Doesn't work via Tailscale | Magic packet not routed | Use device on LAN |
 
-> **Nota**: Il magic packet WOL è broadcast Layer 2, quindi deve essere inviato
-> da un dispositivo sulla stessa VLAN/subnet del Mini PC.
+> **Note**: The WOL magic packet is Layer 2 broadcast, so it must be sent
+> from a device on the same VLAN/subnet as the Mini PC.
 
-### 8.3 GPU Passthrough Intel Quick Sync per LXC
+### 8.3 Intel Quick Sync GPU Passthrough for LXC
 
-Il Mini PC Lenovo ThinkCentre neo 50q Gen 4 ha CPU Intel i5-13420H con iGPU integrata che supporta Quick Sync
-per hardware transcoding in Plex. Questo riduce drasticamente il carico CPU.
+The Lenovo ThinkCentre neo 50q Gen 4 Mini PC has an Intel i5-13420H CPU with integrated iGPU that supports Quick Sync
+for hardware transcoding in Plex. This drastically reduces CPU load.
 
-#### 8.3.1 Verificare iGPU su Host Proxmox
+#### 8.3.1 Verify iGPU on Proxmox Host
 
 ```bash
-# SSH nel Proxmox
+# SSH into Proxmox
 ssh root@192.168.3.20
 
-# Verificare presenza device DRI (Direct Rendering Infrastructure)
+# Verify DRI (Direct Rendering Infrastructure) device presence
 ls -la /dev/dri/
-# Output atteso:
+# Expected output:
 # drwxr-xr-x 3 root root       100 date time .
 # drwxr-xr-x 18 root root     4600 date time ..
 # drwxr-xr-x 2 root root        80 date time by-path
 # crw-rw---- 1 root video  226,  0 date time card0
 # crw-rw---- 1 root render 226, 128 date time renderD128
 
-# Verificare driver Intel caricato
+# Verify Intel driver loaded
 lspci -k | grep -A 3 VGA
-# Dovrebbe mostrare "Kernel driver in use: i915"
+# Should show "Kernel driver in use: i915"
 ```
 
-#### 8.3.2 Caricare Moduli Kernel (se necessario)
+#### 8.3.2 Load Kernel Modules (if necessary)
 
 ```bash
-# Verificare che i915 sia caricato
+# Verify i915 is loaded
 lsmod | grep i915
 
-# Se non presente, caricare manualmente
+# If not present, load manually
 modprobe i915
 
-# Rendere permanente
+# Make permanent
 echo "i915" >> /etc/modules
 ```
 
-#### 8.3.3 Configurare Permessi Device
+#### 8.3.3 Configure Device Permissions
 
 ```bash
-# Identificare GID del gruppo render e video
+# Identify GID of render and video groups
 getent group render video
-# Output tipico: render:x:108:  video:x:44:
+# Typical output: render:x:108:  video:x:44:
 
-# Annotare i numeri (108 e 44 nell'esempio)
+# Note the numbers (108 and 44 in the example)
 ```
 
-#### 8.3.4 Configurare LXC per GPU Passthrough
+#### 8.3.4 Configure LXC for GPU Passthrough
 
-**IMPORTANTE**: Fermare il container prima di modificare la configurazione.
+**IMPORTANT**: Stop the container before modifying the configuration.
 
 ```bash
-# Fermare container Plex
+# Stop Plex container
 pct stop 100
 
-# Modificare configurazione LXC
+# Edit LXC configuration
 nano /etc/pve/lxc/100.conf
 ```
 
-Aggiungere le seguenti righe alla fine del file:
+Add the following lines at the end of the file:
 
 ```bash
-# Intel iGPU Passthrough per Quick Sync
+# Intel iGPU Passthrough for Quick Sync
 lxc.cgroup2.devices.allow: c 226:0 rwm
 lxc.cgroup2.devices.allow: c 226:128 rwm
 lxc.mount.entry: /dev/dri dev/dri none bind,optional,create=dir
@@ -833,31 +833,31 @@ lxc.mount.entry: /dev/dri/card0 dev/dri/card0 none bind,optional,create=file
 lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file
 ```
 
-> **Nota**: `c 226:0` è card0, `c 226:128` è renderD128. Il major number 226
-> è standard per device DRI su Linux.
+> **Note**: `c 226:0` is card0, `c 226:128` is renderD128. The major number 226
+> is standard for DRI devices on Linux.
 
-#### 8.3.5 Avviare Container e Verificare
+#### 8.3.5 Start Container and Verify
 
 ```bash
-# Avviare container
+# Start container
 pct start 100
 
-# Entrare nel container
+# Enter container
 pct enter 100
 
-# Verificare device disponibili
+# Verify available devices
 ls -la /dev/dri/
-# Dovrebbe mostrare card0 e renderD128
+# Should show card0 and renderD128
 
-# Installare vainfo per test Quick Sync
+# Install vainfo to test Quick Sync
 apt update && apt install -y vainfo
 
-# Testare VA-API (Video Acceleration API)
+# Test VA-API (Video Acceleration API)
 vainfo
-# Output atteso con elenco profili supportati (H.264, HEVC, VP9, AV1)
+# Expected output with list of supported profiles (H.264, HEVC, VP9, AV1)
 ```
 
-Output esempio `vainfo` per i5-13420H:
+Example `vainfo` output for i5-13420H:
 ```
 libva info: VA-API version 1.17.0
 libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so
@@ -873,109 +873,109 @@ vainfo: Supported profile and entrypoints
       ...
 ```
 
-#### 8.3.6 Configurare Plex per Hardware Transcoding
+#### 8.3.6 Configure Plex for Hardware Transcoding
 
-1. Accedere a Plex: `http://192.168.3.21:32400/web`
+1. Access Plex: `http://192.168.3.21:32400/web`
 2. Settings → Transcoder
-3. [ ] **Hardware transcoding**: Enabled (richiede Plex Pass)
+3. [ ] **Hardware transcoding**: Enabled (requires Plex Pass)
 4. [ ] **Use hardware acceleration when available**: Checked
 5. [ ] **Use hardware-accelerated video encoding**: Checked
 
-#### 8.3.7 Verificare Hardware Transcoding Attivo
+#### 8.3.7 Verify Active Hardware Transcoding
 
-Durante la riproduzione con transcoding:
+During playback with transcoding:
 
 ```bash
-# Nel container Plex
-# Monitorare utilizzo GPU Intel
+# In Plex container
+# Monitor Intel GPU usage
 apt install -y intel-gpu-tools
 intel_gpu_top
 ```
 
-Oppure in Plex Dashboard → Now Playing, verificare che mostri "(hw)" accanto
-al codec durante il transcoding.
+Or in Plex Dashboard → Now Playing, verify it shows "(hw)" next to
+the codec during transcoding.
 
-#### 8.3.8 Troubleshooting GPU
+#### 8.3.8 GPU Troubleshooting
 
-| Problema | Causa | Soluzione |
-|----------|-------|-----------|
-| /dev/dri non esiste | Driver i915 non caricato | `modprobe i915` |
-| Permission denied | Permessi cgroup errati | Verificare config LXC |
-| vainfo fallisce | Driver mancanti nel container | `apt install intel-media-va-driver-non-free` |
-| Transcoding ancora software | Plex Pass non attivo | Verificare abbonamento |
-| renderD128 non presente | Kernel troppo vecchio | Aggiornare Proxmox |
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| /dev/dri doesn't exist | i915 driver not loaded | `modprobe i915` |
+| Permission denied | Wrong cgroup permissions | Verify LXC config |
+| vainfo fails | Missing drivers in container | `apt install intel-media-va-driver-non-free` |
+| Still software transcoding | Plex Pass not active | Verify subscription |
+| renderD128 not present | Kernel too old | Update Proxmox |
 
-> **Nota**: Hardware transcoding richiede abbonamento **Plex Pass**.
+> **Note**: Hardware transcoding requires **Plex Pass** subscription.
 
 ---
 
-## Verifica Finale
+## Final Verification
 
-### Checklist Proxmox
+### Proxmox Checklist
 
-- [ ] WebUI accessibile: `https://192.168.3.20:8006`
-- [ ] Nessun errore in System → Syslog
-- [ ] Storage NFS montato e accessibile
-- [ ] Backup job configurato
+- [ ] WebUI accessible: `https://192.168.3.20:8006`
+- [ ] No errors in System → Syslog
+- [ ] NFS storage mounted and accessible
+- [ ] Backup job configured
 
-### Checklist Plex
+### Plex Checklist
 
-- [ ] WebUI accessibile: `http://192.168.3.21:32400/web`
-- [ ] Librerie sincronizzate
-- [ ] Playback locale funzionante
-- [ ] Accesso remoto via Tailscale funzionante
+- [ ] WebUI accessible: `http://192.168.3.21:32400/web`
+- [ ] Libraries synced
+- [ ] Local playback working
+- [ ] Remote access via Tailscale working
 
-### Checklist Tailscale
+### Tailscale Checklist
 
-- [ ] `tailscale status` mostra connected
-- [ ] Subnet routes approvate (se configurate)
-- [ ] Accesso remoto a Plex funzionante
+- [ ] `tailscale status` shows connected
+- [ ] Subnet routes approved (if configured)
+- [ ] Remote access to Plex working
 
 ---
 
 ## Troubleshooting
 
-| Problema | Causa | Soluzione |
-|----------|-------|-----------|
-| Container non parte | Risorse insufficienti | Aumentare RAM/CPU |
-| NFS mount fallisce | Permessi o rete | Verificare export NFS su NAS |
-| Plex non vede media | Mount point errato | Verificare /media nel container |
-| Tailscale non connette | Firewall | Verificare regole UDM-SE |
-| Transcoding lento | No GPU | Abilitare hardware acceleration |
-| Backup fallisce | Spazio insufficiente | Verificare retention policy |
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Container won't start | Insufficient resources | Increase RAM/CPU |
+| NFS mount fails | Permissions or network | Verify NFS export on NAS |
+| Plex doesn't see media | Wrong mount point | Verify /media in container |
+| Tailscale won't connect | Firewall | Verify UDM-SE rules |
+| Slow transcoding | No GPU | Enable hardware acceleration |
+| Backup fails | Insufficient space | Verify retention policy |
 
 ---
 
-## Comandi Utili
+## Useful Commands
 
 ```bash
-# Stato container
+# Container status
 pct list
 
-# Entrare in container
+# Enter container
 pct enter 100
 
-# Log container
+# Container log
 pct console 100
 
 # Restart container
 pct restart 100
 
-# Stato Tailscale
+# Tailscale status
 tailscale status
 
-# Aggiornare Plex (nel container)
+# Update Plex (in container)
 apt update && apt upgrade plexmediaserver -y
 
-# Verificare mount NFS
+# Verify NFS mount
 df -h | grep nfs
 ```
 
 ---
 
-## Prossimi Passi
+## Next Steps
 
-Dopo aver completato il setup Proxmox:
+After completing Proxmox setup:
 
-1. → Procedere con [Configurazione Backup](../operations/runbook-backup-restore.md)
-2. → Tornare a [START_HERE.md](../../START_HERE.md) Fase 7
+1. → Proceed with [Backup Configuration](../operations/runbook-backup-restore.md)
+2. → Return to [START_HERE.md](../../START_HERE.md) Phase 7

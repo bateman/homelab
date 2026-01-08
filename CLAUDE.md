@@ -1,330 +1,123 @@
-# CLAUDE.md - Guida Repository Homelab
+# CLAUDE.md - Homelab Repository Guide
 
-## Panoramica Progetto
+## Project Overview
 
-Questo repository contiene la configurazione infrastructure-as-code completa per un homelab basato su NAS QNAP TS-435XeU e Mini PC Lenovo con Proxmox. Il setup segue le best practice di Trash Guides per la gestione media con supporto hardlinking.
+Infrastructure-as-code for a homelab: QNAP NAS (Docker media stack) + Lenovo Mini PC (Proxmox/Plex). Follows Trash Guides best practices with hardlinking support.
 
-## Architettura
-
-### Hardware
-- **NAS**: [QNAP TS-435XeU](https://www.qnap.com/it-it/product/ts-435xeu) (192.168.3.10) - Esegue lo stack Docker media
-- **Mini PC**: [Lenovo ThinkCentre neo 50q Gen 4](https://www.lenovo.com/it/it/p/desktops/thinkcentre/thinkcentre-neo-series/thinkcentre-neo-50q-gen-4-tiny-(intel)/12lmcto1wwit1) (192.168.3.20) - Esegue Proxmox con Plex
-- **Router**: [Ubiquiti UniFi Dream Machine SE](https://store.ui.com/eu/en/category/cloud-gateways-large-scale/products/udm-se) (192.168.2.1) - Router/Firewall
-- **Switch**: [Ubiquiti USW-Pro-Max-16-PoE](https://eu.store.ui.com/eu/en/products/usw-pro-max-16-poe) (192.168.2.10) - Switch PoE gestito
-- **Access Point**: [Ubiquiti U6-Pro](https://store.ui.com/eu/en/category/wifi-flagship-high-capacity/products/u6-pro) - Wi-Fi 6
-- **UPS**: [Eaton 5P 650i Rack G2](https://www.eaton.com/it/it-it/skuPage.5P650IRG2.html) - Gruppo di continuità
-- **Rack**: 8U con ottimizzazione raffreddamento passivo
-- **PC Desktop**: (192.168.3.40) - Workstation
-- **Stampante**: (192.168.3.30) - Stampante di rete
-
-### Topologia di Rete
-- **VLAN 2** (192.168.2.0/24): Management - UDM-SE, Switch, AP
-- **VLAN 3** (192.168.3.0/24): Servers - NAS, Proxmox, PC Desktop, Stampante
-- **VLAN 4** (192.168.4.0/24): Media - Smart TV, telefoni, tablet
-- **VLAN 5** (192.168.5.0/24): Guest - Accesso internet isolato
-- **VLAN 6** (192.168.6.0/24): IoT - Alexa, dispositivi smart
-- **Legacy** (192.168.1.0/24): Iliad Box + dispositivi Vimar (non gestita da UDM-SE)
-
-## Struttura Repository
+## Repository Structure
 
 ```
 homelab/
-├── Makefile                        # Comandi gestione stack
-├── docker/                         # Stack Docker
-│   ├── compose.yml                 # Stack infrastruttura (Pi-hole, HA, Portainer, Duplicati)
-│   ├── compose.media.yml           # Stack media (*arr, download clients, monitoring)
-│   ├── .env.example                # Template config non sensibile
-│   ├── .env.secrets.example        # Template credenziali (gitignored dopo copia)
-│   └── recyclarr.yml               # Esempio config profili qualita' Trash Guides
-├── scripts/                        # Script operativi
-│   ├── setup-folders.sh            # Creazione struttura cartelle iniziale
-│   ├── generate-certs.sh           # Generazione certificati HTTPS self-signed
-│   ├── backup-qts-config.sh        # Backup automatico configurazione QNAP QTS
-│   └── verify-backup.sh            # Verifica integrita' backup Docker
-└── docs/                           # Documentazione
-    ├── setup/                      # Guide setup iniziale
-    │   ├── NETWORK_SETUP.md        # Setup rete UniFi e VLAN
-    │   ├── NAS_SETUP.md            # Setup NAS QNAP e Docker
-    │   ├── NOTIFICATIONS_SETUP.md  # Setup notifiche Uptime Kuma via HA
-    │   ├── PROXMOX_SETUP.md        # Setup Proxmox e Plex
-    │   ├── REVERSE_PROXY_SETUP.md  # Traefik, NPM, Pi-hole DNS Tailscale
-    │   └── VPN_SETUP.md            # Protezione VPN per download clients (Gluetun)
-    ├── network/                    # Config rete
-    │   ├── firewall-config.md      # Regole firewall UDM-SE e config VLAN
-    │   └── rack-homelab-config.md  # Layout rack hardware e piano IP
-    └── operations/                 # Runbook operativi
-        └── runbook-backup-restore.md   # Procedure backup/restore
+├── Makefile                 # Stack management (run `make help` for commands)
+├── docker/
+│   ├── compose.yml          # Infrastructure: Pi-hole, Home Assistant, Portainer, Traefik
+│   ├── compose.media.yml    # Media stack: *arr apps, download clients, monitoring
+│   ├── .env.example         # Non-sensitive config template
+│   └── .env.secrets.example # Credentials template (gitignored after copy)
+├── scripts/                 # Operational scripts (setup, backup, certs)
+└── docs/
+    ├── setup/               # Initial setup guides (VPN, reverse proxy, notifications)
+    ├── network/             # Hardware layout, IP plan, firewall rules
+    └── operations/          # Backup/restore runbooks
 ```
 
-## Servizi Docker (su NAS 192.168.3.10)
+**Reference docs instead of duplicating**: Hardware specs, IP addresses, service ports, and detailed procedures are in `docs/`. Don't repeat them here.
 
-| Servizio | Porta | Descrizione |
-|----------|-------|-------------|
-| Sonarr | 8989 | Gestione serie TV |
-| Radarr | 7878 | Gestione film |
-| Lidarr | 8686 | Gestione musica |
-| Prowlarr | 9696 | Gestione indexer |
-| Bazarr | 6767 | Gestione sottotitoli |
-| Gluetun | - | Container VPN con kill switch (vedi `docs/setup/VPN_SETUP.md`) |
-| qBittorrent | 8080 | Client torrent (via Gluetun) |
-| NZBGet | 6789 | Client Usenet (via Gluetun) |
-| Huntarr | 9705 | Monitoring *arr |
-| Cleanuparr | 11011 | Pulizia automatica |
-| Pi-hole | 8081 | DNS ad-blocking |
-| Home Assistant | 8123 | Automazione domotica |
-| Portainer | 9443 | Gestione Docker (accesso socket diretto) |
-| FlareSolverr | 8191 | Bypass Cloudflare |
-| Recyclarr | - | Sync profili Trash Guides |
-| Watchtower | 8383 | Auto-update container (via socket proxy) |
-| Duplicati | 8200 | Backup incrementale con UI |
-| Uptime Kuma | 3001 | Monitoring e alerting (vedi `docs/setup/NOTIFICATIONS_SETUP.md`) |
-| Traefik | 80/443 | Reverse proxy HTTPS (via socket proxy) |
-| Socket Proxy | - | Proxy sicuro Docker socket (interno) |
+## Key Concepts
 
-## Servizi Proxmox (su Mini PC 192.168.3.20)
+### Hardlinking (Critical)
+All paths under `/share/data` must be on the same filesystem. Services mount `/share/data:/data` to enable hardlinks between downloads and media library.
 
-| Servizio | Porta | Descrizione |
-|----------|-------|-------------|
-| Proxmox VE | 8006 | WebUI hypervisor |
-| Plex Media Server | 32400 | Streaming media (LXC container 100, IP 192.168.3.21) |
-| Tailscale | - | VPN mesh, subnet router per VLAN 3 e 4 |
+### VPN Profiles
+Download clients use Docker Compose profiles:
+- `COMPOSE_PROFILES=vpn` → qBittorrent/NZBGet via Gluetun (recommended)
+- `COMPOSE_PROFILES=novpn` → Direct connection
 
-## Comandi Comuni
+When using VPN, configure *arr apps with hostname `gluetun` (not `qbittorrent`/`nzbget`).
+
+### Docker Socket Security
+- **Socket Proxy**: Traefik and Watchtower use a proxy with limited API access
+- **Portainer**: Direct socket access (requires full API for exec/volumes)
+
+## Development Guidelines
+
+### Mandatory: Consistency Check
+**Before any change**, verify consistency with the rest of the codebase and documentation:
+1. Search for related code/config that might need updates
+2. Check if documentation references what you're changing
+3. Update all affected files together, not just the immediate target
+
+### When Modifying Compose Files
+1. Use existing YAML anchors: `&common-env`, `&common-logging`, `&common-healthcheck`
+2. Every service must have: `healthcheck`, `logging`, `deploy.resources`, `labels` (watchtower)
+3. Maintain `depends_on` relationships
+4. For hardlink support: mount `/share/data:/data` (not subdirectories)
+
+### When Adding New Services
+1. Add to appropriate compose file (infrastructure vs media)
+2. Update `scripts/setup-folders.sh` for new config directories
+3. Add health check endpoint to `Makefile` `health` target
+4. Add WebUI URL to `Makefile` `show-urls` target
+5. Update service table in `docs/network/rack-homelab-config.md`
+6. Add firewall rules if inter-VLAN access needed (document in `docs/network/firewall-config.md`)
+
+### When Modifying Firewall Rules
+1. Rule order matters - rules are processed sequentially
+2. "Allow Established/Related" must be first
+3. Use IP/Port groups for maintainability
+4. Block rules come after specific allow rules
+5. End with catch-all "Block All Inter-VLAN"
+
+## Best Practices
+
+### Makefile
+- Use `.PHONY` for all non-file targets
+- Provide `help` target with descriptions
+- Use variables for repeated values
+- Check prerequisites before operations (`check-docker`, `check-compose`)
+- Use color output for status messages
+
+### Docker Compose
+- Pin image versions in production (avoid `latest` for critical services)
+- Set resource limits (`deploy.resources.limits`)
+- Configure logging limits to prevent disk fill
+- Use named networks for service isolation
+- Prefer `depends_on` with `condition: service_healthy`
+
+### Shell Scripts
+- Start with `#!/usr/bin/env bash` and `set -euo pipefail`
+- Quote all variables: `"${VAR}"` not `$VAR`
+- Use `[[ ]]` for conditionals (bash-specific but safer)
+- Provide `--dry-run` and `--verbose` flags where appropriate
+- Exit with meaningful codes (0=success, 1=error, 2=usage error)
+
+## Trade-offs
+
+When facing trade-offs (simplicity vs completeness, security vs convenience, standards vs customization), **ask the user** rather than making assumptions.
+
+## Secrets Management
+
+- `docker/.env` → Non-sensitive config (PUID, PGID, TZ)
+- `docker/.env.secrets` → Passwords and API keys (gitignored)
+
+API keys for *arr apps are stored in each service's config (Settings → General → API Key).
+
+## Quick Reference
 
 ```bash
-# Gestione stack (via Makefile)
-make setup      # Crea struttura cartelle (eseguire una volta)
-./scripts/generate-certs.sh  # Genera certificati HTTPS (eseguire una volta)
-make validate   # Verifica configurazione compose
-make up         # Avvia tutti i container
-make down       # Ferma tutti i container
-make restart    # Restart completo
-make pull       # Aggiorna immagini Docker
-make logs       # Segui tutti i logs
-make status     # Stato container e utilizzo risorse
-make health     # Health check tutti i servizi
-make backup     # Trigger backup Duplicati on-demand
-make backup-qts # Backup configurazione QNAP QTS
-make verify-backup  # Verifica integrita' backup (estrazione + SQLite)
-make urls       # Mostra tutti gli URL WebUI
-make update     # Aggiorna immagini e restart (pull + restart)
-make clean      # Rimuove container, immagini e volumi orfani
-
-# Recyclarr (sync profili qualita')
-make recyclarr-sync     # Sync manuale profili Trash Guides
-make recyclarr-config   # Genera template configurazione
-
-# Specifici per servizio
-make logs-sonarr    # Logs per servizio specifico
-make shell-radarr   # Shell nel container
+make help          # Show all available commands
+make up            # Start all containers
+make health        # Check all services
+make urls          # Show WebUI URLs
+make logs-SERVICE  # Logs for specific service
 ```
 
-## Configurazioni Chiave
+## Documentation Index
 
-### Variabili Ambiente
-- `PUID=1000` / `PGID=100` - ID utente/gruppo container
-- `TZ=Europe/Rome` - Fuso orario
-- `UMASK=002` - Permessi file
-
-### VPN Profiles (COMPOSE_PROFILES)
-Lo stack media supporta due modalità per i download clients tramite Docker Compose profiles:
-
-| Profile | Comando | Descrizione |
-|---------|---------|-------------|
-| `vpn` | `COMPOSE_PROFILES=vpn make up` | qBittorrent/NZBGet via Gluetun VPN (raccomandato) |
-| `novpn` | `COMPOSE_PROFILES=novpn make up` | Connessione diretta senza VPN |
-
-**Configurazione**: Imposta `COMPOSE_PROFILES=vpn` (o `novpn`) in `docker/.env`.
-
-**Importante - Hostname download clients**:
-- Profile `vpn`: usare `gluetun` come host nelle *arr apps (es. `gluetun:8080`)
-- Profile `novpn`: usare `qbittorrent` / `nzbget` come host
-
-Se `COMPOSE_PROFILES` non è impostato, nessun download client verrà avviato.
-
-### Struttura Cartelle NAS
-```
-/share/
-├── data/                           # Dati media (conforme Trash Guides)
-│   ├── torrents/
-│   │   ├── movies/
-│   │   ├── tv/
-│   │   └── music/
-│   ├── usenet/
-│   │   ├── incomplete/
-│   │   └── complete/{movies,tv,music}/
-│   └── media/
-│       ├── movies/
-│       ├── tv/
-│       └── music/
-├── container/                      # Configurazioni container Docker
-│   └── <servizio>/config/
-└── backup/                         # Destinazione backup locali
-```
-
-**Critico**: Tutti i path sotto `/share/data` devono essere sullo stesso filesystem perche' l'hardlinking funzioni.
-
-### Verifica Hardlinking
-```bash
-ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.mkv
-# Stesso numero inode = hardlink funzionante
-```
-
-## Linee Guida Sviluppo
-
-### Quando modifichi i file compose
-1. `docker/compose.yml` contiene servizi infrastruttura (Pi-hole, Home Assistant, Portainer, Watchtower)
-2. `docker/compose.media.yml` contiene lo stack media (*arr, download clients, monitoring)
-3. Sonarr/Radarr/Lidarr e download clients (qBittorrent, NZBGet) montano `/share/data:/data` per supporto hardlink; Bazarr monta solo `/share/data/media:/data/media`
-4. Usa anchor YAML (`&common-env`, `&common-logging`, `&common-healthcheck`) per config condivise
-5. Mantieni relazioni `depends_on` tra servizi
-6. Conserva label Watchtower per auto-update
-7. Ogni servizio deve avere: healthcheck, logging, deploy.resources
-
-### Quando modifichi regole firewall
-1. Le regole sono processate in ordine - la posizione conta
-2. Includi sempre "Allow Established/Related" come prima regola
-3. Usa gruppi IP/Porte per manutenibilita'
-4. Le regole di blocco devono venire dopo le regole allow specifiche
-5. Termina con catch-all "Block All Inter-VLAN"
-
-### Quando aggiungi nuovi servizi
-1. Aggiungi a `docker/compose.yml` (infrastruttura) o `docker/compose.media.yml` (media stack)
-2. Includi: healthcheck, logging, deploy.resources, labels watchtower
-3. Aggiorna `scripts/setup-folders.sh` se servono nuove directory config
-4. Aggiungi endpoint health check al target health del `Makefile`
-5. Aggiorna target urls del `Makefile` con nuova WebUI
-6. Documenta nella tabella servizi sopra e in `docs/network/rack-homelab-config.md`
-7. Aggiungi regole firewall se serve accesso inter-VLAN
-
-## Gestione Secrets
-
-Le credenziali sono separate dalla configurazione:
-- **`docker/.env`** - Configurazione non sensibile (PUID, PGID, TZ, porte)
-- **`docker/.env.secrets`** - Password e API key (gitignored)
-
-### Posizione API Key
-
-Le API key sono salvate nella config di ogni servizio e vanno recuperate da:
-- Sonarr/Radarr/Lidarr/Prowlarr: Settings -> General -> API Key
-- qBittorrent: Settings -> WebUI -> Authentication
-- NZBGet: Settings -> Security -> ControlUsername/ControlPassword
-
-Le password di sistema vanno in `docker/.env.secrets`:
-- `PIHOLE_PASSWORD` - Password Pi-hole
-- `TRAEFIK_DASHBOARD_AUTH` - Basic auth Traefik (hash bcrypt)
-- `WATCHTOWER_API_TOKEN` - Token API Watchtower
-
-## Strategia Backup
-
-### Duplicati (consigliato)
-Container dedicato con WebUI per backup automatizzati:
-- **URL**: https://duplicati.home.local (o http://192.168.3.10:8200)
-- **Sorgente**: `/source/config` (tutte le config dei servizi)
-- **Destinazione locale**: `/backups` -> `/share/backup`
-- **Destinazione offsite**: Google Drive o Dropbox (configurare via WebUI)
-- **Retention consigliata**: 7 daily, 4 weekly, 3 monthly
-
-### Backup on-demand via Makefile
-```bash
-make backup  # Avvia backup Duplicati (richiede job configurato in WebUI)
-```
-
-### Altri backup
-- **Compose files**: Versionati in Git (questo repository)
-- **Config QTS**: Settimanale via Control Panel -> Backup/Restore
-- **VM Proxmox**: Settimanale su NAS via mount NFS
-
-Vedi `docs/operations/runbook-backup-restore.md` per procedure dettagliate.
-
-## Troubleshooting
-
-### Container non parte
-```bash
-docker compose logs <service>
-# Verifica permessi
-chown -R 1000:100 ./config/<service>
-```
-
-### Hardlink non funzionano
-- Verifica che sorgente e destinazione siano sullo stesso filesystem
-- Controlla `Use Hardlinks instead of Copy: Yes` nelle impostazioni *arr
-- Testa manualmente con comando `ln`
-
-### Problemi connettivita' rete
-- Verifica assegnazione VLAN sulla porta switch
-- Controlla regole firewall in UDM-SE
-- Testa con `ping` dalla VLAN rilevante
-
-### Servizio non accessibile da altra VLAN
-- Controlla regole firewall in `docs/network/firewall-config.md`
-- Verifica che mDNS reflection sia abilitato se necessario
-- Verifica che il gruppo porte includa la porta del servizio
-
-### VPN/Gluetun non si connette
-- Verifica credenziali in `docker/.env.secrets` (attenzione: alcuni provider richiedono "service credentials", non login account)
-- Controlla logs: `docker logs gluetun | grep -i error`
-- Verifica che `/dev/net/tun` sia disponibile: `lsmod | grep tun`
-- Prova a cambiare server: modifica `SERVER_COUNTRIES` in `.env.secrets`
-
-### Download clients non raggiungibili con VPN attiva
-- Verifica che le porte siano esposte su Gluetun, non sui container qBittorrent/NZBGet
-- Controlla che qBit/NZBGet usino `network_mode: "service:gluetun"`
-- Aggiorna hostname nelle *arr apps da `qbittorrent`/`nzbget` a `gluetun`
-
-## Sicurezza Docker Socket
-
-Il Docker socket (`/var/run/docker.sock`) e' un vettore di attacco critico: un container compromesso con accesso al socket puo' ottenere controllo completo dell'host.
-
-**Architettura implementata**:
-- **Socket Proxy** (tecnativa/docker-socket-proxy): espone solo le API Docker necessarie su rete interna
-- **Traefik**: usa socket proxy (solo lettura container/network)
-- **Watchtower**: usa socket proxy (lettura + restart container)
-- **Portainer**: accesso diretto al socket (richiede API complete)
-
-**Perche' Portainer non usa il proxy**: Portainer necessita di EXEC, VOLUMES, BUILD e altre API per funzionalita' complete (console, gestione volumi). Il proxy blocca queste API per sicurezza.
-
-**Mitigazione rischio Portainer**:
-- Accessibile solo via HTTPS con autenticazione
-- Limitare accesso a utenti fidati
-- In ambienti ad alta sicurezza: rimuovere Portainer e usare solo CLI
-
-## Protezione VPN Download Clients
-
-I download clients (qBittorrent, NZBGet) sono protetti da VPN tramite **Gluetun**, che instrada tutto il loro traffico attraverso un tunnel crittografato.
-
-**Architettura implementata**:
-- **Gluetun**: container VPN con kill switch integrato (se VPN cade, traffico bloccato)
-- **qBittorrent/NZBGet**: usano `network_mode: "service:gluetun"` per condividere lo stack di rete
-- **Porte**: esposte da Gluetun (8080 per qBit, 6789 per NZBGet), non dai container stessi
-
-**Perche' serve**:
-- ISP non vede traffico P2P/Usenet (crittografato)
-- IP reale non esposto ai peer torrent
-- Kill switch previene leak se VPN si disconnette
-
-**Configurazione *arr apps**: quando download clients usano la rete di Gluetun, il loro hostname diventa `gluetun`:
-- qBittorrent: Host `gluetun`, Port `8080`
-- NZBGet: Host `gluetun`, Port `6789`
-
-**Verifica VPN funzionante**:
-```bash
-# IP host (senza VPN)
-curl -s https://ipinfo.io/ip
-
-# IP download clients (con VPN) - deve essere DIVERSO
-docker exec gluetun curl -s https://ipinfo.io/ip
-```
-
-**Provider VPN supportati**: NordVPN, ProtonVPN, Mullvad, PIA, AirVPN, Surfshark e 30+ altri.
-
-Vedi `docs/setup/VPN_SETUP.md` per setup completo, configurazione provider e troubleshooting.
-
-## Note Importanti
-
-- **HTTPS abilitato**: Tutti i servizi sono accessibili via HTTPS (certificato self-signed). HTTP viene reindirizzato automaticamente a HTTPS
-- **DNS con fallback**: Pi-hole e' DNS primario, Cloudflare (1.1.1.1) come fallback. Se Pi-hole e' down, `*.home.local` non risolve ma internet funziona. Vedi `docs/network/firewall-config.md` per configurazione DHCP.
-- Home Assistant usa `network_mode: host` per discovery dispositivi
-- Iliad Box (192.168.1.254) resta come router upstream (double NAT)
-- Tailscale su Mini PC fornisce accesso remoto senza port forwarding
-- Container Station 3 richiesto su QNAP per Docker Compose v2
+| Topic | File |
+|-------|------|
+| Hardware & IP plan | `docs/network/rack-homelab-config.md` |
+| Firewall & VLAN config | `docs/network/firewall-config.md` |
+| VPN setup (Gluetun) | `docs/setup/VPN_SETUP.md` |
+| Reverse proxy (Traefik) | `docs/setup/REVERSE_PROXY_SETUP.md` |
+| Backup procedures | `docs/operations/runbook-backup-restore.md` |

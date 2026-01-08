@@ -3,20 +3,20 @@
 # verify-backup.sh - Automated Backup Integrity Verification
 # Homelab - NAS QNAP TS-435XeU
 #
-# Verifica che i backup siano estraibili e i database SQLite leggibili.
-# Eseguire settimanalmente via cron per rilevare corruzioni prima del disaster.
+# Verifies that backups are extractable and SQLite databases are readable.
+# Run weekly via cron to detect corruptions before disaster strikes.
 #
 # Usage:
-#   ./scripts/verify-backup.sh              # Verifica backup piu' recente
-#   ./scripts/verify-backup.sh --notify     # Con notifica Home Assistant
-#   ./scripts/verify-backup.sh --verbose    # Output dettagliato
+#   ./scripts/verify-backup.sh              # Verify most recent backup
+#   ./scripts/verify-backup.sh --notify     # With Home Assistant notification
+#   ./scripts/verify-backup.sh --verbose    # Detailed output
 #
 # Exit codes:
-#   0 - Verifica OK
-#   1 - Errori rilevati
-#   2 - Nessun backup trovato
+#   0 - Verification OK
+#   1 - Errors detected
+#   2 - No backup found
 #
-# Cron example (domenica alle 05:00):
+# Cron example (Sunday at 05:00):
 #   0 5 * * 0 /path/to/scripts/verify-backup.sh --notify >> /var/log/verify-backup.log 2>&1
 # =============================================================================
 
@@ -71,12 +71,12 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [--verbose] [--notify]"
             echo ""
             echo "Options:"
-            echo "  --verbose, -v    Output dettagliato"
-            echo "  --notify, -n     Invia notifica a Home Assistant se fallisce"
+            echo "  --verbose, -v    Detailed output"
+            echo "  --notify, -n     Send notification to Home Assistant on failure"
             echo ""
             echo "Environment:"
-            echo "  BACKUP_DIR       Directory backup (default: /share/backup)"
-            echo "  HA_WEBHOOK_URL   URL webhook Home Assistant per notifiche"
+            echo "  BACKUP_DIR       Backup directory (default: /share/backup)"
+            echo "  HA_WEBHOOK_URL   Home Assistant webhook URL for notifications"
             exit 0
             ;;
         *)
@@ -109,14 +109,14 @@ notify_ha() {
             -H "Content-Type: application/json" \
             -d "{\"message\": \"$message\", \"level\": \"$level\"}" \
             >/dev/null 2>&1 || true
-        log_verbose "Notifica inviata a Home Assistant"
+        log_verbose "Notification sent to Home Assistant"
     fi
 }
 
 cleanup() {
     if [ -n "${TEMP_DIR:-}" ] && [ -d "$TEMP_DIR" ]; then
         rm -rf "$TEMP_DIR"
-        log_verbose "Cleanup: rimossa directory temporanea"
+        log_verbose "Cleanup: removed temporary directory"
     fi
 }
 
@@ -126,7 +126,7 @@ trap cleanup EXIT
 # Main
 # -----------------------------------------------------------------------------
 
-log "${CYAN}=== Verifica Integrità Backup ===${NC}"
+log "${CYAN}=== Backup Integrity Verification ===${NC}"
 log ""
 
 ERRORS=0
@@ -134,7 +134,7 @@ WARNINGS=0
 
 # Find latest backup
 if [ ! -d "$BACKUP_DIR" ]; then
-    log "${RED}ERRORE: Directory backup non trovata: $BACKUP_DIR${NC}"
+    log "${RED}ERROR: Backup directory not found: $BACKUP_DIR${NC}"
     notify_ha "Backup verification failed: directory not found" "error"
     exit 2
 fi
@@ -142,7 +142,7 @@ fi
 LATEST=$(find "$BACKUP_DIR" -name "$BACKUP_PATTERN" -type f 2>/dev/null | sort -r | head -1)
 
 if [ -z "$LATEST" ]; then
-    log "${RED}ERRORE: Nessun backup trovato in $BACKUP_DIR${NC}"
+    log "${RED}ERROR: No backup found in $BACKUP_DIR${NC}"
     notify_ha "Backup verification failed: no backup files found" "error"
     exit 2
 fi
@@ -151,48 +151,48 @@ BACKUP_DATE=$(stat -c %y "$LATEST" 2>/dev/null | cut -d' ' -f1 || stat -f %Sm -t
 BACKUP_SIZE=$(du -h "$LATEST" | cut -f1)
 
 log "Backup: ${CYAN}$(basename "$LATEST")${NC}"
-log "Data: $BACKUP_DATE | Size: $BACKUP_SIZE"
+log "Date: $BACKUP_DATE | Size: $BACKUP_SIZE"
 log ""
 
 # Check backup age (warn if older than 7 days)
 BACKUP_AGE_DAYS=$(( ($(date +%s) - $(stat -c %Y "$LATEST" 2>/dev/null || stat -f %m "$LATEST" 2>/dev/null || echo 0)) / 86400 ))
 if [ "$BACKUP_AGE_DAYS" -gt 7 ]; then
-    log "${YELLOW}WARNING: Backup vecchio di $BACKUP_AGE_DAYS giorni${NC}"
+    log "${YELLOW}WARNING: Backup is $BACKUP_AGE_DAYS days old${NC}"
     WARNINGS=$((WARNINGS + 1))
 fi
 
 # Create temp directory
 TEMP_DIR=$(mktemp -d)
-log_verbose "Directory temporanea: $TEMP_DIR"
+log_verbose "Temporary directory: $TEMP_DIR"
 
 # Test 1: Archive extraction
-log "1. Test estrazione archivio..."
+log "1. Testing archive extraction..."
 if tar -tzf "$LATEST" >/dev/null 2>&1; then
-    log "   ${GREEN}✓ Archivio integro${NC}"
+    log "   ${GREEN}✓ Archive intact${NC}"
 else
-    log "   ${RED}✗ ERRORE: Archivio corrotto o non estraibile${NC}"
+    log "   ${RED}✗ ERROR: Archive corrupted or not extractable${NC}"
     ERRORS=$((ERRORS + 1))
 fi
 
 # Test 2: Full extraction to temp
-log "2. Estrazione completa..."
+log "2. Full extraction..."
 if tar -xzf "$LATEST" -C "$TEMP_DIR" 2>/dev/null; then
-    log "   ${GREEN}✓ Estrazione completata${NC}"
+    log "   ${GREEN}✓ Extraction completed${NC}"
 
     # Count extracted files
     FILE_COUNT=$(find "$TEMP_DIR" -type f | wc -l)
-    log_verbose "   File estratti: $FILE_COUNT"
+    log_verbose "   Files extracted: $FILE_COUNT"
 else
-    log "   ${RED}✗ ERRORE: Impossibile estrarre${NC}"
+    log "   ${RED}✗ ERROR: Unable to extract${NC}"
     ERRORS=$((ERRORS + 1))
 fi
 
 # Test 3: SQLite database integrity
-log "3. Verifica database SQLite..."
+log "3. Verifying SQLite databases..."
 
 # Check if sqlite3 is available
 if ! command -v sqlite3 >/dev/null 2>&1; then
-    log "   ${YELLOW}⚠ sqlite3 non disponibile, skip verifica DB${NC}"
+    log "   ${YELLOW}⚠ sqlite3 not available, skipping DB verification${NC}"
     WARNINGS=$((WARNINGS + 1))
 else
     for db_path in "${SQLITE_DATABASES[@]}"; do
@@ -209,7 +209,7 @@ else
         done
 
         if [ -z "$db_file" ]; then
-            log_verbose "   - $db_name: non trovato (potrebbe essere normale)"
+            log_verbose "   - $db_name: not found (may be normal)"
             continue
         fi
 
@@ -217,14 +217,14 @@ else
         if sqlite3 "$db_file" "PRAGMA integrity_check;" 2>/dev/null | grep -q "^ok$"; then
             log "   ${GREEN}✓ $db_name: OK${NC}"
         else
-            log "   ${RED}✗ $db_name: CORROTTO${NC}"
+            log "   ${RED}✗ $db_name: CORRUPTED${NC}"
             ERRORS=$((ERRORS + 1))
         fi
     done
 fi
 
 # Test 4: Check critical files exist
-log "4. Verifica file critici..."
+log "4. Verifying critical files..."
 
 CRITICAL_FILES=(
     "traefik/tls.yml"
@@ -243,7 +243,7 @@ for cf in "${CRITICAL_FILES[@]}"; do
     if [ "$found" = true ]; then
         log_verbose "   ✓ $cf"
     else
-        log_verbose "   - $cf: non trovato"
+        log_verbose "   - $cf: not found"
     fi
 done
 
@@ -254,19 +254,19 @@ log ""
 # -----------------------------------------------------------------------------
 
 if [ $ERRORS -gt 0 ]; then
-    log "${RED}=== VERIFICA FALLITA ===${NC}"
-    log "${RED}Errori: $ERRORS | Warning: $WARNINGS${NC}"
+    log "${RED}=== VERIFICATION FAILED ===${NC}"
+    log "${RED}Errors: $ERRORS | Warnings: $WARNINGS${NC}"
     log ""
-    log "Azione richiesta: verificare manualmente il backup o eseguire nuovo backup"
+    log "Action required: manually verify backup or run new backup"
     notify_ha "Backup verification FAILED: $ERRORS errors, $WARNINGS warnings" "error"
     exit 1
 elif [ $WARNINGS -gt 0 ]; then
-    log "${YELLOW}=== VERIFICA OK CON WARNING ===${NC}"
-    log "${YELLOW}Warning: $WARNINGS${NC}"
+    log "${YELLOW}=== VERIFICATION OK WITH WARNINGS ===${NC}"
+    log "${YELLOW}Warnings: $WARNINGS${NC}"
     notify_ha "Backup verification passed with $WARNINGS warnings" "warning"
     exit 0
 else
-    log "${GREEN}=== VERIFICA OK ===${NC}"
-    log "${GREEN}Backup integro e verificato${NC}"
+    log "${GREEN}=== VERIFICATION OK ===${NC}"
+    log "${GREEN}Backup intact and verified${NC}"
     exit 0
 fi

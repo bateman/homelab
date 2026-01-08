@@ -1,394 +1,394 @@
-# Runbook — Backup e Restore Homelab
+# Runbook — Backup and Restore Homelab
 
-> Procedure operative per backup e disaster recovery di NAS QNAP TS-435XeU e Mini PC Proxmox
-
----
-
-## Panoramica Strategia Backup
-
-La strategia segue la regola **3-2-1**: tre copie dei dati, su due tipi di storage diversi, con una copia offsite.
-
-| Componente | Dati | Frequenza | Destinazione | Retention |
-|------------|------|-----------|--------------|-----------|
-| Docker configs | ./config/* (include *arr, Traefik, Pi-hole, etc.) | Giornaliero | NAS + Cloud | 30 giorni |
-| Docker compose | compose.yml, compose.media.yml, .env | Ad ogni modifica | Git + NAS | Illimitato |
-| QNAP config | Sistema QTS | Settimanale | USB + Cloud | 5 versioni |
-| Proxmox VMs | Tutte le VM | Settimanale | NAS | 4 versioni |
-| Media library | /share/data/media | Mai (ricostruibile) | — | — |
-| Database *arr | SQLite in ./config | Giornaliero | Incluso in Docker configs | 30 giorni |
-
-> **Nota**: La cartella `./config` contiene le configurazioni di tutti i servizi Docker: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr, qBittorrent, NZBGet, Pi-hole, Home Assistant, Portainer, Duplicati, Uptime Kuma, Recyclarr, Traefik, Huntarr, Cleanuparr.
+> Operational procedures for backup and disaster recovery of QNAP NAS TS-435XeU and Mini PC Proxmox
 
 ---
 
-## Procedure di Backup
+## Backup Strategy Overview
 
-### 1. Backup Configurazioni Docker (Duplicati - Raccomandato)
+The strategy follows the **3-2-1 rule**: three copies of data, on two different storage types, with one copy offsite.
 
-Il container Duplicati gestisce backup automatici con deduplicazione e cifratura.
+| Component | Data | Frequency | Destination | Retention |
+|-----------|------|-----------|-------------|-----------|
+| Docker configs | ./config/* (includes *arr, Traefik, Pi-hole, etc.) | Daily | NAS + Cloud | 30 days |
+| Docker compose | compose.yml, compose.media.yml, .env | On each change | Git + NAS | Unlimited |
+| QNAP config | QTS system | Weekly | USB + Cloud | 5 versions |
+| Proxmox VMs | All VMs | Weekly | NAS | 4 versions |
+| Media library | /share/data/media | Never (rebuildable) | — | — |
+| *arr databases | SQLite in ./config | Daily | Included in Docker configs | 30 days |
 
-**Configurazione iniziale:**
+> **Note**: The `./config` folder contains configurations for all Docker services: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr, qBittorrent, NZBGet, Pi-hole, Home Assistant, Portainer, Duplicati, Uptime Kuma, Recyclarr, Traefik, Huntarr, Cleanuparr.
 
-1. Accedere a `http://192.168.3.10:8200`
-2. Add backup → Configurare:
-   - **Nome**: `docker-configs-local`
-   - **Destinazione**: Folder path → `/backups`
-   - **Sorgente**: `/source/config`
-   - **Schedule**: Giornaliero alle 02:00
+---
+
+## Backup Procedures
+
+### 1. Docker Configurations Backup (Duplicati - Recommended)
+
+The Duplicati container manages automatic backups with deduplication and encryption.
+
+**Initial configuration:**
+
+1. Access `http://192.168.3.10:8200`
+2. Add backup → Configure:
+   - **Name**: `docker-configs-local`
+   - **Destination**: Folder path → `/backups`
+   - **Source**: `/source/config`
+   - **Schedule**: Daily at 02:00
    - **Retention**: Smart backup retention (7 daily, 4 weekly, 3 monthly)
-   - **Encryption**: Opzionale ma consigliato per backup offsite
+   - **Encryption**: Optional but recommended for offsite backups
 
-**Trigger backup manuale:**
+**Trigger manual backup:**
 ```bash
-make backup  # Triggera Duplicati via API
+make backup  # Triggers Duplicati via API
 ```
 
-**Verifica backup:**
-- Accedere a Duplicati WebUI → Selezionare backup → "Show log"
-- Oppure: Restore → Browse per verificare contenuti
+**Verify backup:**
+- Access Duplicati WebUI → Select backup → "Show log"
+- Or: Restore → Browse to verify contents
 
-#### Alternativa: Backup manuale con cron
+#### Alternative: Manual backup with cron
 
-Se preferisci backup tar.gz manuali senza Duplicati:
+If you prefer manual tar.gz backups without Duplicati:
 
 ```bash
-# Creare cron job sul NAS (ssh admin@192.168.3.10)
+# Create cron job on NAS (ssh admin@192.168.3.10)
 crontab -e
 
-# Backup alle 02:00 (richiede downtime ~1 minuto)
-# Nota: adattare il path alla propria installazione
+# Backup at 02:00 (requires ~1 minute downtime)
+# Note: adjust path to your installation
 0 2 * * * cd /share/container/mediastack && make down && tar -czf /share/backup/docker-config-$(date +\%Y\%m\%d).tar.gz ./config && make up
 
-# Pulizia backup vecchi (mantieni ultimi 30)
+# Clean old backups (keep last 30)
 0 3 * * * find /share/backup -name "docker-config-*.tar.gz" -mtime +30 -delete
 ```
 
-**Verifica backup tar.gz:**
+**Verify tar.gz backup:**
 ```bash
 ls -lah /share/backup/docker-config-*.tar.gz
 tar -tzf /share/backup/docker-config-YYYYMMDD.tar.gz | head -20
 ```
 
-### 2. Backup Configurazione QNAP QTS
+### 2. QNAP QTS Configuration Backup
 
-Lo script `scripts/backup-qts-config.sh` automatizza il backup della configurazione QTS.
+The `scripts/backup-qts-config.sh` script automates QTS configuration backup.
 
-**Contenuto del backup QTS:**
-- Configurazione utenti e gruppi
-- Shared folders e permessi
-- Configurazione rete e VLAN
-- App installate e relative configurazioni
+**QTS backup contents:**
+- User and group configuration
+- Shared folders and permissions
+- Network and VLAN configuration
+- Installed apps and their configurations
 - Scheduled tasks
 
-**Backup manuale:**
+**Manual backup:**
 ```bash
-make backup-qts  # Esegue backup e mostra output dettagliato
+make backup-qts  # Runs backup and shows detailed output
 ```
 
-**Automazione con cron (consigliato):**
+**Automation with cron (recommended):**
 ```bash
-# Sul NAS, aggiungere a crontab (ssh admin@192.168.3.10)
+# On NAS, add to crontab (ssh admin@192.168.3.10)
 crontab -e
 
-# Domenica alle 03:00
+# Sunday at 03:00
 0 3 * * 0 /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
 ```
 
-**Parametri configurabili (variabili ambiente):**
-| Variabile | Default | Descrizione |
-|-----------|---------|-------------|
-| `QTS_BACKUP_DIR` | `/share/backup/qts-config` | Directory destinazione backup |
-| `QTS_BACKUP_RETENTION` | `5` | Numero backup da mantenere |
-| `HA_WEBHOOK_URL` | - | URL webhook Home Assistant per notifiche |
+**Configurable parameters (environment variables):**
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `QTS_BACKUP_DIR` | `/share/backup/qts-config` | Backup destination directory |
+| `QTS_BACKUP_RETENTION` | `5` | Number of backups to keep |
+| `HA_WEBHOOK_URL` | - | Home Assistant webhook URL for notifications |
 
-**Verifica backup disponibili:**
+**Check available backups:**
 ```bash
 ls -la /share/backup/qts-config/
 ```
 
-**Backup manuale via interfaccia web (alternativa):**
+**Manual backup via web interface (alternative):**
 
-1. Accedere a `https://192.168.3.10:5000` (porta HTTPS di QTS)
+1. Access `https://192.168.3.10:5000` (QTS HTTPS port)
 2. Control Panel → System → Backup/Restore
 3. Backup System Settings → Create Backup
-4. Salvare il file `.bin` generato
+4. Save the generated `.bin` file
 
-### 3. Backup VM Proxmox
+### 3. Proxmox VM Backup
 
-**Configurazione Proxmox Backup:**
+**Proxmox Backup Configuration:**
 
-1. Accedere a `https://192.168.3.20:8006`
+1. Access `https://192.168.3.20:8006`
 2. Datacenter → Storage → Add → Directory
    - ID: `backup-nas`
-   - Directory: `/mnt/nas-backup` (NFS mount da QNAP)
+   - Directory: `/mnt/nas-backup` (NFS mount from QNAP)
    - Content: VZDump backup file
 3. Datacenter → Backup → Add
    - Storage: backup-nas
    - Schedule: `sun 03:00`
    - Selection mode: All
-   - Mode: Snapshot (per VM running)
+   - Mode: Snapshot (for running VMs)
    - Compression: ZSTD
    - Retention: Keep last 4
 
-**Mount NFS da QNAP su Proxmox:**
+**Mount NFS from QNAP on Proxmox:**
 ```bash
-# Sul NAS: abilitare NFS per la shared folder backup
+# On NAS: enable NFS for backup shared folder
 # Control Panel → Shared Folders → backup → Edit → NFS Permission
-# Aggiungi: 192.168.3.20 (read/write, no_root_squash)
+# Add: 192.168.3.20 (read/write, no_root_squash)
 
-# Su Proxmox:
+# On Proxmox:
 mkdir -p /mnt/nas-backup
 echo "192.168.3.10:/backup /mnt/nas-backup nfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 
-**Backup manuale immediato:**
+**Immediate manual backup:**
 ```bash
-# Via CLI Proxmox
+# Via Proxmox CLI
 vzdump <vmid> --storage backup-nas --compress zstd --mode snapshot
 ```
 
-### 4. Backup Offsite (Cloud)
+### 4. Offsite Backup (Cloud)
 
-**Duplicati verso Dropbox o Google Drive**
+**Duplicati to Dropbox or Google Drive**
 
-Duplicati ha supporto integrato per Dropbox e Google Drive:
+Duplicati has built-in support for Dropbox and Google Drive:
 
-1. Accedere a `http://192.168.3.10:8200`
-2. Add backup → Destinazione: **Google Drive** o **Dropbox**
-3. Autenticarsi con OAuth (link nel wizard)
-4. Cartella remota: `homelab-backup`
-5. Sorgente: `/source/config`
-6. Schedule: giornaliero
+1. Access `http://192.168.3.10:8200`
+2. Add backup → Destination: **Google Drive** or **Dropbox**
+3. Authenticate with OAuth (link in wizard)
+4. Remote folder: `homelab-backup`
+5. Source: `/source/config`
+6. Schedule: daily
 7. Retention: Smart (7 daily, 4 weekly, 3 monthly)
 
 ---
 
-## Procedure di Restore
+## Restore Procedures
 
-### 1. Restore Configurazioni Docker
+### 1. Docker Configurations Restore
 
-**Scenario: Corruzione config singolo servizio**
+**Scenario: Single service config corruption**
 ```bash
-# Fermare il servizio (dalla directory del progetto)
-make logs-sonarr  # Prima verificare i log per capire il problema
+# Stop the service (from project directory)
+make logs-sonarr  # First check logs to understand the problem
 docker compose -f docker/compose.yml -f docker/compose.media.yml stop sonarr
 
-# Backup config corrotta (per analisi)
+# Backup corrupted config (for analysis)
 mv ./config/sonarr ./config/sonarr.corrupted
 
-# Restore da backup
+# Restore from backup
 tar -xzf /share/backup/docker-config-YYYYMMDD.tar.gz ./config/sonarr
 
-# Riavviare
+# Restart
 docker compose -f docker/compose.yml -f docker/compose.media.yml start sonarr
 
-# Verificare logs
+# Verify logs
 make logs-sonarr
 ```
 
-**Scenario: Reinstallazione completa NAS**
+**Scenario: Complete NAS reinstallation**
 ```bash
-# 1. Reinstallare Container Station su QTS
-# 2. Clonare repository
+# 1. Reinstall Container Station on QTS
+# 2. Clone repository
 git clone <repo-url> /share/container/homelab
 cd /share/container/homelab
 
-# 3. Ricreare struttura cartelle
+# 3. Recreate folder structure
 ./scripts/setup-folders.sh
 
-# 4. Restore tutte le config
+# 4. Restore all configs
 tar -xzf /share/backup/docker-config-YYYYMMDD.tar.gz -C .
 
-# 5. Verificare permessi
+# 5. Verify permissions
 sudo chown -R 1000:100 ./config
 sudo chmod -R 775 ./config
 
-# 6. Copiare .env
+# 6. Copy .env
 cp docker/.env.example docker/.env
-# Editare docker/.env con le password corrette
+# Edit docker/.env with correct passwords
 
-# 7. Avviare stack
+# 7. Start stack
 make up
 
-# 8. Verificare tutti i servizi
+# 8. Verify all services
 make health
 ```
 
-### 2. Restore Configurazione QNAP QTS
+### 2. QNAP QTS Configuration Restore
 
-**Via interfaccia web:**
+**Via web interface:**
 
-1. Dopo reinstallazione QTS, accedere a `https://<ip>:5000`
+1. After QTS reinstallation, access `https://<ip>:5000`
 2. Control Panel → System → Backup/Restore
 3. Restore System Settings
-4. Caricare il file `.bin` di backup
-5. Sistema richiederà riavvio
+4. Upload backup `.bin` file
+5. System will request reboot
 
 **Post-restore checklist:**
-- [ ] Verificare shared folders
-- [ ] Verificare utenti e permessi
-- [ ] Reinstallare Container Station
-- [ ] Verificare configurazione rete/VLAN
-- [ ] Restore configurazioni Docker (procedura sopra)
+- [ ] Verify shared folders
+- [ ] Verify users and permissions
+- [ ] Reinstall Container Station
+- [ ] Verify network/VLAN configuration
+- [ ] Restore Docker configurations (procedure above)
 
-### 3. Restore VM Proxmox
+### 3. Proxmox VM Restore
 
-**Via interfaccia web:**
+**Via web interface:**
 
-1. Accedere a `https://192.168.3.20:8006`
+1. Access `https://192.168.3.20:8006`
 2. Storage → backup-nas → Content
-3. Selezionare backup desiderato
+3. Select desired backup
 4. Click "Restore"
-5. Configurare: VM ID, Storage target
-6. Start after restore: opzionale
+5. Configure: VM ID, Storage target
+6. Start after restore: optional
 
 **Via CLI:**
 ```bash
-# Listare backup disponibili
+# List available backups
 ls -la /mnt/nas-backup/
-# oppure
+# or
 pvesm list backup-nas
 
 # Restore VM
 qmrestore /mnt/nas-backup/vzdump-qemu-<vmid>-<date>.vma.zst <new-vmid> --storage local-lvm
 
-# Se stesso VMID (sovrascrive)
+# If same VMID (overwrites)
 qmrestore /mnt/nas-backup/vzdump-qemu-<vmid>-<date>.vma.zst <vmid> --force
 ```
 
-### 4. Disaster Recovery Completo
+### 4. Complete Disaster Recovery
 
-**Scenario: Perdita totale NAS + Proxmox**
+**Scenario: Total loss of NAS + Proxmox**
 
-Prerequisiti: backup offsite disponibile (cloud o secondo sito)
+Prerequisites: offsite backup available (cloud or secondary site)
 
-**Fase 1: Hardware**
-1. Sostituire/riparare hardware
-2. Installare QTS su NAS
-3. Installare Proxmox su Mini PC
+**Phase 1: Hardware**
+1. Replace/repair hardware
+2. Install QTS on NAS
+3. Install Proxmox on Mini PC
 
-**Fase 2: Configurazione base**
+**Phase 2: Base configuration**
 ```bash
-# NAS: configurazione rete manuale
+# NAS: manual network configuration
 # IP: 192.168.3.10/24
 # Gateway: 192.168.3.1
 # DNS: 1.1.1.1
 
-# Proxmox: configurazione rete manuale
+# Proxmox: manual network configuration
 # IP: 192.168.3.20/24
 # Gateway: 192.168.3.1
 ```
 
-**Fase 3: Restore da offsite**
+**Phase 3: Restore from offsite**
 ```bash
-# Scaricare backup da cloud (Google Drive)
+# Download backup from cloud (Google Drive)
 rclone copy gdrive-backup:homelab-backup /share/backup --progress
 
-# Oppure restore diretto da Duplicati WebUI se configurato
+# Or direct restore from Duplicati WebUI if configured
 
-# Oppure da Tailscale remote
+# Or from Tailscale remote
 rsync -avz user@100.x.x.x:/backup/homelab/ /share/backup/
 ```
 
-**Fase 4: Restore componenti**
-1. Restore QTS config (procedura sopra)
-2. Ricreare struttura cartelle: `./scripts/setup-folders.sh`
+**Phase 4: Restore components**
+1. Restore QTS config (procedure above)
+2. Recreate folder structure: `./scripts/setup-folders.sh`
 3. Restore Docker configs
-4. Restore VM Proxmox
+4. Restore Proxmox VMs
 
-**Fase 5: Verifica**
-- [ ] Tutti i container running: `make status`
+**Phase 5: Verification**
+- [ ] All containers running: `make status`
 - [ ] Health check: `make health`
-- [ ] Connettività inter-VLAN
-- [ ] Accesso Plex da VLAN Media
-- [ ] Tailscale connesso
+- [ ] Inter-VLAN connectivity
+- [ ] Plex access from Media VLAN
+- [ ] Tailscale connected
 
 ---
 
-## Verifica Automatica Backup
+## Automatic Backup Verification
 
-### Script Implementato
+### Implemented Script
 
-Lo script `scripts/verify-backup.sh` verifica automaticamente l'integrita' dei backup:
+The `scripts/verify-backup.sh` script automatically verifies backup integrity:
 
-1. **Estrazione archivio**: Verifica che il tar.gz sia leggibile
-2. **Integrita' SQLite**: Controlla i database di Sonarr, Radarr, Lidarr, Prowlarr, Bazarr
-3. **Eta' backup**: Warning se piu' vecchio di 7 giorni
-4. **File critici**: Verifica presenza configurazioni Traefik
+1. **Archive extraction**: Verifies tar.gz is readable
+2. **SQLite integrity**: Checks databases for Sonarr, Radarr, Lidarr, Prowlarr, Bazarr
+3. **Backup age**: Warning if older than 7 days
+4. **Critical files**: Verifies Traefik configuration presence
 
-### Utilizzo
+### Usage
 
 ```bash
-# Verifica manuale (verbose)
+# Manual verification (verbose)
 make verify-backup
 
-# Oppure direttamente
+# Or directly
 ./scripts/verify-backup.sh --verbose
 
-# Con notifica Home Assistant (richiede HA_WEBHOOK_URL)
+# With Home Assistant notification (requires HA_WEBHOOK_URL)
 ./scripts/verify-backup.sh --notify
 ```
 
-### Automazione con Cron
+### Automation with Cron
 
-Per verifica automatica settimanale (consigliato):
+For automatic weekly verification (recommended):
 
 ```bash
-# Sul NAS, aggiungere a crontab
+# On NAS, add to crontab
 crontab -e
 
-# Domenica alle 05:00, dopo il backup notturno
+# Sunday at 05:00, after overnight backup
 0 5 * * 0 /share/container/homelab/scripts/verify-backup.sh --notify >> /var/log/verify-backup.log 2>&1
 ```
 
-### Notifiche Home Assistant (Opzionale)
+### Home Assistant Notifications (Optional)
 
-Per ricevere alert in caso di errori:
+To receive alerts on errors:
 
-1. Creare automazione webhook in Home Assistant
-2. Impostare variabile ambiente:
+1. Create webhook automation in Home Assistant
+2. Set environment variable:
    ```bash
    # In docker/.env.secrets
    HA_WEBHOOK_URL=http://192.168.3.10:8123/api/webhook/backup-verify
    ```
-3. Eseguire con `--notify`
+3. Run with `--notify`
 
 ### Exit Codes
 
-| Codice | Significato |
-|--------|-------------|
-| 0 | Verifica OK |
-| 1 | Errori rilevati (backup corrotto) |
-| 2 | Nessun backup trovato |
+| Code | Meaning |
+|------|---------|
+| 0 | Verification OK |
+| 1 | Errors detected (corrupted backup) |
+| 2 | No backup found |
 
-### Opzioni Avanzate (Non Implementate)
+### Advanced Options (Not Implemented)
 
-**Duplicati Verify (integrato)**
+**Duplicati Verify (built-in)**
 
-Duplicati ha una funzione "Verify" che controlla l'integrita' dei backup:
-1. WebUI → Selezionare backup
-2. Operazioni → "Verify files"
-3. Schedulare via Advanced options → `--backup-test-samples=5`
+Duplicati has a "Verify" function that checks backup integrity:
+1. WebUI → Select backup
+2. Operations → "Verify files"
+3. Schedule via Advanced options → `--backup-test-samples=5`
 
-**Restore automatico in ambiente isolato**
+**Automatic restore in isolated environment**
 
-Per homelab avanzati:
-1. VM Proxmox dedicata per test restore
-2. Script che ogni settimana:
-   - Restore config in directory temporanea
-   - Avvia container in rete isolata
-   - Verifica healthcheck
-   - Elimina e notifica risultato
+For advanced homelabs:
+1. Dedicated Proxmox VM for restore testing
+2. Script that weekly:
+   - Restores config in temporary directory
+   - Starts containers in isolated network
+   - Verifies healthchecks
+   - Deletes and notifies result
 
 ---
 
-## Contatti e Escalation
+## Contacts and Escalation
 
-| Risorsa | Contatto |
-|---------|----------|
-| Documentazione QNAP | qnap.com/en/how-to/knowledge-base |
-| Forum Proxmox | forum.proxmox.com |
+| Resource | Contact |
+|----------|---------|
+| QNAP Documentation | qnap.com/en/how-to/knowledge-base |
+| Proxmox Forum | forum.proxmox.com |
 | Trash Guides Discord | trash-guides.info (link in homepage) |
 | r/homelab | reddit.com/r/homelab |
 
@@ -396,8 +396,8 @@ Per homelab avanzati:
 
 ## Changelog
 
-| Data | Modifica |
-|------|----------|
-| 2026-01-06 | Aggiunto script backup-qts-config.sh per automazione backup QTS |
-| 2025-01-04 | Revisione: Duplicati come metodo primario, fix comandi docker compose, chiarimenti porte QTS |
-| 2025-01-02 | Creazione documento |
+| Date | Change |
+|------|--------|
+| 2026-01-06 | Added backup-qts-config.sh script for QTS backup automation |
+| 2025-01-04 | Revision: Duplicati as primary method, docker compose command fixes, QTS port clarifications |
+| 2025-01-02 | Document creation |

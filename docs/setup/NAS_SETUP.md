@@ -1,398 +1,398 @@
-# Checklist Deployment — QNAP TS-435XeU
+# Deployment Checklist — QNAP TS-435XeU
 
-> Checklist completa per setup iniziale NAS QNAP con Container Station e media stack
+> Complete checklist for initial NAS setup with Container Station and media stack
 
 ---
 
-## Pre-Installazione Hardware
+## Pre-Installation Hardware
 
-### Rack e Fisico
-- [ ] NAS montato in rack U2 (sotto pannello ventilato)
-- [ ] Isolante neoprene 5mm posizionato tra NAS e UPS
-- [ ] Ventilazione laterale non ostruita
-- [ ] Cavi SFP+ 10G collegati (porta 1 verso switch)
-- [ ] Cavo RJ45 2.5GbE di backup collegato (opzionale)
+### Rack and Physical
+- [ ] NAS mounted in rack U2 (below vented panel)
+- [ ] 5mm neoprene insulation positioned between NAS and UPS
+- [ ] Side ventilation not obstructed
+- [ ] 10G SFP+ cables connected (port 1 to switch)
+- [ ] 2.5GbE RJ45 backup cable connected (optional)
 
 ### Storage
-- [ ] HDD installati nei bay (verificare compatibilità: qnap.com/compatibility)
-- [ ] HDD dello stesso modello/capacità per RAID
-- [ ] SSD M.2 NVMe per caching installato (opzionale ma raccomandato)
+- [ ] HDDs installed in bays (check compatibility: qnap.com/compatibility)
+- [ ] HDDs of same model/capacity for RAID
+- [ ] M.2 NVMe SSD for caching installed (optional but recommended)
 
 ---
 
-## Setup Iniziale QTS
+## Initial QTS Setup
 
-### Primo Avvio
-- [ ] Collegare monitor + tastiera oppure usare Qfinder Pro
-- [ ] Accedere a `http://<ip>:8080` o `http://qnapnas.local:8080`
-- [ ] Completare wizard iniziale
-- [ ] Aggiornare firmware all'ultima versione stabile
-- [ ] Riavviare dopo aggiornamento
+### First Boot
+- [ ] Connect monitor + keyboard or use Qfinder Pro
+- [ ] Access `http://<ip>:8080` or `http://qnapnas.local:8080`
+- [ ] Complete initial wizard
+- [ ] Update firmware to latest stable version
+- [ ] Reboot after update
 
-### Configurazione Amministratore
-- [ ] Cambiare password admin default
-- [ ] Creare utente amministrativo secondario
-- [ ] Abilitare 2FA per admin (Control Panel → Security → 2-Step Verification)
-- [ ] Disabilitare account "admin" default (opzionale, dopo creazione altro admin)
+### Administrator Configuration
+- [ ] Change default admin password
+- [ ] Create secondary admin user
+- [ ] Enable 2FA for admin (Control Panel → Security → 2-Step Verification)
+- [ ] Disable default "admin" account (optional, after creating another admin)
 
-### Configurazione Rete
-- [ ] Assegnare IP statico: `192.168.3.10`
+### Network Configuration
+- [ ] Assign static IP: `192.168.3.10`
 - [ ] Subnet mask: `255.255.255.0`
 - [ ] Gateway: `192.168.3.1`
-- [ ] DNS primario: `192.168.3.1` (UDM-SE) o `1.1.1.1`
-- [ ] DNS secondario: `1.0.0.1`
-- [ ] Hostname: `qnap-nas` (o nome scelto)
-- [ ] Verificare MTU 9000 se Jumbo Frames abilitati su switch
+- [ ] Primary DNS: `192.168.3.1` (UDM-SE) or `1.1.1.1`
+- [ ] Secondary DNS: `1.0.0.1`
+- [ ] Hostname: `qnap-nas` (or chosen name)
+- [ ] Verify MTU 9000 if Jumbo Frames enabled on switch
 
-**Percorso:** Control Panel → Network & Virtual Switch → Interfaces
+**Path:** Control Panel → Network & Virtual Switch → Interfaces
 
 ---
 
-## Configurazione Storage
+## Storage Configuration
 
-### Scelta Filesystem: ext4 vs ZFS
+### Filesystem Choice: ext4 vs ZFS
 
-| Aspetto | ext4 | ZFS |
-|---------|------|-----|
-| **RAM minima** | ~256MB | **8-16GB dedicati** (1GB/TB per ARC) |
-| **CPU overhead** | Basso | Medio-alto (checksumming, compression) |
-| **Complessità** | Semplice, maturo | Complesso, curva apprendimento ripida |
-| **Integrità dati** | Base (journaling) | Eccellente (checksumming end-to-end) |
-| **Snapshot** | No (serve LVM) | Sì, nativi e efficienti |
-| **Self-healing** | No | Sì (con mirror/raidz) |
-| **Compression** | No | Sì (LZ4, ZSTD) - guadagno 10-30% |
-| **Hardlinking** | ✓ Ottimo | ✓ Ottimo |
-| **QNAP QTS support** | Nativo, stabile | Limitato |
+| Aspect | ext4 | ZFS |
+|--------|------|-----|
+| **Minimum RAM** | ~256MB | **8-16GB dedicated** (1GB/TB for ARC) |
+| **CPU overhead** | Low | Medium-high (checksumming, compression) |
+| **Complexity** | Simple, mature | Complex, steep learning curve |
+| **Data integrity** | Basic (journaling) | Excellent (end-to-end checksumming) |
+| **Snapshots** | No (requires LVM) | Yes, native and efficient |
+| **Self-healing** | No | Yes (with mirror/raidz) |
+| **Compression** | No | Yes (LZ4, ZSTD) - 10-30% gain |
+| **Hardlinking** | ✓ Excellent | ✓ Excellent |
+| **QNAP QTS support** | Native, stable | Limited |
 
-**Raccomandazione: ext4**
-- QTS ha supporto nativo e stabile
-- Il TS-435XeU ha RAM limitata (4-8GB tipici)
-- Per media server le feature avanzate ZFS non sono critiche
-- Hardlinking funziona perfettamente
+**Recommendation: ext4**
+- QTS has native and stable support
+- TS-435XeU has limited RAM (typically 4-8GB)
+- For media server, advanced ZFS features are not critical
+- Hardlinking works perfectly
 
-> ZFS avrebbe senso con 16GB+ RAM e priorità massima su integrità dati, oppure su Proxmox/TrueNAS.
+> ZFS would make sense with 16GB+ RAM and maximum priority on data integrity, or on Proxmox/TrueNAS.
 
-### Scelta RAID: RAID 5 vs RAID 10
+### RAID Choice: RAID 5 vs RAID 10
 
-| Aspetto | RAID 5 | RAID 10 |
-|---------|--------|---------|
-| **Capacità utile (4 dischi)** | **75%** (3 su 4) | 50% (2 su 4) |
-| **Fault tolerance** | 1 disco | 1 disco (2 se in mirror diversi) |
-| **Read performance** | Buona | **Eccellente** |
-| **Write performance** | Degradata (parity calc) | **Eccellente** |
-| **Rebuild time** | Lungo + stress dischi | **Veloce** |
-| **Rischio durante rebuild** | Alto (URE può fallire) | **Basso** |
-| **Random I/O (Docker)** | Medio | **Ottimo** |
-| **Sequential I/O (streaming)** | Buono | Buono |
-| **Costo per TB** | **Minore** | Maggiore |
+| Aspect | RAID 5 | RAID 10 |
+|--------|--------|---------|
+| **Usable capacity (4 disks)** | **75%** (3 of 4) | 50% (2 of 4) |
+| **Fault tolerance** | 1 disk | 1 disk (2 if in different mirrors) |
+| **Read performance** | Good | **Excellent** |
+| **Write performance** | Degraded (parity calc) | **Excellent** |
+| **Rebuild time** | Long + disk stress | **Fast** |
+| **Risk during rebuild** | High (URE can fail) | **Low** |
+| **Random I/O (Docker)** | Medium | **Excellent** |
+| **Sequential I/O (streaming)** | Good | Good |
+| **Cost per TB** | **Lower** | Higher |
 
-**Performance indicative (4x HDD SATA):**
+**Indicative performance (4x HDD SATA):**
 ```
                     RAID 5          RAID 10
 Sequential Read:    ~400 MB/s       ~400 MB/s
 Sequential Write:   ~200 MB/s       ~300 MB/s
 Random Read 4K:     ~300 IOPS       ~500 IOPS
-Random Write 4K:    ~100 IOPS       ~400 IOPS  ← differenza critica per Docker
+Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docker
 ```
 
-**Raccomandazione: RAID 10**
-- Container Station genera molto random I/O
-- Database SQLite degli *arr beneficiano di write veloci
-- Rebuild più sicuro e veloce
-- Hardlinking e import istantanei
+**Recommendation: RAID 10**
+- Container Station generates heavy random I/O
+- SQLite databases of *arr apps benefit from fast writes
+- Safer and faster rebuild
+- Instant hardlinking and imports
 
-> RAID 5 ha senso se la capacità è priorità assoluta e il budget per dischi è limitato.
+> RAID 5 makes sense if capacity is absolute priority and disk budget is limited.
 
-### Riepilogo Configurazione Raccomandata
+### Recommended Configuration Summary
 
-| Componente | Scelta | Motivo |
-|------------|--------|--------|
-| **Filesystem** | ext4 | Compatibilità QTS, basso overhead RAM/CPU |
-| **RAID** | RAID 10 | Performance I/O per Docker, rebuild sicuro |
-| **Volume** | Static | Miglior performance hardlink |
+| Component | Choice | Reason |
+|-----------|--------|--------|
+| **Filesystem** | ext4 | QTS compatibility, low RAM/CPU overhead |
+| **RAID** | RAID 10 | I/O performance for Docker, safe rebuild |
+| **Volume** | Static | Best hardlink performance |
 
 ---
 
 ### Storage Pool
 - [ ] Control Panel → Storage & Snapshots → Storage/Snapshots
 - [ ] Create → New Storage Pool
-- [ ] Selezionare tutti gli HDD (4 dischi)
-- [ ] RAID type: **RAID 10** (raccomandato per media server)
-  - Alternativa 2 dischi: RAID 1 (mirror)
-  - Alternativa se capacità prioritaria: RAID 5
+- [ ] Select all HDDs (4 disks)
+- [ ] RAID type: **RAID 10** (recommended for media server)
+  - Alternative for 2 disks: RAID 1 (mirror)
+  - Alternative if capacity priority: RAID 5
 - [ ] Alert threshold: 80%
-- [ ] Completare creazione (tempo variabile in base a capacità)
+- [ ] Complete creation (time varies based on capacity)
 
-### SSD Cache (se presente M.2)
+### SSD Cache (if M.2 present)
 - [ ] Storage & Snapshots → Cache Acceleration
 - [ ] Create
-- [ ] Selezionare SSD M.2
-- [ ] Cache mode: Read-Write (raccomandato per Container Station)
-- [ ] Associare allo Storage Pool principale
+- [ ] Select M.2 SSD
+- [ ] Cache mode: Read-Write (recommended for Container Station)
+- [ ] Associate with main Storage Pool
 
 ### Static Volume
 - [ ] Storage & Snapshots → Create → New Volume
-- [ ] Volume type: **Static Volume** (raccomandato per hardlink performance)
-  - Alternativa: Thick Volume se preferisci snapshots nativi
-- [ ] Allocare tutto lo spazio disponibile (o quota desiderata)
-- [ ] Nome: `DataVol1`
-- [ ] Filesystem: **ext4** (raccomandato per compatibilità e basso overhead)
+- [ ] Volume type: **Static Volume** (recommended for hardlink performance)
+  - Alternative: Thick Volume if you prefer native snapshots
+- [ ] Allocate all available space (or desired quota)
+- [ ] Name: `DataVol1`
+- [ ] Filesystem: **ext4** (recommended for compatibility and low overhead)
 
 ### Shared Folders
-Creare le seguenti shared folders su DataVol1:
+Create the following shared folders on DataVol1:
 
-| Nome | Percorso | Scopo |
-|------|----------|-------|
-| data | /share/data | Mount principale per hardlinking |
-| container | /share/container | Docker configs e compose files |
-| backup | /share/backup | Backup locali |
+| Name | Path | Purpose |
+|------|------|---------|
+| data | /share/data | Main mount for hardlinking |
+| container | /share/container | Docker configs and compose files |
+| backup | /share/backup | Local backups |
 
-**Percorso:** Control Panel → Shared Folders → Create
+**Path:** Control Panel → Shared Folders → Create
 
-Per ogni folder:
-- [ ] Creare folder
-- [ ] Permessi: admin RW, everyone RO (o secondo policy)
-- [ ] Abilitare Recycle Bin (opzionale)
+For each folder:
+- [ ] Create folder
+- [ ] Permissions: admin RW, everyone RO (or per policy)
+- [ ] Enable Recycle Bin (optional)
 
 ---
 
-## Configurazione Utenti e Permessi
+## Users and Permissions Configuration
 
-### Utente Docker
+### Docker User
 - [ ] Control Panel → Users → Create
-- [ ] Username: `dockeruser` (o nome scelto)
-- [ ] UID: verificare che sia 1000 (o annotare per PUID)
-- [ ] Password: generare password sicura
-- [ ] Permessi shared folders:
+- [ ] Username: `dockeruser` (or chosen name)
+- [ ] UID: verify it's 1000 (or note for PUID)
+- [ ] Password: generate secure password
+- [ ] Shared folder permissions:
   - data: RW
   - container: RW
   - backup: RO
 
-### Abilitare SSH
+### Enable SSH
 - [ ] Control Panel → Network Services → Telnet/SSH
 - [ ] Enable SSH service: **On**
 - [ ] Port: 22 (default)
 - [ ] Apply
 
-### Verificare PUID/PGID
+### Verify PUID/PGID
 ```bash
-# Connettersi via SSH
+# Connect via SSH
 ssh admin@192.168.3.10
 
-# Verificare ID utente
+# Verify user ID
 id dockeruser
-# Output atteso: uid=1000(dockeruser) gid=100(everyone) ...
-#                     ^^^^          ^^^
-#                     PUID          PGID
+# Expected output: uid=1000(dockeruser) gid=100(everyone) ...
+#                      ^^^^          ^^^
+#                      PUID          PGID
 ```
 
-> **Importante**: Annota questi valori! Serviranno per configurare il file `.env` dopo aver clonato il repository.
+> **Important**: Note these values! They will be needed to configure the `.env` file after cloning the repository.
 
 ---
 
-## Installazione Container Station
+## Container Station Installation
 
-### Installazione
+### Installation
 - [ ] App Center → Search "Container Station"
-- [ ] Installare Container Station 3
-- [ ] Attendere completamento
-- [ ] Aprire Container Station
-- [ ] Completare wizard iniziale
+- [ ] Install Container Station 3
+- [ ] Wait for completion
+- [ ] Open Container Station
+- [ ] Complete initial wizard
 
-### Configurazione Container Station
-- [ ] Settings → Docker root path: lasciare default o spostare su DataVol1
+### Container Station Configuration
+- [ ] Settings → Docker root path: leave default or move to DataVol1
 - [ ] Settings → Default registry: Docker Hub (default)
-- [ ] Verificare versione Docker: `docker version`
+- [ ] Verify Docker version: `docker version`
 
-### Struttura Cartelle Media Stack
+### Media Stack Folder Structure
 
-> **Nota**: Il repository homelab va clonato/copiato **solo sul NAS**, non su Proxmox.
-> Proxmox ospita solo il container Plex che accede ai media via NFS.
+> **Note**: The homelab repository should be cloned/copied **only on the NAS**, not on Proxmox.
+> Proxmox only hosts the Plex container which accesses media via NFS.
 
-#### Opzione A: Clone Git (consigliato)
+#### Option A: Git Clone (recommended)
 
 ```bash
-# Via SSH sul NAS
+# Via SSH on NAS
 ssh admin@192.168.3.10
 
-# Installare git se non presente (App Center -> Git)
-# Oppure via Entware: opkg install git
+# Install git if not present (App Center -> Git)
+# Or via Entware: opkg install git
 
 cd /share/container
-git clone https://github.com/<tuo-username>/homelab.git mediastack
+git clone https://github.com/<your-username>/homelab.git mediastack
 cd mediastack
 ```
 
-#### Opzione B: Copia manuale (se git non disponibile)
+#### Option B: Manual Copy (if git not available)
 
 ```bash
-# Via SSH sul NAS
+# Via SSH on NAS
 cd /share/container
 mkdir -p mediastack
 cd mediastack
 
-# Da un PC con il repository clonato, copiare via SCP:
+# From a PC with the cloned repository, copy via SCP:
 # scp -r docker/ scripts/ Makefile admin@192.168.3.10:/share/container/mediastack/
 
-# Oppure usare File Station per upload dei file
+# Or use File Station to upload files
 ```
 
 ---
 
-## Deploy Docker Stack
+## Docker Stack Deployment
 
-### Setup Iniziale e Configurazione .env
+### Initial Setup and .env Configuration
 
-Il comando `make setup` crea la struttura cartelle e il file `.env`. **Deve essere eseguito prima del primo avvio.**
+The `make setup` command creates the folder structure and `.env` file. **It must be run before first startup.**
 
 ```bash
 cd /share/container/mediastack
 
-# Eseguire setup (crea cartelle data, config e .env da template)
+# Run setup (creates data, config folders and .env from template)
 make setup
 
-# Editare .env con i valori corretti
+# Edit .env with correct values
 nano docker/.env
 ```
 
-Configurazione **obbligatoria** in `docker/.env`:
+**Mandatory** configuration in `docker/.env`:
 
 ```bash
-# PUID e PGID devono corrispondere all'utente dockeruser creato in precedenza
-# Ottieni i valori con: id dockeruser
-# Esempio output: uid=1000(dockeruser) gid=100(everyone)
-PUID=1000    # ← sostituisci con uid di dockeruser
-PGID=100     # ← sostituisci con gid di dockeruser
+# PUID and PGID must match the dockeruser created earlier
+# Get values with: id dockeruser
+# Example output: uid=1000(dockeruser) gid=100(everyone)
+PUID=1000    # ← replace with dockeruser uid
+PGID=100     # ← replace with dockeruser gid
 
 # Timezone
 TZ=Europe/Rome
 
-# Password per Pi-hole (genera con: openssl rand -base64 24)
-PIHOLE_PASSWORD=<password-sicura>
+# Password for Pi-hole (generate with: openssl rand -base64 24)
+PIHOLE_PASSWORD=<secure-password>
 ```
 
-> **Critico**: Se PUID/PGID non corrispondono all'utente proprietario di `/share/data`, i container non avranno i permessi corretti per scrivere i file e l'hardlinking non funzionerà.
+> **Critical**: If PUID/PGID don't match the user owning `/share/data`, containers won't have correct permissions to write files and hardlinking won't work.
 
-### Verifica Struttura e Permessi
+### Verify Structure and Permissions
 
-Dopo `make setup`, verificare che la struttura sia stata creata:
+After `make setup`, verify the structure was created:
 
 ```bash
-# Verificare cartelle data
+# Verify data folders
 ls -la /share/data/
-# Deve contenere: torrents/, usenet/, media/
+# Should contain: torrents/, usenet/, media/
 
-# Verificare cartelle config
+# Verify config folders
 ls -la ./config/
-# Deve contenere sottocartelle per ogni servizio
+# Should contain subfolders for each service
 
-# Verificare ownership (deve corrispondere a PUID:PGID configurati)
+# Verify ownership (must match PUID:PGID configured)
 ls -ln /share/data
-# Esempio output per PUID=1000 PGID=100:
+# Example output for PUID=1000 PGID=100:
 # drwxrwxr-x 1000 100 ... media
 # drwxrwxr-x 1000 100 ... torrents
 # drwxrwxr-x 1000 100 ... usenet
 ```
 
-Se i permessi non sono corretti:
+If permissions are incorrect:
 ```bash
-# Sostituire 1000:100 con i tuoi PUID:PGID da .env
+# Replace 1000:100 with your PUID:PGID from .env
 sudo chown -R 1000:100 /share/data
 sudo chown -R 1000:100 /share/container/mediastack/config
 sudo chmod -R 775 /share/data
 sudo chmod -R 775 /share/container/mediastack/config
 ```
 
-### Verifica Porta DNS
+### Verify DNS Port
 
-Prima di avviare, verificare che la porta 53 non sia già in uso da QTS:
+Before starting, verify port 53 is not already in use by QTS:
 
 ```bash
-# Verificare se porta 53 è occupata
+# Check if port 53 is occupied
 ss -tulnp | grep :53
 
-# Se occupata, disabilitare DNS locale QTS:
-# Control Panel → Network & Virtual Switch → DNS Server → Disabilita
+# If occupied, disable QTS local DNS:
+# Control Panel → Network & Virtual Switch → DNS Server → Disable
 ```
 
-### Primo Avvio
+### First Startup
 ```bash
 cd /share/container/mediastack
 
-# Validare configurazione
+# Validate configuration
 make validate
 
-# Pull immagini
+# Pull images
 make pull
 
-# Avvio stack
+# Start stack
 make up
 
-# Verificare status
+# Verify status
 make status
 
-# Verificare logs per errori
+# Check logs for errors
 make logs | grep -i error
 ```
 
-### Verifica Servizi
-- [ ] Sonarr: `http://192.168.3.10:8989` risponde
-- [ ] Radarr: `http://192.168.3.10:7878` risponde
-- [ ] Lidarr: `http://192.168.3.10:8686` risponde
-- [ ] Prowlarr: `http://192.168.3.10:9696` risponde
-- [ ] Bazarr: `http://192.168.3.10:6767` risponde
-- [ ] qBittorrent: `http://192.168.3.10:8080` risponde
-- [ ] NZBGet: `http://192.168.3.10:6789` risponde
-- [ ] Pi-hole: `http://192.168.3.10:8081/admin` risponde
-- [ ] Home Assistant: `http://192.168.3.10:8123` risponde
-- [ ] Portainer: `https://192.168.3.10:9443` risponde
-- [ ] Uptime Kuma: `http://192.168.3.10:3001` risponde
-- [ ] Duplicati: `http://192.168.3.10:8200` risponde
-- [ ] Huntarr: `http://192.168.3.10:9705` risponde
-- [ ] Cleanuparr: `http://192.168.3.10:11011` risponde
+### Verify Services
+- [ ] Sonarr: `http://192.168.3.10:8989` responds
+- [ ] Radarr: `http://192.168.3.10:7878` responds
+- [ ] Lidarr: `http://192.168.3.10:8686` responds
+- [ ] Prowlarr: `http://192.168.3.10:9696` responds
+- [ ] Bazarr: `http://192.168.3.10:6767` responds
+- [ ] qBittorrent: `http://192.168.3.10:8080` responds
+- [ ] NZBGet: `http://192.168.3.10:6789` responds
+- [ ] Pi-hole: `http://192.168.3.10:8081/admin` responds
+- [ ] Home Assistant: `http://192.168.3.10:8123` responds
+- [ ] Portainer: `https://192.168.3.10:9443` responds
+- [ ] Uptime Kuma: `http://192.168.3.10:3001` responds
+- [ ] Duplicati: `http://192.168.3.10:8200` responds
+- [ ] Huntarr: `http://192.168.3.10:9705` responds
+- [ ] Cleanuparr: `http://192.168.3.10:11011` responds
 
 ---
 
-## Configurazione Servizi *arr
+## *arr Services Configuration
 
-### Prowlarr (primo)
-- [ ] Accedere a `http://192.168.3.10:9696`
+### Prowlarr (first)
+- [ ] Access `http://192.168.3.10:9696`
 - [ ] Settings → General → Authentication: Forms
-- [ ] Creare username/password
-- [ ] Settings → General → Annotare API Key
-- [ ] Indexers → Add indexers desiderati
+- [ ] Create username/password
+- [ ] Settings → General → Note API Key
+- [ ] Indexers → Add desired indexers
 - [ ] Settings → Apps → Add Sonarr
   - Prowlarr Server: `http://prowlarr:9696`
   - Sonarr Server: `http://sonarr:8989`
-  - API Key: (da Sonarr)
-- [ ] Ripetere per Radarr e Lidarr
+  - API Key: (from Sonarr)
+- [ ] Repeat for Radarr and Lidarr
 
 ### qBittorrent
-- [ ] Accedere a `http://192.168.3.10:8080`
-- [ ] **Credenziali primo accesso**:
+- [ ] Access `http://192.168.3.10:8080`
+- [ ] **First access credentials**:
   - Username: `admin`
-  - Password: generata casualmente al primo avvio
-  - Recuperare la password dai log:
+  - Password: randomly generated on first boot
+  - Retrieve password from logs:
     ```bash
     docker logs qbittorrent 2>&1 | grep -i password
     # Output: "The WebUI administrator password was not set. A temporary password is provided: XXXXXX"
     ```
 - [ ] Options → Downloads:
   - Default Save Path: `/data/torrents`
-  - Keep incomplete in: disabilitato (usa stesso path)
+  - Keep incomplete in: disabled (use same path)
 - [ ] Options → Downloads → Default Torrent Management Mode: **Automatic**
 - [ ] Options → BitTorrent:
-  - Seeding limits secondo preferenze
+  - Seeding limits per preferences
 - [ ] Options → WebUI:
-  - Cambiare password
-- [ ] Categories (click destro nel pannello sinistro → Add category):
+  - Change password
+- [ ] Categories (right-click in left panel → Add category):
   - `movies` → Save path: `movies`
   - `tv` → Save path: `tv`
   - `music` → Save path: `music`
 
 ### NZBGet
-- [ ] Accedere a `http://192.168.3.10:6789`
-- [ ] Completare wizard iniziale
+- [ ] Access `http://192.168.3.10:6789`
+- [ ] Complete initial wizard
 - [ ] Settings → Paths:
   - MainDir: `/data/usenet`
   - DestDir: `/data/usenet/complete`
@@ -401,14 +401,14 @@ make logs | grep -i error
   - `movies` → DestDir: `movies`
   - `tv` → DestDir: `tv`
   - `music` → DestDir: `music`
-- [ ] Settings → Security → ControlUsername/ControlPassword: annotare
+- [ ] Settings → Security → ControlUsername/ControlPassword: note them
 
 ### Sonarr
-- [ ] Accedere a `http://192.168.3.10:8989`
+- [ ] Access `http://192.168.3.10:8989`
 - [ ] Settings → Media Management:
   - Rename Episodes: Yes
-  - Standard Episode Format: configurare secondo preferenze
-  - **Use Hardlinks instead of Copy: Yes** ← CRITICO
+  - Standard Episode Format: configure per preferences
+  - **Use Hardlinks instead of Copy: Yes** ← CRITICAL
   - Root Folders → Add: `/data/media/tv`
 - [ ] Settings → Download Clients:
   - Add → qBittorrent
@@ -418,119 +418,119 @@ make logs | grep -i error
   - Add → NZBGet
     - Host: `nzbget`
     - Port: `6789`
-    - Username/Password: (da NZBGet)
+    - Username/Password: (from NZBGet)
     - Category: `tv`
-- [ ] Settings → General → API Key: annotare (per Prowlarr)
+- [ ] Settings → General → API Key: note (for Prowlarr)
 
 ### Radarr
-- [ ] Accedere a `http://192.168.3.10:7878`
+- [ ] Access `http://192.168.3.10:7878`
 - [ ] Settings → Media Management:
   - Rename Movies: Yes
-  - **Use Hardlinks instead of Copy: Yes** ← CRITICO
+  - **Use Hardlinks instead of Copy: Yes** ← CRITICAL
   - Root Folders → Add: `/data/media/movies`
-- [ ] Settings → Download Clients: (come Sonarr, category: `movies`)
-- [ ] Settings → General → API Key: annotare
+- [ ] Settings → Download Clients: (like Sonarr, category: `movies`)
+- [ ] Settings → General → API Key: note
 
 ### Lidarr
-- [ ] Accedere a `http://192.168.3.10:8686`
+- [ ] Access `http://192.168.3.10:8686`
 - [ ] Settings → Media Management:
-  - **Use Hardlinks instead of Copy: Yes** ← CRITICO
+  - **Use Hardlinks instead of Copy: Yes** ← CRITICAL
   - Root Folders → Add: `/data/media/music`
-- [ ] Settings → Download Clients: (come Sonarr, category: `music`)
-- [ ] Settings → General → API Key: annotare
+- [ ] Settings → Download Clients: (like Sonarr, category: `music`)
+- [ ] Settings → General → API Key: note
 
 ### Bazarr
-- [ ] Accedere a `http://192.168.3.10:6767`
+- [ ] Access `http://192.168.3.10:6767`
 - [ ] Settings → Sonarr:
   - Address: `sonarr`
   - Port: `8989`
-  - API Key: (da Sonarr)
+  - API Key: (from Sonarr)
   - Test → Save
-- [ ] Settings → Radarr: (configurazione analoga)
-- [ ] Settings → Languages: configurare lingue sottotitoli
-- [ ] Settings → Providers: aggiungere provider sottotitoli
+- [ ] Settings → Radarr: (similar configuration)
+- [ ] Settings → Languages: configure subtitle languages
+- [ ] Settings → Providers: add subtitle providers
 
 ---
 
-## Verifica Hardlinking
+## Hardlinking Verification
 
-Test critico per verificare che hardlinking funzioni:
+Critical test to verify hardlinking works:
 
 ```bash
-# Via SSH sul NAS (path host)
-# I container vedono questi path come /data/...
+# Via SSH on NAS (host path)
+# Containers see these paths as /data/...
 
-# 1. Creare file di test in torrents
+# 1. Create test file in torrents
 echo "test hardlink" > /share/data/torrents/movies/test.txt
 
-# 2. Creare hardlink in media
+# 2. Create hardlink in media
 ln /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 
-# 3. Verificare stesso inode
+# 3. Verify same inode
 ls -li /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 
-# Output atteso: stesso numero inode (prima colonna)
-# Esempio:
+# Expected output: same inode number (first column)
+# Example:
 # 12345 -rw-r--r-- 2 dockeruser everyone 15 Jan  2 10:00 /share/data/torrents/movies/test.txt
 # 12345 -rw-r--r-- 2 dockeruser everyone 15 Jan  2 10:00 /share/data/media/movies/test.txt
-#   ^-- stesso inode = hardlink OK
+#   ^-- same inode = hardlink OK
 
 # 4. Cleanup
 rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 ```
 
-> **Nota sui path**: Sul NAS host i path sono `/share/data/...`, mentre i container vedono `/data/...` grazie al mount `-v /share/data:/data`. Entrambi puntano allo stesso filesystem, quindi gli hardlink funzionano.
+> **Note on paths**: On NAS host, paths are `/share/data/...`, while containers see `/data/...` thanks to the mount `-v /share/data:/data`. Both point to the same filesystem, so hardlinks work.
 
-Se inode diversi: **PROBLEMA** — verificare che entrambi i path siano sullo stesso volume/filesystem.
+If inodes are different: **PROBLEM** — verify both paths are on the same volume/filesystem.
 
 ---
 
-## Configurazione Pi-hole
+## Pi-hole Configuration
 
-- [ ] Accedere a `http://192.168.3.10:8081/admin`
-- [ ] Login con password da `.env`
+- [ ] Access `http://192.168.3.10:8081/admin`
+- [ ] Login with password from `.env`
 - [ ] Settings → DNS:
-  - Upstream DNS: verificare 1.1.1.1, 1.0.0.1
-  - Interface: rispondere su tutte le interfacce
-- [ ] Adlists → Aggiungere liste aggiuntive (opzionale):
+  - Upstream DNS: verify 1.1.1.1, 1.0.0.1
+  - Interface: respond on all interfaces
+- [ ] Adlists → Add additional lists (optional):
   - `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts`
-  - `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/multi.txt` (Hagezi Multi - consigliata)
-  - `https://small.oisd.nl/domainswild` (OISD - blocklist unificata)
-  - `https://v.firebog.net/hosts/lists.php?type=tick` (Firebog Ticked - curate dalla community)
+  - `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/multi.txt` (Hagezi Multi - recommended)
+  - `https://small.oisd.nl/domainswild` (OISD - unified blocklist)
+  - `https://v.firebog.net/hosts/lists.php?type=tick` (Firebog Ticked - community curated)
 
-### Configurare UDM-SE per usare Pi-hole
-- [ ] UDM-SE → Settings → Networks → (ogni VLAN)
+### Configure UDM-SE to use Pi-hole
+- [ ] UDM-SE → Settings → Networks → (each VLAN)
 - [ ] DHCP Name Server: `192.168.3.10`
-- [ ] Oppure: usare Pi-hole solo per VLAN specifiche
+- [ ] Or: use Pi-hole only for specific VLANs
 
 ---
 
-## Configurazione Recyclarr
+## Recyclarr Configuration
 
-Recyclarr sincronizza automaticamente i Quality Profiles da [Trash Guides](https://trash-guides.info/).
+Recyclarr automatically syncs Quality Profiles from [Trash Guides](https://trash-guides.info/).
 
-### Generare Configurazione Base
+### Generate Base Configuration
 
-Al primo avvio, Recyclarr crea un file template. Per generare una configurazione completa:
+On first boot, Recyclarr creates a template file. To generate a complete configuration:
 
 ```bash
-# Generare template configurazione
+# Generate config template
 make recyclarr-config
 
-# Oppure manualmente
+# Or manually
 docker exec recyclarr recyclarr config create
 ```
 
-### Configurare recyclarr.yml
+### Configure recyclarr.yml
 
-Editare `./config/recyclarr/recyclarr.yml`:
+Edit `./config/recyclarr/recyclarr.yml`:
 
 ```yaml
-# Esempio configurazione minima
+# Minimal configuration example
 sonarr:
   series:
     base_url: http://sonarr:8989
-    api_key: <API_KEY_SONARR>  # Da Sonarr → Settings → General
+    api_key: <SONARR_API_KEY>  # From Sonarr → Settings → General
     quality_definition:
       type: series
     quality_profiles:
@@ -539,68 +539,68 @@ sonarr:
 radarr:
   movies:
     base_url: http://radarr:7878
-    api_key: <API_KEY_RADARR>  # Da Radarr → Settings → General
+    api_key: <RADARR_API_KEY>  # From Radarr → Settings → General
     quality_definition:
       type: movie
     quality_profiles:
       - name: HD Bluray + WEB
 ```
 
-> **Documentazione completa**: https://recyclarr.dev/wiki/yaml/config-reference/
+> **Full documentation**: https://recyclarr.dev/wiki/yaml/config-reference/
 
-### Sincronizzazione
+### Synchronization
 
 ```bash
-# Sync manuale
+# Manual sync
 make recyclarr-sync
 
-# Oppure
+# Or
 docker exec recyclarr recyclarr sync
 ```
 
-### Verifica
+### Verification
 
-- [ ] Verificare Quality Profiles creati in Sonarr (Settings → Profiles)
-- [ ] Verificare Quality Profiles creati in Radarr (Settings → Profiles)
-- [ ] Verificare Custom Formats importati
+- [ ] Verify Quality Profiles created in Sonarr (Settings → Profiles)
+- [ ] Verify Quality Profiles created in Radarr (Settings → Profiles)
+- [ ] Verify Custom Formats imported
 
 ---
 
-## Post-Installazione
+## Post-Installation
 
-### Backup Configurazione Iniziale
+### Initial Configuration Backup
 ```bash
 cd /share/container/mediastack
 make backup
 ```
-- [ ] Backup creato in `./backups/`
-- [ ] Copiare backup offsite (USB, cloud)
+- [ ] Backup created in `./backups/`
+- [ ] Copy backup offsite (USB, cloud)
 
-### Backup QTS Config
+### QTS Config Backup
 - [ ] Control Panel → System → Backup/Restore → Backup System Settings
-- [ ] Salvare file `.bin` in location sicura
+- [ ] Save `.bin` file in secure location
 
-### Documentazione
-- [ ] Annotare tutti gli API key in password manager
-- [ ] Aggiornare documentazione con eventuali modifiche
-- [ ] Screenshot configurazioni importanti
-
----
-
-## Troubleshooting Comune
-
-| Problema | Causa Probabile | Soluzione |
-|----------|-----------------|-----------|
-| Container non parte | Permessi cartelle | `chown -R $PUID:$PGID ./config` (usa valori da .env) |
-| Hardlink non funziona | Path su filesystem diversi | Verificare mount points |
-| qBittorrent "stalled" | Porta non raggiungibile | Verificare port forwarding 50413 |
-| Pi-hole non risolve | Porta 53 in uso | Verificare altri servizi DNS su NAS |
-| WebUI non risponde | Container crashed | `docker compose logs <service>` |
-| Permessi errati sui file | PUID/PGID non corrispondono | Verificare `id dockeruser` e aggiornare .env |
+### Documentation
+- [ ] Note all API keys in password manager
+- [ ] Update documentation with any modifications
+- [ ] Screenshot important configurations
 
 ---
 
-## Riferimenti
+## Common Troubleshooting
+
+| Problem | Probable Cause | Solution |
+|---------|----------------|----------|
+| Container won't start | Folder permissions | `chown -R $PUID:$PGID ./config` (use values from .env) |
+| Hardlink doesn't work | Paths on different filesystems | Verify mount points |
+| qBittorrent "stalled" | Port not reachable | Verify port forwarding 50413 |
+| Pi-hole doesn't resolve | Port 53 in use | Verify other DNS services on NAS |
+| WebUI not responding | Container crashed | `docker compose logs <service>` |
+| Incorrect file permissions | PUID/PGID mismatch | Verify `id dockeruser` and update .env |
+
+---
+
+## References
 
 - Trash Guides Docker Setup: https://trash-guides.info/File-and-Folder-Structure/How-to-set-up/Docker/
 - QNAP Container Station: https://www.qnap.com/en/how-to/tutorial/article/how-to-use-container-station-3

@@ -3,20 +3,20 @@
 # backup-qts-config.sh - Automated QNAP QTS Configuration Backup
 # Homelab - NAS QNAP TS-435XeU
 #
-# Esegue backup automatico della configurazione di sistema QTS.
-# Include: utenti, gruppi, shared folders, permessi, rete, app installate.
+# Performs automatic backup of QTS system configuration.
+# Includes: users, groups, shared folders, permissions, network, installed apps.
 #
 # Usage:
-#   ./scripts/backup-qts-config.sh              # Backup standard
-#   ./scripts/backup-qts-config.sh --notify     # Con notifica Home Assistant
-#   ./scripts/backup-qts-config.sh --verbose    # Output dettagliato
+#   ./scripts/backup-qts-config.sh              # Standard backup
+#   ./scripts/backup-qts-config.sh --notify     # With Home Assistant notification
+#   ./scripts/backup-qts-config.sh --verbose    # Detailed output
 #
 # Exit codes:
 #   0 - Backup OK
-#   1 - Errori durante il backup
-#   2 - Prerequisiti mancanti
+#   1 - Errors during backup
+#   2 - Missing prerequisites
 #
-# Cron example (domenica alle 03:00):
+# Cron example (Sunday at 03:00):
 #   0 3 * * 0 /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
 #
 # Note: Compatible with QNAP BusyBox environment
@@ -67,13 +67,13 @@ while [ $# -gt 0 ]; do
             echo "Usage: $0 [--verbose] [--notify]"
             echo ""
             echo "Options:"
-            echo "  --verbose, -v    Output dettagliato"
-            echo "  --notify, -n     Invia notifica a Home Assistant"
+            echo "  --verbose, -v    Detailed output"
+            echo "  --notify, -n     Send notification to Home Assistant"
             echo ""
             echo "Environment:"
-            echo "  QTS_BACKUP_DIR       Directory backup (default: /share/backup/qts-config)"
-            echo "  QTS_BACKUP_RETENTION Numero backup da mantenere (default: 5)"
-            echo "  HA_WEBHOOK_URL       URL webhook Home Assistant per notifiche"
+            echo "  QTS_BACKUP_DIR       Backup directory (default: /share/backup/qts-config)"
+            echo "  QTS_BACKUP_RETENTION Number of backups to keep (default: 5)"
+            echo "  HA_WEBHOOK_URL       Home Assistant webhook URL for notifications"
             exit 0
             ;;
         *)
@@ -106,7 +106,7 @@ notify_ha() {
             -H "Content-Type: application/json" \
             -d "{\"message\": \"$message\", \"level\": \"$level\", \"source\": \"qts-backup\"}" \
             >/dev/null 2>&1 || true
-        log_verbose "Notifica inviata a Home Assistant"
+        log_verbose "Notification sent to Home Assistant"
     fi
 }
 
@@ -114,14 +114,14 @@ check_qnap() {
     # Verify we're running on QNAP NAS
     # Check for QNAP-specific paths (either qpkg.conf or /share should exist)
     if [ ! -f /etc/config/qpkg.conf ] && [ ! -d /share/CACHEDEV1_DATA ]; then
-        log "${RED}ERRORE: Questo script deve essere eseguito su un NAS QNAP${NC}"
+        log "${RED}ERROR: This script must be run on a QNAP NAS${NC}"
         return 1
     fi
 
     # Check if config_util exists and is executable
     if [ ! -x /sbin/config_util ]; then
-        log "${RED}ERRORE: /sbin/config_util non trovato${NC}"
-        log "Assicurati di eseguire come admin/root"
+        log "${RED}ERROR: /sbin/config_util not found${NC}"
+        log "Make sure you're running as admin/root"
         return 1
     fi
 
@@ -129,12 +129,12 @@ check_qnap() {
 }
 
 create_backup() {
-    log "Creazione backup in corso..."
+    log "Creating backup..."
 
     # Create backup directory if needed
     if [ ! -d "$BACKUP_DIR" ]; then
         mkdir -p "$BACKUP_DIR"
-        log_verbose "Directory creata: $BACKUP_DIR"
+        log_verbose "Directory created: $BACKUP_DIR"
     fi
 
     local backup_path="${BACKUP_DIR}/${BACKUP_FILE}"
@@ -142,28 +142,28 @@ create_backup() {
     # Execute QNAP config backup
     # The -e flag exports the configuration
     if /sbin/config_util -e "$backup_path" 2>/dev/null; then
-        log "${GREEN}Backup creato: ${backup_path}${NC}"
+        log "${GREEN}Backup created: ${backup_path}${NC}"
 
         # Verify file was created and has content
         if [ -f "$backup_path" ] && [ -s "$backup_path" ]; then
             local size
             size=$(du -h "$backup_path" | cut -f1)
-            log "Dimensione: $size"
+            log "Size: $size"
             return 0
         else
-            log "${RED}ERRORE: File backup vuoto o non creato${NC}"
+            log "${RED}ERROR: Backup file empty or not created${NC}"
             rm -f "$backup_path" 2>/dev/null
             return 1
         fi
     else
-        log "${RED}ERRORE: config_util ha fallito${NC}"
-        log "Verifica di avere i permessi di amministratore"
+        log "${RED}ERROR: config_util failed${NC}"
+        log "Verify you have administrator permissions"
         return 1
     fi
 }
 
 cleanup_old_backups() {
-    log "Pulizia backup vecchi (mantengo ultimi ${RETENTION_COUNT})..."
+    log "Cleaning old backups (keeping last ${RETENTION_COUNT})..."
 
     # Count existing backups (BusyBox compatible)
     # Using find to avoid glob expansion issues when no files exist
@@ -172,7 +172,7 @@ cleanup_old_backups() {
     count=$(($(find "$BACKUP_DIR" -maxdepth 1 -name "qts-config-*.bin" -type f 2>/dev/null | wc -l) + 0))
 
     if [ "$count" -le "$RETENTION_COUNT" ]; then
-        log_verbose "Nessuna pulizia necessaria ($count backup presenti)"
+        log_verbose "No cleanup needed ($count backups present)"
         return 0
     fi
 
@@ -184,16 +184,16 @@ cleanup_old_backups() {
     # Get oldest files and delete them
     # shellcheck disable=SC2012
     ls -1t "$BACKUP_DIR"/qts-config-*.bin 2>/dev/null | tail -n "$to_delete" | while read -r file; do
-        log_verbose "Rimozione: $(basename "$file")"
+        log_verbose "Removing: $(basename "$file")"
         rm -f "$file"
     done
 
-    log "${GREEN}Rimossi $to_delete backup vecchi${NC}"
+    log "${GREEN}Removed $to_delete old backups${NC}"
 }
 
 list_backups() {
     log ""
-    log "Backup disponibili:"
+    log "Available backups:"
 
     if [ -d "$BACKUP_DIR" ]; then
         # Check if any backup files exist using find (avoids glob issues)
@@ -202,7 +202,7 @@ list_backups() {
         file_count=$(($(find "$BACKUP_DIR" -maxdepth 1 -name "qts-config-*.bin" -type f 2>/dev/null | wc -l) + 0))
 
         if [ "$file_count" -eq 0 ]; then
-            echo "  Nessun backup trovato"
+            echo "  No backups found"
             return 0
         fi
 
@@ -218,7 +218,7 @@ list_backups() {
             fi
         done
     else
-        echo "  Nessun backup trovato"
+        echo "  No backups found"
     fi
 }
 
@@ -226,14 +226,14 @@ list_backups() {
 # Main
 # -----------------------------------------------------------------------------
 
-log "${CYAN}=== Backup Configurazione QNAP QTS ===${NC}"
+log "${CYAN}=== QNAP QTS Configuration Backup ===${NC}"
 log ""
 
 ERRORS=0
 
 # Check prerequisites
 if ! check_qnap; then
-    notify_ha "QTS backup failed: prerequisiti mancanti" "error"
+    notify_ha "QTS backup failed: missing prerequisites" "error"
     exit 2
 fi
 
@@ -261,11 +261,11 @@ log ""
 # -----------------------------------------------------------------------------
 
 if [ $ERRORS -gt 0 ]; then
-    log "${RED}=== BACKUP FALLITO ===${NC}"
+    log "${RED}=== BACKUP FAILED ===${NC}"
     notify_ha "QTS backup FAILED" "error"
     exit 1
 else
-    log "${GREEN}=== BACKUP COMPLETATO ===${NC}"
+    log "${GREEN}=== BACKUP COMPLETED ===${NC}"
     notify_ha "QTS backup completed: ${BACKUP_FILE}" "info"
     exit 0
 fi

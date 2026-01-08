@@ -1,63 +1,63 @@
-# Network Setup - UniFi UDM-SE e VLAN
+# Network Setup - UniFi UDM-SE and VLANs
 
-> Guida completa per configurare la rete UniFi con segmentazione VLAN
-
----
-
-## Prerequisiti
-
-- [ ] UDM-SE montato in rack e alimentato
-- [ ] USW-Pro-Max-16-PoE montato e alimentato
-- [ ] Cavo ethernet da UDM-SE porta WAN a Iliad Box LAN
-- [ ] Cavo ethernet da UDM-SE porta 1 a Switch porta 1
-- [ ] PC collegato a una porta LAN del UDM-SE
+> Complete guide to configure UniFi network with VLAN segmentation
 
 ---
 
-## Fase 1: Setup Iniziale UDM-SE
+## Prerequisites
 
-### 1.1 Primo Accesso
+- [ ] UDM-SE mounted in rack and powered on
+- [ ] USW-Pro-Max-16-PoE mounted and powered on
+- [ ] Ethernet cable from UDM-SE WAN port to Iliad Box LAN
+- [ ] Ethernet cable from UDM-SE port 1 to Switch port 1
+- [ ] PC connected to a UDM-SE LAN port
 
-1. Collegare PC direttamente a una porta LAN del UDM-SE
-2. Il PC riceverà IP via DHCP (192.168.1.x)
-3. Aprire browser: `https://192.168.1.1`
-4. Accettare certificato self-signed
+---
 
-### 1.2 Wizard Iniziale
+## Phase 1: Initial UDM-SE Setup
 
-1. [ ] Selezionare "Set up a new UniFi Console"
-2. [ ] Creare account UniFi o accedere con esistente
-3. [ ] Nome console: `Homelab`
-4. [ ] Configurazione WAN:
-   - Tipo: DHCP (Iliad Box assegnerà IP)
-   - Verificare connessione Internet
-5. [ ] Configurazione LAN default:
-   - Lasciare temporaneamente 192.168.1.0/24
-   - Modificheremo dopo
+### 1.1 First Access
 
-### 1.3 Aggiornamento Firmware
+1. Connect PC directly to a UDM-SE LAN port
+2. PC will receive IP via DHCP (192.168.1.x)
+3. Open browser: `https://192.168.1.1`
+4. Accept self-signed certificate
+
+### 1.2 Initial Wizard
+
+1. [ ] Select "Set up a new UniFi Console"
+2. [ ] Create UniFi account or log in with existing
+3. [ ] Console name: `Homelab`
+4. [ ] WAN configuration:
+   - Type: DHCP (Iliad Box will assign IP)
+   - Verify Internet connection
+5. [ ] Default LAN configuration:
+   - Leave temporarily at 192.168.1.0/24
+   - We'll modify later
+
+### 1.3 Firmware Update
 
 1. [ ] Settings → System → Firmware
-2. [ ] Verificare aggiornamenti disponibili
-3. [ ] Installare ultima versione stabile
-4. [ ] Attendere riavvio (~5 minuti)
+2. [ ] Check for available updates
+3. [ ] Install latest stable version
+4. [ ] Wait for reboot (~5 minutes)
 
 ---
 
-## Fase 2: Creazione VLAN
+## Phase 2: VLAN Creation
 
-### 2.1 Eliminare Rete Default (opzionale)
+### 2.1 Delete Default Network (optional)
 
-> Nota: Potresti voler mantenere la rete default per la transizione
+> Note: You may want to keep the default network for transition
 
-Settings → Networks → Default → Delete (dopo aver creato VLAN 3 per Servers)
+Settings → Networks → Default → Delete (after creating VLAN 3 for Servers)
 
-### 2.2 Creare VLAN Management (VLAN 2)
+### 2.2 Create Management VLAN (VLAN 2)
 
 Settings → Networks → Create New Network
 
-| Campo | Valore |
-|-------|--------|
+| Field | Value |
+|-------|-------|
 | Name | Management |
 | Router | UDM-SE |
 | Gateway IP/Subnet | 192.168.2.1/24 |
@@ -66,61 +66,61 @@ Settings → Networks → Create New Network
 | DHCP Range | 192.168.2.100 - 192.168.2.200 |
 | Domain Name | management.local |
 
-**Opzioni Avanzate:**
+**Advanced Options:**
 - [ ] IGMP Snooping: Enabled
 - [ ] Multicast DNS: Enabled
 
-Cliccare "Add Network"
+Click "Add Network"
 
-### 2.3 Creare VLAN Servers (VLAN 3)
+### 2.3 Create Servers VLAN (VLAN 3)
 
-| Campo | Valore |
-|-------|--------|
+| Field | Value |
+|-------|-------|
 | Name | Servers |
 | Gateway IP/Subnet | 192.168.3.1/24 |
 | VLAN ID | 3 |
-| DHCP Mode | None (IP statici) |
+| DHCP Mode | None (static IPs) |
 | Domain Name | servers.local |
 
-> **Nota**: VLAN Servers usa IP statici. Assegnare manualmente: NAS=.10, Proxmox=.20, Stampante=.30, PC=.40
+> **Note**: Servers VLAN uses static IPs. Assign manually: NAS=.10, Proxmox=.20, Printer=.30, PC=.40
 
-### 2.4 Creare VLAN Media (VLAN 4)
+### 2.4 Create Media VLAN (VLAN 4)
 
-| Campo | Valore |
-|-------|--------|
+| Field | Value |
+|-------|-------|
 | Name | Media |
 | Gateway IP/Subnet | 192.168.4.1/24 |
 | VLAN ID | 4 |
 | DHCP Range | 192.168.4.100 - 192.168.4.200 |
 | Domain Name | media.local |
 
-### 2.5 Creare VLAN Guest (VLAN 5)
+### 2.5 Create Guest VLAN (VLAN 5)
 
-| Campo | Valore |
-|-------|--------|
+| Field | Value |
+|-------|-------|
 | Name | Guest |
 | Gateway IP/Subnet | 192.168.5.1/24 |
 | VLAN ID | 5 |
 | DHCP Range | 192.168.5.100 - 192.168.5.200 |
 | Network Type | Guest Network |
 
-**Opzioni Guest:**
+**Guest Options:**
 - [ ] Guest Network Isolation: Enabled
 - [ ] Apply Guest Policies: Enabled
 
-### 2.6 Creare VLAN IoT (VLAN 6)
+### 2.6 Create IoT VLAN (VLAN 6)
 
-| Campo | Valore |
-|-------|--------|
+| Field | Value |
+|-------|-------|
 | Name | IoT |
 | Gateway IP/Subnet | 192.168.6.1/24 |
 | VLAN ID | 6 |
 | DHCP Range | 192.168.6.100 - 192.168.6.200 |
 | Domain Name | iot.local |
 
-### Verifica VLAN Create
+### Verify Created VLANs
 
-Settings → Networks dovrebbe mostrare:
+Settings → Networks should show:
 
 ```
 Management  192.168.2.0/24  VLAN 2
@@ -132,39 +132,39 @@ IoT         192.168.6.0/24  VLAN 6
 
 ---
 
-## Fase 3: Configurazione Switch
+## Phase 3: Switch Configuration
 
-### 3.1 Adozione Switch
+### 3.1 Switch Adoption
 
-1. [ ] Collegare switch a UDM-SE porta 1
-2. [ ] UniFi Devices → dovrebbe apparire "USW-Pro-Max-16-PoE"
-3. [ ] Cliccare "Adopt"
-4. [ ] Attendere provisioning (~2 minuti)
-5. [ ] Aggiornare firmware se disponibile
+1. [ ] Connect switch to UDM-SE port 1
+2. [ ] UniFi Devices → should show "USW-Pro-Max-16-PoE"
+3. [ ] Click "Adopt"
+4. [ ] Wait for provisioning (~2 minutes)
+5. [ ] Update firmware if available
 
-### 3.2 Configurazione Porte Switch
+### 3.2 Switch Port Configuration
 
 Settings → Devices → USW-Pro-Max-16-PoE → Ports
 
-| Porta | Profilo | VLAN | Dispositivo |
-|-------|---------|------|-------------|
+| Port | Profile | VLAN | Device |
+|------|---------|------|--------|
 | 1 | All | Trunk | UDM-SE Uplink |
 | 2 | Servers | 3 | Mini PC Proxmox |
-| 3 | Management | 2 | (riservata) |
-| 4 | Servers | 3 | (espansione) |
-| 5 | Media | 4 | (espansione) |
-| 6 | IoT | 6 | (espansione) |
+| 3 | Management | 2 | (reserved) |
+| 4 | Servers | 3 | (expansion) |
+| 5 | Media | 4 | (expansion) |
+| 6 | IoT | 6 | (expansion) |
 | SFP+ 1 | Servers | 3 | NAS QNAP 10GbE |
-| SFP+ 2 | - | - | (non usata) |
+| SFP+ 2 | - | - | (unused) |
 
-### 3.3 Creare Port Profiles
+### 3.3 Create Port Profiles
 
 Settings → Profiles → Switch Ports → Create New Profile
 
 **Profile "Servers":**
 - Native Network: Servers (VLAN 3)
 - Tagged Networks: None
-- PoE: Off (per porte dati)
+- PoE: Off (for data ports)
 
 **Profile "Management":**
 - Native Network: Management (VLAN 2)
@@ -178,83 +178,83 @@ Settings → Profiles → Switch Ports → Create New Profile
 - Native Network: IoT (VLAN 6)
 - Tagged Networks: None
 
-### 3.4 Applicare Profili alle Porte
+### 3.4 Apply Profiles to Ports
 
-Per ogni porta, cliccare → Port Profile → selezionare profilo appropriato
+For each port, click → Port Profile → select appropriate profile
 
 ---
 
-## Fase 4: Configurazione IP Statici
+## Phase 4: Static IP Configuration
 
-> **Nota importante**: Gli IP statici per NAS e Proxmox vengono configurati **direttamente sui dispositivi** durante il loro setup iniziale (vedi [NAS_SETUP.md](NAS_SETUP.md) e [PROXMOX_SETUP.md](PROXMOX_SETUP.md)).
+> **Important note**: Static IPs for NAS and Proxmox are configured **directly on the devices** during their initial setup (see [NAS_SETUP.md](NAS_SETUP.md) and [PROXMOX_SETUP.md](PROXMOX_SETUP.md)).
 >
-> Le "Fixed IP" in UniFi sono **opzionali** e servono solo se preferisci usare DHCP con reservation invece di IP statici configurati sui device.
+> "Fixed IP" in UniFi is **optional** and only needed if you prefer DHCP with reservation instead of static IPs configured on devices.
 
-### 4.1 Opzione A: IP Statici sui Dispositivi (Raccomandato)
+### 4.1 Option A: Static IPs on Devices (Recommended)
 
-Configurare IP statici direttamente su:
-- **NAS QNAP**: Control Panel → Network → IP statico `192.168.3.10`
-- **Mini PC Proxmox**: Durante installazione, IP `192.168.3.20`
+Configure static IPs directly on:
+- **NAS QNAP**: Control Panel → Network → Static IP `192.168.3.10`
+- **Mini PC Proxmox**: During installation, IP `192.168.3.20`
 
-### 4.2 Opzione B: DHCP Reservation in UniFi (Alternativa)
+### 4.2 Option B: DHCP Reservation in UniFi (Alternative)
 
-Se preferisci gestire gli IP centralmente da UniFi:
+If you prefer managing IPs centrally from UniFi:
 
-1. Collegare temporaneamente i dispositivi per farli apparire in Client Devices
-2. Settings → Client Devices → (cercare per MAC address)
-3. Settings → Fixed IP Address: assegnare IP desiderato
+1. Temporarily connect devices to make them appear in Client Devices
+2. Settings → Client Devices → (search by MAC address)
+3. Settings → Fixed IP Address: assign desired IP
 
-### 4.3 Fixed IP per Switch
+### 4.3 Fixed IP for Switch
 
-Lo switch dovrebbe già avere IP in VLAN Management dopo l'adozione.
-Verificare: Settings → Devices → Switch → IP: dovrebbe essere 192.168.2.x
+Switch should already have IP in Management VLAN after adoption.
+Verify: Settings → Devices → Switch → IP: should be 192.168.2.x
 
 ---
 
-## Fase 5: Gruppi IP e Porte
+## Phase 5: IP and Port Groups
 
-> Necessari per le regole firewall. Vedi [`firewall-config.md`](../network/firewall-config.md) per la lista completa.
+> Required for firewall rules. See [`firewall-config.md`](../network/firewall-config.md) for the complete list.
 
-### 5.1 Creare Gruppi IP
+### 5.1 Create IP Groups
 
 Settings → Profiles → IP Groups → Create New Group
 
-**Gruppo: RFC1918 (Reti Private)**
+**Group: RFC1918 (Private Networks)**
 - Type: IPv4 Address/Subnet
 - Addresses:
   - `10.0.0.0/8`
   - `172.16.0.0/12`
   - `192.168.0.0/16`
 
-**Gruppo: NAS Server**
+**Group: NAS Server**
 - Type: IPv4 Address/Subnet
 - Addresses:
   - `192.168.3.10/32`
 
-**Gruppo: Media Clients**
+**Group: Media Clients**
 - Type: IPv4 Address/Subnet
 - Addresses:
   - `192.168.4.0/24`
 
-**Gruppo: Plex Server**
+**Group: Plex Server**
 - Type: IPv4 Address/Subnet
 - Addresses:
   - `192.168.3.20/32`
 
-### 5.2 Creare Gruppi Porte
+### 5.2 Create Port Groups
 
 Settings → Profiles → Port Groups → Create New Group
 
-**Gruppo: Media Services Ports**
+**Group: Media Services Ports**
 - Ports:
   - `8989` (Sonarr)
   - `7878` (Radarr)
   - `8686` (Lidarr)
   - `6767` (Bazarr)
 
-> **Nota**: Plex (32400) non è incluso perché gira sul Mini PC, non sul NAS. qBittorrent (8080) e NZBGet (6789) non sono inclusi perché i dispositivi della VLAN Media (TV, telefoni) non hanno bisogno di accedervi direttamente. I servizi *arr comunicano con i download client internamente via Docker network, non attraverso il firewall.
+> **Note**: Plex (32400) is not included because it runs on Mini PC, not NAS. qBittorrent (8080) and NZBGet (6789) are not included because Media VLAN devices (TVs, phones) don't need direct access. *arr services communicate with download clients internally via Docker network, not through firewall.
 
-**Gruppo: Infrastructure Ports**
+**Group: Infrastructure Ports**
 - Ports:
   - `53` (DNS)
   - `8081` (Pi-hole)
@@ -262,26 +262,26 @@ Settings → Profiles → Port Groups → Create New Group
 
 ---
 
-## Fase 6: Regole Firewall
+## Phase 6: Firewall Rules
 
-**Riferimento completo:** [`firewall-config.md`](../network/firewall-config.md)
+**Full reference:** [`firewall-config.md`](../network/firewall-config.md)
 
-> **Importante**: Questa sezione contiene solo le regole essenziali per iniziare.
-> Per la configurazione completa (13 regole), consulta [`firewall-config.md`](../network/firewall-config.md).
+> **Important**: This section contains only essential rules to get started.
+> For complete configuration (13 rules), see [`firewall-config.md`](../network/firewall-config.md).
 >
-> Le regole sotto sono un **subset minimo** per far funzionare lo stack media.
-> Aggiungi le regole mancanti da firewall-config.md per una sicurezza completa.
+> Rules below are a **minimal subset** to make media stack work.
+> Add missing rules from firewall-config.md for complete security.
 
-### 6.1 Ordine Regole (CRITICO)
+### 6.1 Rule Order (CRITICAL)
 
-Le regole sono processate in ordine. Inserire esattamente in questa sequenza:
+Rules are processed in order. Insert exactly in this sequence:
 
 Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
 
-### Regola 1: Allow Established/Related
+### Rule 1: Allow Established/Related
 
-| Campo | Valore |
-|-------|--------|
+| Field | Value |
+|-------|-------|
 | Type | LAN In |
 | Description | Allow Established and Related |
 | Action | Allow |
@@ -289,10 +289,10 @@ Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
 | Source | Any |
 | Destination | Any |
 
-### Regola 2: Allow Media to NAS Media Services
+### Rule 2: Allow Media to NAS Media Services
 
-| Campo | Valore |
-|-------|--------|
+| Field | Value |
+|-------|-------|
 | Type | LAN In |
 | Description | Media VLAN to NAS Media Services |
 | Action | Allow |
@@ -300,10 +300,10 @@ Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
 | Destination | IP Group: NAS Server |
 | Port Group | Media Services Ports |
 
-### Regola 3: Allow Media to Plex
+### Rule 3: Allow Media to Plex
 
-| Campo | Valore |
-|-------|--------|
+| Field | Value |
+|-------|-------|
 | Type | LAN In |
 | Description | Media VLAN to Plex |
 | Action | Allow |
@@ -311,10 +311,10 @@ Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
 | Destination | IP Group: Plex Server |
 | Port | 32400 |
 
-### Regola 4: Allow IoT to Home Assistant
+### Rule 4: Allow IoT to Home Assistant
 
-| Campo | Valore |
-|-------|--------|
+| Field | Value |
+|-------|-------|
 | Type | LAN In |
 | Description | IoT to Home Assistant |
 | Action | Allow |
@@ -322,55 +322,55 @@ Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
 | Destination | IP Group: NAS Server |
 | Port | 8123 |
 
-### Regola 5: Block All Inter-VLAN (ULTIMA)
+### Rule 5: Block All Inter-VLAN (LAST)
 
-| Campo | Valore |
-|-------|--------|
+| Field | Value |
+|-------|-------|
 | Type | LAN In |
 | Description | Block All Inter-VLAN Traffic |
 | Action | Drop |
 | Source | IP Group: RFC1918 |
 | Destination | IP Group: RFC1918 |
 
-> ⚠️ Questa regola DEVE essere l'ultima. Blocca tutto il traffico inter-VLAN non esplicitamente permesso.
+> ⚠️ This rule MUST be last. It blocks all inter-VLAN traffic not explicitly allowed.
 
 ---
 
-## Fase 7: Configurazione Iliad Box
+## Phase 7: Iliad Box Configuration
 
-### 7.1 Accesso a Iliad Box
+### 7.1 Access Iliad Box
 
-1. Collegare PC direttamente a Iliad Box (temporaneamente)
-2. Accedere a `http://192.168.1.254`
-3. Login con credenziali Iliad
+1. Connect PC directly to Iliad Box (temporarily)
+2. Access `http://192.168.1.254`
+3. Login with Iliad credentials
 
-### 7.2 Configurazione DMZ (Opzionale)
+### 7.2 DMZ Configuration (Optional)
 
-> La DMZ inoltra tutto il traffico in ingresso al UDM-SE. Utile per port forwarding gestito da UniFi.
+> DMZ forwards all incoming traffic to UDM-SE. Useful for port forwarding managed by UniFi.
 
-1. Impostazioni → NAT/Firewall → DMZ
-2. Abilitare DMZ
-3. IP Host DMZ: IP WAN del UDM-SE (verificare in Iliad Box → Dispositivi connessi)
+1. Settings → NAT/Firewall → DMZ
+2. Enable DMZ
+3. DMZ Host IP: UDM-SE WAN IP (check in Iliad Box → Connected devices)
 
-### 7.3 Disabilitare Wi-Fi Iliad (Consigliato)
+### 7.3 Disable Iliad Wi-Fi (Recommended)
 
-1. Impostazioni → Wi-Fi
-2. Disabilitare tutte le reti Wi-Fi
-3. Il Wi-Fi sarà gestito da UniFi AP
+1. Settings → Wi-Fi
+2. Disable all Wi-Fi networks
+3. Wi-Fi will be managed by UniFi AP
 
 ---
 
-## Fase 8: Verifica Configurazione
+## Phase 8: Configuration Verification
 
-### Test Connettività di Base
+### Basic Connectivity Test
 
 ```bash
-# Da un PC su VLAN Servers (192.168.3.x)
+# From a PC on Servers VLAN (192.168.3.x)
 
 # Test gateway
 ping 192.168.3.1
 
-# Test inter-VLAN (dovrebbe funzionare - established)
+# Test inter-VLAN (should work - established)
 ping 192.168.2.1
 
 # Test Internet
@@ -378,27 +378,27 @@ ping 8.8.8.8
 ping google.com
 ```
 
-### Test Regole Firewall
+### Firewall Rules Test
 
 ```bash
-# Da VLAN Media (192.168.4.x)
+# From Media VLAN (192.168.4.x)
 
-# Dovrebbe funzionare (regola allow)
+# Should work (allow rule)
 curl http://192.168.3.10:8989  # Sonarr
 
-# Dovrebbe essere bloccato (no regola)
-ping 192.168.3.10  # ICMP bloccato da catch-all
+# Should be blocked (no rule)
+ping 192.168.3.10  # ICMP blocked by catch-all
 
-# Da VLAN Guest (192.168.5.x)
-# Tutto verso altre VLAN dovrebbe essere bloccato
-ping 192.168.3.10  # Bloccato
-curl http://192.168.3.10:8989  # Bloccato
+# From Guest VLAN (192.168.5.x)
+# Everything to other VLANs should be blocked
+ping 192.168.3.10  # Blocked
+curl http://192.168.3.10:8989  # Blocked
 ```
 
-### Test DNS
+### DNS Test
 
 ```bash
-# Dopo configurazione Pi-hole
+# After Pi-hole configuration
 nslookup google.com 192.168.3.10
 ```
 
@@ -406,17 +406,17 @@ nslookup google.com 192.168.3.10
 
 ## Troubleshooting
 
-| Problema | Causa | Soluzione |
-|----------|-------|-----------|
-| Switch non adottato | Rete diversa | Collegare temporaneamente alla stessa subnet |
-| VLAN non raggiungibile | Porta non taggata | Verificare profilo porta switch |
-| Inter-VLAN bloccato | Regola firewall | Verificare ordine regole |
-| No Internet da VLAN | Gateway errato | Verificare DHCP options |
-| Dispositivo IP errato | DHCP lease vecchio | Rinnovare lease o impostare fixed IP |
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Switch not adopted | Different network | Temporarily connect to same subnet |
+| VLAN not reachable | Port not tagged | Verify switch port profile |
+| Inter-VLAN blocked | Firewall rule | Verify rule order |
+| No Internet from VLAN | Wrong gateway | Verify DHCP options |
+| Device wrong IP | Old DHCP lease | Renew lease or set fixed IP |
 
 ---
 
-## Diagramma Rete Finale
+## Final Network Diagram
 
 ```
                     ┌─────────────┐
@@ -445,7 +445,7 @@ nslookup google.com 192.168.3.10
             ┌────────┘     │     └────────┐
             │              │              │
      ┌──────┴──────┐ ┌─────┴─────┐ ┌──────┴──────┐
-     │    QNAP     │ │  Proxmox  │ │  Altri      │
+     │    QNAP     │ │  Proxmox  │ │  Other      │
      │192.168.3.10 │ │192.168.3.20│ │  Devices    │
      │  VLAN 3     │ │  VLAN 3   │ │             │
      └─────────────┘ └───────────┘ └─────────────┘
@@ -453,9 +453,9 @@ nslookup google.com 192.168.3.10
 
 ---
 
-## Prossimi Passi
+## Next Steps
 
-Dopo aver completato il setup di rete:
+After completing network setup:
 
-1. → Procedere con [Setup NAS QNAP](NAS_SETUP.md)
-2. → Tornare a [START_HERE.md](../../START_HERE.md) Fase 3
+1. → Proceed with [NAS QNAP Setup](NAS_SETUP.md)
+2. → Return to [START_HERE.md](../../START_HERE.md) Phase 3
