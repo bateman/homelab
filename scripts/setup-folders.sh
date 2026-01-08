@@ -165,6 +165,9 @@ make_dir "${CONFIG_ROOT}/recyclarr"
 make_dir "${CONFIG_ROOT}/qbittorrent"
 make_dir "${CONFIG_ROOT}/nzbget"
 
+# VPN (protects download clients)
+make_dir "${CONFIG_ROOT}/gluetun"
+
 # Monitoring/automation
 make_dir "${CONFIG_ROOT}/huntarr"
 make_dir "${CONFIG_ROOT}/cleanuparr"

@@ -30,8 +30,9 @@ Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox c
 - **[Lidarr](https://lidarr.audio/)** (8686) - Musica
 - **[Prowlarr](https://prowlarr.com/)** (9696) - Indexer
 - **[Bazarr](https://www.bazarr.media/)** (6767) - Sottotitoli
-- **[qBittorrent](https://www.qbittorrent.org/)** (8080) - Torrent
-- **[NZBGet](https://nzbget.com/)** (6789) - Usenet
+- **[Gluetun](https://github.com/qdm12/gluetun)** - VPN container con kill switch
+- **[qBittorrent](https://www.qbittorrent.org/)** (8080) - Torrent (via Gluetun)
+- **[NZBGet](https://nzbget.com/)** (6789) - Usenet (via Gluetun)
 - **[Recyclarr](https://recyclarr.dev/)** - Sync profili Trash Guides
 - **[Huntarr](https://github.com/plexguide/Huntarr.io)** (9705) - Monitoring *arr
 - **[Cleanuparr](https://github.com/Cleanuparr/Cleanuparr)** (11011) - Pulizia automatica
@@ -89,6 +90,9 @@ Dettagli in [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md).
 - [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) - Setup rete UniFi e VLAN
 - [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) - Setup NAS QNAP e Docker
 - [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) - Setup Proxmox e Plex
+- [`docs/setup/VPN_SETUP.md`](docs/setup/VPN_SETUP.md) - Protezione VPN per download clients (Gluetun)
+- [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) - Traefik, certificati HTTPS, Pi-hole DNS
+- [`docs/setup/NOTIFICATIONS_SETUP.md`](docs/setup/NOTIFICATIONS_SETUP.md) - Setup notifiche Uptime Kuma via Home Assistant
 
 ### Riferimenti
 - [`CLAUDE.md`](CLAUDE.md) - Guida completa progetto e sviluppo
