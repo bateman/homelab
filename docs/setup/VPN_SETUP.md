@@ -51,254 +51,96 @@ Recupera le credenziali dal tuo provider. Vedi la sezione [Configurazioni per Pr
 
 ---
 
+## Quick Start
+
+La VPN è **già configurata** nei file compose tramite Docker Compose profiles. Devi solo:
+
+1. **Configurare le credenziali VPN** in `docker/.env.secrets`
+2. **Abilitare il profile VPN** in `docker/.env`
+3. **Avviare lo stack** con `make up`
+
+---
+
 ## Configurazione
 
-### 1. Variabili d'Ambiente
+### Step 1: Abilita il Profile VPN
 
-Aggiungi le seguenti variabili a `docker/.env.secrets`:
+In `docker/.env`, imposta:
+
+```bash
+COMPOSE_PROFILES=vpn
+```
+
+> **Alternativa senza VPN**: usa `COMPOSE_PROFILES=novpn` per avviare i download clients senza protezione VPN.
+
+### Step 2: Configura Credenziali VPN
+
+Aggiungi le credenziali del tuo provider a `docker/.env.secrets`:
 
 ```bash
 # -----------------------------------------------------------------------------
-# VPN (Gluetun)
+# VPN (Gluetun) - REQUIRED when using COMPOSE_PROFILES=vpn
 # -----------------------------------------------------------------------------
-# Configura secondo il tuo provider VPN
-# Documentazione: https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers
+# Docs: https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers
 
-# Provider VPN (es: mullvad, nordvpn, protonvpn, private internet access, etc.)
+# Provider VPN (required)
 VPN_SERVICE_PROVIDER=nordvpn
 
-# Tipo VPN: wireguard oppure openvpn
-# - WireGuard: Mullvad, ProtonVPN
-# - OpenVPN: NordVPN, PIA, Surfshark
+# Connection type: openvpn or wireguard
 VPN_TYPE=openvpn
 
 # Server location
 SERVER_COUNTRIES=Switzerland
 
-# --- Per OpenVPN (NordVPN, PIA, Surfshark) ---
+# --- OpenVPN (NordVPN, PIA, Surfshark) ---
 OPENVPN_USER=your_service_username
 OPENVPN_PASSWORD=your_service_password
 
-# --- Per WireGuard (Mullvad, ProtonVPN) ---
+# --- WireGuard (Mullvad, ProtonVPN) - leave empty for OpenVPN ---
 # WIREGUARD_PRIVATE_KEY=your_private_key_here
 # WIREGUARD_ADDRESSES=10.x.x.x/32
 
-# --- Port Forwarding (solo provider che lo supportano: ProtonVPN, PIA, AirVPN) ---
+# --- Port Forwarding (ProtonVPN, PIA, AirVPN only) ---
 # VPN_PORT_FORWARDING=on
 ```
 
-### 2. Aggiungi Gluetun al Compose
-
-Aggiungi questo servizio a `docker/compose.media.yml` **prima** di qBittorrent:
-
-```yaml
-  # ===========================================================================
-  # VPN CONTAINER
-  # ===========================================================================
-
-  gluetun:
-    image: qmcgaw/gluetun:latest
-    container_name: gluetun
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    environment:
-      # Provider e tipo connessione
-      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
-      - VPN_TYPE=${VPN_TYPE:-openvpn}
-      - SERVER_COUNTRIES=${SERVER_COUNTRIES:-Switzerland}
-      - TZ=${TZ:-Europe/Rome}
-      # OpenVPN (NordVPN, PIA, Surfshark)
-      - OPENVPN_USER=${OPENVPN_USER:-}
-      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD:-}
-      # WireGuard (Mullvad, ProtonVPN) - lasciare vuoto se si usa OpenVPN
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY:-}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES:-}
-      # Port forwarding (opzionale, solo ProtonVPN/PIA/AirVPN)
-      - VPN_PORT_FORWARDING=${VPN_PORT_FORWARDING:-off}
-      # Health check
-      - HEALTH_TARGET_ADDRESS=1.1.1.1:443
-      - HEALTH_VPN_DURATION_INITIAL=30s
-    volumes:
-      - ./config/gluetun:/gluetun
-    ports:
-      # Porte esposte per qBittorrent (attraverso VPN)
-      - "8080:8080"           # qBittorrent WebUI
-      - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}"      # qBittorrent torrent port
-      - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}/udp"  # qBittorrent torrent port UDP
-      # Porta esposta per NZBGet (attraverso VPN)
-      - "6789:6789"           # NZBGet WebUI
-    networks:
-      - media_net
-      - proxy
-    restart: unless-stopped
-    logging: *common-logging
-    healthcheck:
-      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 64M
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-```
-
-### 3. Modifica qBittorrent per Usare la VPN
-
-Modifica il servizio `qbittorrent` in `docker/compose.media.yml`:
-
-```yaml
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    # USA LA RETE DI GLUETUN invece della rete diretta
-    network_mode: "service:gluetun"
-    environment:
-      <<: *common-env
-      WEBUI_PORT: 8080
-    volumes:
-      - ./config/qbittorrent:/config
-      - /share/data:/data
-    # RIMUOVI la sezione ports - sono gestite da gluetun
-    # ports:
-    #   - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}"
-    #   - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}/udp"
-    #   - "8080:8080"
-    # RIMUOVI networks - usa la rete di gluetun
-    # networks:
-    #   - media_net
-    #   - proxy
-    restart: unless-stopped
-    logging: *common-logging
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
-      <<: *common-healthcheck
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 256M
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      # Traefik labels devono stare su gluetun, non qbittorrent
-      # - "traefik.enable=true"
-      # ...
-```
-
-### 4. Modifica NZBGet per Usare la VPN
-
-Modifica il servizio `nzbget` in `docker/compose.media.yml`:
-
-```yaml
-  nzbget:
-    image: lscr.io/linuxserver/nzbget:latest
-    container_name: nzbget
-    # USA LA RETE DI GLUETUN invece della rete diretta
-    network_mode: "service:gluetun"
-    environment:
-      <<: *common-env
-    volumes:
-      - ./config/nzbget:/config
-      - /share/data:/data
-    # RIMUOVI la sezione ports - sono gestite da gluetun
-    # ports:
-    #   - "6789:6789"
-    # RIMUOVI networks - usa la rete di gluetun
-    # networks:
-    #   - media_net
-    #   - proxy
-    restart: unless-stopped
-    logging: *common-logging
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6789"]
-      <<: *common-healthcheck
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 128M
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      # Traefik labels devono stare su gluetun, non nzbget
-      # - "traefik.enable=true"
-      # ...
-```
-
-### 5. Sposta Label Traefik su Gluetun
-
-Poiché qBittorrent e NZBGet usano la rete di Gluetun, le label Traefik per entrambi vanno sul container Gluetun:
-
-```yaml
-  gluetun:
-    # ... configurazione esistente ...
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      # Traefik per qBittorrent
-      - "traefik.enable=true"
-      - "traefik.http.routers.qbit.rule=Host(`qbit.home.local`)"
-      - "traefik.http.routers.qbit.entrypoints=websecure"
-      - "traefik.http.routers.qbit.tls=true"
-      - "traefik.http.services.qbit.loadbalancer.server.port=8080"
-      # Traefik per NZBGet
-      - "traefik.http.routers.nzbget.rule=Host(`nzbget.home.local`)"
-      - "traefik.http.routers.nzbget.entrypoints=websecure"
-      - "traefik.http.routers.nzbget.tls=true"
-      - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
-```
-
-### 6. Crea Cartella Config Gluetun
-
-Aggiungi a `scripts/setup-folders.sh`:
+### Step 3: Avvia lo Stack
 
 ```bash
-mkdir -p "${CONFIG_BASE}/gluetun"
+# Create folders (first time only)
+make setup
+
+# Start all services
+make up
+
+# Verify VPN is working
+docker exec gluetun curl -s https://ipinfo.io/ip
+# Should show VPN IP, NOT your real IP
 ```
 
-Oppure crea manualmente:
+### Step 4: Configura Hostname nelle *arr Apps (IMPORTANTE!)
 
-```bash
-mkdir -p /share/container/mediastack/config/gluetun
-```
-
-### 7. Aggiorna Configurazione *arr (IMPORTANTE!)
-
-Quando qBittorrent e NZBGet usano `network_mode: "service:gluetun"`, il loro hostname sulla rete Docker diventa `gluetun`, non più `qbittorrent` o `nzbget`.
-
-**Aggiorna le impostazioni in Sonarr/Radarr/Lidarr:**
-
-| Servizio | Prima | Dopo |
-|----------|-------|------|
-| qBittorrent Host | `qbittorrent` | `gluetun` |
-| qBittorrent Port | `8080` | `8080` (invariato) |
-| NZBGet Host | `nzbget` | `gluetun` |
-| NZBGet Port | `6789` | `6789` (invariato) |
+Con il profile `vpn`, qBittorrent e NZBGet sono raggiungibili tramite l'hostname `gluetun`:
 
 **In Sonarr/Radarr/Lidarr → Settings → Download Clients:**
 
-Per qBittorrent:
-- Host: `gluetun`
-- Port: `8080`
+| Download Client | Host | Port |
+|-----------------|------|------|
+| qBittorrent | `gluetun` | `8080` |
+| NZBGet | `gluetun` | `6789` |
 
-Per NZBGet:
-- Host: `gluetun`
-- Port: `6789`
+> **Perché?** I container con `network_mode: "service:gluetun"` condividono lo stack di rete con Gluetun. Quindi qBittorrent e NZBGet sono raggiungibili all'indirizzo di Gluetun.
 
-> **Perché?** I container con `network_mode: "service:X"` condividono lo stack di rete con il container X. Quindi qBittorrent e NZBGet sono raggiungibili all'indirizzo di Gluetun.
+---
+
+## Profiles Disponibili
+
+| Profile | Comando | Download Clients Host |
+|---------|---------|----------------------|
+| `vpn` | `COMPOSE_PROFILES=vpn make up` | `gluetun:8080` / `gluetun:6789` |
+| `novpn` | `COMPOSE_PROFILES=novpn make up` | `qbittorrent:8080` / `nzbget:6789` |
+
+**Quando cambi profile**, ricorda di aggiornare gli hostname nelle *arr apps!
 
 ---
 

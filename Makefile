@@ -281,6 +281,19 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:8686/ping,Lidarr)
 	$(call check_service,http://localhost:9696/ping,Prowlarr)
 	$(call check_service,http://localhost:6767/ping,Bazarr)
+	@# Gluetun health check (only when vpn profile is active)
+	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^gluetun$$'; then \
+		HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' gluetun 2>/dev/null); \
+		if [ "$$HEALTH" = "healthy" ]; then \
+			echo "Gluetun: $(GREEN)OK (VPN connected)$(NC)"; \
+		elif [ "$$HEALTH" = "starting" ]; then \
+			echo "Gluetun: $(YELLOW)STARTING$(NC)"; \
+		else \
+			echo "Gluetun: $(RED)UNHEALTHY$(NC)"; \
+		fi; \
+	else \
+		echo "Gluetun: $(YELLOW)NOT RUNNING (novpn profile?)$(NC)"; \
+	fi
 	$(call check_service,http://localhost:8080,qBittorrent)
 	$(call check_service,http://localhost:6789,NZBGet)
 	$(call check_service,http://localhost:9705,Huntarr)

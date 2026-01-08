@@ -126,6 +126,22 @@ make shell-radarr   # Shell nel container
 - `TZ=Europe/Rome` - Fuso orario
 - `UMASK=002` - Permessi file
 
+### VPN Profiles (COMPOSE_PROFILES)
+Lo stack media supporta due modalità per i download clients tramite Docker Compose profiles:
+
+| Profile | Comando | Descrizione |
+|---------|---------|-------------|
+| `vpn` | `COMPOSE_PROFILES=vpn make up` | qBittorrent/NZBGet via Gluetun VPN (raccomandato) |
+| `novpn` | `COMPOSE_PROFILES=novpn make up` | Connessione diretta senza VPN |
+
+**Configurazione**: Imposta `COMPOSE_PROFILES=vpn` (o `novpn`) in `docker/.env`.
+
+**Importante - Hostname download clients**:
+- Profile `vpn`: usare `gluetun` come host nelle *arr apps (es. `gluetun:8080`)
+- Profile `novpn`: usare `qbittorrent` / `nzbget` come host
+
+Se `COMPOSE_PROFILES` non è impostato, nessun download client verrà avviato.
+
 ### Struttura Cartelle NAS
 ```
 /share/
