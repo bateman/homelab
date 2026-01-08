@@ -46,11 +46,7 @@ Serve un account con un provider VPN supportato da Gluetun. Provider consigliati
 
 ### Credenziali VPN
 
-Recupera le credenziali dal tuo provider. Esempio per Mullvad:
-
-1. Accedi a https://mullvad.net/account
-2. Genera un device token WireGuard (Settings → WireGuard keys)
-3. Annota: Account number e Private key
+Recupera le credenziali dal tuo provider. Vedi la sezione [Configurazioni per Provider Specifici](#configurazioni-per-provider-specifici) per istruzioni dettagliate per ogni provider.
 
 ---
 
@@ -68,21 +64,23 @@ Aggiungi le seguenti variabili a `docker/.env.secrets`:
 # Documentazione: https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers
 
 # Provider VPN (es: mullvad, nordvpn, protonvpn, private internet access, etc.)
-VPN_SERVICE_PROVIDER=mullvad
+VPN_SERVICE_PROVIDER=nordvpn
 
 # Tipo VPN: wireguard oppure openvpn
-VPN_TYPE=wireguard
+# - WireGuard: Mullvad, ProtonVPN
+# - OpenVPN: NordVPN, PIA, Surfshark
+VPN_TYPE=openvpn
 
 # Server location
 SERVER_COUNTRIES=Switzerland
 
-# --- Per WireGuard (Mullvad, ProtonVPN) ---
-WIREGUARD_PRIVATE_KEY=your_private_key_here
-WIREGUARD_ADDRESSES=10.x.x.x/32
-
 # --- Per OpenVPN (NordVPN, PIA, Surfshark) ---
-# OPENVPN_USER=your_username
-# OPENVPN_PASSWORD=your_password
+OPENVPN_USER=your_service_username
+OPENVPN_PASSWORD=your_service_password
+
+# --- Per WireGuard (Mullvad, ProtonVPN) ---
+# WIREGUARD_PRIVATE_KEY=your_private_key_here
+# WIREGUARD_ADDRESSES=10.x.x.x/32
 
 # --- Port Forwarding (solo provider che lo supportano: ProtonVPN, PIA, AirVPN) ---
 # VPN_PORT_FORWARDING=on
@@ -107,16 +105,16 @@ Aggiungi questo servizio a `docker/compose.media.yml` **prima** di qBittorrent:
     environment:
       # Provider e tipo connessione
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
-      - VPN_TYPE=${VPN_TYPE:-wireguard}
+      - VPN_TYPE=${VPN_TYPE:-openvpn}
       - SERVER_COUNTRIES=${SERVER_COUNTRIES:-Switzerland}
       - TZ=${TZ:-Europe/Rome}
-      # WireGuard (lasciare vuoto se si usa OpenVPN)
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY:-}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES:-}
-      # OpenVPN (lasciare vuoto se si usa WireGuard)
+      # OpenVPN (NordVPN, PIA, Surfshark)
       - OPENVPN_USER=${OPENVPN_USER:-}
       - OPENVPN_PASSWORD=${OPENVPN_PASSWORD:-}
-      # Port forwarding (opzionale, solo per provider che lo supportano)
+      # WireGuard (Mullvad, ProtonVPN) - lasciare vuoto se si usa OpenVPN
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY:-}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES:-}
+      # Port forwarding (opzionale, solo ProtonVPN/PIA/AirVPN)
       - VPN_PORT_FORWARDING=${VPN_PORT_FORWARDING:-off}
       # Health check
       - HEALTH_TARGET_ADDRESS=1.1.1.1:443
@@ -321,10 +319,18 @@ Per ottenere le credenziali:
 # .env.secrets
 VPN_SERVICE_PROVIDER=nordvpn
 VPN_TYPE=openvpn
-OPENVPN_USER=<tuo_username>
-OPENVPN_PASSWORD=<tua_password>
-SERVER_COUNTRIES=Netherlands
+OPENVPN_USER=<tuo_service_username>
+OPENVPN_PASSWORD=<tua_service_password>
+SERVER_COUNTRIES=Switzerland
 ```
+
+Per ottenere le credenziali:
+1. Accedi a https://my.nordaccount.com/
+2. Vai su **NordVPN** → **Configurazione manuale**
+3. Verifica la tua identità (email)
+4. Copia **Service username** e **Service password** (NON sono le credenziali di login!)
+
+> **Importante**: NordVPN richiede le credenziali "Service credentials", non username/password dell'account. Le trovi nel pannello sotto "Manual setup".
 
 ### Private Internet Access (OpenVPN con Port Forwarding)
 
