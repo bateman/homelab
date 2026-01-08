@@ -1,146 +1,146 @@
-# Rack 19" 8U — Home Lab Configuration v3
+# 19" 8U Rack — Home Lab Configuration v3
 
-> Configurazione ottimizzata per ventilazione passiva (rack aperto lateralmente e superiormente)
+> Configuration optimized for passive ventilation (rack open on sides and top)
 
-## Schema Rack
+## Rack Diagram
 
 ```
 ┏━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ U8  │ 🖥️  Lenovo Mini PC (Proxmox)                                            ┃
-┃     │   • Fonte di calore principale -> dissipa verso l'alto (top aperto)     ┃
+┃     │   • Main heat source -> dissipates upward (open top)                    ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ U7  │ 🌀 Pannello ventilato #1                                                ┃
-┃     │   • Isola termicamente il Mini PC dal resto del rack                    ┃
+┃ U7  │ 🌀 Vented Panel #1                                                      ┃
+┃     │   • Thermally isolates Mini PC from rest of rack                        ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ U6  │ 🔀 Switch PoE (USW-Pro-Max-16-PoE)                                      ┃
+┃ U6  │ 🔀 PoE Switch (USW-Pro-Max-16-PoE)                                      ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ U5  │ 🌐 UDM-SE                                                               ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ U4  │ 🔌 Patch Panel                                                          ┃
-┃     │   • Passivo, nessun calore — fa da buffer naturale                      ┃
+┃     │   • Passive, no heat — acts as natural buffer                           ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ U3  │ 🔌 Multipresa Rack                                                      ┃
-┃     │   • Alimentazione dispositivi con spina standard (es. Mini PC)          ┃
+┃ U3  │ 🔌 Rack Power Strip                                                     ┃
+┃     │   • Power for devices with standard plugs (e.g. Mini PC)                ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ U2  │ 💾 NAS QNAP                                                             ┃
-┃     │   • HDD nella zona piu' fresca del rack                                 ┃
+┃ U2  │ 💾 QNAP NAS                                                             ┃
+┃     │   • HDDs in coolest zone of rack                                        ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃     │ ████ ISOLANTE: EVA 5mm ████████████████████████████████████████████████ ┃
+┃     │ ████ INSULATION: EVA 5mm ██████████████████████████████████████████████ ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ U1  │ ⚡ UPS                                                                  ┃
-┃     │   • Peso in basso, minima generazione di calore                         ┃
+┃     │   • Weight at bottom, minimal heat generation                           ┃
 ┗━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-        ↑↑↑ ARIA CALDA ESCE DAL TOP APERTO ↑↑↑
-        
-   <-  aria fresca entra dai lati  ->
+        ↑↑↑ HOT AIR EXITS FROM OPEN TOP ↑↑↑
+
+   <-  cool air enters from sides  ->
 ```
 
 ---
 
-## Dettaglio Componenti
+## Component Details
 
 ### U8 — Lenovo ThinkCentre neo 50q Gen 4
 
-| Spec | Valore |
-|------|--------|
+| Spec | Value |
+|------|-------|
 | CPU | Intel Core i5-13420H (Quick Sync) |
 | RAM | 16GB DDR5 |
 | Storage | 1TB M.2 NVMe PCIe Gen4 (Opal 2.0) |
-| Network | 1x 1GbE RJ45 (integrata) + 1x 2.5GbE USB-C (adattatore) |
-| Adattatore | StarTech US2GC30 (USB-C 3.0 to 2.5GbE) |
+| Network | 1x 1GbE RJ45 (integrated) + 1x 2.5GbE USB-C (adapter) |
+| Adapter | StarTech US2GC30 (USB-C 3.0 to 2.5GbE) |
 | OS | Proxmox VE |
 | Services | Plex, Docker, Tailscale |
 | IP | 192.168.3.20 |
 
-### U7 — Pannello Ventilato #1
+### U7 — Vented Panel #1
 
 - Ubiquiti UACC-Rack-Panel-Vented-1U
-- Isolamento termico tra Mini PC e networking
+- Thermal isolation between Mini PC and networking
 
 ### U6 — UniFi USW-Pro-Max-16-PoE
 
-| Spec | Valore |
-|------|--------|
-| Porte RJ45 GbE | 12x 1GbE (PoE+) |
-| Porte RJ45 2.5GbE | 4x 2.5GbE (PoE++) |
-| Porte SFP+ | 2x 10GbE |
-| SFP+ Port 1 | Uplink a UDM-SE |
+| Spec | Value |
+|------|-------|
+| GbE RJ45 Ports | 12x 1GbE (PoE+) |
+| 2.5GbE RJ45 Ports | 4x 2.5GbE (PoE++) |
+| SFP+ Ports | 2x 10GbE |
+| SFP+ Port 1 | Uplink to UDM-SE |
 | SFP+ Port 2 | QNAP NAS |
-| Budget PoE | 180W |
+| PoE Budget | 180W |
 | IP | 192.168.2.10 |
 
 ### U5 — UniFi Dream Machine SE (UDM-SE-EU)
 
-| Spec | Valore |
-|------|--------|
-| Funzione | Firewall / Router / Controller UniFi |
-| WAN RJ45 | 1x 2.5GbE (ingresso fibra/ISP) |
-| WAN SFP+ | 1x 10GbE (non usata - ISP non supporta 10G) |
+| Spec | Value |
+|------|-------|
+| Function | Firewall / Router / UniFi Controller |
+| WAN RJ45 | 1x 2.5GbE (fiber/ISP input) |
+| WAN SFP+ | 1x 10GbE (unused - ISP doesn't support 10G) |
 | LAN RJ45 | 8x 1GbE |
-| LAN SFP+ | 1x 10GbE (uplink a switch) |
+| LAN SFP+ | 1x 10GbE (uplink to switch) |
 | IP | 192.168.2.1 |
 
-### U4 — Patch Panel deleyCON
+### U4 — deleyCON Patch Panel
 
-| Spec | Valore |
-|------|--------|
-| Porte | 12x RJ45 Keystone |
-| Categoria | CAT6A/CAT7 |
-| Certificazione | 10 Gbit/s |
+| Spec | Value |
+|------|-------|
+| Ports | 12x RJ45 Keystone |
+| Category | CAT6A/CAT7 |
+| Certification | 10 Gbit/s |
 
-### U3 — Multipresa Rack 1U
+### U3 — 1U Rack Power Strip
 
-| Spec | Valore |
-|------|--------|
-| Prese | 8x Schuko |
-| Ingresso | IEC C14 (collegata a UPS) |
-| Funzione | Alimentazione dispositivi con spina standard |
-| Dispositivi collegati | Mini PC Lenovo |
+| Spec | Value |
+|------|-------|
+| Outlets | 8x Schuko |
+| Input | IEC C14 (connected to UPS) |
+| Function | Power for devices with standard plugs |
+| Connected Devices | Lenovo Mini PC |
 
 ### U2 — QNAP TS-435XeU
 
-| Spec | Valore |
-|------|--------|
+| Spec | Value |
+|------|-------|
 | CPU | Marvell Octeon TX2 CN9131 quad-core 2.2GHz |
-| Bay | 4x 3.5" HDD (RAID configurabile) |
+| Bays | 4x 3.5" HDD (configurable RAID) |
 | SFP+ | 2x 10GbE |
-| SFP+ Port 1 | Uplink a Switch (trunk VLAN) |
+| SFP+ Port 1 | Uplink to Switch (VLAN trunk) |
 | SFP+ Port 2 | Spare/backup |
-| RJ45 | 2x 2.5GbE (gestione/backup) |
-| Funzione | Media, Docker volumes, Backup |
+| RJ45 | 2x 2.5GbE (management/backup) |
+| Function | Media, Docker volumes, Backup |
 | IP | 192.168.3.10 |
 
-### Isolante — Neoprene 5mm
+### Insulation — Neoprene 5mm
 
-- Posizionato tra NAS (U2) e UPS (U1)
-- Assorbe vibrazioni HDD
-- Protegge UPS da calore residuo
+- Positioned between NAS (U2) and UPS (U1)
+- Absorbs HDD vibrations
+- Protects UPS from residual heat
 
 ### U1 — UPS Eaton 5P 650i Rack G2
 
-| Spec | Valore |
-|------|--------|
-| Potenza | 650VA / 420W |
-| Tecnologia | Line-interactive |
-| Autonomia | ~10-15 min (carico medio) |
+| Spec | Value |
+|------|-------|
+| Power | 650VA / 420W |
+| Technology | Line-interactive |
+| Runtime | ~10-15 min (average load) |
 | Management | USB -> Proxmox (NUT) |
 
 ---
 
-## Logica Termica
+## Thermal Logic
 
-| Zona | Unita' | Strategia |
-|------|--------|-----------|
-| Top (U8) | Mini PC | Massima dissipazione verso l'esterno |
-| U7 | Ventilato | Taglia la risalita di calore dal networking |
-| Centro (U4-U6) | Networking + Patch | Calore moderato, buona ventilazione laterale |
-| U3 | Multipresa | Passiva, nessun calore generato |
-| Bottom (U1-U2) | NAS + UPS | Zona piu' fresca, ideale per HDD (< 40C) |
+| Zone | Units | Strategy |
+|------|-------|----------|
+| Top (U8) | Mini PC | Maximum dissipation outward |
+| U7 | Vented | Cuts heat rise from networking |
+| Center (U4-U6) | Networking + Patch | Moderate heat, good side ventilation |
+| U3 | Power Strip | Passive, no heat generated |
+| Bottom (U1-U2) | NAS + UPS | Coolest zone, ideal for HDDs (< 40C) |
 
 ---
 
-## Distribuzione Elettrica
+## Power Distribution
 
 ```
                     ┌─────────────────────────────────────────┐
@@ -152,7 +152,7 @@
                           │     │     │     │
                           ▼     │     │     ▼
                       ┌───────┐ │     │ ┌────────────────┐
-                      │  NAS  │ │     │ │ Multipresa 1U  │
+                      │  NAS  │ │     │ │ Power Strip 1U │
                       │ QNAP  │ │     │ │   (U3)         │
                       └───────┘ │     │ └───────┬────────┘
                                 │     │         │
@@ -165,23 +165,23 @@
                           └───────┘ └───────┘ └─────────┘
 ```
 
-| Presa UPS | Dispositivo | Connettore |
-|-----------|-------------|------------|
-| C13 #1 | NAS QNAP | IEC C14 |
+| UPS Outlet | Device | Connector |
+|-----------|--------|-----------|
+| C13 #1 | QNAP NAS | IEC C14 |
 | C13 #2 | UDM-SE | IEC C14 |
-| C13 #3 | Switch PoE | IEC C14 |
-| C13 #4 | Multipresa Rack (U3) | IEC C14 |
+| C13 #3 | PoE Switch | IEC C14 |
+| C13 #4 | Rack Power Strip (U3) | IEC C14 |
 
-| Presa Multipresa | Dispositivo | Note |
-|------------------|-------------|------|
-| Schuko #1 | Mini PC Lenovo | Alimentatore esterno |
-| Schuko #2-8 | Disponibili | Espansioni future |
+| Power Strip Outlet | Device | Notes |
+|-------------------|--------|-------|
+| Schuko #1 | Lenovo Mini PC | External power supply |
+| Schuko #2-8 | Available | Future expansion |
 
-> **Nota**: Tutti i dispositivi sono protetti da batteria UPS. I dispositivi con connettore IEC vanno direttamente all'UPS, quelli con spina standard passano dalla multipresa.
+> **Note**: All devices are protected by UPS battery. Devices with IEC connectors go directly to UPS, those with standard plugs go through the power strip.
 
 ---
 
-## Backbone di Rete (SFP+ 10GbE)
+## Network Backbone (SFP+ 10GbE)
 
 ```
 UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
@@ -193,140 +193,140 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 
 ---
 
-## Servizi in Esecuzione
+## Running Services
 
-### NAS QNAP (192.168.3.10)
+### QNAP NAS (192.168.3.10)
 
-| Servizio | Porta | Descrizione |
-|----------|-------|-------------|
-| Sonarr | 8989 | Gestione serie TV |
-| Radarr | 7878 | Gestione film |
-| Lidarr | 8686 | Gestione musica |
-| Prowlarr | 9696 | Gestione indexer |
-| Bazarr | 6767 | Sottotitoli automatici |
-| qBittorrent | 8080 | Client torrent |
-| NZBGet | 6789 | Client Usenet |
-| Recyclarr | - | Sync profili Trash Guides |
-| Huntarr | 9705 | Monitoring *arr |
-| Cleanuparr | 11011 | Pulizia automatica |
-| FlareSolverr | 8191 | Bypass Cloudflare |
+| Service | Port | Description |
+|---------|------|-------------|
+| Sonarr | 8989 | TV series management |
+| Radarr | 7878 | Movie management |
+| Lidarr | 8686 | Music management |
+| Prowlarr | 9696 | Indexer management |
+| Bazarr | 6767 | Automatic subtitles |
+| qBittorrent | 8080 | Torrent client |
+| NZBGet | 6789 | Usenet client |
+| Recyclarr | - | Trash Guides profile sync |
+| Huntarr | 9705 | *arr monitoring |
+| Cleanuparr | 11011 | Automatic cleanup |
+| FlareSolverr | 8191 | Cloudflare bypass |
 | Pi-hole | 8081 | DNS ad-blocking |
-| Home Assistant | 8123 | Automazione domotica |
-| Portainer | 9443 | Gestione Docker |
-| Duplicati | 8200 | Backup incrementale |
-| Uptime Kuma | 3001 | Monitoring e alerting |
-| Watchtower | 8383 | Auto-update container |
+| Home Assistant | 8123 | Home automation |
+| Portainer | 9443 | Docker management |
+| Duplicati | 8200 | Incremental backup |
+| Uptime Kuma | 3001 | Monitoring and alerting |
+| Watchtower | 8383 | Container auto-update |
 | Traefik | 80/443 | Reverse proxy (dashboard via traefik.home.local) |
 
-### Mini PC Proxmox (192.168.3.20)
+### Proxmox Mini PC (192.168.3.20)
 
-| Servizio | Porta | IP | Descrizione |
-|----------|-------|-----|-------------|
-| Plex | 32400 | 192.168.3.21 | Media server (container LXC) |
-| Tailscale | — | 192.168.3.20 | VPN mesh (host) |
-
----
-
-## Codifica Colore Cavi di Rete
-
-| Colore | Uso | Esempio |
-|--------|-----|---------|
-| ⚫ Nero | Rack interno | NAS, Mini PC |
-| 🟢 Verde | Dispositivi stanze | Camera, Studio, Soggiorno |
-| ⚪ Bianco | Management / Uplink | UDM-SE, Switch, Access Point |
-
-> **Etichettatura**: Ogni cavo deve avere etichetta su entrambe le estremita' con: colore + numero + destinazione (es. "VER-01 Studio/PC")
+| Service | Port | IP | Description |
+|---------|------|-----|-------------|
+| Plex | 32400 | 192.168.3.21 | Media server (LXC container) |
+| Tailscale | — | 192.168.3.20 | Mesh VPN (host) |
 
 ---
 
-## Note
+## Network Cable Color Coding
 
-- **Rack**: Aperto lateralmente e superiormente (ventilazione passiva ottimale)
-- **Pannello ventilato**: In U7 per isolare termicamente il Mini PC dal networking
-- **Multipresa rack**: In U3, collegata all'UPS per dispositivi con spina standard
-- **UPS**: Valutare upgrade a 1000-1500VA se si utilizza intensivamente il PoE
+| Color | Use | Example |
+|-------|-----|---------|
+| ⚫ Black | Rack internal | NAS, Mini PC |
+| 🟢 Green | Room devices | Bedroom, Office, Living Room |
+| ⚪ White | Management / Uplink | UDM-SE, Switch, Access Point |
+
+> **Labeling**: Every cable must have labels on both ends with: color + number + destination (e.g. "GRN-01 Office/PC")
 
 ---
 
-## Piano IP
+## Notes
 
-### Topologia di rete
+- **Rack**: Open on sides and top (optimal passive ventilation)
+- **Vented panel**: In U7 to thermally isolate Mini PC from networking
+- **Rack power strip**: In U3, connected to UPS for devices with standard plugs
+- **UPS**: Consider upgrade to 1000-1500VA if using PoE intensively
+
+---
+
+## IP Plan
+
+### Network Topology
 
 ```
-Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (VLAN segmentate)
+Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (segmented VLANs)
               192.168.1.254       192.168.1.1    192.168.x.0/24
                     ↑               (WAN)
-              Rete legacy              ↓
-              Vimar/IoT          Gateway VLAN
+              Legacy network          ↓
+              Vimar/IoT          VLAN Gateway
 ```
 
-### Configurazione Iliad Box
+### Iliad Box Configuration
 
-| Parametro | Valore |
-|-----------|--------|
-| Modalita' | Router (NO bridge/ONT) |
+| Parameter | Value |
+|-----------|-------|
+| Mode | Router (NO bridge/ONT) |
 | IP | 192.168.1.254 |
-| DHCP | **Disabilitato** (lo gestisce UDM-SE) |
-| DMZ | Abilitata verso 192.168.1.1 |
-| Telefonia VoIP | Funzionante |
+| DHCP | **Disabled** (managed by UDM-SE) |
+| DMZ | Enabled to 192.168.1.1 |
+| VoIP Telephony | Working |
 
-### Indirizzi IP
+### IP Addresses
 
-> Vedi `firewall-config.md` per la configurazione VLAN completa.
+> See `firewall-config.md` for complete VLAN configuration.
 
-#### Rete Legacy — Iliad/Vimar (192.168.1.0/24)
+#### Legacy Network — Iliad/Vimar (192.168.1.0/24)
 
-| Dispositivo | IP | Note |
-|-------------|-----|------|
-| Iliad Box | 192.168.1.254 | Router/modem, telefonia |
-| UDM-SE (WAN) | 192.168.1.1 | Riceve IP via DMZ |
-| Dispositivi Vimar | 192.168.1.x | Videocitofono, allarme, attuatori (statici) |
+| Device | IP | Notes |
+|--------|-----|-------|
+| Iliad Box | 192.168.1.254 | Router/modem, telephony |
+| UDM-SE (WAN) | 192.168.1.1 | Receives IP via DMZ |
+| Vimar Devices | 192.168.1.x | Video intercom, alarm, actuators (static) |
 
-> Questa rete NON e' gestita dal UDM-SE. Resta per i dispositivi Vimar legacy collegati allo switch PoE nel quadro elettrico.
+> This network is NOT managed by UDM-SE. Remains for Vimar legacy devices connected to PoE switch in electrical panel.
 
 #### VLAN 2 — Management (192.168.2.0/24)
 
-| Dispositivo | IP | Note |
-|-------------|-----|------|
-| Gateway (UDM-SE) | 192.168.2.1 | Controller UniFi |
-| Switch UniFi | 192.168.2.10 | USW-Pro-Max-16-PoE |
+| Device | IP | Notes |
+|--------|-----|-------|
+| Gateway (UDM-SE) | 192.168.2.1 | UniFi Controller |
+| UniFi Switch | 192.168.2.10 | USW-Pro-Max-16-PoE |
 | Access Point | 192.168.2.20 | U6-Pro |
 
 #### VLAN 3 — Servers (192.168.3.0/24)
 
-| Dispositivo | IP | Note |
-|-------------|-----|------|
+| Device | IP | Notes |
+|--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.3.1 | — |
-| NAS QNAP | 192.168.3.10 | Media stack, Pi-hole |
-| Mini PC Proxmox | 192.168.3.20 | Plex, Tailscale |
-| Stampante | 192.168.3.30 | Stampa |
-| PC Desktop | 192.168.3.40 | Workstation |
+| QNAP NAS | 192.168.3.10 | Media stack, Pi-hole |
+| Proxmox Mini PC | 192.168.3.20 | Plex, Tailscale |
+| Printer | 192.168.3.30 | Printing |
+| Desktop PC | 192.168.3.40 | Workstation |
 
 #### VLAN 4 — Media (192.168.4.0/24)
 
-| Dispositivo | IP | Note |
-|-------------|-----|------|
+| Device | IP | Notes |
+|--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.4.1 | — |
-| Smart TV, telefoni | DHCP (.100-.200) | Client Plex, gestione *arr |
+| Smart TV, phones | DHCP (.100-.200) | Plex clients, *arr management |
 
 #### VLAN 5 — Guest (192.168.5.0/24)
 
-| Dispositivo | IP | Note |
-|-------------|-----|------|
+| Device | IP | Notes |
+|--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.5.1 | — |
-| Client ospiti | DHCP (.100-.200) | Solo accesso Internet |
+| Guest clients | DHCP (.100-.200) | Internet access only |
 
 #### VLAN 6 — IoT (192.168.6.0/24)
 
-| Dispositivo | IP | Note |
-|-------------|-----|------|
+| Device | IP | Notes |
+|--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.6.1 | — |
-| Alexa, videocamera nuova | DHCP (.100-.200) | Dispositivi smart WiFi |
+| Alexa, new camera | DHCP (.100-.200) | Smart WiFi devices |
 
-### Note
+### Notes
 
-- **Rete Legacy**: La subnet 192.168.1.0/24 resta per Iliad Box e dispositivi Vimar. Non e' gestita dal UDM-SE.
-- **Double NAT**: Tecnicamente presente, ma irrilevante per homelab
-- **Accesso Iliad**: Disponibile su 192.168.1.254 dalla rete (routing attraverso WAN)
-- **Telefonia**: Funziona perche' Iliad resta in modalita' router
-- **Documentazione VLAN**: Vedi `firewall-config.md`
+- **Legacy Network**: The 192.168.1.0/24 subnet remains for Iliad Box and Vimar devices. Not managed by UDM-SE.
+- **Double NAT**: Technically present, but irrelevant for homelab
+- **Iliad Access**: Available at 192.168.1.254 from network (routing through WAN)
+- **Telephony**: Works because Iliad remains in router mode
+- **VLAN Documentation**: See `firewall-config.md`

@@ -1,49 +1,49 @@
-# Reverse Proxy Setup - Traefik con Pi-hole DNS
+# Reverse Proxy Setup - Traefik with Pi-hole DNS
 
-> Guida per configurare Traefik come reverse proxy e Pi-hole come DNS per Tailscale
-
----
-
-## Panoramica
-
-Un reverse proxy permette di accedere ai servizi usando nomi leggibili (es. `sonarr.home.local`) invece di IP:porta. Questa guida documenta:
-
-- **Traefik** come soluzione principale (auto-discovery Docker)
-- **Nginx Proxy Manager** come alternativa (configurazione via WebUI)
-- **Pi-hole + Tailscale** per risolvere gli stessi URL da locale e remoto
+> Guide to configure Traefik as reverse proxy and Pi-hole as DNS for Tailscale
 
 ---
 
-## Confronto Soluzioni
+## Overview
 
-| Aspetto | Traefik | Nginx Proxy Manager |
-|---------|---------|---------------------|
-| **Configurazione** | Labels Docker + YAML | WebUI point-and-click |
-| **Curva apprendimento** | Media | Bassa |
-| **Auto-discovery Docker** | Nativo | No (manuale) |
-| **Certificati SSL** | Let's Encrypt automatico | Let's Encrypt via UI |
-| **Dashboard** | Avanzata | Semplice |
-| **Risorse** | ~30MB RAM | ~50MB RAM |
-| **Aggiunta nuovo servizio** | Aggiungi labels al container | Click in WebUI |
-| **Ideale per** | Stack Docker esistente | Servizi misti/non-Docker |
+A reverse proxy allows accessing services using readable names (e.g., `sonarr.home.local`) instead of IP:port. This guide documents:
 
-**Raccomandazione**: Con lo stack Docker gia' configurato su NAS, **Traefik** si integra meglio grazie all'auto-discovery.
+- **Traefik** as primary solution (Docker auto-discovery)
+- **Nginx Proxy Manager** as alternative (WebUI configuration)
+- **Pi-hole + Tailscale** to resolve same URLs from local and remote
 
 ---
 
-## Prerequisiti
+## Solution Comparison
 
-- [ ] Stack Docker funzionante su NAS (192.168.3.10)
-- [ ] Pi-hole configurato e attivo
-- [ ] Tailscale installato su Proxmox (vedi [PROXMOX_SETUP.md](PROXMOX_SETUP.md))
+| Aspect | Traefik | Nginx Proxy Manager |
+|--------|---------|---------------------|
+| **Configuration** | Docker labels + YAML | WebUI point-and-click |
+| **Learning curve** | Medium | Low |
+| **Docker auto-discovery** | Native | No (manual) |
+| **SSL certificates** | Automatic Let's Encrypt | Let's Encrypt via UI |
+| **Dashboard** | Advanced | Simple |
+| **Resources** | ~30MB RAM | ~50MB RAM |
+| **Adding new service** | Add labels to container | Click in WebUI |
+| **Ideal for** | Existing Docker stack | Mixed/non-Docker services |
+
+**Recommendation**: With Docker stack already configured on NAS, **Traefik** integrates better thanks to auto-discovery.
 
 ---
 
-## Fase 1: Configurazione Pi-hole come DNS Tailscale
+## Prerequisites
 
-> Questa configurazione permette di usare gli stessi URL (es. `sonarr.home.local`) sia dalla rete locale che da remoto via Tailscale.
+- [ ] Docker stack running on NAS (192.168.3.10)
+- [ ] Pi-hole configured and active
+- [ ] Tailscale installed on Proxmox (see [PROXMOX_SETUP.md](PROXMOX_SETUP.md))
 
-### 1.1 Schema di Funzionamento
+---
+
+## Phase 1: Pi-hole Configuration as Tailscale DNS
+
+> This configuration allows using the same URLs (e.g., `sonarr.home.local`) both from local network and remotely via Tailscale.
+
+### 1.1 How It Works
 
 ```
                     +-------------+
@@ -55,31 +55,31 @@ Un reverse proxy permette di accedere ai servizi usando nomi leggibili (es. `son
          |                 |                  |
     +----v----+      +-----v-----+     +------v------+
     |   LAN   |      | Tailscale |     |  Tailscale  |
-    | Client  |      |  (casa)   |     |  (remoto)   |
+    | Client  |      |  (home)   |     |  (remote)   |
     +---------+      +-----------+     +-------------+
          |                 |                  |
          |    DNS query: sonarr.home.local    |
          |                 |                  |
          +-----------------+------------------+
                            v
-                   Tutti ricevono:
+                   All receive:
                     192.168.3.10
 ```
 
-### 1.2 Configurare Tailscale per usare Pi-hole
+### 1.2 Configure Tailscale to use Pi-hole
 
-1. Accedere a https://login.tailscale.com/admin/dns
+1. Access https://login.tailscale.com/admin/dns
 2. In **Nameservers** → Add nameserver → Custom
-3. Inserire: `192.168.3.10` (IP del NAS con Pi-hole)
-4. Abilitare **Override local DNS**
+3. Enter: `192.168.3.10` (NAS IP with Pi-hole)
+4. Enable **Override local DNS**
 
-> **Nota**: Assicurarsi che le subnet routes siano approvate (vedi Fase 6 in PROXMOX_SETUP.md)
+> **Note**: Make sure subnet routes are approved (see Phase 6 in PROXMOX_SETUP.md)
 
-### 1.3 Aggiungere Record DNS in Pi-hole
+### 1.3 Add DNS Records in Pi-hole
 
-Accedere a Pi-hole: `http://192.168.3.10:8081`
+Access Pi-hole: `http://192.168.3.10:8081`
 
-**Local DNS → DNS Records**, aggiungere:
+**Local DNS → DNS Records**, add:
 
 | Domain | IP |
 |--------|-----|
@@ -98,48 +98,48 @@ Accedere a Pi-hole: `http://192.168.3.10:8081`
 | `uptime.home.local` | 192.168.3.10 |
 | `plex.home.local` | 192.168.3.21 |
 
-### 1.4 Verifica
+### 1.4 Verification
 
 ```bash
-# Da client in LAN
+# From LAN client
 nslookup sonarr.home.local
-# Deve restituire 192.168.3.10
+# Should return 192.168.3.10
 
-# Da dispositivo remoto via Tailscale
+# From remote device via Tailscale
 tailscale ping 192.168.3.10
 nslookup sonarr.home.local
-# Deve restituire 192.168.3.10 (DNS via tunnel)
+# Should return 192.168.3.10 (DNS via tunnel)
 ```
 
-### Vantaggi di questa configurazione
+### Benefits of This Configuration
 
-- **Zero costi**: nessun dominio da acquistare
-- **Stesso URL ovunque**: `sonarr.home.local` funziona in LAN e via Tailscale
-- **Ad-blocking anche da remoto**: Pi-hole filtra anche il traffico Tailscale
-- **Nessun port forwarding**: Tailscale gestisce l'accesso remoto
+- **Zero costs**: no domain to purchase
+- **Same URL everywhere**: `sonarr.home.local` works on LAN and via Tailscale
+- **Ad-blocking also remotely**: Pi-hole filters Tailscale traffic too
+- **No port forwarding**: Tailscale handles remote access
 
 ---
 
-## Fase 2: Installazione Traefik (Soluzione Principale)
+## Phase 2: Traefik Installation (Primary Solution)
 
-### 2.1 Configurazione gia' inclusa
+### 2.1 Configuration Already Included
 
-Traefik e' gia' configurato in `docker/compose.yml` con:
-- **HTTPS attivo** con certificato self-signed per `*.home.local`
-- Redirect automatico HTTP → HTTPS
-- Dashboard accessibile via reverse proxy su `traefik.home.local`
-- Auto-discovery Docker sulla rete `homelab_proxy`
-- Provider file per servizi non-Docker (Home Assistant)
-- Labels Traefik gia' aggiunte a tutti i servizi
+Traefik is already configured in `docker/compose.yml` with:
+- **HTTPS enabled** with self-signed certificate for `*.home.local`
+- Automatic HTTP → HTTPS redirect
+- Dashboard accessible via reverse proxy at `traefik.home.local`
+- Docker auto-discovery on `homelab_proxy` network
+- File provider for non-Docker services (Home Assistant)
+- Traefik labels already added to all services
 
-**Accesso Dashboard**: https://traefik.home.local (richiede DNS Pi-hole configurato)
+**Dashboard Access**: https://traefik.home.local (requires Pi-hole DNS configured)
 
-### 2.2 Servizi gia' configurati
+### 2.2 Services Already Configured
 
-Le labels Traefik sono gia' aggiunte a tutti i servizi nei file compose:
+Traefik labels are already added to all services in compose files:
 
-| Servizio | URL Traefik (HTTPS) | Porta diretta (HTTP) |
-|----------|---------------------|----------------------|
+| Service | Traefik URL (HTTPS) | Direct Port (HTTP) |
+|---------|---------------------|-------------------|
 | Sonarr | https://sonarr.home.local | :8989 |
 | Radarr | https://radarr.home.local | :7878 |
 | Lidarr | https://lidarr.home.local | :8686 |
@@ -156,75 +156,75 @@ Le labels Traefik sono gia' aggiunte a tutti i servizi nei file compose:
 | Home Assistant | https://ha.home.local | :8123 |
 | Traefik Dashboard | https://traefik.home.local | (via reverse proxy) |
 
-### 2.3 Configurazione Home Assistant
+### 2.3 Home Assistant Configuration
 
-Home Assistant usa `network_mode: host`, quindi non puo' usare le labels Docker.
-La configurazione e' gia' presente in `docker/config/traefik/homeassistant.yml`.
+Home Assistant uses `network_mode: host`, so it cannot use Docker labels.
+Configuration is already present in `docker/config/traefik/homeassistant.yml`.
 
-### 2.4 Generazione Certificati HTTPS
+### 2.4 HTTPS Certificate Generation
 
-Prima di avviare lo stack, generare i certificati self-signed:
+Before starting the stack, generate self-signed certificates:
 
 ```bash
-# Generare certificato wildcard per *.home.local
+# Generate wildcard certificate for *.home.local
 ./scripts/generate-certs.sh
 
-# I certificati vengono creati in:
+# Certificates are created in:
 # - docker/config/traefik/certs/home.local.crt
 # - docker/config/traefik/certs/home.local.key
 ```
 
-Il certificato e' valido 10 anni e copre:
-- `*.home.local` (tutti i sottodomini)
-- `home.local` (dominio base)
+Certificate is valid for 10 years and covers:
+- `*.home.local` (all subdomains)
+- `home.local` (base domain)
 
-### 2.5 Avvio e Verifica
+### 2.5 Startup and Verification
 
 ```bash
-# Creare struttura cartelle (include traefik)
+# Create folder structure (includes traefik)
 make setup
 
-# Generare certificati HTTPS
+# Generate HTTPS certificates
 ./scripts/generate-certs.sh
 
-# Avviare stack
+# Start stack
 make up
 
-# Verificare Traefik
+# Verify Traefik
 docker logs traefik
 
-# Accedere alla dashboard (richiede DNS Pi-hole configurato)
+# Access dashboard (requires Pi-hole DNS configured)
 # https://traefik.home.local
 ```
 
-### 2.6 Test Accesso via Nome
+### 2.6 Test Access via Name
 
 ```bash
-# Da browser o curl (-k ignora certificato self-signed)
+# From browser or curl (-k ignores self-signed certificate)
 curl -k https://sonarr.home.local
 curl -k https://radarr.home.local
 curl -k https://pihole.home.local
 ```
 
-> **Nota**: Il browser mostrera' un warning al primo accesso perche' il certificato e' self-signed. E' normale e sicuro per uso interno. Accetta il certificato una volta e il warning non apparira' piu'.
+> **Note**: Browser will show warning on first access because certificate is self-signed. This is normal and safe for internal use. Accept certificate once and warning won't appear again.
 
 ---
 
-## Alternativa: Nginx Proxy Manager
+## Alternative: Nginx Proxy Manager
 
-> Usa NPM se preferisci configurare via interfaccia grafica o hai servizi non-Docker.
+> Use NPM if you prefer configuring via graphical interface or have non-Docker services.
 
-### Installazione su Proxmox (LXC Container)
+### Installation on Proxmox (LXC Container)
 
 ```bash
-# Creare LXC container (ID 101)
-# Installare Docker
+# Create LXC container (ID 101)
+# Install Docker
 apt update && apt install docker.io docker-compose -y
 
-# Creare directory
+# Create directory
 mkdir -p /opt/npm && cd /opt/npm
 
-# docker-compose.yml per NPM
+# docker-compose.yml for NPM
 cat > docker-compose.yml << 'EOF'
 version: '3'
 services:
@@ -243,62 +243,62 @@ EOF
 docker-compose up -d
 ```
 
-### Accesso e Configurazione
+### Access and Configuration
 
-1. Accedere: `http://192.168.3.22:81`
-2. Login default: `admin@example.com` / `changeme`
-3. Cambiare password al primo accesso
+1. Access: `http://192.168.3.22:81`
+2. Default login: `admin@example.com` / `changeme`
+3. Change password on first access
 
-### Aggiungere Proxy Host
+### Add Proxy Host
 
-Per ogni servizio:
+For each service:
 
 1. **Hosts → Proxy Hosts → Add Proxy Host**
 2. **Domain Names**: `sonarr.home.local`
 3. **Scheme**: `http`
 4. **Forward Hostname/IP**: `192.168.3.10`
 5. **Forward Port**: `8989`
-6. **Block Common Exploits**: abilitato
-7. **Websockets Support**: abilitato (per Home Assistant)
+6. **Block Common Exploits**: enabled
+7. **Websockets Support**: enabled (for Home Assistant)
 
-### Quando preferire NPM
+### When to Prefer NPM
 
-- Configurazione visuale senza modificare file YAML
-- Servizi non-Docker (es. Proxmox WebUI, dispositivi di rete)
-- SSL con Let's Encrypt via interfaccia guidata
-- Utenti meno esperti con Docker
+- Visual configuration without modifying YAML files
+- Non-Docker services (e.g., Proxmox WebUI, network devices)
+- SSL with Let's Encrypt via guided interface
+- Users less experienced with Docker
 
 ---
 
-## Fase 3: Accettare il Certificato Self-Signed
+## Phase 3: Accept Self-Signed Certificate
 
-HTTPS e' abilitato di default con certificati self-signed. Il traffico e' cifrato, ma i browser mostreranno un warning perche' il certificato non e' emesso da una CA pubblica.
+HTTPS is enabled by default with self-signed certificates. Traffic is encrypted, but browsers will show a warning because certificate is not issued by a public CA.
 
-### 3.1 Accettare nel Browser (Metodo Semplice)
+### 3.1 Accept in Browser (Simple Method)
 
-Al primo accesso a ogni servizio:
+On first access to each service:
 
-1. Il browser mostra "La connessione non e' privata" (o simile)
-2. Click su **Avanzate** → **Procedi comunque**
-3. Il certificato viene memorizzato e il warning non appare piu'
+1. Browser shows "Connection is not private" (or similar)
+2. Click **Advanced** → **Proceed anyway**
+3. Certificate is remembered and warning won't appear again
 
-### 3.2 Importare il Certificato (Metodo Permanente)
+### 3.2 Import Certificate (Permanent Method)
 
-Per eliminare il warning su tutti i servizi, importare il certificato come attendibile.
+To eliminate warning on all services, import certificate as trusted.
 
-**Esportare il certificato dal NAS:**
+**Export certificate from NAS:**
 ```bash
-# Il certificato e' in:
+# Certificate is in:
 # docker/config/traefik/certs/home.local.crt
 ```
 
 **Windows:**
-1. Copiare `home.local.crt` sul PC
-2. Doppio click → **Installa certificato**
-3. Selezionare **Computer locale** → **Avanti**
-4. **Colloca tutti i certificati nel seguente archivio** → **Sfoglia**
-5. Selezionare **Autorita' di certificazione radice attendibili**
-6. **Fine** → Riavviare browser
+1. Copy `home.local.crt` to PC
+2. Double-click → **Install certificate**
+3. Select **Local Machine** → **Next**
+4. **Place all certificates in the following store** → **Browse**
+5. Select **Trusted Root Certification Authorities**
+6. **Finish** → Restart browser
 
 **macOS:**
 ```bash
@@ -310,31 +310,31 @@ sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keyc
 certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Homelab" -i home.local.crt
 ```
 
-**Firefox (tutti i sistemi):**
-1. Impostazioni → Privacy e sicurezza → Certificati → Mostra certificati
-2. Tab **Autorita'** → **Importa**
-3. Selezionare `home.local.crt`
-4. Selezionare **Considera attendibile per identificare siti web**
+**Firefox (all systems):**
+1. Settings → Privacy & Security → Certificates → View Certificates
+2. **Authorities** tab → **Import**
+3. Select `home.local.crt`
+4. Select **Trust this CA to identify websites**
 
-### 3.3 Rigenerare i Certificati
+### 3.3 Regenerate Certificates
 
-Se i certificati scadono o vuoi rigenerarli:
+If certificates expire or you want to regenerate:
 
 ```bash
 ./scripts/generate-certs.sh
-# Rispondere 'y' per sovrascrivere
+# Answer 'y' to overwrite
 make restart
 ```
 
 ---
 
-## Riepilogo Accessi
+## Access Summary
 
-### Con Traefik configurato (HTTPS)
+### With Traefik Configured (HTTPS)
 
-| Servizio | URL (HTTPS) | Porta diretta (HTTP, backup) |
-|----------|-------------|------------------------------|
-| Dashboard Traefik | https://traefik.home.local | (via reverse proxy) |
+| Service | URL (HTTPS) | Direct Port (HTTP, backup) |
+|---------|-------------|---------------------------|
+| Traefik Dashboard | https://traefik.home.local | (via reverse proxy) |
 | Sonarr | https://sonarr.home.local | :8989 |
 | Radarr | https://radarr.home.local | :7878 |
 | Lidarr | https://lidarr.home.local | :8686 |
@@ -349,72 +349,72 @@ make restart
 | Portainer | https://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | https://duplicati.home.local | :8200 |
 | Uptime Kuma | https://uptime.home.local | :3001 |
-| Plex | https://plex.home.local | :32400 (su 192.168.3.21) |
+| Plex | https://plex.home.local | :32400 (on 192.168.3.21) |
 
-> **Nota**: Gli URL funzionano sia dalla rete locale che da remoto via Tailscale (grazie a Pi-hole come DNS).
-> HTTP (porta 80) viene automaticamente reindirizzato a HTTPS (porta 443).
+> **Note**: URLs work both from local network and remotely via Tailscale (thanks to Pi-hole as DNS).
+> HTTP (port 80) is automatically redirected to HTTPS (port 443).
 
 ---
 
 ## Troubleshooting
 
-### DNS non risolve
+### DNS not resolving
 
 ```bash
-# Verificare che Pi-hole sia raggiungibile
+# Verify Pi-hole is reachable
 ping 192.168.3.10
 
-# Verificare record DNS in Pi-hole
+# Verify DNS records in Pi-hole
 # WebUI → Local DNS → DNS Records
 
-# Forzare uso Pi-hole come DNS
+# Force use of Pi-hole as DNS
 # Linux: /etc/resolv.conf → nameserver 192.168.3.10
-# Windows: Impostazioni rete → DNS: 192.168.3.10
+# Windows: Network settings → DNS: 192.168.3.10
 ```
 
-### Traefik non trova i container
+### Traefik not finding containers
 
 ```bash
-# Verificare network proxy
+# Verify proxy network
 docker network ls | grep proxy
 
-# Verificare che i container siano sulla rete proxy
+# Verify containers are on proxy network
 docker network inspect proxy
 
-# Verificare labels
+# Verify labels
 docker inspect sonarr | grep -A 20 Labels
 ```
 
 ### 502 Bad Gateway
 
 ```bash
-# Verificare che il servizio backend sia attivo
+# Verify backend service is running
 docker ps | grep sonarr
 curl http://192.168.3.10:8989
 
-# Verificare logs Traefik
+# Check Traefik logs
 docker logs traefik --tail 50
 ```
 
-### Accesso remoto non funziona
+### Remote access not working
 
 ```bash
-# Verificare Tailscale
+# Verify Tailscale
 tailscale status
 
-# Verificare DNS Tailscale
+# Verify Tailscale DNS
 # https://login.tailscale.com/admin/dns
-# Deve mostrare 192.168.3.10 come nameserver
+# Should show 192.168.3.10 as nameserver
 
-# Verificare subnet routes approvate
+# Verify subnet routes approved
 # https://login.tailscale.com/admin/machines
 ```
 
 ---
 
-## Note
+## Notes
 
-- **Porte dirette**: Restano accessibili come backup se Traefik ha problemi
-- **Home Assistant**: Richiede configurazione file separata (network_mode: host)
-- **Plex**: Se su Proxmox, aggiungere record DNS che punta a 192.168.3.20
-- **Aggiornamenti**: Watchtower aggiorna automaticamente Traefik
+- **Direct ports**: Remain accessible as backup if Traefik has issues
+- **Home Assistant**: Requires separate file configuration (network_mode: host)
+- **Plex**: If on Proxmox, add DNS record pointing to 192.168.3.20
+- **Updates**: Watchtower automatically updates Traefik

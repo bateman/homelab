@@ -1,85 +1,85 @@
-# Setup Notifiche - Uptime Kuma via Home Assistant
+# Notifications Setup - Uptime Kuma via Home Assistant
 
-> Guida per configurare notifiche push iOS dagli alert di Uptime Kuma tramite Home Assistant
+> Guide to configure iOS push notifications from Uptime Kuma alerts via Home Assistant
 
 ---
 
-## Panoramica
+## Overview
 
-Questa guida spiega come ricevere notifiche push su iPhone quando Uptime Kuma rileva un servizio down, utilizzando Home Assistant come ponte.
+This guide explains how to receive push notifications on iPhone when Uptime Kuma detects a service down, using Home Assistant as a bridge.
 
-### Architettura
+### Architecture
 
 ```
 ┌──────────────┐     webhook      ┌──────────────────┐     push      ┌─────────┐
 │ Uptime Kuma  │ ───────────────► │  Home Assistant  │ ────────────► │  iPhone │
-│  (monitor)   │   HTTP POST      │   (automazione)  │   APNs        │  (app)  │
+│  (monitor)   │   HTTP POST      │   (automation)   │   APNs        │  (app)  │
 └──────────────┘                  └──────────────────┘               └─────────┘
    :3001                              :8123                         HA Companion
 ```
 
-### Perche' questa soluzione
+### Why This Solution
 
-- **Gratuita**: nessun costo, nessun abbonamento
-- **Gia' nello stack**: Home Assistant e' gia' configurato
-- **Notifiche native iOS**: push istantanee, supporto notifiche critiche
-- **Nessuna dipendenza esterna**: funziona anche senza internet (in LAN)
-
----
-
-## Prerequisiti
-
-- [ ] Uptime Kuma attivo (`https://uptime.home.local` o `http://192.168.3.10:3001`)
-- [ ] Home Assistant attivo (`https://ha.home.local` o `http://192.168.3.10:8123`)
-- [ ] iPhone con iOS 14+
+- **Free**: no cost, no subscription
+- **Already in stack**: Home Assistant is already configured
+- **Native iOS notifications**: instant push, critical notification support
+- **No external dependencies**: works without internet (on LAN)
 
 ---
 
-## Passo 1: Installare l'App iOS
+## Prerequisites
 
-1. Scarica **Home Assistant** dall'App Store (gratuita)
-2. Apri l'app e connettiti al server:
-   - URL interno: `http://192.168.3.10:8123`
-   - Oppure via Tailscale: `https://ha.home.local`
-3. Effettua il login con le tue credenziali HA
-4. Quando richiesto, **consenti le notifiche**
-5. Completa la configurazione iniziale dell'app
+- [ ] Uptime Kuma active (`https://uptime.home.local` or `http://192.168.3.10:3001`)
+- [ ] Home Assistant active (`https://ha.home.local` or `http://192.168.3.10:8123`)
+- [ ] iPhone with iOS 14+
 
-### Trovare il Nome del Dispositivo
+---
 
-Dopo la configurazione, HA crea automaticamente un servizio di notifica per il tuo dispositivo.
+## Step 1: Install iOS App
 
-1. Vai in HA → **Impostazioni** → **Dispositivi e servizi**
-2. Cerca **Mobile App** o il nome del tuo iPhone
-3. Clicca sul dispositivo
-4. Nota il nome del servizio, sara' qualcosa come:
-   - `notify.mobile_app_iphone_di_mario`
+1. Download **Home Assistant** from the App Store (free)
+2. Open the app and connect to server:
+   - Internal URL: `http://192.168.3.10:8123`
+   - Or via Tailscale: `https://ha.home.local`
+3. Log in with your HA credentials
+4. When prompted, **allow notifications**
+5. Complete initial app setup
+
+### Find Device Name
+
+After setup, HA automatically creates a notification service for your device.
+
+1. Go to HA → **Settings** → **Devices & services**
+2. Search for **Mobile App** or your iPhone name
+3. Click on the device
+4. Note the service name, it will be something like:
+   - `notify.mobile_app_marios_iphone`
    - `notify.mobile_app_iphone`
 
-> **Importante**: Annota questo nome esatto, servira' per configurare l'automazione.
+> **Important**: Note this exact name, you'll need it to configure the automation.
 
 ---
 
-## Passo 2: Configurare l'Automazione in Home Assistant
+## Step 2: Configure Automation in Home Assistant
 
-Hai due opzioni: via UI (consigliata) o via YAML.
+You have two options: via UI (recommended) or via YAML.
 
-### Opzione A: Via UI (Consigliata)
+### Option A: Via UI (Recommended)
 
-1. Vai in HA → **Impostazioni** → **Automazioni e scene**
-2. Clicca **+ Crea automazione** → **Crea nuova automazione**
-3. Configura il **Trigger**:
-   - Tipo trigger: **Webhook**
+1. Go to HA → **Settings** → **Automations & scenes**
+2. Click **+ Create automation** → **Create new automation**
+3. Configure the **Trigger**:
+   - Trigger type: **Webhook**
    - Webhook ID: `uptime-kuma-alert`
-   - Metodi consentiti: `POST`
-   - Solo locale: `Si`
-4. Configura l'**Azione**:
-   - Tipo azione: **Chiama servizio**
-   - Servizio: `notify.mobile_app_<nome_tuo_iphone>`
-   - Clicca sui tre puntini → **Modifica in YAML**
-   - Inserisci:
+   - Allowed methods: `POST`
+   - Local only: `Yes`
+4. Configure the **Action**:
+   - Action type: **Call service**
+   - Service: `notify.mobile_app_<your_iphone_name>`
+   - Click three dots → **Edit in YAML**
+   - Enter:
      ```yaml
-     service: notify.mobile_app_<nome_tuo_iphone>
+     service: notify.mobile_app_<your_iphone_name>
      data:
        title: "{{ trigger.json.monitor.name | default('Uptime Kuma') }}"
        message: "{{ trigger.json.heartbeat.msg | default('Status changed') }}"
@@ -88,12 +88,12 @@ Hai due opzioni: via UI (consigliata) o via YAML.
            sound: default
          url: "https://uptime.home.local"
      ```
-5. Dai un nome: `Uptime Kuma Alerts`
-6. **Salva**
+5. Name it: `Uptime Kuma Alerts`
+6. **Save**
 
-### Opzione B: Via YAML
+### Option B: Via YAML
 
-Aggiungi questa automazione al file `automations.yaml` di Home Assistant:
+Add this automation to Home Assistant's `automations.yaml`:
 
 ```yaml
 - id: uptime_kuma_notifications
@@ -107,14 +107,14 @@ Aggiungi questa automazione al file `automations.yaml` di Home Assistant:
       local_only: true
   condition: []
   action:
-    - service: notify.mobile_app_<nome_tuo_iphone>
+    - service: notify.mobile_app_<your_iphone_name>
       data:
         title: "{{ trigger.json.monitor.name | default('Uptime Kuma') }}"
         message: "{{ trigger.json.heartbeat.msg | default('Status changed') }}"
         data:
           push:
             sound: default
-            # Decommentare per notifiche critiche (bypass silenzioso)
+            # Uncomment for critical notifications (bypass silent mode)
             # critical: 1
             # volume: 1.0
           url: "https://uptime.home.local"
@@ -122,41 +122,41 @@ Aggiungi questa automazione al file `automations.yaml` di Home Assistant:
   max: 10
 ```
 
-Dopo aver modificato il file, riavvia Home Assistant:
-- Impostazioni → Sistema → Riavvia
+After modifying the file, restart Home Assistant:
+- Settings → System → Restart
 
-> **Nota**: Sostituisci `<nome_tuo_iphone>` con il nome reale del dispositivo trovato al Passo 1.
+> **Note**: Replace `<your_iphone_name>` with the actual device name found in Step 1.
 
 ---
 
-## Passo 3: Configurare Uptime Kuma
+## Step 3: Configure Uptime Kuma
 
-1. Apri Uptime Kuma: `https://uptime.home.local` (o `http://192.168.3.10:3001`)
-2. Vai in **Settings** (icona ingranaggio) → **Notifications**
-3. Clicca **Setup Notification**
-4. Configura:
+1. Open Uptime Kuma: `https://uptime.home.local` (or `http://192.168.3.10:3001`)
+2. Go to **Settings** (gear icon) → **Notifications**
+3. Click **Setup Notification**
+4. Configure:
    - **Notification Type**: `Webhook`
    - **Friendly Name**: `Home Assistant iOS`
    - **Post URL**: `http://192.168.3.10:8123/api/webhook/uptime-kuma-alert`
    - **Request Body**: `application/json`
-5. Clicca **Test** per verificare
-6. Se il test funziona, clicca **Save**
+5. Click **Test** to verify
+6. If test works, click **Save**
 
-> **Nota**: Si usa l'IP `192.168.3.10` (non `localhost`) perche' Uptime Kuma gira in rete Docker mentre Home Assistant e' in `network_mode: host`. L'IP dell'host e' necessario per la comunicazione.
+> **Note**: We use IP `192.168.3.10` (not `localhost`) because Uptime Kuma runs in Docker network while Home Assistant is in `network_mode: host`. The host IP is required for communication.
 
-### Associare la Notifica ai Monitor
+### Associate Notification with Monitors
 
-Per ogni monitor che vuoi monitorare:
+For each monitor you want to track:
 
-1. Vai sul monitor esistente o creane uno nuovo
-2. Nella sezione **Notifications**, abilita `Home Assistant iOS`
-3. Salva
+1. Go to existing monitor or create a new one
+2. In **Notifications** section, enable `Home Assistant iOS`
+3. Save
 
 ---
 
-## Test Manuale
+## Manual Test
 
-Puoi testare il webhook direttamente con curl:
+You can test the webhook directly with curl:
 
 ```bash
 curl -X POST http://192.168.3.10:8123/api/webhook/uptime-kuma-alert \
@@ -167,16 +167,16 @@ curl -X POST http://192.168.3.10:8123/api/webhook/uptime-kuma-alert \
   }'
 ```
 
-Dovresti ricevere una notifica push sull'iPhone entro pochi secondi.
+You should receive a push notification on iPhone within seconds.
 
 ---
 
-## Notifiche Critiche (Opzionale)
+## Critical Notifications (Optional)
 
-Per ricevere notifiche anche quando l'iPhone e' in modalita' silenzioso o Non Disturbare:
+To receive notifications even when iPhone is in silent mode or Do Not Disturb:
 
-1. Modifica l'automazione in HA
-2. Aggiungi questi parametri all'azione:
+1. Edit the automation in HA
+2. Add these parameters to the action:
    ```yaml
    data:
      push:
@@ -184,50 +184,50 @@ Per ricevere notifiche anche quando l'iPhone e' in modalita' silenzioso o Non Di
        critical: 1
        volume: 1.0
    ```
-3. L'app iOS chiedera' il permesso per le notifiche critiche
+3. The iOS app will request permission for critical notifications
 
-> **Attenzione**: Le notifiche critiche bypassano TUTTE le impostazioni di silenzio. Usale solo per alert veramente importanti (servizi critici down).
+> **Warning**: Critical notifications bypass ALL silence settings. Use only for truly important alerts (critical services down).
 
 ---
 
 ## Troubleshooting
 
-### La notifica non arriva
+### Notification not arriving
 
-| Verifica | Come |
-|----------|------|
-| Servizio notify esiste | HA → Strumenti sviluppatori → Servizi → cerca `notify.mobile_app_*` |
-| Automazione attiva | HA → Impostazioni → Automazioni → verifica stato |
-| Log automazione | Automazioni → tre puntini → Traccia |
-| Log HA | Impostazioni → Sistema → Log |
-| Webhook funziona | Usa il comando curl sopra |
+| Check | How |
+|-------|-----|
+| Notify service exists | HA → Developer Tools → Services → search `notify.mobile_app_*` |
+| Automation active | HA → Settings → Automations → check status |
+| Automation log | Automations → three dots → Traces |
+| HA Log | Settings → System → Logs |
+| Webhook works | Use curl command above |
 
-### Errore "Service not found"
+### Error "Service not found"
 
-- Il nome del dispositivo e' **case-sensitive**
-- Verifica il nome esatto in Dispositivi e servizi → Mobile App
-- Prova a riavviare HA dopo aver installato l'app Companion
+- Device name is **case-sensitive**
+- Verify exact name in Devices & services → Mobile App
+- Try restarting HA after installing Companion app
 
-### Webhook non raggiungibile
+### Webhook not reachable
 
 ```bash
-# Verificare che HA risponda
+# Verify HA responds
 curl http://192.168.3.10:8123/api/
 
-# Se errore, verificare che HA sia attivo
+# If error, verify HA is running
 docker ps | grep homeassistant
 docker logs homeassistant --tail 20
 ```
 
-### Notifiche in ritardo
+### Delayed notifications
 
-- Le notifiche push dipendono da Apple Push Notification service (APNs)
-- In rari casi possono esserci ritardi di alcuni secondi
-- Per test immediati, usa il pulsante **Test** in Uptime Kuma
+- Push notifications depend on Apple Push Notification service (APNs)
+- In rare cases there may be delays of a few seconds
+- For immediate tests, use the **Test** button in Uptime Kuma
 
 ---
 
-## Riferimenti
+## References
 
 - [Home Assistant Companion App](https://companion.home-assistant.io/)
 - [HA Automation Triggers - Webhook](https://www.home-assistant.io/docs/automation/trigger/#webhook-trigger)
