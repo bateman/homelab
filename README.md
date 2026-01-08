@@ -1,64 +1,64 @@
 # Homelab Infrastructure
 
-> **Prima installazione**: Vai direttamente a [`START_HERE.md`](START_HERE.md) per la guida passo-passo completa.
+> **First installation**: Go directly to [`START_HERE.md`](START_HERE.md) for the complete step-by-step guide.
 
-Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox con stack media completo.
+Infrastructure-as-code configuration for a homelab based on QNAP NAS and Proxmox with a complete media stack.
 
-**Cosa fa questo progetto:**
-- Gestione automatizzata di serie TV, film e musica (Sonarr, Radarr, Lidarr)
-- Download da torrent e Usenet con supporto hardlinking
-- DNS ad-blocking per tutta la rete (Pi-hole)
-- Streaming media locale e remoto (Plex)
-- Backup automatizzati locali e cloud
-- Segmentazione rete con VLAN per sicurezza
+**What this project does:**
+- Automated management of TV series, movies, and music (Sonarr, Radarr, Lidarr)
+- Downloads from torrent and Usenet with hardlinking support
+- Network-wide DNS ad-blocking (Pi-hole)
+- Local and remote media streaming (Plex)
+- Automated local and cloud backups
+- Network segmentation with VLANs for security
 
 ## Hardware
 
-| Dispositivo | Ruolo | IP |
-|-------------|-------|-----|
-| [QNAP TS-435XeU](https://www.qnap.com/it-it/product/ts-435xeu) | NAS + Docker stack media | 192.168.3.10 |
-| [Lenovo ThinkCentre neo 50q Gen 4](https://www.lenovo.com/it/it/p/desktops/thinkcentre/thinkcentre-neo-series/thinkcentre-neo-50q-gen-4-tiny-(intel)/12lmcto1wwit1) | Proxmox + Plex | 192.168.3.20 |
-| [Ubiquiti UniFi Dream Machine SE](https://store.ui.com/eu/en/category/cloud-gateways-large-scale/products/udm-se) | Router/Firewall | 192.168.2.1 |
-| [Ubiquiti USW-Pro-Max-16-PoE](https://eu.store.ui.com/eu/en/products/usw-pro-max-16-poe) | Switch PoE | 192.168.2.10 |
-| [Ubiquiti U6-Pro](https://store.ui.com/eu/en/category/wifi-flagship-high-capacity/products/u6-pro) | Access Point Wi-Fi 6 | DHCP |
-| [Eaton 5P 650i Rack G2](https://www.eaton.com/it/it-it/skuPage.5P650IRG2.html) | UPS / Gruppo di continuità | - |
+| Device | Role | IP |
+|--------|------|-----|
+| [QNAP TS-435XeU](https://www.qnap.com/en/product/ts-435xeu) | NAS + Docker media stack | 192.168.3.10 |
+| [Lenovo ThinkCentre neo 50q Gen 4](https://www.lenovo.com/us/en/p/desktops/thinkcentre/thinkcentre-neo-series/thinkcentre-neo-50q-gen-4-tiny-(intel)/12lmcto1wwit1) | Proxmox + Plex | 192.168.3.20 |
+| [Ubiquiti UniFi Dream Machine SE](https://store.ui.com/us/en/category/cloud-gateways-large-scale/products/udm-se) | Router/Firewall | 192.168.2.1 |
+| [Ubiquiti USW-Pro-Max-16-PoE](https://store.ui.com/us/en/products/usw-pro-max-16-poe) | PoE Switch | 192.168.2.10 |
+| [Ubiquiti U6-Pro](https://store.ui.com/us/en/category/wifi-flagship-high-capacity/products/u6-pro) | Wi-Fi 6 Access Point | DHCP |
+| [Eaton 5P 650i Rack G2](https://www.eaton.com/us/en-us/skuPage.5P650IRG2.html) | UPS / Uninterruptible Power Supply | - |
 
-## Stack Docker (NAS)
+## Docker Stack (NAS)
 
-- **[Sonarr](https://sonarr.tv/)** (8989) - Serie TV
-- **[Radarr](https://radarr.video/)** (7878) - Film
-- **[Lidarr](https://lidarr.audio/)** (8686) - Musica
+- **[Sonarr](https://sonarr.tv/)** (8989) - TV Series
+- **[Radarr](https://radarr.video/)** (7878) - Movies
+- **[Lidarr](https://lidarr.audio/)** (8686) - Music
 - **[Prowlarr](https://prowlarr.com/)** (9696) - Indexer
-- **[Bazarr](https://www.bazarr.media/)** (6767) - Sottotitoli
-- **[Gluetun](https://github.com/qdm12/gluetun)** - VPN container con kill switch
+- **[Bazarr](https://www.bazarr.media/)** (6767) - Subtitles
+- **[Gluetun](https://github.com/qdm12/gluetun)** - VPN container with kill switch
 - **[qBittorrent](https://www.qbittorrent.org/)** (8080) - Torrent (via Gluetun)
 - **[NZBGet](https://nzbget.com/)** (6789) - Usenet (via Gluetun)
-- **[Recyclarr](https://recyclarr.dev/)** - Sync profili Trash Guides
-- **[Huntarr](https://github.com/plexguide/Huntarr.io)** (9705) - Monitoring *arr
-- **[Cleanuparr](https://github.com/Cleanuparr/Cleanuparr)** (11011) - Pulizia automatica
-- **[FlareSolverr](https://github.com/FlareSolverr/FlareSolverr)** (8191) - Bypass Cloudflare
+- **[Recyclarr](https://recyclarr.dev/)** - Trash Guides profile sync
+- **[Huntarr](https://github.com/plexguide/Huntarr.io)** (9705) - *arr Monitoring
+- **[Cleanuparr](https://github.com/Cleanuparr/Cleanuparr)** (11011) - Automatic cleanup
+- **[FlareSolverr](https://github.com/FlareSolverr/FlareSolverr)** (8191) - Cloudflare bypass
 - **[Pi-hole](https://pi-hole.net/)** (8081) - DNS/Ad-blocking
-- **[Home Assistant](https://www.home-assistant.io/)** (8123) - Domotica
-- **[Portainer](https://www.portainer.io/)** (9443) - Gestione Docker
-- **[Duplicati](https://www.duplicati.com/)** (8200) - Backup automatizzati
-- **[Uptime Kuma](https://github.com/louislam/uptime-kuma)** (3001) - Monitoring e alerting
-- **[Watchtower](https://containrrr.dev/watchtower/)** (8383) - Auto-update container
+- **[Home Assistant](https://www.home-assistant.io/)** (8123) - Home automation
+- **[Portainer](https://www.portainer.io/)** (9443) - Docker management
+- **[Duplicati](https://www.duplicati.com/)** (8200) - Automated backups
+- **[Uptime Kuma](https://github.com/louislam/uptime-kuma)** (3001) - Monitoring and alerting
+- **[Watchtower](https://containrrr.dev/watchtower/)** (8383) - Container auto-update
 - **[Traefik](https://traefik.io/traefik/)** (80/443) - Reverse proxy
 
-## Stack Proxmox (Mini PC)
+## Proxmox Stack (Mini PC)
 
-Il Mini PC esegue Proxmox VE come hypervisor con container LXC:
+The Mini PC runs Proxmox VE as hypervisor with LXC containers:
 
-- **[Plex Media Server](https://www.plex.tv/)** (32400) - Streaming media con hardware transcoding Intel Quick Sync
-- **[Tailscale](https://tailscale.com/)** - Accesso remoto VPN mesh (subnet router per 192.168.3.0/24 e 192.168.4.0/24)
+- **[Plex Media Server](https://www.plex.tv/)** (32400) - Media streaming with Intel Quick Sync hardware transcoding
+- **[Tailscale](https://tailscale.com/)** - Mesh VPN remote access (subnet router for 192.168.3.0/24 and 192.168.4.0/24)
 
-WebUI Proxmox: `https://192.168.3.20:8006`
+Proxmox WebUI: `https://192.168.3.20:8006`
 
-Dettagli setup in [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md).
+Setup details in [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md).
 
-## Struttura Cartelle
+## Folder Structure
 
-Configurato per supporto hardlinking secondo [Trash Guides](https://trash-guides.info/):
+Configured for hardlinking support according to [Trash Guides](https://trash-guides.info/):
 
 ```
 /share/data/
@@ -69,92 +69,92 @@ Configurato per supporto hardlinking secondo [Trash Guides](https://trash-guides
 └── media/{movies,tv,music}/
 ```
 
-## Rete
+## Network
 
-La rete è segmentata in VLAN per isolare il traffico e migliorare la sicurezza:
+The network is segmented into VLANs to isolate traffic and improve security:
 
-| VLAN | Subnet | Uso |
+| VLAN | Subnet | Use |
 |------|--------|-----|
 | 2 | 192.168.2.0/24 | Management (switch, router, AP) |
 | 3 | 192.168.3.0/24 | Servers (NAS, Proxmox) |
-| 4 | 192.168.4.0/24 | Media (TV, dispositivi streaming) |
-| 5 | 192.168.5.0/24 | Guest (accesso internet isolato) |
-| 6 | 192.168.6.0/24 | IoT (dispositivi smart) |
+| 4 | 192.168.4.0/24 | Media (TV, streaming devices) |
+| 5 | 192.168.5.0/24 | Guest (isolated internet access) |
+| 6 | 192.168.6.0/24 | IoT (smart devices) |
 
-Dettagli in [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md).
+Details in [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md).
 
-## Documentazione
+## Documentation
 
-### Guide Installazione
-- [`START_HERE.md`](START_HERE.md) - **Guida installazione completa (inizia qui)**
-- [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) - Setup rete UniFi e VLAN
-- [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) - Setup NAS QNAP e Docker
-- [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) - Setup Proxmox e Plex
-- [`docs/setup/VPN_SETUP.md`](docs/setup/VPN_SETUP.md) - Protezione VPN per download clients (Gluetun)
-- [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) - Traefik, certificati HTTPS, Pi-hole DNS
-- [`docs/setup/NOTIFICATIONS_SETUP.md`](docs/setup/NOTIFICATIONS_SETUP.md) - Setup notifiche Uptime Kuma via Home Assistant
+### Installation Guides
+- [`START_HERE.md`](START_HERE.md) - **Complete installation guide (start here)**
+- [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) - UniFi network and VLAN setup
+- [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) - QNAP NAS and Docker setup
+- [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) - Proxmox and Plex setup
+- [`docs/setup/VPN_SETUP.md`](docs/setup/VPN_SETUP.md) - VPN protection for download clients (Gluetun)
+- [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) - Traefik, HTTPS certificates, Pi-hole DNS
+- [`docs/setup/NOTIFICATIONS_SETUP.md`](docs/setup/NOTIFICATIONS_SETUP.md) - Uptime Kuma notifications via Home Assistant
 
-### Riferimenti
-- [`CLAUDE.md`](CLAUDE.md) - Guida completa progetto e sviluppo
-- [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) - Layout hardware e piano IP
-- [`docs/network/firewall-config.md`](docs/network/firewall-config.md) - Regole firewall UDM-SE
-- [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) - Procedure backup/restore
+### Reference
+- [`CLAUDE.md`](CLAUDE.md) - Project guide and development guidelines
+- [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) - Hardware layout and IP plan
+- [`docs/network/firewall-config.md`](docs/network/firewall-config.md) - UDM-SE firewall rules
+- [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) - Backup/restore procedures
 
-## Comandi Utili
+## Useful Commands
 
-Tutti i comandi vanno eseguiti nella directory `/share/container/mediastack` sul NAS.
+All commands should be run in the `/share/container/mediastack` directory on the NAS.
 
-### Setup e Validazione
+### Setup and Validation
 
-| Comando | Descrizione |
+| Command | Description |
 |---------|-------------|
-| `make setup` | Crea struttura cartelle e file `.env` (eseguire una sola volta all'installazione) |
-| `make validate` | Verifica sintassi dei file compose prima dell'avvio |
+| `make setup` | Create folder structure and `.env` file (run once during installation) |
+| `make validate` | Verify compose file syntax before startup |
 
-### Gestione Container
+### Container Management
 
-| Comando | Descrizione |
+| Command | Description |
 |---------|-------------|
-| `make up` | Avvia tutti i container (valida config automaticamente) |
-| `make down` | Ferma tutti i container |
-| `make restart` | Restart completo (down + up) |
-| `make pull` | Scarica versioni aggiornate delle immagini Docker |
-| `make update` | Aggiorna e riavvia in un comando (pull + restart) |
+| `make up` | Start all containers (validates config automatically) |
+| `make down` | Stop all containers |
+| `make restart` | Full restart (down + up) |
+| `make pull` | Download updated Docker image versions |
+| `make update` | Update and restart in one command (pull + restart) |
 
-### Monitoraggio
+### Monitoring
 
-| Comando | Descrizione |
+| Command | Description |
 |---------|-------------|
-| `make status` | Mostra stato container, uso risorse CPU/RAM e spazio disco |
-| `make logs` | Segui i log di tutti i container in tempo reale |
-| `make logs-<servizio>` | Log di un singolo servizio (es: `make logs-sonarr`) |
-| `make health` | Health check HTTP di tutti i servizi |
-| `make urls` | Elenca URL di accesso a tutti i servizi (Sonarr, Radarr, Pi-hole, ecc.) |
+| `make status` | Show container status, CPU/RAM usage, and disk space |
+| `make logs` | Follow all container logs in real-time |
+| `make logs-<service>` | Single service log (e.g., `make logs-sonarr`) |
+| `make health` | HTTP health check of all services |
+| `make urls` | List access URLs for all services (Sonarr, Radarr, Pi-hole, etc.) |
 
 ### Backup
 
-| Comando | Descrizione |
+| Command | Description |
 |---------|-------------|
-| `make backup` | Avvia backup Duplicati on-demand |
-| Duplicati WebUI | http://192.168.3.10:8200 - configurazione e backup schedulati |
+| `make backup` | Start Duplicati backup on-demand |
+| Duplicati WebUI | http://192.168.3.10:8200 - configuration and scheduled backups |
 
-### Utility
+### Utilities
 
-| Comando | Descrizione |
+| Command | Description |
 |---------|-------------|
-| `make shell-<servizio>` | Apre shell nel container (es: `make shell-radarr`) |
-| `make clean` | Rimuove risorse Docker orfane (chiede conferma) |
-| `make recyclarr-sync` | Sync manuale profili qualità Trash Guides |
-| `make recyclarr-config` | Genera template configurazione Recyclarr |
-| `make help` | Mostra tutti i comandi disponibili |
+| `make shell-<service>` | Open shell in container (e.g., `make shell-radarr`) |
+| `make clean` | Remove orphan Docker resources (asks for confirmation) |
+| `make recyclarr-sync` | Manual Trash Guides quality profile sync |
+| `make recyclarr-config` | Generate Recyclarr configuration template |
+| `make help` | Show all available commands |
 
-## Requisiti
+## Requirements
 
-Prima di iniziare, assicurati di avere:
+Before starting, make sure you have:
 
-- **NAS QNAP** con Container Station 3 installato (fornisce Docker)
-- **Docker Compose v2** (incluso in Container Station 3)
-- **Rete UniFi** (UDM-SE o simile) per gestione VLAN
-- **Abbonamenti** indexer/Usenet per lo stack media (opzionale ma consigliato)
+- **QNAP NAS** with Container Station 3 installed (provides Docker)
+- **Docker Compose v2** (included in Container Station 3)
+- **UniFi Network** (UDM-SE or similar) for VLAN management
+- **Subscriptions** to indexer/Usenet for the media stack (optional but recommended)
 
-Per la lista completa dell'hardware e i dettagli, vedi [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md).
+For the complete hardware list and details, see [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md).
