@@ -355,7 +355,7 @@ services:
   #   - "traefik.http.services.<name>.loadbalancer.server.port=<port>"
   #
   # Requires Pi-hole DNS records pointing *.home.local -> 192.168.3.10
-  # See docs/setup/REVERSE_PROXY_SETUP.md for full configuration guide
+  # See docs/setup/reverse-proxy-setup.md for full configuration guide
   traefik:
     image: traefik:v3.2
     container_name: traefik

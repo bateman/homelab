@@ -116,7 +116,7 @@ services:
       # Disable IPv6 to prevent leaks (most VPN providers don't support it)
       - net.ipv6.conf.all.disable_ipv6=1
     environment:
-      # VPN provider (required) - see docs/setup/VPN_SETUP.md
+      # VPN provider (required) - see docs/setup/vpn-setup.md
       VPN_SERVICE_PROVIDER: ${VPN_SERVICE_PROVIDER:?VPN_SERVICE_PROVIDER is required when using vpn profile}
       VPN_TYPE: ${VPN_TYPE:-openvpn}
       SERVER_COUNTRIES: ${SERVER_COUNTRIES:-Switzerland}

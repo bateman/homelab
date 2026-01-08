@@ -35,7 +35,7 @@ A reverse proxy allows accessing services using readable names (e.g., `sonarr.ho
 
 - [ ] Docker stack running on NAS (192.168.3.10)
 - [ ] Pi-hole configured and active
-- [ ] Tailscale installed on Proxmox (see [PROXMOX_SETUP.md](PROXMOX_SETUP.md))
+- [ ] Tailscale installed on Proxmox (see [proxmox-setup.md](proxmox-setup.md))
 
 ---
 
@@ -75,7 +75,7 @@ A reverse proxy allows accessing services using readable names (e.g., `sonarr.ho
 4. Enable **Override local DNS**
 
 > [!NOTE]
-> Make sure subnet routes are approved (see Phase 6 in PROXMOX_SETUP.md)
+> Make sure subnet routes are approved (see Phase 6 in proxmox-setup.md)
 
 ### 1.3 Add DNS Records in Pi-hole
 
