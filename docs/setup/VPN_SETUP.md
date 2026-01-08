@@ -208,6 +208,25 @@ To get credentials:
 
 > **Note**: Mullvad no longer supports port forwarding since 2023.
 
+### PrivadoVPN (OpenVPN with Port Forwarding)
+
+```bash
+# .env.secrets
+VPN_SERVICE_PROVIDER=privado
+VPN_TYPE=openvpn
+OPENVPN_USER=<your_username>
+OPENVPN_PASSWORD=<your_password>
+SERVER_COUNTRIES=Switzerland
+VPN_PORT_FORWARDING=on
+```
+
+To get credentials:
+1. Log in to https://privadovpn.com/control-panel/
+2. Go to **Account** → **OpenVPN/IKEv2 Username**
+3. Copy your **Username** and **Password**
+
+> **Note**: PrivadoVPN supports port forwarding, which improves torrent speeds.
+
 ---
 
 ## Verify Functionality
