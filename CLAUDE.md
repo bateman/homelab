@@ -65,9 +65,9 @@ homelab/
 | Lidarr | 8686 | Gestione musica |
 | Prowlarr | 9696 | Gestione indexer |
 | Bazarr | 6767 | Gestione sottotitoli |
-| qBittorrent | 8080 | Client torrent (protezione VPN, vedi `docs/setup/VPN_SETUP.md`) |
-| NZBGet | 6789 | Client Usenet (protezione VPN, vedi `docs/setup/VPN_SETUP.md`) |
-| Gluetun | - | Container VPN per protezione download clients (opzionale) |
+| Gluetun | - | Container VPN con kill switch (vedi `docs/setup/VPN_SETUP.md`) |
+| qBittorrent | 8080 | Client torrent (via Gluetun) |
+| NZBGet | 6789 | Client Usenet (via Gluetun) |
 | Huntarr | 9705 | Monitoring *arr |
 | Cleanuparr | 11011 | Pulizia automatica |
 | Pi-hole | 8081 | DNS ad-blocking |
