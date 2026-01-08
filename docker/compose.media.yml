@@ -45,25 +45,89 @@ x-common-healthcheck: &common-healthcheck
 
 services:
   # ===========================================================================
-  # DOWNLOAD CLIENTS
+  # VPN CONTAINER
+  # ===========================================================================
+
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      # Provider e tipo connessione
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE:-openvpn}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES:-Switzerland}
+      - TZ=${TZ:-Europe/Rome}
+      # OpenVPN (NordVPN, PIA, Surfshark)
+      - OPENVPN_USER=${OPENVPN_USER:-}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD:-}
+      # WireGuard (Mullvad, ProtonVPN) - lasciare vuoto se si usa OpenVPN
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY:-}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES:-}
+      # Port forwarding (opzionale, solo ProtonVPN/PIA/AirVPN)
+      - VPN_PORT_FORWARDING=${VPN_PORT_FORWARDING:-off}
+      # Health check
+      - HEALTH_TARGET_ADDRESS=1.1.1.1:443
+      - HEALTH_VPN_DURATION_INITIAL=30s
+    volumes:
+      - ./config/gluetun:/gluetun
+    ports:
+      # Porte esposte per qBittorrent (attraverso VPN)
+      - "8080:8080"                                       # qBittorrent WebUI
+      - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}"         # qBittorrent torrent port
+      - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}/udp"     # qBittorrent torrent port UDP
+      # Porta esposta per NZBGet (attraverso VPN)
+      - "6789:6789"                                       # NZBGet WebUI
+    networks:
+      - media_net
+      - proxy
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik per qBittorrent
+      - "traefik.enable=true"
+      - "traefik.http.routers.qbit.rule=Host(`qbit.home.local`)"
+      - "traefik.http.routers.qbit.entrypoints=websecure"
+      - "traefik.http.routers.qbit.tls=true"
+      - "traefik.http.services.qbit.loadbalancer.server.port=8080"
+      # Traefik per NZBGet
+      - "traefik.http.routers.nzbget.rule=Host(`nzbget.home.local`)"
+      - "traefik.http.routers.nzbget.entrypoints=websecure"
+      - "traefik.http.routers.nzbget.tls=true"
+      - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
+
+  # ===========================================================================
+  # DOWNLOAD CLIENTS (via Gluetun VPN)
   # ===========================================================================
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
+    # Usa la rete di Gluetun per instradare tutto il traffico via VPN
+    network_mode: "service:gluetun"
     environment:
       <<: *common-env
       WEBUI_PORT: 8080
     volumes:
       - ./config/qbittorrent:/config
       - /share/data:/data
-    ports:
-      - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}"
-      - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}/udp"
-      - "8080:8080"
-    networks:
-      - media_net
-      - proxy
+    # Porte gestite da gluetun (non qui)
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -75,28 +139,24 @@ services:
           memory: 2G
         reservations:
           memory: 256M
+    depends_on:
+      gluetun:
+        condition: service_healthy
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-      # Traefik
-      - "traefik.enable=true"
-      - "traefik.http.routers.qbit.rule=Host(`qbit.home.local`)"
-      - "traefik.http.routers.qbit.entrypoints=websecure"
-      - "traefik.http.routers.qbit.tls=true"
-      - "traefik.http.services.qbit.loadbalancer.server.port=8080"
+      # Traefik labels su gluetun, non qui
 
   nzbget:
     image: lscr.io/linuxserver/nzbget:latest
     container_name: nzbget
+    # Usa la rete di Gluetun per instradare tutto il traffico via VPN
+    network_mode: "service:gluetun"
     environment:
       <<: *common-env
     volumes:
       - ./config/nzbget:/config
       - /share/data:/data
-    ports:
-      - "6789:6789"
-    networks:
-      - media_net
-      - proxy
+    # Porte gestite da gluetun (non qui)
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
@@ -108,14 +168,12 @@ services:
           memory: 1G
         reservations:
           memory: 128M
+    depends_on:
+      gluetun:
+        condition: service_healthy
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-      # Traefik
-      - "traefik.enable=true"
-      - "traefik.http.routers.nzbget.rule=Host(`nzbget.home.local`)"
-      - "traefik.http.routers.nzbget.entrypoints=websecure"
-      - "traefik.http.routers.nzbget.tls=true"
-      - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
+      # Traefik labels su gluetun, non qui
 
   # ===========================================================================
   # INDEXER MANAGEMENT
