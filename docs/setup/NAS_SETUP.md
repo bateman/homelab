@@ -70,6 +70,7 @@
 - For media server, advanced ZFS features are not critical
 - Hardlinking works perfectly
 
+> [!NOTE]
 > ZFS would make sense with 16GB+ RAM and maximum priority on data integrity, or on Proxmox/TrueNAS.
 
 ### RAID Choice: RAID 5 vs RAID 10
@@ -101,6 +102,7 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 - Safer and faster rebuild
 - Instant hardlinking and imports
 
+> [!TIP]
 > RAID 5 makes sense if capacity is absolute priority and disk budget is limited.
 
 ### Recommended Configuration Summary
@@ -186,7 +188,8 @@ id dockeruser
 #                      PUID          PGID
 ```
 
-> **Important**: Note these values! They will be needed to configure the `.env` file after cloning the repository.
+> [!IMPORTANT]
+> Note these values! They will be needed to configure the `.env` file after cloning the repository.
 
 ---
 
@@ -206,7 +209,8 @@ id dockeruser
 
 ### Media Stack Folder Structure
 
-> **Note**: The homelab repository should be cloned/copied **only on the NAS**, not on Proxmox.
+> [!NOTE]
+> The homelab repository should be cloned/copied **only on the NAS**, not on Proxmox.
 > Proxmox only hosts the Plex container which accesses media via NFS.
 
 #### Option A: Git Clone (recommended)
@@ -271,7 +275,8 @@ TZ=Europe/Rome
 PIHOLE_PASSWORD=<secure-password>
 ```
 
-> **Critical**: If PUID/PGID don't match the user owning `/share/data`, containers won't have correct permissions to write files and hardlinking won't work.
+> [!IMPORTANT]
+> If PUID/PGID don't match the user owning `/share/data`, containers won't have correct permissions to write files and hardlinking won't work.
 
 ### Verify Structure and Permissions
 
@@ -479,9 +484,11 @@ ls -li /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 ```
 
-> **Note on paths**: On NAS host, paths are `/share/data/...`, while containers see `/data/...` thanks to the mount `-v /share/data:/data`. Both point to the same filesystem, so hardlinks work.
+> [!NOTE]
+> On NAS host, paths are `/share/data/...`, while containers see `/data/...` thanks to the mount `-v /share/data:/data`. Both point to the same filesystem, so hardlinks work.
 
-If inodes are different: **PROBLEM** — verify both paths are on the same volume/filesystem.
+> [!WARNING]
+> If inodes are different, verify both paths are on the same volume/filesystem.
 
 ---
 

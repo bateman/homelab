@@ -56,9 +56,8 @@ sudo dd bs=4M if=proxmox-ve_*.iso of=/dev/sdX conv=fsync status=progress
    - Select NVMe SSD
    - **Filesystem: ext4** (recommended for single NVMe)
 
-   > **Note**: ZFS requires at least 8GB dedicated RAM and offers advantages (snapshots,
-   > integrity) mainly with multi-disk configurations. For single NVMe,
-   > ext4 is more resource-efficient.
+   > [!NOTE]
+   > ZFS requires at least 8GB dedicated RAM and offers advantages (snapshots, integrity) mainly with multi-disk configurations. For single NVMe, ext4 is more resource-efficient.
 
 3. [ ] Locale settings:
    - Country: Italy
@@ -176,12 +175,14 @@ Also add storage for backup:
 | Export | /share/backup |
 | Content | VZDump backup file |
 
-> **Troubleshooting**: If NFS mount fails, verify that the QNAP firewall allows connections from 192.168.3.20 and that NFS services are active.
+> [!TIP]
+> If NFS mount fails, verify that the QNAP firewall allows connections from 192.168.3.20 and that NFS services are active.
 
 ---
 
 ## Phase 4: Creating LXC Container for Plex
 
+> [!TIP]
 > LXC is lighter than a full VM and sufficient for Plex
 
 ### 4.1 Download Template
@@ -190,6 +191,7 @@ Datacenter → proxmox → local → CT Templates → Templates
 
 Download: `debian-12-standard` (Bookworm)
 
+> [!TIP]
 > **Why Debian instead of Ubuntu?**
 > - Reduced footprint (~150MB vs ~400MB base image)
 > - Lower RAM consumption (~50-80MB idle vs ~150-200MB)
@@ -284,6 +286,7 @@ Open browser: `http://192.168.3.21:32400/web`
 
 ## Phase 5: Plex Configuration (Trash Guides)
 
+> [!NOTE]
 > This section follows the [official Trash Guides recommendations](https://trash-guides.info/Plex/Tips/Plex-media-server/) to optimize Plex Media Server.
 
 ### 5.1 Initial Setup
@@ -309,6 +312,7 @@ Add Library → Music:
 
 ### 5.3 Library Settings (Settings → Library)
 
+> [!IMPORTANT]
 > **Trash Guides Philosophy**: Plex should never modify your media files. Use Sonarr/Radarr to manage the library. For extra security, configure Plex with **Read Only** access to the media library.
 
 | Setting | Value | Rationale |
@@ -356,7 +360,8 @@ mount -t tmpfs -o size=2G tmpfs /tmp/plex
 echo "tmpfs /tmp/plex tmpfs size=2G,mode=1777 0 0" >> /etc/fstab
 ```
 
-> **Note**: Transcoding on RAM reduces SSD wear and speeds up operations, since transcode data is temporary.
+> [!TIP]
+> Transcoding on RAM reduces SSD wear and speeds up operations, since transcode data is temporary.
 
 ### 5.5 Network Settings (Settings → Network)
 
@@ -370,7 +375,8 @@ echo "tmpfs /tmp/plex tmpfs size=2G,mode=1777 0 0" >> /etc/fstab
 | LAN Networks | `192.168.3.0/24,192.168.4.0/24` | **Important**: Specify local networks to prevent LAN devices from appearing as remote |
 | Treat WAN IP As LAN Bandwidth | ✅ Enabled | Useful if you have DNS rebinding protection active |
 
-> **Critical**: If your local devices are seen as "remote", properly configure **LAN Networks** with your subnets.
+> [!IMPORTANT]
+> If your local devices are seen as "remote", properly configure **LAN Networks** with your subnets.
 
 ### 5.6 Specific Library Settings
 
@@ -431,6 +437,7 @@ For each Plex client (TV, phone, tablet, web):
 
 ### 5.8 4K Transcoding Prevention (Optional)
 
+> [!WARNING]
 > Transcoding 4K/HDR content is very resource-intensive and can degrade quality. It's better to prevent it.
 
 #### Why Prevent 4K Transcoding
@@ -514,6 +521,7 @@ If it shows "Transcoding":
 
 ## Phase 6: Tailscale Installation
 
+> [!NOTE]
 > Tailscale provides secure remote access without port forwarding
 
 ### 6.1 Install on Proxmox Host
@@ -588,7 +596,8 @@ Datacenter → Storage → Add → NFS
 - Export: /share/backup
 - Content: VZDump backup file
 
-> **Note**: Proxmox backups will be saved in an automatic subfolder (`dump/`).
+> [!NOTE]
+> Proxmox backups will be saved in an automatic subfolder (`dump/`).
 
 ### 7.2 Create Scheduled Backup Job
 
@@ -759,8 +768,8 @@ ssh admin@100.x.x.x "wakeonlan AA:BB:CC:DD:EE:FF"
 | Doesn't work from another VLAN | Broadcast doesn't pass | Send from same VLAN |
 | Doesn't work via Tailscale | Magic packet not routed | Use device on LAN |
 
-> **Note**: The WOL magic packet is Layer 2 broadcast, so it must be sent
-> from a device on the same VLAN/subnet as the Mini PC.
+> [!NOTE]
+> The WOL magic packet is Layer 2 broadcast, so it must be sent from a device on the same VLAN/subnet as the Mini PC.
 
 ### 8.3 Intel Quick Sync GPU Passthrough for LXC
 
@@ -833,8 +842,8 @@ lxc.mount.entry: /dev/dri/card0 dev/dri/card0 none bind,optional,create=file
 lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file
 ```
 
-> **Note**: `c 226:0` is card0, `c 226:128` is renderD128. The major number 226
-> is standard for DRI devices on Linux.
+> [!NOTE]
+> `c 226:0` is card0, `c 226:128` is renderD128. The major number 226 is standard for DRI devices on Linux.
 
 #### 8.3.5 Start Container and Verify
 
@@ -905,7 +914,8 @@ the codec during transcoding.
 | Still software transcoding | Plex Pass not active | Verify subscription |
 | renderD128 not present | Kernel too old | Update Proxmox |
 
-> **Note**: Hardware transcoding requires **Plex Pass** subscription.
+> [!IMPORTANT]
+> Hardware transcoding requires **Plex Pass** subscription.
 
 ---
 

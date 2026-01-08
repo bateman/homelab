@@ -55,9 +55,11 @@ Internet
 | 5 | Guest | 192.168.5.0/24 | 192.168.5.1 | .100-.200 | Guest WiFi |
 | 6 | IoT | 192.168.6.0/24 | 192.168.6.1 | .100-.200 | Alexa, new camera, smart WiFi devices |
 
-> **Note**: The 192.168.1.0/24 subnet is NOT managed by UDM-SE. It remains for Iliad Box and legacy Vimar devices connected to the PoE switch in the electrical panel.
+> [!NOTE]
+> The 192.168.1.0/24 subnet is NOT managed by UDM-SE. It remains for Iliad Box and legacy Vimar devices connected to the PoE switch in the electrical panel.
 
-> ***DHCP Disabled on VLAN 3**: Server devices use static IPs configured directly on them. If you need to temporarily connect a new device to configure it, you can:
+> [!TIP]
+> **DHCP Disabled on VLAN 3**: Server devices use static IPs configured directly on them. If you need to temporarily connect a new device to configure it, you can:
 > 1. Connect it first to another VLAN with DHCP (e.g., Management), configure the static IP, then move it
 > 2. Configure the static IP manually before connecting to the network
 
@@ -130,7 +132,8 @@ Internet
 | DMZ | Enabled to 192.168.1.1 |
 | VoIP Telephony | Working |
 
-> **Note**: Iliad Box IP should NOT be changed. The 192.168.1.0/24 subnet remains for legacy Vimar devices.
+> [!IMPORTANT]
+> Iliad Box IP should NOT be changed. The 192.168.1.0/24 subnet remains for legacy Vimar devices.
 
 ---
 
@@ -142,7 +145,8 @@ Internet
 | Casa-Guest | 5 | WPA3/WPA2 | Guests, complete isolation |
 | Casa-IoT | 6 | WPA3/WPA2 | Alexa, smart WiFi devices |
 
-> **Note**: No SSID needed for Management (wired access only) or Servers (wired devices with static IPs).
+> [!NOTE]
+> No SSID needed for Management (wired access only) or Servers (wired devices with static IPs).
 
 ---
 
@@ -186,7 +190,8 @@ Define in Settings -> Profiles -> Port Groups:
 | Printing | 631, 9100 |
 | mDNS | 5353 |
 
-> **Note**: Arr-Stack includes: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), Pi-hole (8081), FlareSolverr (8191), Duplicati (8200), Uptime Kuma (3001).
+> [!NOTE]
+> Arr-Stack includes: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), Pi-hole (8081), FlareSolverr (8191), Duplicati (8200), Uptime Kuma (3001).
 
 ---
 
@@ -207,6 +212,7 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | Any |
 | States | Established, Related |
 
+> [!IMPORTANT]
 > Allows return traffic for already established connections. Essential for proper operation.
 
 ### Rule 2 — Allow All -> Pi-hole DNS
@@ -313,6 +319,7 @@ Rules are processed in order, from first to last. Order matters.
 | Source | VLAN-IoT |
 | Destination | RFC1918 |
 
+> [!TIP]
 > Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (rule 9).
 
 ### Rule 11 — Block Guest -> All Private
@@ -370,7 +377,8 @@ Enable mDNS reflection to allow automatic discovery across VLANs:
 | 5 (Guest) | No | Complete isolation |
 | 6 (IoT) | Yes | HA smart device discovery |
 
-> **Security note**: mDNS reflection only exposes service names (e.g., "Printer._ipp._tcp.local"), it doesn't provide access. The firewall continues to block unauthorized traffic between VLANs.
+> [!NOTE]
+> mDNS reflection only exposes service names (e.g., "Printer._ipp._tcp.local"), it doesn't provide access. The firewall continues to block unauthorized traffic between VLANs.
 
 ---
 
@@ -472,7 +480,8 @@ docker start pihole
 - **Ad-blocking**: Disabled during fallback
 - **Workaround**: Access services via direct IP (e.g., `https://192.168.3.10:8989`)
 
-> **For complete redundancy with ad-blocking**: Install second Pi-hole on Proxmox with Gravity Sync. See Gravity Sync documentation: https://github.com/vmstan/gravity-sync
+> [!TIP]
+> For complete redundancy with ad-blocking, install second Pi-hole on Proxmox with Gravity Sync. See Gravity Sync documentation: https://github.com/vmstan/gravity-sync
 
 ---
 
@@ -486,7 +495,8 @@ If in the future you need to open specific ports (e.g., for remote Plex without 
 |------|---------------|---------------|-------------|----------|
 | Plex Remote | 32400 | 32400 | 192.168.3.20 | TCP |
 
-> **Note**: Opening ports exposes services to the Internet. Prefer Tailscale when possible.
+> [!WARNING]
+> Opening ports exposes services to the Internet. Prefer Tailscale when possible.
 
 ---
 

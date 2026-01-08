@@ -48,7 +48,8 @@
 
 ### 2.1 Delete Default Network (optional)
 
-> Note: You may want to keep the default network for transition
+> [!NOTE]
+> You may want to keep the default network for transition
 
 Settings → Networks → Default → Delete (after creating VLAN 3 for Servers)
 
@@ -82,7 +83,8 @@ Click "Add Network"
 | DHCP Mode | None (static IPs) |
 | Domain Name | servers.local |
 
-> **Note**: Servers VLAN uses static IPs. Assign manually: NAS=.10, Proxmox=.20, Printer=.30, PC=.40
+> [!NOTE]
+> Servers VLAN uses static IPs. Assign manually: NAS=.10, Proxmox=.20, Printer=.30, PC=.40
 
 ### 2.4 Create Media VLAN (VLAN 4)
 
@@ -186,7 +188,8 @@ For each port, click → Port Profile → select appropriate profile
 
 ## Phase 4: Static IP Configuration
 
-> **Important note**: Static IPs for NAS and Proxmox are configured **directly on the devices** during their initial setup (see [NAS_SETUP.md](NAS_SETUP.md) and [PROXMOX_SETUP.md](PROXMOX_SETUP.md)).
+> [!IMPORTANT]
+> Static IPs for NAS and Proxmox are configured **directly on the devices** during their initial setup (see [NAS_SETUP.md](NAS_SETUP.md) and [PROXMOX_SETUP.md](PROXMOX_SETUP.md)).
 >
 > "Fixed IP" in UniFi is **optional** and only needed if you prefer DHCP with reservation instead of static IPs configured on devices.
 
@@ -252,7 +255,8 @@ Settings → Profiles → Port Groups → Create New Group
   - `8686` (Lidarr)
   - `6767` (Bazarr)
 
-> **Note**: Plex (32400) is not included because it runs on Mini PC, not NAS. qBittorrent (8080) and NZBGet (6789) are not included because Media VLAN devices (TVs, phones) don't need direct access. *arr services communicate with download clients internally via Docker network, not through firewall.
+> [!NOTE]
+> Plex (32400) is not included because it runs on Mini PC, not NAS. qBittorrent (8080) and NZBGet (6789) are not included because Media VLAN devices (TVs, phones) don't need direct access. *arr services communicate with download clients internally via Docker network, not through firewall.
 
 **Group: Infrastructure Ports**
 - Ports:
@@ -266,7 +270,8 @@ Settings → Profiles → Port Groups → Create New Group
 
 **Full reference:** [`firewall-config.md`](../network/firewall-config.md)
 
-> **Important**: This section contains only essential rules to get started.
+> [!IMPORTANT]
+> This section contains only essential rules to get started.
 > For complete configuration (13 rules), see [`firewall-config.md`](../network/firewall-config.md).
 >
 > Rules below are a **minimal subset** to make media stack work.
@@ -332,7 +337,8 @@ Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
 | Source | IP Group: RFC1918 |
 | Destination | IP Group: RFC1918 |
 
-> ⚠️ This rule MUST be last. It blocks all inter-VLAN traffic not explicitly allowed.
+> [!WARNING]
+> This rule MUST be last. It blocks all inter-VLAN traffic not explicitly allowed.
 
 ---
 
@@ -346,6 +352,7 @@ Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
 
 ### 7.2 DMZ Configuration (Optional)
 
+> [!TIP]
 > DMZ forwards all incoming traffic to UDM-SE. Useful for port forwarding managed by UniFi.
 
 1. Settings → NAT/Firewall → DMZ

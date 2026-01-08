@@ -56,7 +56,8 @@ After setup, HA automatically creates a notification service for your device.
    - `notify.mobile_app_marios_iphone`
    - `notify.mobile_app_iphone`
 
-> **Important**: Note this exact name, you'll need it to configure the automation.
+> [!IMPORTANT]
+> Note this exact name, you'll need it to configure the automation.
 
 ---
 
@@ -125,7 +126,8 @@ Add this automation to Home Assistant's `automations.yaml`:
 After modifying the file, restart Home Assistant:
 - Settings → System → Restart
 
-> **Note**: Replace `<your_iphone_name>` with the actual device name found in Step 1.
+> [!NOTE]
+> Replace `<your_iphone_name>` with the actual device name found in Step 1.
 
 ---
 
@@ -142,7 +144,8 @@ After modifying the file, restart Home Assistant:
 5. Click **Test** to verify
 6. If test works, click **Save**
 
-> **Note**: We use IP `192.168.3.10` (not `localhost`) because Uptime Kuma runs in Docker network while Home Assistant is in `network_mode: host`. The host IP is required for communication.
+> [!NOTE]
+> We use IP `192.168.3.10` (not `localhost`) because Uptime Kuma runs in Docker network while Home Assistant is in `network_mode: host`. The host IP is required for communication.
 
 ### Associate Notification with Monitors
 
@@ -186,7 +189,8 @@ To receive notifications even when iPhone is in silent mode or Do Not Disturb:
    ```
 3. The iOS app will request permission for critical notifications
 
-> **Warning**: Critical notifications bypass ALL silence settings. Use only for truly important alerts (critical services down).
+> [!WARNING]
+> Critical notifications bypass ALL silence settings. Use only for truly important alerts (critical services down).
 
 ---
 
