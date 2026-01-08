@@ -78,7 +78,6 @@ When using VPN, configure *arr apps with hostname `gluetun` (not `qbittorrent`/`
 - Use color output for status messages
 
 ### Docker Compose
-- Pin image versions in production (avoid `latest` for critical services)
 - Set resource limits (`deploy.resources.limits`)
 - Configure logging limits to prevent disk fill
 - Use named networks for service isolation
