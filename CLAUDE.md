@@ -245,6 +245,17 @@ chown -R 1000:100 ./config/<service>
 - Verifica che mDNS reflection sia abilitato se necessario
 - Verifica che il gruppo porte includa la porta del servizio
 
+### VPN/Gluetun non si connette
+- Verifica credenziali in `docker/.env.secrets` (attenzione: alcuni provider richiedono "service credentials", non login account)
+- Controlla logs: `docker logs gluetun | grep -i error`
+- Verifica che `/dev/net/tun` sia disponibile: `lsmod | grep tun`
+- Prova a cambiare server: modifica `SERVER_COUNTRIES` in `.env.secrets`
+
+### Download clients non raggiungibili con VPN attiva
+- Verifica che le porte siano esposte su Gluetun, non sui container qBittorrent/NZBGet
+- Controlla che qBit/NZBGet usino `network_mode: "service:gluetun"`
+- Aggiorna hostname nelle *arr apps da `qbittorrent`/`nzbget` a `gluetun`
+
 ## Sicurezza Docker Socket
 
 Il Docker socket (`/var/run/docker.sock`) e' un vettore di attacco critico: un container compromesso con accesso al socket puo' ottenere controllo completo dell'host.
@@ -261,6 +272,37 @@ Il Docker socket (`/var/run/docker.sock`) e' un vettore di attacco critico: un c
 - Accessibile solo via HTTPS con autenticazione
 - Limitare accesso a utenti fidati
 - In ambienti ad alta sicurezza: rimuovere Portainer e usare solo CLI
+
+## Protezione VPN Download Clients
+
+I download clients (qBittorrent, NZBGet) sono protetti da VPN tramite **Gluetun**, che instrada tutto il loro traffico attraverso un tunnel crittografato.
+
+**Architettura implementata**:
+- **Gluetun**: container VPN con kill switch integrato (se VPN cade, traffico bloccato)
+- **qBittorrent/NZBGet**: usano `network_mode: "service:gluetun"` per condividere lo stack di rete
+- **Porte**: esposte da Gluetun (8080 per qBit, 6789 per NZBGet), non dai container stessi
+
+**Perche' serve**:
+- ISP non vede traffico P2P/Usenet (crittografato)
+- IP reale non esposto ai peer torrent
+- Kill switch previene leak se VPN si disconnette
+
+**Configurazione *arr apps**: quando download clients usano la rete di Gluetun, il loro hostname diventa `gluetun`:
+- qBittorrent Host: `gluetun:8080`
+- NZBGet Host: `gluetun:6789`
+
+**Verifica VPN funzionante**:
+```bash
+# IP host (senza VPN)
+curl -s https://ipinfo.io/ip
+
+# IP download clients (con VPN) - deve essere DIVERSO
+docker exec gluetun curl -s https://ipinfo.io/ip
+```
+
+**Provider VPN supportati**: NordVPN, ProtonVPN, Mullvad, PIA, AirVPN, Surfshark e 30+ altri.
+
+Vedi `docs/setup/VPN_SETUP.md` per setup completo, configurazione provider e troubleshooting.
 
 ## Note Importanti
 
