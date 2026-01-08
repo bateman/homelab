@@ -288,8 +288,8 @@ I download clients (qBittorrent, NZBGet) sono protetti da VPN tramite **Gluetun*
 - Kill switch previene leak se VPN si disconnette
 
 **Configurazione *arr apps**: quando download clients usano la rete di Gluetun, il loro hostname diventa `gluetun`:
-- qBittorrent Host: `gluetun:8080`
-- NZBGet Host: `gluetun:6789`
+- qBittorrent: Host `gluetun`, Port `8080`
+- NZBGet: Host `gluetun`, Port `6789`
 
 **Verifica VPN funzionante**:
 ```bash
