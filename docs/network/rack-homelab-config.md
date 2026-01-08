@@ -177,7 +177,8 @@
 | Schuko #1 | Lenovo Mini PC | External power supply |
 | Schuko #2-8 | Available | Future expansion |
 
-> **Note**: All devices are protected by UPS battery. Devices with IEC connectors go directly to UPS, those with standard plugs go through the power strip.
+> [!NOTE]
+> All devices are protected by UPS battery. Devices with IEC connectors go directly to UPS, those with standard plugs go through the power strip.
 
 ---
 
@@ -235,7 +236,8 @@ UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
 | 🟢 Green | Room devices | Bedroom, Office, Living Room |
 | ⚪ White | Management / Uplink | UDM-SE, Switch, Access Point |
 
-> **Labeling**: Every cable must have labels on both ends with: color + number + destination (e.g. "GRN-01 Office/PC")
+> [!TIP]
+> Every cable must have labels on both ends with: color + number + destination (e.g. "GRN-01 Office/PC")
 
 ---
 
@@ -282,6 +284,7 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (segmented VLANs)
 | UDM-SE (WAN) | 192.168.1.1 | Receives IP via DMZ |
 | Vimar Devices | 192.168.1.x | Video intercom, alarm, actuators (static) |
 
+> [!NOTE]
 > This network is NOT managed by UDM-SE. Remains for Vimar legacy devices connected to PoE switch in electrical panel.
 
 #### VLAN 2 — Management (192.168.2.0/24)

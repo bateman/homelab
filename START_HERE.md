@@ -68,7 +68,8 @@ Before starting, make sure you have:
 
 **Reference:** [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md)
 
-> ⚠️ Complete this phase BEFORE configuring any other device
+> [!WARNING]
+> Complete this phase BEFORE configuring any other device
 
 ### 2.1 UDM-SE Initial Setup
 
@@ -201,7 +202,8 @@ TZ=Europe/Rome
 PIHOLE_PASSWORD=<secure-password>
 ```
 
-> **Critical**: If PUID/PGID don't match the user owning the folders, containers won't have write permissions.
+> [!IMPORTANT]
+> If PUID/PGID don't match the user owning the folders, containers won't have write permissions.
 
 ### 4.2.1 Permissions Verification
 
@@ -274,7 +276,8 @@ Follow exactly this order for dependencies:
 10. Home Assistant → Home automation (independent)
 ```
 
-> **Note**: Prowlarr is configured first, then download clients, then *arr apps that connect them all together.
+> [!NOTE]
+> Prowlarr is configured first, then download clients, then *arr apps that connect them all together.
 
 ### qBittorrent First Access
 

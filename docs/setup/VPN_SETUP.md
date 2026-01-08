@@ -35,6 +35,7 @@ This guide explains how to configure **Gluetun** as a VPN container to route dow
 
 You need an account with a VPN provider supported by Gluetun.
 
+> [!NOTE]
 > **Port forwarding** is important for optimal torrent speeds. It allows incoming connections from peers. If your provider doesn't support it (e.g., Mullvad), torrents will still work but may be slower.
 
 ### VPN Credentials
@@ -63,7 +64,8 @@ In `docker/.env`, set:
 COMPOSE_PROFILES=vpn
 ```
 
-> **Alternative without VPN**: use `COMPOSE_PROFILES=novpn` to start download clients without VPN protection.
+> [!TIP]
+> Use `COMPOSE_PROFILES=novpn` to start download clients without VPN protection.
 
 ### Step 2: Configure VPN Credentials
 
@@ -121,7 +123,8 @@ With the `vpn` profile, qBittorrent and NZBGet are reachable via hostname `gluet
 | qBittorrent | `gluetun` | `8080` |
 | NZBGet | `gluetun` | `6789` |
 
-> **Why?** Containers with `network_mode: "service:gluetun"` share the network stack with Gluetun. So qBittorrent and NZBGet are reachable at Gluetun's address.
+> [!IMPORTANT]
+> Containers with `network_mode: "service:gluetun"` share the network stack with Gluetun. So qBittorrent and NZBGet are reachable at Gluetun's address.
 
 ---
 
@@ -132,7 +135,8 @@ With the `vpn` profile, qBittorrent and NZBGet are reachable via hostname `gluet
 | `vpn` | `COMPOSE_PROFILES=vpn make up` | `gluetun:8080` / `gluetun:6789` |
 | `novpn` | `COMPOSE_PROFILES=novpn make up` | `qbittorrent:8080` / `nzbget:6789` |
 
-**When changing profiles**, remember to update hostnames in *arr apps!
+> [!IMPORTANT]
+> When changing profiles, remember to update hostnames in *arr apps!
 
 ---
 
@@ -155,7 +159,8 @@ To get credentials:
 3. Verify your identity (email)
 4. Copy **Service username** and **Service password** (NOT your login credentials!)
 
-> **Important**: NordVPN requires "Service credentials", not account username/password. Find them in the panel under "Manual setup".
+> [!IMPORTANT]
+> NordVPN requires "Service credentials", not account username/password. Find them in the panel under "Manual setup".
 
 ### ProtonVPN (WireGuard with Port Forwarding)
 
@@ -174,7 +179,8 @@ To get credentials:
 2. Generate WireGuard configuration (requires Plus plan or higher)
 3. Copy `PrivateKey` and `Address`
 
-> **Note**: ProtonVPN port forwarding requires Plus plan or higher.
+> [!NOTE]
+> ProtonVPN port forwarding requires Plus plan or higher.
 
 ### Private Internet Access (OpenVPN with Port Forwarding)
 
@@ -188,7 +194,8 @@ SERVER_REGIONS=Switzerland
 VPN_PORT_FORWARDING=on
 ```
 
-> **Note**: PIA uses `SERVER_REGIONS` instead of `SERVER_COUNTRIES`.
+> [!NOTE]
+> PIA uses `SERVER_REGIONS` instead of `SERVER_COUNTRIES`.
 
 ### Mullvad (WireGuard)
 
@@ -206,7 +213,8 @@ To get credentials:
 2. Download a WireGuard configuration
 3. Open the `.conf` file and copy `PrivateKey` and `Address`
 
-> **Note**: Mullvad no longer supports port forwarding since 2023.
+> [!CAUTION]
+> Mullvad no longer supports port forwarding since 2023.
 
 ### PrivadoVPN (OpenVPN with Port Forwarding)
 
@@ -225,7 +233,8 @@ To get credentials:
 2. Go to **Account** → **OpenVPN/IKEv2 Username**
 3. Copy your **Username** and **Password**
 
-> **Note**: PrivadoVPN supports port forwarding, which improves torrent speeds.
+> [!TIP]
+> PrivadoVPN supports port forwarding, which improves torrent speeds.
 
 ---
 
@@ -273,7 +282,8 @@ docker exec gluetun curl -s --max-time 5 https://ipinfo.io/ip
 docker restart gluetun
 ```
 
-> **Note**: The kill switch is managed by iptables in Gluetun. If VPN connection drops, all traffic is automatically blocked.
+> [!NOTE]
+> The kill switch is managed by iptables in Gluetun. If VPN connection drops, all traffic is automatically blocked.
 
 ### 4. Verify qBittorrent Port
 

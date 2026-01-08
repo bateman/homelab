@@ -41,6 +41,7 @@ A reverse proxy allows accessing services using readable names (e.g., `sonarr.ho
 
 ## Phase 1: Pi-hole Configuration as Tailscale DNS
 
+> [!TIP]
 > This configuration allows using the same URLs (e.g., `sonarr.home.local`) both from local network and remotely via Tailscale.
 
 ### 1.1 How It Works
@@ -73,7 +74,8 @@ A reverse proxy allows accessing services using readable names (e.g., `sonarr.ho
 3. Enter: `192.168.3.10` (NAS IP with Pi-hole)
 4. Enable **Override local DNS**
 
-> **Note**: Make sure subnet routes are approved (see Phase 6 in PROXMOX_SETUP.md)
+> [!NOTE]
+> Make sure subnet routes are approved (see Phase 6 in PROXMOX_SETUP.md)
 
 ### 1.3 Add DNS Records in Pi-hole
 
@@ -206,12 +208,14 @@ curl -k https://radarr.home.local
 curl -k https://pihole.home.local
 ```
 
-> **Note**: Browser will show warning on first access because certificate is self-signed. This is normal and safe for internal use. Accept certificate once and warning won't appear again.
+> [!NOTE]
+> Browser will show warning on first access because certificate is self-signed. This is normal and safe for internal use. Accept certificate once and warning won't appear again.
 
 ---
 
 ## Alternative: Nginx Proxy Manager
 
+> [!TIP]
 > Use NPM if you prefer configuring via graphical interface or have non-Docker services.
 
 ### Installation on Proxmox (LXC Container)
@@ -351,7 +355,8 @@ make restart
 | Uptime Kuma | https://uptime.home.local | :3001 |
 | Plex | https://plex.home.local | :32400 (on 192.168.3.21) |
 
-> **Note**: URLs work both from local network and remotely via Tailscale (thanks to Pi-hole as DNS).
+> [!NOTE]
+> URLs work both from local network and remotely via Tailscale (thanks to Pi-hole as DNS).
 > HTTP (port 80) is automatically redirected to HTTPS (port 443).
 
 ---
