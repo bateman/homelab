@@ -22,8 +22,8 @@ Questa guida spiega come configurare **Gluetun** come container VPN per instrada
 [Gluetun](https://github.com/qdm12/gluetun) è il container VPN più usato per questo scopo:
 
 - **Kill switch integrato**: se la VPN cade, il traffico si ferma automaticamente
-- **Supporta 30+ provider VPN**: Mullvad, NordVPN, Surfshark, PIA, ProtonVPN, etc.
-- **Port forwarding automatico**: per alcuni provider (Mullvad, PIA, ProtonVPN)
+- **Supporta 30+ provider VPN**: NordVPN, Mullvad, Surfshark, PIA, ProtonVPN, etc.
+- **Port forwarding automatico**: per alcuni provider (ProtonVPN, PIA, AirVPN)
 - **Health checks**: riavvio automatico se la connessione fallisce
 - **Leggero**: ~15MB RAM
 
@@ -37,10 +37,11 @@ Serve un account con un provider VPN supportato da Gluetun. Provider consigliati
 
 | Provider | Port Forwarding | Prezzo | Note |
 |----------|-----------------|--------|------|
-| [Mullvad](https://mullvad.net/) | No (rimosso 2023) | €5/mese | Privacy-first, no email richiesta |
+| [NordVPN](https://nordvpn.com/) | No | €3-5/mese | Popolare, molti server, veloce |
 | [ProtonVPN](https://protonvpn.com/) | Sì (Plus) | €5-10/mese | Svizzero, open source |
 | [AirVPN](https://airvpn.org/) | Sì | €7/mese | Ottimo per P2P, port forwarding incluso |
 | [Private Internet Access](https://www.privateinternetaccess.com/) | Sì | €2-3/mese | Economico, buon supporto P2P |
+| [Mullvad](https://mullvad.net/) | No (rimosso 2023) | €5/mese | Privacy-first, no email richiesta |
 
 > **Port forwarding** è importante per velocità torrent ottimali. Permette connessioni in ingresso dai peer. Se il tuo provider non lo supporta (es. Mullvad), i torrent funzioneranno comunque ma potrebbero essere più lenti.
 
@@ -274,44 +275,34 @@ Oppure crea manualmente:
 mkdir -p /share/container/mediastack/config/gluetun
 ```
 
+### 7. Aggiorna Configurazione *arr (IMPORTANTE!)
+
+Quando qBittorrent e NZBGet usano `network_mode: "service:gluetun"`, il loro hostname sulla rete Docker diventa `gluetun`, non più `qbittorrent` o `nzbget`.
+
+**Aggiorna le impostazioni in Sonarr/Radarr/Lidarr:**
+
+| Servizio | Prima | Dopo |
+|----------|-------|------|
+| qBittorrent Host | `qbittorrent` | `gluetun` |
+| qBittorrent Port | `8080` | `8080` (invariato) |
+| NZBGet Host | `nzbget` | `gluetun` |
+| NZBGet Port | `6789` | `6789` (invariato) |
+
+**In Sonarr/Radarr/Lidarr → Settings → Download Clients:**
+
+Per qBittorrent:
+- Host: `gluetun`
+- Port: `8080`
+
+Per NZBGet:
+- Host: `gluetun`
+- Port: `6789`
+
+> **Perché?** I container con `network_mode: "service:X"` condividono lo stack di rete con il container X. Quindi qBittorrent e NZBGet sono raggiungibili all'indirizzo di Gluetun.
+
 ---
 
 ## Configurazioni per Provider Specifici
-
-### Mullvad (WireGuard) - Consigliato
-
-```bash
-# .env.secrets
-VPN_SERVICE_PROVIDER=mullvad
-VPN_TYPE=wireguard
-WIREGUARD_PRIVATE_KEY=<tua_chiave_privata>
-WIREGUARD_ADDRESSES=10.x.x.x/32
-SERVER_COUNTRIES=Switzerland
-```
-
-Per ottenere le credenziali:
-1. Vai su https://mullvad.net/account
-2. Scarica una configurazione WireGuard
-3. Apri il file `.conf` e copia `PrivateKey` e `Address`
-
-### ProtonVPN (WireGuard con Port Forwarding)
-
-```bash
-# .env.secrets
-VPN_SERVICE_PROVIDER=protonvpn
-VPN_TYPE=wireguard
-WIREGUARD_PRIVATE_KEY=<tua_chiave_privata>
-WIREGUARD_ADDRESSES=10.x.x.x/32
-SERVER_COUNTRIES=Switzerland
-VPN_PORT_FORWARDING=on
-```
-
-Per ottenere le credenziali:
-1. Vai su https://account.protonvpn.com/downloads
-2. Genera configurazione WireGuard (richiede piano Plus o superiore)
-3. Copia `PrivateKey` e `Address`
-
-> **Nota**: Il port forwarding ProtonVPN richiede un piano Plus o superiore.
 
 ### NordVPN (OpenVPN)
 
@@ -332,6 +323,25 @@ Per ottenere le credenziali:
 
 > **Importante**: NordVPN richiede le credenziali "Service credentials", non username/password dell'account. Le trovi nel pannello sotto "Manual setup".
 
+### ProtonVPN (WireGuard con Port Forwarding)
+
+```bash
+# .env.secrets
+VPN_SERVICE_PROVIDER=protonvpn
+VPN_TYPE=wireguard
+WIREGUARD_PRIVATE_KEY=<tua_chiave_privata>
+WIREGUARD_ADDRESSES=10.x.x.x/32
+SERVER_COUNTRIES=Switzerland
+VPN_PORT_FORWARDING=on
+```
+
+Per ottenere le credenziali:
+1. Vai su https://account.protonvpn.com/downloads
+2. Genera configurazione WireGuard (richiede piano Plus o superiore)
+3. Copia `PrivateKey` e `Address`
+
+> **Nota**: Il port forwarding ProtonVPN richiede un piano Plus o superiore.
+
 ### Private Internet Access (OpenVPN con Port Forwarding)
 
 ```bash
@@ -345,6 +355,24 @@ VPN_PORT_FORWARDING=on
 ```
 
 > **Nota**: PIA usa `SERVER_REGIONS` invece di `SERVER_COUNTRIES`.
+
+### Mullvad (WireGuard)
+
+```bash
+# .env.secrets
+VPN_SERVICE_PROVIDER=mullvad
+VPN_TYPE=wireguard
+WIREGUARD_PRIVATE_KEY=<tua_chiave_privata>
+WIREGUARD_ADDRESSES=10.x.x.x/32
+SERVER_COUNTRIES=Switzerland
+```
+
+Per ottenere le credenziali:
+1. Vai su https://mullvad.net/account
+2. Scarica una configurazione WireGuard
+3. Apri il file `.conf` e copia `PrivateKey` e `Address`
+
+> **Nota**: Mullvad non supporta più il port forwarding dal 2023.
 
 ---
 
@@ -381,16 +409,18 @@ Sia qBittorrent che NZBGet usano questo stesso IP VPN per tutte le connessioni.
 ### 3. Verifica Kill Switch
 
 ```bash
-# Simula disconnessione VPN
-docker exec gluetun pkill -f wireguard
+# Simula disconnessione VPN (ferma il tunnel)
+docker exec gluetun killall -STOP openvpn 2>/dev/null || docker exec gluetun killall -STOP wireguard-go 2>/dev/null
 
-# Prova a raggiungere internet da qBittorrent
+# Prova a raggiungere internet
 docker exec gluetun curl -s --max-time 5 https://ipinfo.io/ip
 # Output: (timeout o errore) ← Kill switch funziona!
 
 # Riavvia per ripristinare
 docker restart gluetun
 ```
+
+> **Nota**: Il kill switch è gestito da iptables in Gluetun. Se la connessione VPN cade, tutto il traffico viene bloccato automaticamente.
 
 ### 4. Verifica Porta qBittorrent
 
