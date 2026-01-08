@@ -442,7 +442,8 @@ Path: Settings -> Networks -> (select VLAN) -> DHCP -> DHCP DNS Server
 | 5 (Guest) | 1.1.1.1 | 1.0.0.1 | Cloudflare only (no Pi-hole) |
 | 6 (IoT) | 192.168.3.10 | 1.1.1.1 | Pi-hole + Cloudflare fallback |
 
-> **Note VLAN 5 (Guest)**: Guests use Cloudflare directly to prevent them from seeing local DNS records (`*.home.local`).
+> [!NOTE]
+> **VLAN 5 (Guest)**: Guests use Cloudflare directly to prevent them from seeing local DNS records (`*.home.local`).
 
 ### Fallback Behavior
 
@@ -600,6 +601,7 @@ For this homelab, the risk is accepted because:
 - The alternative (complete rewiring) has disproportionate cost to benefit
 - UDM-SE provides adequate protection on the WAN interface
 
+> [!TIP]
 > **Future improvement (optional)**: Add WAN Local rule on UDM-SE to block management access (port 443) from 192.168.1.0/24 subnet except 192.168.1.254 (Iliad Box).
 
 ---
@@ -655,7 +657,8 @@ To eliminate Double NAT:
 1. Change ISP to one providing separate ONT or bridge mode
 2. Use PPPoE directly on UDM-SE (requires ISP credentials)
 
-> **Acceptance**: For this homelab Double NAT is accepted. Tailscale solves remote access and internal services are not impacted.
+> [!NOTE]
+> For this homelab Double NAT is accepted. Tailscale solves remote access and internal services are not impacted.
 
 ---
 

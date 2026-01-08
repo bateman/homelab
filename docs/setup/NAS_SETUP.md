@@ -553,7 +553,8 @@ radarr:
       - name: HD Bluray + WEB
 ```
 
-> **Full documentation**: https://recyclarr.dev/wiki/yaml/config-reference/
+> [!TIP]
+> Full documentation: https://recyclarr.dev/wiki/yaml/config-reference/
 
 ### Synchronization
 

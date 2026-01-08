@@ -625,7 +625,8 @@ Container/VM → Backup → Backup now
 
 To access services with readable names (e.g., `sonarr.home.local`) instead of IP:port, configure a reverse proxy.
 
-> **Complete guide**: See [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md)
+> [!TIP]
+> See [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md) for the complete guide.
 
 The guide documents:
 - **Traefik** (recommended): Docker auto-discovery, configuration via labels
