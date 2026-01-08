@@ -189,7 +189,7 @@ For each port, click → Port Profile → select appropriate profile
 ## Phase 4: Static IP Configuration
 
 > [!IMPORTANT]
-> Static IPs for NAS and Proxmox are configured **directly on the devices** during their initial setup (see [NAS_SETUP.md](NAS_SETUP.md) and [PROXMOX_SETUP.md](PROXMOX_SETUP.md)).
+> Static IPs for NAS and Proxmox are configured **directly on the devices** during their initial setup (see [nas-setup.md](nas-setup.md) and [proxmox-setup.md](proxmox-setup.md)).
 >
 > "Fixed IP" in UniFi is **optional** and only needed if you prefer DHCP with reservation instead of static IPs configured on devices.
 
@@ -464,5 +464,5 @@ nslookup google.com 192.168.3.10
 
 After completing network setup:
 
-1. → Proceed with [NAS QNAP Setup](NAS_SETUP.md)
+1. → Proceed with [NAS QNAP Setup](nas-setup.md)
 2. → Return to [START_HERE.md](../../START_HERE.md) Phase 3

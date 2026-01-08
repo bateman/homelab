@@ -55,7 +55,7 @@ The Mini PC runs Proxmox VE as hypervisor with LXC containers:
 
 Proxmox WebUI: `https://192.168.3.20:8006`
 
-Setup details in [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md).
+Setup details in [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md).
 
 ## Folder Structure
 
@@ -82,18 +82,18 @@ The network is segmented into VLANs to isolate traffic and improve security:
 | 5 | 192.168.5.0/24 | Guest (isolated internet access) |
 | 6 | 192.168.6.0/24 | IoT (smart devices) |
 
-Details in [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md).
+Details in [`docs/setup/network-setup.md`](docs/setup/network-setup.md).
 
 ## Documentation
 
 ### Installation Guides
 - [`START_HERE.md`](START_HERE.md) - **Complete installation guide (start here)**
-- [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) - UniFi network and VLAN setup
-- [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) - QNAP NAS and Docker setup
-- [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) - Proxmox and Plex setup
-- [`docs/setup/VPN_SETUP.md`](docs/setup/VPN_SETUP.md) - VPN protection for download clients (Gluetun)
-- [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) - Traefik, HTTPS certificates, Pi-hole DNS
-- [`docs/setup/NOTIFICATIONS_SETUP.md`](docs/setup/NOTIFICATIONS_SETUP.md) - Uptime Kuma notifications via Home Assistant
+- [`docs/setup/network-setup.md`](docs/setup/network-setup.md) - UniFi network and VLAN setup
+- [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) - QNAP NAS and Docker setup
+- [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md) - Proxmox and Plex setup
+- [`docs/setup/vpn-setup.md`](docs/setup/vpn-setup.md) - VPN protection for download clients (Gluetun)
+- [`docs/setup/reverse-proxy-setup.md`](docs/setup/reverse-proxy-setup.md) - Traefik, HTTPS certificates, Pi-hole DNS
+- [`docs/setup/notifications-setup.md`](docs/setup/notifications-setup.md) - Uptime Kuma notifications via Home Assistant
 
 ### Reference
 - [`CLAUDE.md`](CLAUDE.md) - Project guide and development guidelines

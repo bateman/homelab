@@ -117,6 +117,6 @@ make logs-SERVICE  # Logs for specific service
 |-------|------|
 | Hardware & IP plan | `docs/network/rack-homelab-config.md` |
 | Firewall & VLAN config | `docs/network/firewall-config.md` |
-| VPN setup (Gluetun) | `docs/setup/VPN_SETUP.md` |
-| Reverse proxy (Traefik) | `docs/setup/REVERSE_PROXY_SETUP.md` |
+| VPN setup (Gluetun) | `docs/setup/vpn-setup.md` |
+| Reverse proxy (Traefik) | `docs/setup/reverse-proxy-setup.md` |
 | Backup procedures | `docs/operations/runbook-backup-restore.md` |

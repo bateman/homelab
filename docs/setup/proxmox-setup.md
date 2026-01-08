@@ -10,7 +10,7 @@
 - [ ] Connected to switch port VLAN 3 (Servers)
 - [ ] Monitor and keyboard for initial installation
 - [ ] USB drive (8GB+) for Proxmox ISO
-- [ ] VLAN 3 configured (see [NETWORK_SETUP.md](NETWORK_SETUP.md))
+- [ ] VLAN 3 configured (see [network-setup.md](network-setup.md))
 
 ---
 
@@ -626,7 +626,7 @@ Container/VM → Backup → Backup now
 To access services with readable names (e.g., `sonarr.home.local`) instead of IP:port, configure a reverse proxy.
 
 > [!TIP]
-> See [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md) for the complete guide.
+> See [reverse-proxy-setup.md](reverse-proxy-setup.md) for the complete guide.
 
 The guide documents:
 - **Traefik** (recommended): Docker auto-discovery, configuration via labels

@@ -20,12 +20,12 @@ Before starting, make sure you have:
 | Phase | Description | Reference Documents |
 |-------|-------------|---------------------|
 | 1 | Hardware Installation | [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) |
-| 2 | UniFi Network Setup | [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) |
-| 3 | QNAP NAS Setup | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) |
-| 4 | Docker Stack Deploy | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md), [`Makefile`](Makefile) |
-| 5 | Services Configuration | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) |
-| 5b | Reverse Proxy *(optional)* | [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) |
-| 6 | Proxmox/Plex Setup | [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) |
+| 2 | UniFi Network Setup | [`docs/setup/network-setup.md`](docs/setup/network-setup.md) |
+| 3 | QNAP NAS Setup | [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) |
+| 4 | Docker Stack Deploy | [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md), [`Makefile`](Makefile) |
+| 5 | Services Configuration | [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) |
+| 5b | Reverse Proxy *(optional)* | [`docs/setup/reverse-proxy-setup.md`](docs/setup/reverse-proxy-setup.md) |
+| 6 | Proxmox/Plex Setup | [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md) |
 | 7 | Backup Configuration | [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) |
 | 8 | Final Verification | This guide |
 
@@ -66,7 +66,7 @@ Before starting, make sure you have:
 
 ## Phase 2: UniFi Network Setup
 
-**Reference:** [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md)
+**Reference:** [`docs/setup/network-setup.md`](docs/setup/network-setup.md)
 
 > [!WARNING]
 > Complete this phase BEFORE configuring any other device
@@ -119,7 +119,7 @@ ping 192.168.2.1    # Management VLAN (should work)
 
 ## Phase 3: QNAP NAS Setup
 
-**Reference:** [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md)
+**Reference:** [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md)
 
 Follow the complete checklist. Key points:
 
@@ -257,7 +257,7 @@ make urls
 
 ## Phase 5: Services Configuration
 
-**Reference:** [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) section "*arr Services Configuration"
+**Reference:** [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) section "*arr Services Configuration"
 
 ### Configuration Order (IMPORTANT)
 
@@ -326,7 +326,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 
 ## Phase 6: Proxmox/Plex Setup
 
-**Reference:** [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md)
+**Reference:** [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md)
 
 ### 6.1 Proxmox Installation
 
@@ -451,7 +451,7 @@ make backup      # Additional manual backup
 | qBittorrent login fails | Retrieve password: `docker logs qbittorrent 2>&1 \| grep password` |
 | Wrong PUID/PGID | Verify with `id dockeruser` and update docker/.env |
 
-For specific problems, consult the Troubleshooting section in [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md).
+For specific problems, consult the Troubleshooting section in [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md).
 
 ---
 
@@ -462,8 +462,8 @@ For specific problems, consult the Troubleshooting section in [`docs/setup/NAS_S
 | [`CLAUDE.md`](CLAUDE.md) | Project guide and development guidelines |
 | [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) | Hardware layout and IP plan |
 | [`docs/network/firewall-config.md`](docs/network/firewall-config.md) | Complete firewall rules |
-| [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) | Detailed QNAP checklist |
+| [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) | Detailed QNAP checklist |
 | [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) | Backup and restore procedures |
-| [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) | UniFi network setup |
-| [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) | Proxmox and Plex setup |
-| [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) | Traefik, Nginx Proxy Manager, Tailscale DNS |
+| [`docs/setup/network-setup.md`](docs/setup/network-setup.md) | UniFi network setup |
+| [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md) | Proxmox and Plex setup |
+| [`docs/setup/reverse-proxy-setup.md`](docs/setup/reverse-proxy-setup.md) | Traefik, Nginx Proxy Manager, Tailscale DNS |
