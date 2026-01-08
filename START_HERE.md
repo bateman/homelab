@@ -1,175 +1,175 @@
-# START HERE - Guida Installazione Completa
+# START HERE - Complete Installation Guide
 
-> Questa guida fornisce l'ordine corretto per installare e configurare l'intero homelab dall'inizio alla fine.
-
----
-
-## Prerequisiti
-
-Prima di iniziare, assicurati di avere:
-
-- [ ] Tutto l'hardware elencato in [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md)
-- [ ] Accesso alla rete locale e a un computer per la configurazione
-- [ ] Account per servizi cloud (opzionale: Google Drive o Dropbox per backup offsite)
-- [ ] Abbonamenti indexer/Usenet (per lo stack media)
+> This guide provides the correct order to install and configure the entire homelab from start to finish.
 
 ---
 
-## Panoramica Fasi
+## Prerequisites
 
-| Fase | Descrizione | Documenti di Riferimento |
-|------|-------------|--------------------------|
-| 1 | Installazione Hardware | [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) |
-| 2 | Setup Rete UniFi | [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) |
-| 3 | Setup NAS QNAP | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) |
-| 4 | Deploy Stack Docker | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md), [`Makefile`](Makefile) |
-| 5 | Configurazione Servizi | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) |
-| 5b | Reverse Proxy *(opzionale)* | [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) |
-| 6 | Setup Proxmox/Plex | [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) |
-| 7 | Configurazione Backup | [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) |
-| 8 | Verifica Finale | Questa guida |
+Before starting, make sure you have:
+
+- [ ] All hardware listed in [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md)
+- [ ] Access to local network and a computer for configuration
+- [ ] Accounts for cloud services (optional: Google Drive or Dropbox for offsite backup)
+- [ ] Indexer/Usenet subscriptions (for media stack)
 
 ---
 
-## Fase 1: Installazione Hardware
+## Phase Overview
 
-**Riferimento:** [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md)
+| Phase | Description | Reference Documents |
+|-------|-------------|---------------------|
+| 1 | Hardware Installation | [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) |
+| 2 | UniFi Network Setup | [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) |
+| 3 | QNAP NAS Setup | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) |
+| 4 | Docker Stack Deploy | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md), [`Makefile`](Makefile) |
+| 5 | Services Configuration | [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) |
+| 5b | Reverse Proxy *(optional)* | [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) |
+| 6 | Proxmox/Plex Setup | [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) |
+| 7 | Backup Configuration | [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) |
+| 8 | Final Verification | This guide |
 
-### Layout Rack (dal basso verso l'alto)
+---
 
-1. [ ] **U1**: UPS (peso in basso, minima generazione calore)
-2. [ ] **Isolante**: Neoprene 5mm tra UPS e NAS
-3. [ ] **U2**: QNAP TS-435XeU (zona fresca per HDD)
-4. [ ] **U3**: Multipresa rack (alimentazione dispositivi)
-5. [ ] **U4**: Patch panel (passivo, buffer termico)
+## Phase 1: Hardware Installation
+
+**Reference:** [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md)
+
+### Rack Layout (bottom to top)
+
+1. [ ] **U1**: UPS (weight at bottom, minimal heat generation)
+2. [ ] **Insulation**: 5mm neoprene between UPS and NAS
+3. [ ] **U2**: QNAP TS-435XeU (cool zone for HDDs)
+4. [ ] **U3**: Rack power strip (device power)
+5. [ ] **U4**: Patch panel (passive, thermal buffer)
 6. [ ] **U5**: UDM-SE
 7. [ ] **U6**: USW-Pro-Max-16-PoE
-8. [ ] **U7**: Pannello ventilato (isolamento termico)
-9. [ ] **U8**: Lenovo Mini PC (top, dissipazione verso l'alto)
+8. [ ] **U7**: Vented panel (thermal isolation)
+9. [ ] **U8**: Lenovo Mini PC (top, dissipation upward)
 
-### Cablaggio
+### Cabling
 
-- [ ] Collegare UDM-SE porta WAN → Iliad Box LAN
-- [ ] Collegare UDM-SE porta 1 → Switch porta 1 (trunk VLAN)
-- [ ] Collegare Switch porta SFP+ → NAS porta SFP+ (10GbE)
-- [ ] Collegare Switch porta 2 → Mini PC (2.5GbE via adattatore USB-C)
-- [ ] Collegare tutti i dispositivi a UPS
+- [ ] Connect UDM-SE WAN port → Iliad Box LAN
+- [ ] Connect UDM-SE port 1 → Switch port 1 (VLAN trunk)
+- [ ] Connect Switch SFP+ port → NAS SFP+ port (10GbE)
+- [ ] Connect Switch port 2 → Mini PC (2.5GbE via USB-C adapter)
+- [ ] Connect all devices to UPS
 
-### Verifica
+### Verification
 
 ```bash
-# Tutti i LED di stato dovrebbero essere accesi
-# UPS dovrebbe mostrare carico attivo
+# All status LEDs should be on
+# UPS should show active load
 ```
 
 ---
 
-## Fase 2: Setup Rete UniFi
+## Phase 2: UniFi Network Setup
 
-**Riferimento:** [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md)
+**Reference:** [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md)
 
-> ⚠️ Completare questa fase PRIMA di configurare qualsiasi altro dispositivo
+> ⚠️ Complete this phase BEFORE configuring any other device
 
-### 2.1 Setup Iniziale UDM-SE
+### 2.1 UDM-SE Initial Setup
 
-1. [ ] Collegare PC direttamente a UDM-SE porta LAN
-2. [ ] Accedere a `https://192.168.1.1` (IP default)
-3. [ ] Completare wizard UniFi
-4. [ ] Creare account UniFi o usare esistente
+1. [ ] Connect PC directly to UDM-SE LAN port
+2. [ ] Access `https://192.168.1.1` (default IP)
+3. [ ] Complete UniFi wizard
+4. [ ] Create UniFi account or use existing
 
-### 2.2 Creazione VLAN
+### 2.2 VLAN Creation
 
-Creare le seguenti reti in **Settings → Networks**:
+Create the following networks in **Settings → Networks**:
 
-| VLAN ID | Nome | Subnet | Gateway | DHCP Range |
+| VLAN ID | Name | Subnet | Gateway | DHCP Range |
 |---------|------|--------|---------|------------|
 | 2 | Management | 192.168.2.0/24 | 192.168.2.1 | .100-.200 |
-| 3 | Servers | 192.168.3.0/24 | 192.168.3.1 | Disabilitato (IP statici) |
+| 3 | Servers | 192.168.3.0/24 | 192.168.3.1 | Disabled (static IPs) |
 | 4 | Media | 192.168.4.0/24 | 192.168.4.1 | .100-.200 |
 | 5 | Guest | 192.168.5.0/24 | 192.168.5.1 | .100-.200 |
 | 6 | IoT | 192.168.6.0/24 | 192.168.6.1 | .100-.200 |
 
-### 2.3 Configurazione Switch
+### 2.3 Switch Configuration
 
-1. [ ] Adottare switch in UniFi Controller
-2. [ ] Configurare porte switch:
-   - Porta 1: Trunk (tutte le VLAN)
-   - Porta SFP+: VLAN 3 (Servers)
-   - Porta 2: VLAN 3 (Servers)
+1. [ ] Adopt switch in UniFi Controller
+2. [ ] Configure switch ports:
+   - Port 1: Trunk (all VLANs)
+   - SFP+ Port: VLAN 3 (Servers)
+   - Port 2: VLAN 3 (Servers)
 
-### 2.4 Regole Firewall
+### 2.4 Firewall Rules
 
-**Riferimento:** [`docs/network/firewall-config.md`](docs/network/firewall-config.md)
+**Reference:** [`docs/network/firewall-config.md`](docs/network/firewall-config.md)
 
-1. [ ] Creare gruppi IP (vedi `firewall-config.md` sezione "IP Groups")
-2. [ ] Creare gruppi porte (vedi `firewall-config.md` sezione "Port Groups")
-3. [ ] Inserire regole firewall nell'ordine esatto specificato
+1. [ ] Create IP groups (see `firewall-config.md` section "IP Groups")
+2. [ ] Create port groups (see `firewall-config.md` section "Port Groups")
+3. [ ] Insert firewall rules in the exact order specified
 
-### Verifica Fase 2
+### Phase 2 Verification
 
 ```bash
-# Da un PC su VLAN 3
+# From a PC on VLAN 3
 ping 192.168.3.1    # Gateway
 ping 8.8.8.8        # Internet
-ping 192.168.2.1    # Management VLAN (dovrebbe funzionare)
+ping 192.168.2.1    # Management VLAN (should work)
 ```
 
 ---
 
-## Fase 3: Setup NAS QNAP
+## Phase 3: QNAP NAS Setup
 
-**Riferimento:** [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md)
+**Reference:** [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md)
 
-Seguire la checklist completa. Punti chiave:
+Follow the complete checklist. Key points:
 
-### 3.1 Setup QTS
+### 3.1 QTS Setup
 
-1. [ ] Primo avvio e wizard iniziale
-2. [ ] Aggiornamento firmware
-3. [ ] Configurazione IP statico: `192.168.3.10`
-4. [ ] Creazione utenti e sicurezza
+1. [ ] First boot and initial wizard
+2. [ ] Firmware update
+3. [ ] Static IP configuration: `192.168.3.10`
+4. [ ] User creation and security
 
-### 3.2 Configurazione Storage
+### 3.2 Storage Configuration
 
-1. [ ] Creazione Storage Pool (RAID)
-2. [ ] Creazione Static Volume
-3. [ ] Creazione Shared Folders:
-   - `/share/data` - Dati media e download
-   - `/share/container` - File Docker
-   - `/share/backup` - Backup
+1. [ ] Create Storage Pool (RAID)
+2. [ ] Create Static Volume
+3. [ ] Create Shared Folders:
+   - `/share/data` - Media and download data
+   - `/share/container` - Docker files
+   - `/share/backup` - Backups
 
 ### 3.3 Container Station
 
-1. [ ] Installare Container Station 3 da App Center
-2. [ ] Completare wizard iniziale
-3. [ ] Verificare Docker funzionante:
+1. [ ] Install Container Station 3 from App Center
+2. [ ] Complete initial wizard
+3. [ ] Verify Docker is working:
    ```bash
    ssh admin@192.168.3.10
    docker version
    ```
 
-### Verifica Fase 3
+### Phase 3 Verification
 
-- [ ] QTS accessibile: `http://192.168.3.10:8080` (o `https://192.168.3.10:8443`)
-- [ ] SSH funzionante
-- [ ] Docker installato
-- [ ] Shared folders create
+- [ ] QTS accessible: `http://192.168.3.10:8080` (or `https://192.168.3.10:8443`)
+- [ ] SSH working
+- [ ] Docker installed
+- [ ] Shared folders created
 
 ---
 
-## Fase 4: Deploy Stack Docker
+## Phase 4: Docker Stack Deploy
 
-### 4.1 Preparazione File
+### 4.1 File Preparation
 
 ```bash
-# SSH nel NAS
+# SSH into NAS
 ssh admin@192.168.3.10
 
-# Creare directory
+# Create directory
 mkdir -p /share/container/mediastack
 cd /share/container/mediastack
 
-# Copiare i file dal repository (via SCP o SFTP):
+# Copy files from repository (via SCP or SFTP):
 # - docker/compose.yml
 # - docker/compose.media.yml
 # - Makefile
@@ -177,290 +177,290 @@ cd /share/container/mediastack
 # - docker/.env.example
 ```
 
-### 4.2 Setup Struttura Cartelle
+### 4.2 Folder Structure Setup
 
 ```bash
-# Eseguire setup completo (crea cartelle data, config e file .env)
+# Run complete setup (creates data, config folders and .env file)
 make setup
 
-# Editare file .env con i valori corretti
+# Edit .env file with correct values
 nano docker/.env
 ```
 
-**Configurazione obbligatoria in `.env`:**
+**Required configuration in `.env`:**
 
 ```bash
-# Verificare prima PUID/PGID dell'utente dockeruser creato in Fase 3
+# First verify PUID/PGID of dockeruser created in Phase 3
 ssh admin@192.168.3.10 "id dockeruser"
 # Output: uid=1000(dockeruser) gid=100(everyone)
 
-# Impostare in docker/.env:
-PUID=1000          # ← valore uid da comando id
-PGID=100           # ← valore gid da comando id
+# Set in docker/.env:
+PUID=1000          # ← uid value from id command
+PGID=100           # ← gid value from id command
 TZ=Europe/Rome
-PIHOLE_PASSWORD=<password-sicura>
+PIHOLE_PASSWORD=<secure-password>
 ```
 
-> **Critico**: Se PUID/PGID non corrispondono all'utente proprietario delle cartelle, i container non avranno permessi di scrittura.
+> **Critical**: If PUID/PGID don't match the user owning the folders, containers won't have write permissions.
 
-### 4.2.1 Verifica Permessi
+### 4.2.1 Permissions Verification
 
 ```bash
-# Verificare ownership cartelle (deve corrispondere a PUID:PGID)
+# Verify folder ownership (must match PUID:PGID)
 ls -ln /share/data
 
-# Se necessario, correggere permessi:
+# If needed, fix permissions:
 sudo chown -R 1000:100 /share/data
 sudo chown -R 1000:100 ./config
 ```
 
-### 4.2.2 Verifica Porta DNS
+### 4.2.2 DNS Port Verification
 
-Prima di avviare lo stack, verificare che la porta 53 non sia già in uso:
+Before starting the stack, verify port 53 is not already in use:
 
 ```bash
 ss -tulnp | grep :53
 
-# Se occupata, disabilitare DNS locale QTS:
-# Control Panel → Network & Virtual Switch → DNS Server → Disabilita
+# If occupied, disable QTS local DNS:
+# Control Panel → Network & Virtual Switch → DNS Server → Disable
 ```
 
-### 4.3 Avvio Container
+### 4.3 Container Startup
 
 ```bash
-# Validare configurazione
+# Validate configuration
 make validate
 
-# Pull immagini
+# Pull images
 make pull
 
-# Avviare stack
+# Start stack
 make up
 
-# Verificare stato
+# Verify status
 make status
 ```
 
-### Verifica Fase 4
+### Phase 4 Verification
 
 ```bash
-# Tutti i container devono essere "Up" e "healthy"
+# All containers must be "Up" and "healthy"
 make health
 
-# Visualizzare URL servizi
+# Display service URLs
 make urls
 ```
 
 ---
 
-## Fase 5: Configurazione Servizi
+## Phase 5: Services Configuration
 
-**Riferimento:** [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) sezione "Configurazione Servizi *arr"
+**Reference:** [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) section "*arr Services Configuration"
 
-### Ordine di Configurazione (IMPORTANTE)
+### Configuration Order (IMPORTANT)
 
-Seguire esattamente questo ordine per le dipendenze:
+Follow exactly this order for dependencies:
 
 ```
-1. Prowlarr        → Indexer manager (configurare per primo)
-2. qBittorrent     → Download client torrent
-3. NZBGet          → Download client Usenet
-4. Sonarr          → TV (connette a Prowlarr + download client)
-5. Radarr          → Film (connette a Prowlarr + download client)
-6. Lidarr          → Musica (connette a Prowlarr + download client)
-7. Bazarr          → Sottotitoli (connette a Sonarr + Radarr)
-8. Recyclarr       → Quality profiles (connette a Sonarr + Radarr)
-9. Pi-hole         → DNS (indipendente)
-10. Home Assistant → Domotica (indipendente)
+1. Prowlarr        → Indexer manager (configure first)
+2. qBittorrent     → Torrent download client
+3. NZBGet          → Usenet download client
+4. Sonarr          → TV (connects to Prowlarr + download client)
+5. Radarr          → Movies (connects to Prowlarr + download client)
+6. Lidarr          → Music (connects to Prowlarr + download client)
+7. Bazarr          → Subtitles (connects to Sonarr + Radarr)
+8. Recyclarr       → Quality profiles (connects to Sonarr + Radarr)
+9. Pi-hole         → DNS (independent)
+10. Home Assistant → Home automation (independent)
 ```
 
-> **Nota**: Prowlarr si configura per primo, poi i download client, poi le app *arr che li collegano tutti insieme.
+> **Note**: Prowlarr is configured first, then download clients, then *arr apps that connect them all together.
 
-### Primo Accesso qBittorrent
+### qBittorrent First Access
 
-qBittorrent genera una password casuale al primo avvio. Per recuperarla:
+qBittorrent generates a random password on first boot. To retrieve it:
 
 ```bash
-# Recuperare password temporanea dai log
+# Retrieve temporary password from logs
 docker logs qbittorrent 2>&1 | grep -i password
 # Output: "The WebUI administrator password was not set. A temporary password is provided: XXXXXX"
 ```
 
 - Username: `admin`
-- Password: dal log sopra
-- Dopo il login: Options → WebUI → cambiare password
+- Password: from log above
+- After login: Options → WebUI → change password
 
-### Configurazioni Critiche
+### Critical Configurations
 
-Per ogni servizio *arr, verificare:
+For each *arr service, verify:
 
-- [ ] **Hardlinks abilitati**: Settings → Media Management → Use Hardlinks instead of Copy: **Yes**
-- [ ] **Root folder corretto**: `/data/media/{movies,tv,music}`
-- [ ] **Download client path**: `/data/torrents` o `/data/usenet/complete`
+- [ ] **Hardlinks enabled**: Settings → Media Management → Use Hardlinks instead of Copy: **Yes**
+- [ ] **Correct root folder**: `/data/media/{movies,tv,music}`
+- [ ] **Download client path**: `/data/torrents` or `/data/usenet/complete`
 
-### Raccolta API Key
+### API Key Collection
 
-Annotare le API key (per password manager):
+Note the API keys (for password manager):
 
-| Servizio | Percorso API Key |
-|----------|------------------|
+| Service | API Key Path |
+|---------|--------------|
 | Sonarr | Settings → General → API Key |
 | Radarr | Settings → General → API Key |
 | Lidarr | Settings → General → API Key |
 | Prowlarr | Settings → General → API Key |
 | Bazarr | Settings → General → API Key |
 
-### Verifica Hardlinking
+### Hardlinking Verification
 
 ```bash
-# Test critico - eseguire dopo prima importazione
+# Critical test - run after first import
 ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.mkv
 
-# Stesso numero inode = hardlink funzionante
+# Same inode number = hardlink working
 ```
 
 ---
 
-## Fase 6: Setup Proxmox/Plex
+## Phase 6: Proxmox/Plex Setup
 
-**Riferimento:** [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md)
+**Reference:** [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md)
 
-### 6.1 Installazione Proxmox
+### 6.1 Proxmox Installation
 
-1. [ ] Scaricare ISO Proxmox VE
-2. [ ] Creare USB avviabile
-3. [ ] Installare su Mini PC Lenovo
-4. [ ] Configurare IP: `192.168.3.20`
+1. [ ] Download Proxmox VE ISO
+2. [ ] Create bootable USB
+3. [ ] Install on Lenovo Mini PC
+4. [ ] Configure IP: `192.168.3.20`
 
-### 6.2 Setup Plex
+### 6.2 Plex Setup
 
-1. [ ] Creare VM o LXC container per Plex
-2. [ ] Montare NFS share dal NAS
-3. [ ] Configurare librerie Plex
+1. [ ] Create VM or LXC container for Plex
+2. [ ] Mount NFS share from NAS
+3. [ ] Configure Plex libraries
 
-### 6.3 Configurazione Tailscale
+### 6.3 Tailscale Configuration
 
-1. [ ] Installare Tailscale su Proxmox
-2. [ ] Configurare come exit node (opzionale)
-3. [ ] Abilitare accesso remoto
+1. [ ] Install Tailscale on Proxmox
+2. [ ] Configure as exit node (optional)
+3. [ ] Enable remote access
 
-### Verifica Fase 6
+### Phase 6 Verification
 
-- [ ] Proxmox accessibile: `https://192.168.3.20:8006`
-- [ ] Plex accessibile: `http://192.168.3.21:32400/web` (container LXC)
-- [ ] Tailscale connesso
+- [ ] Proxmox accessible: `https://192.168.3.20:8006`
+- [ ] Plex accessible: `http://192.168.3.21:32400/web` (LXC container)
+- [ ] Tailscale connected
 
 ---
 
-## Fase 7: Configurazione Backup
+## Phase 7: Backup Configuration
 
-**Riferimento:** [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md)
+**Reference:** [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md)
 
 ### 7.1 Duplicati (Container)
 
-1. [ ] Accedere a `http://192.168.3.10:8200`
-2. [ ] Configurare backup job:
-   - Sorgente: `/source/config`
-   - Destinazione locale: `/backups`
-   - Destinazione cloud: Google Drive o Dropbox (opzionale)
-3. [ ] Impostare schedule: giornaliero
+1. [ ] Access `http://192.168.3.10:8200`
+2. [ ] Configure backup job:
+   - Source: `/source/config`
+   - Local destination: `/backups`
+   - Cloud destination: Google Drive or Dropbox (optional)
+3. [ ] Set schedule: daily
 4. [ ] Retention: 7 daily, 4 weekly, 3 monthly
 
-### 7.2 Backup QTS
+### 7.2 QTS Backup
 
 1. [ ] Control Panel → System → Backup/Restore
-2. [ ] Backup System Settings → Salva file .bin
+2. [ ] Backup System Settings → Save .bin file
 
-### 7.3 Backup VM Proxmox
+### 7.3 Proxmox VM Backup
 
 1. [ ] Proxmox → Datacenter → Storage → Add NFS
-2. [ ] Configurare backup schedule settimanale
+2. [ ] Configure weekly backup schedule
 
-### 7.4 Test Restore
+### 7.4 Restore Test
 
-- [ ] Testare restore di un file config
-- [ ] Documentare procedura
+- [ ] Test restoring a config file
+- [ ] Document procedure
 
 ---
 
-## Fase 8: Verifica Finale
+## Phase 8: Final Verification
 
-### Checklist Funzionalità
+### Functionality Checklist
 
-**Rete:**
-- [ ] Tutte le VLAN raggiungibili
-- [ ] Internet funzionante da ogni VLAN
-- [ ] Regole firewall attive (testare blocchi)
+**Network:**
+- [ ] All VLANs reachable
+- [ ] Internet working from every VLAN
+- [ ] Firewall rules active (test blocks)
 
 **NAS/Docker:**
-- [ ] Tutti i container healthy: `make health`
-- [ ] WebUI accessibili: `make urls`
-- [ ] Logs senza errori critici: `make logs`
+- [ ] All containers healthy: `make health`
+- [ ] WebUIs accessible: `make urls`
+- [ ] Logs without critical errors: `make logs`
 
 **Media Stack:**
-- [ ] Prowlarr: indexer configurati e funzionanti
-- [ ] Sonarr/Radarr/Lidarr: possono cercare contenuti
-- [ ] Download client: test download completato
-- [ ] Hardlinking: verificato con `ls -li`
-- [ ] Bazarr: sottotitoli scaricati automaticamente
+- [ ] Prowlarr: indexers configured and working
+- [ ] Sonarr/Radarr/Lidarr: can search for content
+- [ ] Download client: test download completed
+- [ ] Hardlinking: verified with `ls -li`
+- [ ] Bazarr: subtitles downloaded automatically
 
 **Plex:**
-- [ ] Librerie sincronizzate
-- [ ] Streaming funzionante (locale e remoto via Tailscale)
+- [ ] Libraries synced
+- [ ] Streaming working (local and remote via Tailscale)
 
 **Backup:**
-- [ ] Duplicati job schedulato
-- [ ] Test restore completato
-- [ ] Backup offsite configurato
+- [ ] Duplicati job scheduled
+- [ ] Restore test completed
+- [ ] Offsite backup configured
 
 ---
 
-## Manutenzione Ordinaria
+## Routine Maintenance
 
-### Giornaliera (automatica)
-- Watchtower aggiorna container
-- Duplicati esegue backup
-- Cleanuparr pulisce file obsoleti
+### Daily (automatic)
+- Watchtower updates containers
+- Duplicati runs backup
+- Cleanuparr cleans obsolete files
 
-### Settimanale
+### Weekly
 ```bash
-make status      # Verificare stato container
+make status      # Verify container status
 make health      # Health check
 ```
 
-### Mensile
+### Monthly
 ```bash
-make pull        # Aggiornare immagini manualmente se necessario
-make backup      # Backup manuale aggiuntivo
+make pull        # Update images manually if needed
+make backup      # Additional manual backup
 ```
 
 ---
 
-## Risoluzione Problemi Comuni
+## Common Troubleshooting
 
-| Problema | Soluzione Rapida |
-|----------|------------------|
-| Container non parte | `docker compose logs <servizio>` |
-| Permessi negati | `sudo chown -R $PUID:$PGID ./config` (usa valori da .env) |
-| Hardlink fallisce | Verificare stesso filesystem |
-| Servizio non raggiungibile | Verificare regole firewall |
-| Pi-hole non risolve | Verificare porta 53 libera (`ss -tulnp \| grep :53`) |
-| qBittorrent login fallisce | Recuperare password: `docker logs qbittorrent 2>&1 \| grep password` |
-| PUID/PGID errati | Verificare con `id dockeruser` e aggiornare docker/.env |
+| Problem | Quick Solution |
+|---------|----------------|
+| Container won't start | `docker compose logs <service>` |
+| Permission denied | `sudo chown -R $PUID:$PGID ./config` (use values from .env) |
+| Hardlink fails | Verify same filesystem |
+| Service unreachable | Verify firewall rules |
+| Pi-hole doesn't resolve | Verify port 53 is free (`ss -tulnp \| grep :53`) |
+| qBittorrent login fails | Retrieve password: `docker logs qbittorrent 2>&1 \| grep password` |
+| Wrong PUID/PGID | Verify with `id dockeruser` and update docker/.env |
 
-Per problemi specifici, consultare la sezione Troubleshooting in [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md).
+For specific problems, consult the Troubleshooting section in [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md).
 
 ---
 
-## Documenti di Riferimento
+## Reference Documents
 
-| Documento | Contenuto |
-|-----------|-----------|
-| [`CLAUDE.md`](CLAUDE.md) | Guida completa progetto e linee guida sviluppo |
-| [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) | Layout hardware e piano IP |
-| [`docs/network/firewall-config.md`](docs/network/firewall-config.md) | Regole firewall complete |
-| [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) | Checklist dettagliata QNAP |
-| [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) | Procedure backup e restore |
-| [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) | Setup rete UniFi |
-| [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) | Setup Proxmox e Plex |
-| [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) | Traefik, Nginx Proxy Manager, DNS Tailscale |
+| Document | Contents |
+|----------|----------|
+| [`CLAUDE.md`](CLAUDE.md) | Project guide and development guidelines |
+| [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) | Hardware layout and IP plan |
+| [`docs/network/firewall-config.md`](docs/network/firewall-config.md) | Complete firewall rules |
+| [`docs/setup/NAS_SETUP.md`](docs/setup/NAS_SETUP.md) | Detailed QNAP checklist |
+| [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) | Backup and restore procedures |
+| [`docs/setup/NETWORK_SETUP.md`](docs/setup/NETWORK_SETUP.md) | UniFi network setup |
+| [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md) | Proxmox and Plex setup |
+| [`docs/setup/REVERSE_PROXY_SETUP.md`](docs/setup/REVERSE_PROXY_SETUP.md) | Traefik, Nginx Proxy Manager, Tailscale DNS |
