@@ -79,6 +79,14 @@ homelab/
 | Traefik | 80/443 | Reverse proxy HTTPS (via socket proxy) |
 | Socket Proxy | - | Proxy sicuro Docker socket (interno) |
 
+## Servizi Proxmox (su Mini PC 192.168.3.20)
+
+| Servizio | Porta | Descrizione |
+|----------|-------|-------------|
+| Proxmox VE | 8006 | WebUI hypervisor |
+| Plex Media Server | 32400 | Streaming media (LXC container 100, IP 192.168.3.21) |
+| Tailscale | - | VPN mesh, subnet router per VLAN 3 e 4 |
+
 ## Comandi Comuni
 
 ```bash

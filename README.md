@@ -44,6 +44,17 @@ Configurazione infrastructure-as-code per homelab basato su NAS QNAP e Proxmox c
 - **[Watchtower](https://containrrr.dev/watchtower/)** (8383) - Auto-update container
 - **[Traefik](https://traefik.io/traefik/)** (80/443) - Reverse proxy
 
+## Stack Proxmox (Mini PC)
+
+Il Mini PC esegue Proxmox VE come hypervisor con container LXC:
+
+- **[Plex Media Server](https://www.plex.tv/)** (32400) - Streaming media con hardware transcoding Intel Quick Sync
+- **[Tailscale](https://tailscale.com/)** - Accesso remoto VPN mesh (subnet router per 192.168.3.0/24 e 192.168.4.0/24)
+
+WebUI Proxmox: `https://192.168.3.20:8006`
+
+Dettagli setup in [`docs/setup/PROXMOX_SETUP.md`](docs/setup/PROXMOX_SETUP.md).
+
 ## Struttura Cartelle
 
 Configurato per supporto hardlinking secondo [Trash Guides](https://trash-guides.info/):
