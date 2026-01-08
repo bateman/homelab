@@ -1,21 +1,21 @@
 # Guida VPN per Download Clients
 
-> Setup Gluetun come container VPN per proteggere qBittorrent (e opzionalmente NZBGet)
+> Setup Gluetun come container VPN per proteggere qBittorrent e NZBGet
 
 ---
 
 ## Panoramica
 
-Questa guida spiega come configurare **Gluetun** come container VPN per instradare il traffico torrent attraverso una connessione VPN sicura.
+Questa guida spiega come configurare **Gluetun** come container VPN per instradare il traffico dei download clients attraverso una connessione VPN sicura.
 
-### Perché Serve una VPN per Torrent?
+### Perché Serve una VPN per i Download Clients?
 
 | Rischio senza VPN | Protezione con VPN |
 |-------------------|---------------------|
-| ISP vede tutto il traffico P2P | Traffico criptato, invisibile all'ISP |
-| IP reale esposto ai peer | IP del server VPN visibile ai peer |
+| ISP vede tutto il traffico | Traffico criptato, invisibile all'ISP |
+| IP reale esposto (torrent: ai peer) | IP del server VPN visibile |
 | Possibili lettere DMCA | IP non riconducibile a te |
-| Throttling P2P dall'ISP | ISP non può identificare traffico P2P |
+| Throttling dall'ISP | ISP non può identificare il tipo di traffico |
 
 ### Perché Gluetun?
 
@@ -26,17 +26,6 @@ Questa guida spiega come configurare **Gluetun** come container VPN per instrada
 - **Port forwarding automatico**: per alcuni provider (Mullvad, PIA, ProtonVPN)
 - **Health checks**: riavvio automatico se la connessione fallisce
 - **Leggero**: ~15MB RAM
-
-### VPN per Usenet (NZBGet)?
-
-Per **Usenet la VPN è generalmente non necessaria**:
-
-- Usenet usa connessioni SSL dirette ai provider (porta 563)
-- Non c'è esposizione peer-to-peer dell'IP
-- I provider Usenet non condividono informazioni con terzi
-- Il traffico è già criptato end-to-end
-
-Tuttavia, puoi instradare NZBGet attraverso la VPN se vuoi nascondere anche il traffico Usenet dal tuo ISP.
 
 ---
 
@@ -130,8 +119,8 @@ Aggiungi questo servizio a `docker/compose.media.yml` **prima** di qBittorrent:
       - "8080:8080"           # qBittorrent WebUI
       - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}"      # qBittorrent torrent port
       - "${QBIT_PORT:-50413}:${QBIT_PORT:-50413}/udp"  # qBittorrent torrent port UDP
-      # Porta esposta per NZBGet se instradato via VPN (opzionale)
-      # - "6789:6789"
+      # Porta esposta per NZBGet (attraverso VPN)
+      - "6789:6789"           # NZBGet WebUI
     networks:
       - media_net
       - proxy
@@ -199,9 +188,52 @@ Modifica il servizio `qbittorrent` in `docker/compose.media.yml`:
       # ...
 ```
 
-### 4. Sposta Label Traefik su Gluetun
+### 4. Modifica NZBGet per Usare la VPN
 
-Poiché qBittorrent usa la rete di Gluetun, le label Traefik vanno sul container Gluetun:
+Modifica il servizio `nzbget` in `docker/compose.media.yml`:
+
+```yaml
+  nzbget:
+    image: lscr.io/linuxserver/nzbget:latest
+    container_name: nzbget
+    # USA LA RETE DI GLUETUN invece della rete diretta
+    network_mode: "service:gluetun"
+    environment:
+      <<: *common-env
+    volumes:
+      - ./config/nzbget:/config
+      - /share/data:/data
+    # RIMUOVI la sezione ports - sono gestite da gluetun
+    # ports:
+    #   - "6789:6789"
+    # RIMUOVI networks - usa la rete di gluetun
+    # networks:
+    #   - media_net
+    #   - proxy
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6789"]
+      <<: *common-healthcheck
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 128M
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik labels devono stare su gluetun, non nzbget
+      # - "traefik.enable=true"
+      # ...
+```
+
+### 5. Sposta Label Traefik su Gluetun
+
+Poiché qBittorrent e NZBGet usano la rete di Gluetun, le label Traefik per entrambi vanno sul container Gluetun:
 
 ```yaml
   gluetun:
@@ -214,9 +246,14 @@ Poiché qBittorrent usa la rete di Gluetun, le label Traefik vanno sul container
       - "traefik.http.routers.qbit.entrypoints=websecure"
       - "traefik.http.routers.qbit.tls=true"
       - "traefik.http.services.qbit.loadbalancer.server.port=8080"
+      # Traefik per NZBGet
+      - "traefik.http.routers.nzbget.rule=Host(`nzbget.home.local`)"
+      - "traefik.http.routers.nzbget.entrypoints=websecure"
+      - "traefik.http.routers.nzbget.tls=true"
+      - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
 ```
 
-### 5. Crea Cartella Config Gluetun
+### 6. Crea Cartella Config Gluetun
 
 Aggiungi a `scripts/setup-folders.sh`:
 
@@ -316,10 +353,12 @@ docker logs gluetun | grep -i "connected\|healthy"
 curl -s https://ipinfo.io/ip
 # Output: <tuo_IP_reale>
 
-# IP di qBittorrent (attraverso VPN)
+# IP dei download clients (attraverso VPN)
 docker exec gluetun curl -s https://ipinfo.io/ip
-# Output: <IP_del_server_VPN>  ← Deve essere DIVERSO!
+# Output: <IP_del_server_VPN>  ← Deve essere DIVERSO dal tuo IP reale!
 ```
+
+Sia qBittorrent che NZBGet usano questo stesso IP VPN per tutte le connessioni.
 
 ### 3. Verifica Kill Switch
 
@@ -354,46 +393,6 @@ Verifica con un port checker online o:
 ```bash
 # Da fuori la rete locale
 nc -zv <IP_VPN> <porta_forwarded>
-```
-
----
-
-## Configurazione Opzionale: NZBGet via VPN
-
-Se vuoi instradare anche NZBGet attraverso la VPN:
-
-### 1. Aggiungi Porta a Gluetun
-
-```yaml
-  gluetun:
-    ports:
-      # ... porte esistenti ...
-      - "6789:6789"  # NZBGet WebUI
-```
-
-### 2. Modifica NZBGet
-
-```yaml
-  nzbget:
-    image: lscr.io/linuxserver/nzbget:latest
-    container_name: nzbget
-    network_mode: "service:gluetun"
-    environment:
-      <<: *common-env
-    volumes:
-      - ./config/nzbget:/config
-      - /share/data:/data
-    # Rimuovi ports e networks
-    restart: unless-stopped
-    logging: *common-logging
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6789"]
-      <<: *common-healthcheck
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
 ```
 
 ---
