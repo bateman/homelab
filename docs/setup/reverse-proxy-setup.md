@@ -85,6 +85,7 @@ Access Pi-hole: `http://192.168.3.10:8081`
 
 | Domain | IP |
 |--------|-----|
+| `auth.home.local` | 192.168.3.10 |
 | `traefik.home.local` | 192.168.3.10 |
 | `sonarr.home.local` | 192.168.3.10 |
 | `radarr.home.local` | 192.168.3.10 |
@@ -142,6 +143,7 @@ Traefik labels are already added to all services in compose files:
 
 | Service | Traefik URL (HTTPS) | Direct Port (HTTP) |
 |---------|---------------------|-------------------|
+| Authelia | https://auth.home.local | :9091 |
 | Sonarr | https://sonarr.home.local | :8989 |
 | Radarr | https://radarr.home.local | :7878 |
 | Lidarr | https://lidarr.home.local | :8686 |
@@ -338,6 +340,7 @@ make restart
 
 | Service | URL (HTTPS) | Direct Port (HTTP, backup) |
 |---------|-------------|---------------------------|
+| Authelia (SSO) | https://auth.home.local | :9091 |
 | Traefik Dashboard | https://traefik.home.local | (via reverse proxy) |
 | Sonarr | https://sonarr.home.local | :8989 |
 | Radarr | https://radarr.home.local | :7878 |
@@ -358,6 +361,10 @@ make restart
 > [!NOTE]
 > URLs work both from local network and remotely via Tailscale (thanks to Pi-hole as DNS).
 > HTTP (port 80) is automatically redirected to HTTPS (port 443).
+
+> [!IMPORTANT]
+> All services are protected by Authelia SSO. You must authenticate once at https://auth.home.local to access any service.
+> See [Authelia Setup](authelia-setup.md) for configuration details.
 
 ---
 

@@ -1,0 +1,49 @@
+# =============================================================================
+# Authelia Users Database
+# =============================================================================
+# Define your users here. Each user needs:
+#   - username (login name)
+#   - displayname (shown in UI)
+#   - password (hashed with argon2)
+#   - email (for notifications and password reset)
+#   - groups (for access control rules)
+#
+# To generate a password hash, run:
+#   docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'YOUR_PASSWORD'
+#
+# Or after starting Authelia:
+#   docker exec authelia authelia crypto hash generate argon2 --password 'YOUR_PASSWORD'
+#
+# IMPORTANT: Replace the example user below with your own!
+# =============================================================================
+
+users:
+  # ---------------------------------------------------------------------------
+  # Example admin user - CHANGE THIS!
+  # ---------------------------------------------------------------------------
+  # Default password: changeme (CHANGE IMMEDIATELY!)
+  # Hash below is for 'changeme' - generate your own!
+  #
+  admin:
+    disabled: false
+    displayname: "Administrator"
+    # Password: changeme
+    # CHANGE THIS! Generate with: docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'YOUR_PASSWORD'
+    password: "$argon2id$v=19$m=65536,t=3,p=4$BpLnfgDsc2WD8F2q$o/vzA4myCqZZ36bUGsDY//8mKUYNZZaR0t4MFFSs+iM"
+    email: admin@home.local
+    groups:
+      - admins
+      - users
+
+  # ---------------------------------------------------------------------------
+  # Example regular user (optional)
+  # ---------------------------------------------------------------------------
+  # Uncomment and modify to add family members or additional users
+  #
+  # user:
+  #   disabled: false
+  #   displayname: "Regular User"
+  #   password: "$argon2id$v=19$m=65536,t=3,p=4$..."
+  #   email: user@home.local
+  #   groups:
+  #     - users

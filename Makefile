@@ -305,6 +305,17 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:3001,UptimeKuma)
 	$(call check_service,http://localhost:8383/v1/metrics,Watchtower)
 	$(call check_service,http://localhost:80,Traefik)
+	@# Authelia health check
+	@HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' authelia 2>/dev/null); \
+	if [ "$$HEALTH" = "healthy" ]; then \
+		echo "Authelia: $(GREEN)OK (healthy)$(NC)"; \
+	elif [ "$$HEALTH" = "starting" ]; then \
+		echo "Authelia: $(YELLOW)STARTING$(NC)"; \
+	elif [ -z "$$HEALTH" ]; then \
+		echo "Authelia: $(YELLOW)NOT RUNNING$(NC)"; \
+	else \
+		echo "Authelia: $(RED)UNHEALTHY$(NC)"; \
+	fi
 	@# Portainer uses HTTPS
 	@STATUS=$$(curl -sk -o /dev/null -w '%{http_code}' --max-time 5 https://localhost:9443 2>/dev/null); \
 	if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "303" ]; then \
@@ -346,7 +357,12 @@ show-urls:
 	@echo "  Home Assist:  http://$(HOST_IP):8123"
 	@echo "  Portainer:    https://$(HOST_IP):9443"
 	@echo "  Duplicati:    http://$(HOST_IP):8200"
-	@echo "  Traefik:      http://traefik.home.local (requires DNS)"
+	@echo "  Traefik:      https://traefik.home.local (requires DNS)"
+	@echo ""
+	@echo "$(GREEN)Authentication (SSO)$(NC)"
+	@echo "  Authelia:     https://auth.home.local (requires DNS)"
+	@echo ""
+	@echo "$(YELLOW)Note: All services require Authelia SSO when accessed via *.home.local$(NC)"
 	@echo ""
 
 # Alias for show-urls

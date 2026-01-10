@@ -180,6 +180,11 @@ make_dir "${CONFIG_ROOT}/portainer"
 make_dir "${CONFIG_ROOT}/duplicati"
 make_dir "${CONFIG_ROOT}/uptime-kuma"
 make_dir "${CONFIG_ROOT}/traefik"
+make_dir "${CONFIG_ROOT}/authelia"
+
+# Secrets directory (for Authelia secrets)
+SECRETS_ROOT="${SCRIPT_DIR}/../docker/secrets"
+make_dir "${SECRETS_ROOT}/authelia"
 
 # Permissions
 log_info "Setting permissions (PUID=$PUID, PGID=$PGID)..."
