@@ -300,7 +300,7 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:11011/health,Cleanuparr)
 	$(call check_service,http://localhost:8191/health,FlareSolverr)
 	$(call check_service,http://localhost:8081/admin,Pi-hole)
-	$(call check_service,http://localhost:8123/api/,HomeAssistant)
+	# $(call check_service,http://localhost:8123/api/,HomeAssistant)  # Disabled - see compose.homeassistant.yml
 	$(call check_service,http://localhost:8200,Duplicati)
 	$(call check_service,http://localhost:3001,UptimeKuma)
 	$(call check_service,http://localhost:8383/v1/metrics,Watchtower)
@@ -354,7 +354,7 @@ show-urls:
 	@echo ""
 	@echo "$(GREEN)Infrastructure$(NC)"
 	@echo "  Pi-hole:      http://$(HOST_IP):8081/admin"
-	@echo "  Home Assist:  http://$(HOST_IP):8123"
+	# @echo "  Home Assist:  http://$(HOST_IP):8123"  # Disabled - see compose.homeassistant.yml
 	@echo "  Portainer:    https://$(HOST_IP):9443"
 	@echo "  Duplicati:    http://$(HOST_IP):8200"
 	@echo "  Traefik:      https://traefik.home.local (requires DNS)"
