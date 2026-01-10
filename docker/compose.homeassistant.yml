@@ -1,0 +1,64 @@
+# =============================================================================
+# Docker Compose - Home Assistant (Optional)
+# NAS QNAP TS-435XeU - Homelab
+#
+# Home automation platform - currently disabled to save RAM (~2GB)
+#
+# To enable, add this file to your compose command:
+#   docker compose -f compose.yml -f compose.media.yml -f compose.homeassistant.yml up -d
+#
+# Or update Makefile COMPOSE_FILES variable to include this file
+#
+# NOTE: Home Assistant uses network_mode: host for device discovery
+# (Zigbee, Bluetooth, mDNS), so it doesn't use Docker networks.
+# =============================================================================
+
+# =============================================================================
+# Reusable YAML Anchors (duplicated from compose.yml for standalone use)
+# =============================================================================
+
+x-common-logging: &common-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+x-common-healthcheck: &common-healthcheck
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 60s
+
+services:
+  # ---------------------------------------------------------------------------
+  # Home Automation
+  # ---------------------------------------------------------------------------
+  # NOTE: Home Assistant uses network_mode: host for device discovery
+  # (Zigbee, Bluetooth, mDNS). This means:
+  # - It is NOT part of media_net network
+  # - It cannot resolve other containers by name (use IP 192.168.3.10 instead)
+  # - It binds directly to host port 8123
+  # - Firewall rules targeting NAS IP (192.168.3.10:8123) work correctly
+  #   because HA responds on the host interface, not a container network
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    environment:
+      TZ: ${TZ:-Europe/Rome}
+    volumes:
+      - ./config/homeassistant:/config
+      - /run/dbus:/run/dbus:ro
+    network_mode: host
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8123/api/"]
+      <<: *common-healthcheck
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
