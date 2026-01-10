@@ -1,0 +1,189 @@
+# =============================================================================
+# Authelia Configuration - Homelab SSO with Passkey Support
+# =============================================================================
+# Docs: https://www.authelia.com/configuration/
+#
+# Session timeouts are set to be generous for homelab use:
+#   - Session expiration: 7 days
+#   - Inactivity timeout: 3 days
+#   - Remember me: 30 days
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Server Configuration
+# -----------------------------------------------------------------------------
+server:
+  address: 'tcp://0.0.0.0:9091/'
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
+log:
+  level: info
+  format: text
+  # Uncomment for debugging:
+  # level: debug
+
+# -----------------------------------------------------------------------------
+# TOTP Configuration (backup 2FA method)
+# -----------------------------------------------------------------------------
+totp:
+  issuer: homelab
+  period: 30
+  skew: 1
+
+# -----------------------------------------------------------------------------
+# WebAuthn / Passkey Configuration
+# -----------------------------------------------------------------------------
+# This enables passwordless login with:
+#   - Touch ID / Face ID (Mac, iPhone)
+#   - Windows Hello (fingerprint, face, PIN)
+#   - Android fingerprint
+#   - Hardware security keys (YubiKey, etc.)
+#
+webauthn:
+  disable: false
+  display_name: Homelab
+  # 'indirect' is recommended for privacy (doesn't send device info)
+  attestation_conveyance_preference: indirect
+  # 'preferred' uses biometric when available, falls back to PIN
+  user_verification: preferred
+  # Timeout for registration/authentication prompts (2 minutes)
+  timeout: 120s
+
+# -----------------------------------------------------------------------------
+# Authentication Backend
+# -----------------------------------------------------------------------------
+# Using file-based backend for simplicity (no LDAP needed for homelab)
+# Users are defined in users_database.yml
+#
+authentication_backend:
+  # Disable password reset via email (use CLI instead)
+  password_reset:
+    disable: false
+  file:
+    path: /config/users_database.yml
+    watch: true
+    # Argon2 password hashing (secure defaults)
+    password:
+      algorithm: argon2
+      argon2:
+        variant: argon2id
+        iterations: 3
+        memory: 65536
+        parallelism: 4
+        key_length: 32
+        salt_length: 16
+
+# -----------------------------------------------------------------------------
+# Session Configuration
+# -----------------------------------------------------------------------------
+# GENEROUS TIMEOUTS for homelab convenience:
+#   - expiration: 7 days before forced re-login
+#   - inactivity: 3 days of no activity before logout
+#   - remember_me: 30 days when "remember me" is checked
+#
+session:
+  # Session cookie name
+  name: authelia_session
+  # Same site cookie policy
+  same_site: lax
+  # Session expiration (7 days = 604800 seconds)
+  expiration: 7d
+  # Inactivity timeout (3 days = 259200 seconds)
+  inactivity: 3d
+  # Remember me duration (30 days)
+  remember_me: 30d
+  # Cookie domain (all *.home.local subdomains)
+  cookies:
+    - domain: home.local
+      authelia_url: https://auth.home.local
+      default_redirection_url: https://home.local
+      # Only send cookies over HTTPS
+      same_site: lax
+      # Expire on browser close if remember_me not checked
+      # (overridden by remember_me when checked)
+
+# -----------------------------------------------------------------------------
+# Storage Backend
+# -----------------------------------------------------------------------------
+# SQLite for simplicity (sufficient for homelab)
+# Data stored in /config/db.sqlite3
+#
+storage:
+  local:
+    path: /config/db.sqlite3
+
+# -----------------------------------------------------------------------------
+# Notification Provider
+# -----------------------------------------------------------------------------
+# Using filesystem for simplicity (notifications saved to file)
+# For email setup, see: https://www.authelia.com/configuration/notifications/smtp/
+#
+notifier:
+  disable_startup_check: false
+  filesystem:
+    filename: /config/notification.txt
+
+# -----------------------------------------------------------------------------
+# Access Control Policy
+# -----------------------------------------------------------------------------
+# Rules are evaluated in order. First match wins.
+#
+# Policies:
+#   - bypass: No authentication required
+#   - one_factor: Password OR passkey required
+#   - two_factor: Password + TOTP/WebAuthn required
+#
+# For passkey users: passkey counts as one_factor (it's already 2FA by nature)
+# Use two_factor only for extra-critical services requiring password + second factor
+#
+access_control:
+  # Default: require authentication
+  default_policy: one_factor
+
+  rules:
+    # -------------------------------------------------------------------------
+    # Bypass rules (no authentication)
+    # -------------------------------------------------------------------------
+    # Uptime Kuma status page (optional: make public)
+    # Uncomment to allow public access to status page:
+    # - domain: uptime.home.local
+    #   policy: bypass
+
+    # API endpoints that need to bypass auth (for *arr inter-service communication)
+    - domain: "*.home.local"
+      policy: bypass
+      resources:
+        - "^/api/.*$"
+        - "^/ping$"
+        - "^/health$"
+        - "^/healthcheck$"
+
+    # -------------------------------------------------------------------------
+    # Two-factor rules (extra security for admin tools)
+    # -------------------------------------------------------------------------
+    # Portainer (full Docker control = high risk)
+    - domain: portainer.home.local
+      policy: two_factor
+
+    # Traefik dashboard
+    - domain: traefik.home.local
+      policy: two_factor
+
+    # -------------------------------------------------------------------------
+    # One-factor rules (passkey or password)
+    # -------------------------------------------------------------------------
+    # All other services require single authentication
+    - domain: "*.home.local"
+      policy: one_factor
+
+# -----------------------------------------------------------------------------
+# Identity Providers (optional, for future use)
+# -----------------------------------------------------------------------------
+# Authelia can act as an OpenID Connect provider
+# Uncomment and configure if you want SSO for apps that support OIDC
+#
+# identity_providers:
+#   oidc:
+#     # See: https://www.authelia.com/configuration/identity-providers/openid-connect/

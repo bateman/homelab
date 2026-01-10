@@ -3,28 +3,37 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Secrets e Configurazioni Locali
+# Secrets and Local Configuration
 # -----------------------------------------------------------------------------
-# File con credenziali - MAI committare!
+# Credential files - NEVER commit!
 docker/.env
 docker/.env.secrets
 
-# Certificati TLS generati localmente
+# Authelia secrets (JWT, session, encryption keys)
+docker/secrets/
+
+# Locally generated TLS certificates
 docker/config/traefik/certs/
 
 # -----------------------------------------------------------------------------
-# Configurazioni Servizi (generate a runtime)
+# Service Configurations (generated at runtime)
 # -----------------------------------------------------------------------------
-# Le config dei servizi contengono API key e dati sensibili
-# Vengono backuppate via Duplicati, non via Git
+# Service configs contain API keys and sensitive data
+# Backed up via Duplicati, not via Git
 docker/config/*/
 
-# Eccezione: mantieni i file di configurazione Traefik statici
+# Exception: keep static Traefik configuration files
 !docker/config/traefik/
 docker/config/traefik/certs/
 
+# Exception: keep Authelia configuration templates
+!docker/config/authelia/
+# But ignore SQLite database and runtime files
+docker/config/authelia/db.sqlite3
+docker/config/authelia/notification.txt
+
 # -----------------------------------------------------------------------------
-# File di Sistema
+# System Files
 # -----------------------------------------------------------------------------
 .DS_Store
 Thumbs.db
@@ -33,7 +42,7 @@ Thumbs.db
 *~
 
 # -----------------------------------------------------------------------------
-# Log e Cache
+# Logs and Cache
 # -----------------------------------------------------------------------------
 *.log
 *.cache
