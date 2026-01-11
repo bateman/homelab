@@ -227,6 +227,22 @@ ss -tulnp | grep :53
 # Control Panel → Network & Virtual Switch → DNS Server → Disable
 ```
 
+### 4.2.3 Authelia Secret Generation
+
+Authelia requires cryptographic secrets for JWT, session management, and storage encryption:
+
+```bash
+# Generate Authelia secrets (required before first start)
+./scripts/generate-authelia-secrets.sh
+
+# Verify secrets were created
+ls -la docker/secrets/authelia/
+# Should show: JWT_SECRET, SESSION_SECRET, STORAGE_ENCRYPTION_KEY
+```
+
+> [!IMPORTANT]
+> The stack will fail to start if Authelia secrets are not generated. See [Authelia Setup](docs/setup/authelia-setup.md) for user configuration.
+
 ### 4.3 Container Startup
 
 ```bash
@@ -258,6 +274,25 @@ make urls
 ## Phase 5: Services Configuration
 
 **Reference:** [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) section "*arr Services Configuration"
+
+### Optional Services
+
+Some services are not enabled by default. To enable them, modify the `COMPOSE_FILES` variable in `Makefile`:
+
+```makefile
+# Default (in Makefile line 13):
+COMPOSE_FILES := -f docker/compose.yml -f docker/compose.media.yml
+
+# To add Home Assistant:
+COMPOSE_FILES := -f docker/compose.yml -f docker/compose.media.yml -f docker/compose.homeassistant.yml
+```
+
+| Optional Service | Compose File | Notes |
+|------------------|--------------|-------|
+| Home Assistant | `docker/compose.homeassistant.yml` | Uses `network_mode: host` (port 8123) |
+
+> [!NOTE]
+> After modifying `COMPOSE_FILES`, run `make up` to start the new services.
 
 ### Configuration Order (IMPORTANT)
 

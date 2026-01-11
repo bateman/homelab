@@ -189,3 +189,25 @@ radarr:
         quality_profiles:
           - name: HD Bluray + WEB
             score: 100
+
+# =============================================================================
+# Lidarr Configuration (Not Included)
+# =============================================================================
+# NOTE: Lidarr is NOT included in this configuration because:
+# 1. Trash Guides has limited support for Lidarr compared to Sonarr/Radarr
+# 2. Music quality preferences are highly subjective
+# 3. Lidarr's default quality profiles are generally adequate
+#
+# If you want to add Lidarr sync, uncomment and customize below:
+#
+# lidarr:
+#   music:
+#     base_url: http://lidarr:8686
+#     api_key: YOUR_LIDARR_API_KEY
+#
+#     quality_definition:
+#       type: music
+#
+#     # Add quality profiles and custom formats as needed
+#     # See: https://recyclarr.dev/wiki/yaml/config-reference/lidarr/
+# =============================================================================

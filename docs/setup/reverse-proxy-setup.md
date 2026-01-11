@@ -99,6 +99,8 @@ Access Pi-hole: `http://192.168.3.10:8081`
 | `portainer.home.local` | 192.168.3.10 |
 | `duplicati.home.local` | 192.168.3.10 |
 | `uptime.home.local` | 192.168.3.10 |
+| `huntarr.home.local` | 192.168.3.10 |
+| `cleanuparr.home.local` | 192.168.3.10 |
 | `plex.home.local` | 192.168.3.21 |
 
 ### 1.4 Verification

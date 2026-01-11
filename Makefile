@@ -113,7 +113,17 @@ setup: check-compose
 		cp docker/.env.secrets.example docker/.env.secrets; \
 		echo "$(YELLOW)WARNING: Edit docker/.env.secrets with your passwords$(NC)"; \
 	fi
+	@if [ ! -f docker/secrets/authelia/JWT_SECRET ]; then \
+		echo ">>> Generating Authelia secrets..."; \
+		chmod +x scripts/generate-authelia-secrets.sh; \
+		./scripts/generate-authelia-secrets.sh; \
+	fi
 	@echo "$(GREEN)>>> Setup complete$(NC)"
+	@echo "$(YELLOW)NEXT STEPS:$(NC)"
+	@echo "  1. Edit docker/.env with PUID, PGID, TZ"
+	@echo "  2. Edit docker/.env.secrets with passwords"
+	@echo "  3. Edit docker/config/authelia/users_database.yml with your user"
+	@echo "  4. Run: make up"
 
 setup-dry-run:
 	@echo ">>> Previewing folder structure (dry-run)..."
