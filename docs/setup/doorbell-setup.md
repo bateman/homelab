@@ -1,12 +1,80 @@
 # Smart Doorbell Setup - Vimar View Door 7 Integration
 
-> Guida per integrare un campanello smart PoE con il videocitofono Vimar View Door 7 tramite Home Assistant
+> Guida per integrare una telecamera alla porta d'ingresso e visualizzare l'anteprima sul videocitofono Vimar View Door 7
 
 ---
 
 ## Overview
 
-Questa guida spiega come aggiungere una telecamera campanello alla porta d'ingresso e visualizzare l'anteprima sul videocitofono Vimar esistente.
+Questa guida spiega come aggiungere una telecamera alla porta d'ingresso e visualizzare l'anteprima sul videocitofono Vimar esistente quando qualcuno suona al campanello.
+
+### Obiettivi
+
+1. **Visualizzazione automatica** sul View Door 7 quando suonano
+2. **Notifica su smartphone** con snapshot (opzionale, via Home Assistant)
+3. **Registrazione video** degli eventi (opzionale)
+
+---
+
+## Opzione 1: Telecamera Elvox (Raccomandata)
+
+La soluzione più semplice è usare una telecamera Elvox, compatibile nativamente con il sistema Due Fili Plus del View Door 7.
+
+### Architettura
+
+```
+┌──────────────────┐                    ┌──────────────────┐
+│  Telecamera      │   Due Fili Plus    │  Vimar View Door │
+│  Elvox PoE       │ ◄────────────────► │  7 (40517)       │
+│  192.168.1.x     │   integrazione     │  192.168.1.x     │
+└──────────────────┘   nativa           └──────────────────┘
+                                                 │
+                                                 │ quando suonano
+                                                 ▼
+                                        ┌──────────────────┐
+                                        │  Mostra video    │
+                                        │  automaticamente │
+                                        └──────────────────┘
+```
+
+### Hardware Elvox Consigliato
+
+| Modello | Tipo | Risoluzione | Prezzo |
+|---------|------|-------------|--------|
+| **Elvox 46237** | Bullet PoE | 2MP | ~€150-200 |
+| **Elvox 46239** | Dome PoE | 2MP | ~€150-200 |
+| **Elvox 46249** | Bullet PoE | 4MP | ~€200-250 |
+| **Elvox 46247** | Compact PoE | 2MP | ~€120-150 |
+
+### Vantaggi Elvox
+
+- **Integrazione nativa** con View Door 7 - zero configurazione
+- **Stesso ecosistema** - gestione unificata in Elvox Device Manager
+- **Evento automatico** - il video appare sul videocitofono quando suonano
+- **Supporto Vimar** - assistenza diretta del produttore
+
+### Installazione Elvox
+
+1. **Posiziona** la telecamera accanto alla porta d'ingresso
+2. **Collega** al PoE switch nel quadro elettrico (rete legacy 192.168.1.x)
+3. **Apri Elvox Device Manager** sul PC
+4. **Aggiungi telecamera** - verrà rilevata automaticamente
+5. **Associa al campanello** - configura l'evento "mostra video quando suonano"
+6. **Test** - premi il campanello e verifica che il View Door 7 mostri il feed
+
+### Configurazione Evento in Elvox Device Manager
+
+1. Vai su **Impianto** → **Eventi**
+2. Crea nuova regola:
+   - **Trigger**: Chiamata campanello / Posto esterno
+   - **Azione**: Visualizza telecamera su View Door 7
+3. Salva e sincronizza
+
+---
+
+## Opzione 2: Telecamera Terze Parti (Alternativa)
+
+Se preferisci campanelli smart con funzionalità aggiuntive (rilevamento persone, audio bidirezionale, app dedicata), puoi usare modelli di terze parti con integrazione via Home Assistant.
 
 ### Architettura
 
@@ -16,7 +84,7 @@ Questa guida spiega come aggiungere una telecamera campanello alla porta d'ingre
 │  (Reolink PoE)   │   192.168.6.x      │   192.168.3.10   │
 └──────────────────┘                    └────────┬─────────┘
         │                                        │
-        │ ONVIF                                  │ Push + Snapshot
+        │ ONVIF (se supportato)                  │ Push + Snapshot
         ▼                                        ▼
 ┌──────────────────┐                    ┌──────────────────┐
 │  Vimar View Door │                    │     iPhone       │
@@ -24,27 +92,20 @@ Questa guida spiega come aggiungere una telecamera campanello alla porta d'ingre
 └──────────────────┘                    └──────────────────┘
 ```
 
-### Obiettivi
-
-1. **Notifica immediata** su smartphone quando qualcuno suona
-2. **Snapshot/video** della persona alla porta
-3. **Visualizzazione opzionale** sul videocitofono Vimar
-
----
-
-## Hardware Consigliato
-
-### Campanelli PoE (Raccomandati)
+### Hardware Terze Parti
 
 | Modello | Pro | Contro | Prezzo |
 |---------|-----|--------|--------|
-| **Reolink Video Doorbell PoE** | RTSP nativo, ONVIF, no cloud, 5MP | Richiede cavo PoE | ~€100 |
+| **Reolink Video Doorbell PoE** | RTSP nativo, ONVIF, no cloud, 5MP | Integrazione Vimar da verificare | ~€100 |
 | **Amcrest AD410** | RTSP, ONVIF, 2K, locale | App mediocre | ~€90 |
-| **UniFi G4 Doorbell Pro PoE** | Integrazione UniFi nativa | Costoso, ecosistema chiuso | ~€500 |
+| **UniFi G4 Doorbell Pro PoE** | Integrazione UniFi nativa | Costoso, no ONVIF | ~€500 |
 
-### Raccomandazione
+### Quando scegliere terze parti
 
-**Reolink Video Doorbell PoE** - miglior rapporto qualità/prezzo, integrazione Home Assistant eccellente, supporto RTSP/ONVIF nativo.
+- Vuoi **rilevamento AI** (persone, pacchi, veicoli)
+- Preferisci **app dedicata** oltre a Vimar
+- Hai bisogno di **audio bidirezionale** avanzato
+- Vuoi **integrare con Home Assistant** per automazioni complesse
 
 ---
 
