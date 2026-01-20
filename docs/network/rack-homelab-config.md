@@ -324,7 +324,8 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (segmented VLANs)
 | Device | IP | Notes |
 |--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.6.1 | — |
-| Alexa, new camera | DHCP (.100-.200) | Smart WiFi devices |
+| Doorbell Camera | 192.168.6.50 | PoE smart doorbell (Reolink/Amcrest) |
+| Alexa, other IoT | DHCP (.100-.200) | Smart WiFi devices |
 
 ### Notes
 

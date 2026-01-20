@@ -119,4 +119,5 @@ make logs-SERVICE  # Logs for specific service
 | Firewall & VLAN config | `docs/network/firewall-config.md` |
 | VPN setup (Gluetun) | `docs/setup/vpn-setup.md` |
 | Reverse proxy (Traefik) | `docs/setup/reverse-proxy-setup.md` |
+| Smart doorbell integration | `docs/setup/doorbell-setup.md` |
 | Backup procedures | `docs/operations/runbook-backup-restore.md` |
