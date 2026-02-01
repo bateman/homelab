@@ -449,10 +449,11 @@ Home Assistant can centralize power management with intelligent automations.
 
 # Shutdown Plex server at night if no active streams
 # Requires Plex integration for sensor.plex
+# Note: Scheduled before NAS shutdown (01:00) since HA runs on NAS
 - alias: "Shutdown Plex Overnight"
   trigger:
     - platform: time
-      at: "02:00:00"
+      at: "00:30:00"
   condition:
     - condition: template
       value_template: "{{ states('sensor.plex') | int(0) == 0 }}"
