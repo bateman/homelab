@@ -120,3 +120,4 @@ make logs-SERVICE  # Logs for specific service
 | VPN setup (Gluetun) | `docs/setup/vpn-setup.md` |
 | Reverse proxy (Traefik) | `docs/setup/reverse-proxy-setup.md` |
 | Backup procedures | `docs/operations/runbook-backup-restore.md` |
+| Energy saving strategies | `docs/operations/energy-saving-strategies.md` |

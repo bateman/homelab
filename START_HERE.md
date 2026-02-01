@@ -28,6 +28,7 @@ Before starting, make sure you have:
 | 6 | Proxmox/Plex Setup | [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md) |
 | 7 | Backup Configuration | [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) |
 | 8 | Final Verification | This guide |
+| 9 | Energy Saving *(optional)* | [`docs/operations/energy-saving-strategies.md`](docs/operations/energy-saving-strategies.md) |
 
 ---
 
@@ -418,6 +419,50 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 
 ---
 
+## Phase 9: Energy Saving (Optional)
+
+**Reference:** [`docs/operations/energy-saving-strategies.md`](docs/operations/energy-saving-strategies.md)
+
+> [!TIP]
+> Configure energy saving after your homelab is fully operational and verified. These optimizations can reduce idle power consumption by 15-30%.
+
+### 9.1 Quick Wins (Recommended)
+
+1. [ ] Configure HDD spindown on NAS (30 minutes idle)
+2. [ ] Set LED brightness schedule (dim overnight)
+3. [ ] Enable Wi-Fi WLAN scheduling in UniFi (disable overnight if not needed)
+
+### 9.2 Proxmox Power Management
+
+1. [ ] Document Mini PC MAC address for Wake-on-LAN
+2. [ ] Verify WOL is configured (see [`proxmox-setup.md`](docs/setup/proxmox-setup.md#82-wake-on-lan-wol))
+3. [ ] Set CPU governor to powersave
+4. [ ] Install NUT for UPS monitoring (optional)
+
+### 9.3 Service Scheduling (Optional)
+
+1. [ ] Create power-save scripts for non-critical services
+2. [ ] Configure cron jobs (stop services 03:00, resume 06:00)
+3. [ ] Add Makefile targets: `make power-save-start`, `make power-save-stop`
+
+### 9.4 Advanced Automation (Optional)
+
+1. [ ] Enable Home Assistant
+2. [ ] Configure presence-based WOL automation
+3. [ ] Set up power monitoring dashboard
+
+### Phase 9 Verification
+
+```bash
+# Check UPS load (if NUT configured)
+upsc eaton ups.load
+
+# Verify services resume correctly after power-save
+make health
+```
+
+---
+
 ## Routine Maintenance
 
 ### Daily (automatic)
@@ -463,7 +508,8 @@ For specific problems, consult the Troubleshooting section in [`docs/setup/nas-s
 | [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) | Hardware layout and IP plan |
 | [`docs/network/firewall-config.md`](docs/network/firewall-config.md) | Complete firewall rules |
 | [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) | Detailed QNAP checklist |
-| [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) | Backup and restore procedures |
 | [`docs/setup/network-setup.md`](docs/setup/network-setup.md) | UniFi network setup |
 | [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md) | Proxmox and Plex setup |
 | [`docs/setup/reverse-proxy-setup.md`](docs/setup/reverse-proxy-setup.md) | Traefik, Nginx Proxy Manager, Tailscale DNS |
+| [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) | Backup and restore procedures |
+| [`docs/operations/energy-saving-strategies.md`](docs/operations/energy-saving-strategies.md) | Power management and energy optimization |
