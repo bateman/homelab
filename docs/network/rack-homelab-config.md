@@ -128,6 +128,24 @@
 
 ---
 
+## Non-Rack Components
+
+### UniFi U6-Pro Access Point
+
+| Spec | Value |
+|------|-------|
+| Model | U6-Pro |
+| Location | Ceiling/wall mounted (not in rack) |
+| Power | PoE from USW-Pro-Max-16-PoE |
+| Switch Port | RJ45 port with PoE+ |
+| IP | 192.168.2.20 |
+| VLAN | Management (VLAN 2) |
+
+> [!NOTE]
+> The Access Point is powered via PoE from the switch and mounted centrally for optimal WiFi coverage. It broadcasts SSIDs for Media, Guest, and IoT VLANs.
+
+---
+
 ## Thermal Logic
 
 | Zone | Units | Strategy |
@@ -185,11 +203,13 @@
 ## Network Backbone (SFP+ 10GbE)
 
 ```
-UDM-SE (SFP+) <--10G--> Switch (SFP+ Port 1)
-                              │
-                              │ 10G
-                              ↓
-                        NAS (SFP+ Port 1)
+UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
+                                   │
+                             (SFP+ Port 2)
+                                   │
+                                   │ 10G
+                                   ↓
+                             NAS (SFP+ Port 1)
 ```
 
 ---

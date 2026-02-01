@@ -9,7 +9,7 @@
 - [ ] UDM-SE mounted in rack and powered on
 - [ ] USW-Pro-Max-16-PoE mounted and powered on
 - [ ] Ethernet cable from UDM-SE WAN port to Iliad Box LAN
-- [ ] Ethernet cable from UDM-SE port 1 to Switch port 1
+- [ ] SFP+ DAC or fiber cable from UDM-SE LAN SFP+ to Switch SFP+ port 1
 - [ ] PC connected to a UDM-SE LAN port
 
 ---
@@ -138,7 +138,7 @@ IoT         192.168.6.0/24  VLAN 6
 
 ### 3.1 Switch Adoption
 
-1. [ ] Connect switch to UDM-SE port 1
+1. [ ] Connect switch SFP+ port 1 to UDM-SE LAN SFP+ port (10GbE uplink)
 2. [ ] UniFi Devices → should show "USW-Pro-Max-16-PoE"
 3. [ ] Click "Adopt"
 4. [ ] Wait for provisioning (~2 minutes)
@@ -150,14 +150,14 @@ Settings → Devices → USW-Pro-Max-16-PoE → Ports
 
 | Port | Profile | VLAN | Device |
 |------|---------|------|--------|
-| 1 | All | Trunk | UDM-SE Uplink |
+| 1 | Servers | 3 | (expansion) |
 | 2 | Servers | 3 | Mini PC Proxmox |
 | 3 | Management | 2 | (reserved) |
 | 4 | Servers | 3 | (expansion) |
 | 5 | Media | 4 | (expansion) |
 | 6 | IoT | 6 | (expansion) |
-| SFP+ 1 | Servers | 3 | NAS QNAP 10GbE |
-| SFP+ 2 | - | - | (unused) |
+| SFP+ 1 | All | Trunk | UDM-SE Uplink (10GbE) |
+| SFP+ 2 | Servers | 3 | NAS QNAP 10GbE |
 
 ### 3.3 Create Port Profiles
 
