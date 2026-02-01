@@ -96,13 +96,13 @@ If your usage pattern is predictable:
 
 1. Control Panel → System → Power → Power Schedule
 2. Configure:
-   - Shutdown: 02:00 (after backups complete)
+   - Shutdown: 04:00 (after backups and Watchtower updates)
    - Power On: 06:00 (before morning usage)
 
 **Prerequisites**:
-- Backups must complete before shutdown
+- Duplicati backup (02:00) and Watchtower (04:00) must complete before shutdown
 - No services require overnight access
-- UPS must support scheduled wake
+- UPS must support scheduled wake (via RTC or network signal)
 
 ---
 
@@ -131,15 +131,27 @@ To completely power off the AP (saves more power than radio disable):
 - Schedule power off 00:00–06:00
 - Note: PoE passthrough is lost; requires separate power adapter
 
-**Option B: PoE Port Scheduling (via UniFi)**
+**Option B: PoE Port Control (via UniFi)**
 
+> [!NOTE]
+> Native PoE scheduling is not available in all UniFi controller versions. You can manually toggle PoE or use automation:
+
+**Manual toggle:**
 1. Settings → Devices → USW-Pro-Max-16-PoE
-2. Port Management → Select AP port
-3. PoE → Schedule
-4. Disable PoE: 00:00–06:00
+2. Ports → Select AP port
+3. Port Profile → PoE → Off/On
+
+**Automated via UniFi API** (advanced):
+```bash
+# Example: Disable PoE on port 5 (requires UniFi API access)
+# See: https://ubntwiki.com/products/software/unifi-controller/api
+curl -k -X PUT "https://192.168.2.1:443/api/s/default/rest/device/<switch_id>" \
+  -H "Cookie: unifises=<session>" \
+  -d '{"port_overrides":[{"port_idx":5,"poe_mode":"off"}]}'
+```
 
 > [!TIP]
-> PoE port scheduling is cleaner than smart plugs and doesn't require additional hardware.
+> For simplicity, use WLAN scheduling (Section 3.1) instead of PoE control. WLAN scheduling disables the radio but keeps the AP powered for management.
 
 ### 3.3 Guest Network Scheduling
 
@@ -161,15 +173,20 @@ Non-critical Docker containers can be stopped overnight to reduce CPU/memory usa
 |---------|----------|-------------------|-------|
 | Pi-hole | Yes | No | DNS resolution needed |
 | Traefik | Yes | No | Reverse proxy needed |
+| Socket-proxy | Yes | No | Required by Traefik/Watchtower |
+| Authelia | Yes | No | SSO authentication |
+| Portainer | Yes | No | Container management |
+| Watchtower | Yes | No | Container updates (runs at 04:00) |
+| Uptime Kuma | Yes | No | Monitoring should stay |
+| Duplicati | Yes | No | Runs overnight backups |
+| Gluetun | No | Yes | VPN tunnel (only with vpn profile) |
+| qBittorrent/NZBGet | No | Yes | Download clients |
 | Sonarr/Radarr/Lidarr | No | Yes | No overnight downloads |
 | Prowlarr | No | Yes | Indexer management |
-| qBittorrent/NZBGet | No | Yes | Can pause downloads |
 | Huntarr/Cleanuparr | No | Yes | Monitoring/cleanup |
 | Bazarr | No | Yes | Subtitle fetching |
 | FlareSolverr | No | Yes | Only needed with *arr |
 | Recyclarr | No | Yes | Profile sync |
-| Uptime Kuma | Partial | No | Monitoring should stay |
-| Duplicati | Yes | No | Runs overnight backups |
 
 ### 4.2 Create Scheduling Scripts
 
@@ -180,33 +197,40 @@ Non-critical Docker containers can be stopped overnight to reduce CPU/memory usa
 set -euo pipefail
 
 # Stop non-critical media services for overnight power saving
-# Run via cron at 01:00 (after any scheduled tasks)
+# Run via cron at 03:00 (after Duplicati backup at 02:00)
 
-COMPOSE_DIR="/share/container/homelab/docker"
+# Path to the mediastack directory (adjust if different)
+MEDIASTACK_DIR="/share/container/mediastack"
+
+# Services to stop (order matters: stop dependents first)
 SERVICES=(
     "sonarr"
     "radarr"
     "lidarr"
     "prowlarr"
     "bazarr"
-    "qbittorrent"
-    "nzbget"
     "huntarr"
     "cleanuparr"
     "flaresolverr"
     "recyclarr"
+    "qbittorrent"
+    "nzbget"
+    "gluetun"  # Stop VPN last (download clients depend on it)
 )
 
 echo "[$(date)] Starting power save mode..."
 
-cd "${COMPOSE_DIR}"
+cd "${MEDIASTACK_DIR}"
 
 for service in "${SERVICES[@]}"; do
-    echo "Stopping ${service}..."
-    docker compose -f compose.yml -f compose.media.yml stop "${service}" 2>/dev/null || true
+    # Check if container exists before stopping
+    if docker ps -a --format '{{.Names}}' | grep -q "^${service}$"; then
+        echo "Stopping ${service}..."
+        docker compose -f docker/compose.yml -f docker/compose.media.yml stop "${service}" 2>/dev/null || true
+    fi
 done
 
-echo "[$(date)] Power save mode active. ${#SERVICES[@]} services stopped."
+echo "[$(date)] Power save mode active. Non-critical services stopped."
 ```
 
 **Resume services** (`scripts/power-save-stop.sh`):
@@ -218,14 +242,15 @@ set -euo pipefail
 # Resume non-critical media services after overnight power saving
 # Run via cron at 06:00
 
-COMPOSE_DIR="/share/container/homelab/docker"
+# Path to the mediastack directory (adjust if different)
+MEDIASTACK_DIR="/share/container/mediastack"
 
 echo "[$(date)] Exiting power save mode..."
 
-cd "${COMPOSE_DIR}"
+cd "${MEDIASTACK_DIR}"
 
-# Start all services defined in compose files
-docker compose -f compose.yml -f compose.media.yml start
+# Use make up to ensure proper startup order and validation
+make up
 
 echo "[$(date)] All services resumed."
 ```
@@ -236,12 +261,24 @@ echo "[$(date)] All services resumed."
 # On NAS (ssh admin@192.168.3.10)
 crontab -e
 
-# Enter power save at 01:00 (after backups)
-0 1 * * * /share/container/homelab/scripts/power-save-start.sh >> /var/log/power-save.log 2>&1
+# Enter power save at 03:00 (after Duplicati backup at 02:00)
+0 3 * * * /share/container/mediastack/scripts/power-save-start.sh >> /var/log/power-save.log 2>&1
 
 # Exit power save at 06:00
-0 6 * * * /share/container/homelab/scripts/power-save-stop.sh >> /var/log/power-save.log 2>&1
+0 6 * * * /share/container/mediastack/scripts/power-save-stop.sh >> /var/log/power-save.log 2>&1
 ```
+
+> [!IMPORTANT]
+> **Timing coordination with backups:**
+> - Duplicati backup runs at 02:00 (default)
+> - Power save starts at 03:00 (after backup completes)
+> - Watchtower updates run at 04:00 (still running during power save)
+> - Power save ends at 06:00
+>
+> Adjust timing if you modified the backup or update schedules.
+
+> [!NOTE]
+> Adjust paths if you deployed the stack to a different directory.
 
 ### 4.4 Makefile Integration
 
@@ -380,7 +417,14 @@ Home Assistant can centralize power management with intelligent automations.
 
 ### 6.2 Example Automations
 
-**`config/homeassistant/automations.yaml`**:
+> [!NOTE]
+> These examples require additional integrations:
+> - **Wake-on-LAN**: Built-in, add via Settings → Integrations
+> - **Plex**: Install via HACS or Settings → Integrations (for `sensor.plex_watching`)
+> - **Ping**: Built-in binary sensor for checking if Proxmox is online
+> - **UniFi Network**: For AP control (PoE control requires custom scripts, see below)
+
+**`docker/config/homeassistant/automations.yaml`**:
 
 ```yaml
 # Wake Plex server when someone arrives home
@@ -396,50 +440,61 @@ Home Assistant can centralize power management with intelligent automations.
   action:
     - service: wake_on_lan.send_magic_packet
       data:
-        mac: "AA:BB:CC:DD:EE:FF"  # Mini PC MAC
+        mac: "AA:BB:CC:DD:EE:FF"  # Replace with Mini PC MAC
 
 # Shutdown Plex server at night if no active streams
+# Requires Plex integration for sensor.plex
 - alias: "Shutdown Plex Overnight"
   trigger:
     - platform: time
-      at: "01:00:00"
+      at: "02:00:00"
   condition:
-    - condition: numeric_state
-      entity_id: sensor.plex_watching
-      below: 1
+    - condition: template
+      value_template: "{{ states('sensor.plex') | int(0) == 0 }}"
   action:
     - service: shell_command.shutdown_proxmox
 
-# Disable Wi-Fi AP overnight
-- alias: "Disable AP Overnight"
+# Time-based service control (alternative to cron)
+# Use this if you prefer HA to manage power save instead of cron
+- alias: "Enter Power Save Mode"
   trigger:
     - platform: time
-      at: "00:30:00"
+      at: "03:00:00"  # After Duplicati backup at 02:00
   action:
-    - service: unifi.power_off_poe_port
-      data:
-        device_id: "switch_mac"
-        port: 5  # AP port number
+    - service: shell_command.power_save_start
 
-# Enable Wi-Fi AP morning
-- alias: "Enable AP Morning"
+- alias: "Exit Power Save Mode"
   trigger:
     - platform: time
       at: "06:00:00"
   action:
-    - service: unifi.power_on_poe_port
-      data:
-        device_id: "switch_mac"
-        port: 5
+    - service: shell_command.power_save_stop
 ```
 
-**Shell commands** (`config/homeassistant/configuration.yaml`):
+> [!NOTE]
+> Choose either cron (Section 4.3) OR Home Assistant automations for power save scheduling, not both.
+
+> [!TIP]
+> For UniFi AP PoE control, the built-in UniFi integration doesn't support PoE port toggling directly. Use the UniFi Controller's WLAN scheduling instead (Section 3.1), or create custom shell commands using the UniFi API.
+
+**Shell commands** (`docker/config/homeassistant/configuration.yaml`):
 
 ```yaml
 shell_command:
-  shutdown_proxmox: "ssh -i /config/.ssh/id_rsa root@192.168.3.20 'shutdown -h now'"
+  # Proxmox control (requires SSH key setup)
+  shutdown_proxmox: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa root@192.168.3.20 'shutdown -h now'"
   wake_proxmox: "wakeonlan AA:BB:CC:DD:EE:FF"
+
+  # NAS power save scripts (requires SSH key setup to NAS)
+  power_save_start: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa admin@192.168.3.10 '/share/container/mediastack/scripts/power-save-start.sh'"
+  power_save_stop: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa admin@192.168.3.10 '/share/container/mediastack/scripts/power-save-stop.sh'"
 ```
+
+> [!IMPORTANT]
+> For shell commands to work, you must:
+> 1. Generate SSH key in HA container: `ssh-keygen -t ed25519 -f /config/.ssh/id_rsa -N ""`
+> 2. Copy public key to target hosts: `ssh-copy-id -i /config/.ssh/id_rsa.pub root@192.168.3.20`
+> 3. Test connection from HA container first
 
 ### 6.3 Power Monitoring Dashboard
 
