@@ -100,6 +100,7 @@ Details in [`docs/setup/network-setup.md`](docs/setup/network-setup.md).
 - [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) - Hardware layout and IP plan
 - [`docs/network/firewall-config.md`](docs/network/firewall-config.md) - UDM-SE firewall rules
 - [`docs/operations/runbook-backup-restore.md`](docs/operations/runbook-backup-restore.md) - Backup/restore procedures
+- [`docs/operations/energy-saving-strategies.md`](docs/operations/energy-saving-strategies.md) - Power management and energy optimization
 
 ## Useful Commands
 
