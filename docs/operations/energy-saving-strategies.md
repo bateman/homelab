@@ -494,8 +494,9 @@ shell_command:
 > [!IMPORTANT]
 > For shell commands to work, you must:
 > 1. Generate SSH key in HA container: `ssh-keygen -t ed25519 -f /config/.ssh/id_rsa -N ""`
-> 2. Copy public key to target hosts: `ssh-copy-id -i /config/.ssh/id_rsa.pub root@192.168.3.20`
-> 3. Test connection from HA container first
+> 2. Copy public key to Proxmox: `ssh-copy-id -i /config/.ssh/id_rsa.pub root@192.168.3.20`
+> 3. Copy public key to NAS: `ssh-copy-id -i /config/.ssh/id_rsa.pub admin@192.168.3.10`
+> 4. Test connections from HA container before using automations
 
 ### 6.3 Power Monitoring Dashboard
 
