@@ -428,5 +428,5 @@ tailscale status
 
 - **Direct ports**: Remain accessible as backup if Traefik has issues
 - **Home Assistant**: Requires separate file configuration (network_mode: host)
-- **Plex**: If on Proxmox, add DNS record pointing to 192.168.3.20
+- **Plex**: If on Proxmox, add DNS record pointing to 192.168.3.21 (LXC container IP)
 - **Updates**: Watchtower automatically updates Traefik
