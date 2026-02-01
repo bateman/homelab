@@ -16,8 +16,8 @@
 #   1 - Errors during backup
 #   2 - Missing prerequisites
 #
-# Cron example (Sunday at 03:00):
-#   0 3 * * 0 /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
+# Cron example (Sunday at 08:00, after NAS power-on at 07:00):
+#   0 8 * * 0 /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
 #
 # Note: Compatible with QNAP BusyBox environment
 # =============================================================================

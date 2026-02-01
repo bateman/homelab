@@ -16,8 +16,8 @@
 #   1 - Errors detected
 #   2 - No backup found
 #
-# Cron example (Sunday at 05:00):
-#   0 5 * * 0 /path/to/scripts/verify-backup.sh --notify >> /var/log/verify-backup.log 2>&1
+# Cron example (Sunday at 08:30, after QTS backup at 08:00):
+#   30 8 * * 0 /path/to/scripts/verify-backup.sh --notify >> /var/log/verify-backup.log 2>&1
 # =============================================================================
 
 set -euo pipefail

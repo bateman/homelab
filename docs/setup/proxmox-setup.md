@@ -493,7 +493,7 @@ Settings → Scheduled Tasks:
 - [ ] **Remove old bundles every week**: ✅ Enabled
 - [ ] **Remove old cache files every week**: ✅ Enabled
 
-Maintenance schedule: Set during nighttime hours (e.g., 02:00-05:00)
+Maintenance schedule: Set during low-usage hours (e.g., 08:00-10:00 or 22:00-23:00)
 
 ### 5.10 Configuration Verification
 
@@ -606,7 +606,7 @@ Datacenter → Backup → Add
 | Field | Value |
 |-------|--------|
 | Storage | nas-backup |
-| Schedule | Weekly (Sun 02:00) |
+| Schedule | Weekly (Sun 08:00) |
 | Selection mode | All |
 | Mode | Snapshot |
 | Compression | ZSTD |

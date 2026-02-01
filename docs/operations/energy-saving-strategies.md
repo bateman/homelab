@@ -96,12 +96,13 @@ If your usage pattern is predictable:
 
 1. Control Panel → System → Power → Power Schedule
 2. Configure:
-   - Shutdown: 04:00 (after backups and Watchtower updates)
-   - Power On: 06:00 (before morning usage)
+   - Shutdown: 01:00 (after Duplicati backup at 23:00)
+   - Power On: 07:00 (before Watchtower updates at 07:30)
 
 **Prerequisites**:
-- Duplicati backup (02:00) and Watchtower (04:00) must complete before shutdown
-- No services require overnight access
+- Duplicati backup (23:00) must complete before shutdown
+- Watchtower (07:30), QTS backup (08:00 Sun), and verification (08:30 Sun) run after power on
+- No services require overnight access (01:00-07:00)
 - UPS must support scheduled wake (via RTC or network signal)
 
 ---
@@ -128,7 +129,7 @@ To completely power off the AP (saves more power than radio disable):
 
 **Option A: Smart Plug with Schedule**
 - Connect U6-Pro to a smart plug (e.g., Tapo, Shelly)
-- Schedule power off 00:00–06:00
+- Schedule power off 01:00–07:00
 - Note: PoE passthrough is lost; requires separate power adapter
 
 **Option B: PoE Port Control (via UniFi)**
@@ -176,9 +177,9 @@ Non-critical Docker containers can be stopped overnight to reduce CPU/memory usa
 | Socket-proxy | Yes | No | Required by Traefik/Watchtower |
 | Authelia | Yes | No | SSO authentication |
 | Portainer | Yes | No | Container management |
-| Watchtower | Yes | No | Container updates (runs at 04:00) |
+| Watchtower | Yes | No | Container updates (runs at 07:30) |
 | Uptime Kuma | Yes | No | Monitoring should stay |
-| Duplicati | Yes | No | Runs overnight backups |
+| Duplicati | Yes | No | Runs backups at 23:00 |
 | Gluetun | No | Yes | VPN tunnel (only with vpn profile) |
 | qBittorrent/NZBGet | No | Yes | Download clients |
 | Sonarr/Radarr/Lidarr | No | Yes | No overnight downloads |
@@ -197,7 +198,7 @@ Non-critical Docker containers can be stopped overnight to reduce CPU/memory usa
 set -euo pipefail
 
 # Stop non-critical media services for overnight power saving
-# Run via cron at 03:00 (after Duplicati backup at 02:00)
+# Run via cron at 00:00 (after Duplicati backup at 23:00)
 
 # Path to the mediastack directory (adjust if different)
 MEDIASTACK_DIR="/share/container/mediastack"
@@ -240,7 +241,7 @@ echo "[$(date)] Power save mode active. Non-critical services stopped."
 set -euo pipefail
 
 # Resume non-critical media services after overnight power saving
-# Run via cron at 06:00
+# Run via cron at 07:00
 
 # Path to the mediastack directory (adjust if different)
 MEDIASTACK_DIR="/share/container/mediastack"
@@ -257,25 +258,29 @@ echo "[$(date)] All services resumed."
 
 ### 4.3 Configure Cron Jobs
 
+> [!NOTE]
+> If using **NAS scheduled shutdown** (01:00-07:00), skip this section—the NAS being off stops all containers automatically. Use power-save scripts only if you want to keep the NAS running but stop non-critical services.
+
 ```bash
 # On NAS (ssh admin@192.168.3.10)
 crontab -e
 
-# Enter power save at 03:00 (after Duplicati backup at 02:00)
-0 3 * * * /share/container/mediastack/scripts/power-save-start.sh >> /var/log/power-save.log 2>&1
+# Enter power save at 00:00 (after Duplicati backup at 23:00)
+0 0 * * * /share/container/mediastack/scripts/power-save-start.sh >> /var/log/power-save.log 2>&1
 
-# Exit power save at 06:00
-0 6 * * * /share/container/mediastack/scripts/power-save-stop.sh >> /var/log/power-save.log 2>&1
+# Exit power save at 07:00 (before Watchtower at 07:30)
+0 7 * * * /share/container/mediastack/scripts/power-save-stop.sh >> /var/log/power-save.log 2>&1
 ```
 
 > [!IMPORTANT]
-> **Timing coordination with backups:**
-> - Duplicati backup runs at 02:00 (default)
-> - Power save starts at 03:00 (after backup completes)
-> - Watchtower updates run at 04:00 (still running during power save)
-> - Power save ends at 06:00
+> **Timing coordination with backups (NAS downtime 01:00-07:00):**
+> - Duplicati backup runs at 23:00 (before NAS shutdown)
+> - NAS shutdown at 01:00 / power on at 07:00
+> - Watchtower updates run at 07:30 (after NAS is up)
+> - QTS config backup runs at 08:00 Sunday (after NAS is up)
+> - Backup verification runs at 08:30 Sunday
 >
-> Adjust timing if you modified the backup or update schedules.
+> All scheduled tasks avoid the 01:00-07:00 downtime window.
 
 > [!NOTE]
 > Adjust paths if you deployed the stack to a different directory.
@@ -444,10 +449,11 @@ Home Assistant can centralize power management with intelligent automations.
 
 # Shutdown Plex server at night if no active streams
 # Requires Plex integration for sensor.plex
+# Note: Scheduled before NAS shutdown (01:00) since HA runs on NAS
 - alias: "Shutdown Plex Overnight"
   trigger:
     - platform: time
-      at: "02:00:00"
+      at: "00:30:00"
   condition:
     - condition: template
       value_template: "{{ states('sensor.plex') | int(0) == 0 }}"
@@ -456,17 +462,18 @@ Home Assistant can centralize power management with intelligent automations.
 
 # Time-based service control (alternative to cron)
 # Use this if you prefer HA to manage power save instead of cron
+# Note: Skip if using NAS scheduled shutdown (01:00-07:00)
 - alias: "Enter Power Save Mode"
   trigger:
     - platform: time
-      at: "03:00:00"  # After Duplicati backup at 02:00
+      at: "00:00:00"  # After Duplicati backup at 23:00
   action:
     - service: shell_command.power_save_start
 
 - alias: "Exit Power Save Mode"
   trigger:
     - platform: time
-      at: "06:00:00"
+      at: "07:00:00"  # Before Watchtower at 07:30
   action:
     - service: shell_command.power_save_stop
 ```
