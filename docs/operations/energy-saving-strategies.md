@@ -420,7 +420,7 @@ Home Assistant can centralize power management with intelligent automations.
 > [!NOTE]
 > These examples require additional integrations:
 > - **Wake-on-LAN**: Built-in, add via Settings → Integrations
-> - **Plex**: Install via HACS or Settings → Integrations (for `sensor.plex_watching`)
+> - **Plex**: Install via HACS or Settings → Integrations (for `sensor.plex`)
 > - **Ping**: Built-in binary sensor for checking if Proxmox is online
 > - **UniFi Network**: For AP control (PoE control requires custom scripts, see below)
 
@@ -504,17 +504,20 @@ Create a Lovelace dashboard card for power monitoring:
 type: entities
 title: Power Management
 entities:
-  - entity: sensor.ups_load
+  - entity: sensor.ups_load           # Requires NUT integration
     name: UPS Load
-  - entity: sensor.ups_battery
+  - entity: sensor.ups_battery        # Requires NUT integration
     name: Battery Charge
-  - entity: sensor.ups_runtime
+  - entity: sensor.ups_runtime        # Requires NUT integration
     name: Est. Runtime
-  - entity: binary_sensor.proxmox_online
+  - entity: binary_sensor.proxmox     # Create via Settings → Helpers → Ping
     name: Plex Server
-  - entity: switch.wifi_ap_power
-    name: Wi-Fi AP
+  - entity: sensor.plex               # Requires Plex integration
+    name: Active Plex Streams
 ```
+
+> [!NOTE]
+> Entity names vary based on your integration setup. Adjust as needed after installing the required integrations.
 
 ---
 
