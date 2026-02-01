@@ -442,7 +442,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 ### 9.3 Service Scheduling (Optional)
 
 1. [ ] Create power-save scripts for non-critical services
-2. [ ] Configure cron jobs (stop services 03:00, resume 06:00)
+2. [ ] Configure cron jobs (stop services 00:00, resume 07:00)
 3. [ ] Add Makefile targets: `make power-save-start`, `make power-save-stop`
 
 ### 9.4 Advanced Automation (Optional)

@@ -35,7 +35,7 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    - **Name**: `docker-configs-local`
    - **Destination**: Folder path → `/backups`
    - **Source**: `/source/config`
-   - **Schedule**: Daily at 02:00
+   - **Schedule**: Daily at 23:00
    - **Retention**: Smart backup retention (7 daily, 4 weekly, 3 monthly)
    - **Encryption**: Optional but recommended for offsite backups
 
@@ -56,12 +56,12 @@ If you prefer manual tar.gz backups without Duplicati:
 # Create cron job on NAS (ssh admin@192.168.3.10)
 crontab -e
 
-# Backup at 02:00 (requires ~1 minute downtime)
+# Backup at 23:00 (requires ~1 minute downtime, before NAS shutdown at 01:00)
 # Note: adjust path to your installation
-0 2 * * * cd /share/container/mediastack && make down && tar -czf /share/backup/docker-config-$(date +\%Y\%m\%d).tar.gz ./config && make up
+0 23 * * * cd /share/container/mediastack && make down && tar -czf /share/backup/docker-config-$(date +\%Y\%m\%d).tar.gz ./config && make up
 
-# Clean old backups (keep last 30)
-0 3 * * * find /share/backup -name "docker-config-*.tar.gz" -mtime +30 -delete
+# Clean old backups (keep last 30) - runs at 23:30 after backup
+30 23 * * * find /share/backup -name "docker-config-*.tar.gz" -mtime +30 -delete
 ```
 
 **Verify tar.gz backup:**
@@ -91,8 +91,8 @@ make backup-qts  # Runs backup and shows detailed output
 # On NAS, add to crontab (ssh admin@192.168.3.10)
 crontab -e
 
-# Sunday at 03:00
-0 3 * * 0 /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
+# Sunday at 08:00 (after NAS power-on at 07:00)
+0 8 * * 0 /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
 ```
 
 **Configurable parameters (environment variables):**
@@ -125,7 +125,7 @@ ls -la /share/backup/qts-config/
    - Content: VZDump backup file
 3. Datacenter → Backup → Add
    - Storage: backup-nas
-   - Schedule: `sun 03:00`
+   - Schedule: `sun 08:00`
    - Selection mode: All
    - Mode: Snapshot (for running VMs)
    - Compression: ZSTD
@@ -339,8 +339,8 @@ For automatic weekly verification (recommended):
 # On NAS, add to crontab
 crontab -e
 
-# Sunday at 05:00, after overnight backup
-0 5 * * 0 /share/container/homelab/scripts/verify-backup.sh --notify >> /var/log/verify-backup.log 2>&1
+# Sunday at 08:30 (after QTS backup at 08:00)
+30 8 * * 0 /share/container/homelab/scripts/verify-backup.sh --notify >> /var/log/verify-backup.log 2>&1
 ```
 
 ### Home Assistant Notifications (Optional)
