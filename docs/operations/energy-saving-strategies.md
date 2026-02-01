@@ -11,7 +11,7 @@ This document covers power management strategies for the homelab infrastructure:
 | Device | Always-On | Can Sleep/Shutdown | Notes |
 |--------|-----------|-------------------|-------|
 | UPS | Yes | No | Powers entire rack |
-| UDM-SE | Yes | No | Gateway, firewall, DNS |
+| UDM-SE | Yes | No | Gateway, firewall, routing |
 | PoE Switch | Yes | No | Network backbone |
 | QNAP NAS | Yes | Partial | HDD spindown, service scheduling |
 | Mini PC (Proxmox) | No | Yes | WOL available, Plex on-demand |
@@ -435,7 +435,7 @@ Home Assistant can centralize power management with intelligent automations.
       to: "home"
   condition:
     - condition: state
-      entity_id: binary_sensor.proxmox_online
+      entity_id: binary_sensor.proxmox  # Create via Settings → Helpers → Ping
       state: "off"
   action:
     - service: wake_on_lan.send_magic_packet
@@ -483,7 +483,8 @@ Home Assistant can centralize power management with intelligent automations.
 shell_command:
   # Proxmox control (requires SSH key setup)
   shutdown_proxmox: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa root@192.168.3.20 'shutdown -h now'"
-  wake_proxmox: "wakeonlan AA:BB:CC:DD:EE:FF"
+  # Wake via NAS (wakeonlan not available in HA container by default)
+  wake_proxmox: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa admin@192.168.3.10 'wakeonlan AA:BB:CC:DD:EE:FF'"
 
   # NAS power save scripts (requires SSH key setup to NAS)
   power_save_start: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa admin@192.168.3.10 '/share/container/mediastack/scripts/power-save-start.sh'"
