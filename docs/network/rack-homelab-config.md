@@ -137,7 +137,7 @@
 | Model | U6-Pro |
 | Location | Ceiling/wall mounted (not in rack) |
 | Power | PoE from USW-Pro-Max-16-PoE |
-| Switch Port | RJ45 port with PoE+ |
+| Switch Port | Port 2 (PoE+) |
 | IP | 192.168.2.20 |
 | VLAN | Management (VLAN 2) |
 

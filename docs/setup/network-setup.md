@@ -150,9 +150,9 @@ Settings → Devices → USW-Pro-Max-16-PoE → Ports
 
 | Port | Profile | VLAN | Device |
 |------|---------|------|--------|
-| 1 | Servers | 3 | (expansion) |
-| 2 | Servers | 3 | Mini PC Proxmox |
-| 3 | Management | 2 | (reserved) |
+| 1 | Servers | 3 | Mini PC Proxmox |
+| 2 | Management | 2 | U6-Pro Access Point |
+| 3 | Servers | 3 | (expansion) |
 | 4 | Servers | 3 | (expansion) |
 | 5 | Media | 4 | (expansion) |
 | 6 | IoT | 6 | (expansion) |
