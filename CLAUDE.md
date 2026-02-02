@@ -41,11 +41,35 @@ When using VPN, configure *arr apps with hostname `gluetun` (not `qbittorrent`/`
 
 ## Development Guidelines
 
-### Mandatory: Consistency Check
-**Before any change**, verify consistency with the rest of the codebase and documentation:
-1. Search for related code/config that might need updates
-2. Check if documentation references what you're changing
-3. Update all affected files together, not just the immediate target
+### Mandatory: Cross-File Consistency (READ THIS FIRST)
+
+**STOP. Before making ANY change, complete this checklist:**
+
+1. **Search for ALL occurrences** of what you're modifying:
+   - Use grep/ripgrep to find references across the entire repo
+   - Check both code files AND documentation (`docs/`)
+   - Look for the exact term AND related terms (e.g., changing a service name? Search for its port, hostname, container name too)
+
+2. **Identify the full scope** before editing anything:
+   - List ALL files that reference the thing you're changing
+   - If modifying one doc page, check sibling pages in the same directory for similar patterns
+   - Tables, lists, and configurations often span multiple files
+
+3. **Make ALL related changes together**:
+   - Never submit a change to one file without updating all related files
+   - If you find 5 files that need updates, update all 5
+   - Document what you changed and where
+
+4. **Verify after changes**:
+   - Re-run the search to confirm nothing was missed
+   - Check that cross-references still work (links, paths, hostnames)
+
+**Common consistency failures to avoid:**
+- Updating a service in compose.yml but not compose.media.yml
+- Changing an IP/port in one doc but not the network config docs
+- Adding a service without updating Makefile, setup scripts, AND docs
+- Modifying firewall rules without updating the rules table AND the IP groups
+- Renaming something without grep-ing for all references first
 
 ### When Modifying Compose Files
 1. Use existing YAML anchors: `&common-env`, `&common-logging`, `&common-healthcheck`
@@ -89,6 +113,16 @@ When using VPN, configure *arr apps with hostname `gluetun` (not `qbittorrent`/`
 - Use `[[ ]]` for conditionals (bash-specific but safer)
 - Provide `--dry-run` and `--verbose` flags where appropriate
 - Exit with meaningful codes (0=success, 1=error, 2=usage error)
+
+### When Modifying Documentation
+
+1. **Check sibling files** in the same directory for similar structure/content
+2. **Update all related tables** - if data appears in multiple tables, update ALL of them
+3. **Verify internal links** still work after renaming/moving sections
+4. **Cross-reference with code** - docs should match actual config values
+5. **Check the Documentation Index** in this file - add new docs there
+
+**Documentation files are interconnected.** A change to `firewall-config.md` likely requires checking `rack-homelab-config.md`. Network changes affect setup guides. Always trace the dependencies.
 
 ## Trade-offs
 
