@@ -72,17 +72,17 @@
 
 #### Port Assignments
 
-| Port | Type | Device/Destination | Cable Label |
-|------|------|-------------------|-------------|
-| 1 | 1GbE PoE+ | — (reserved) | — |
-| 2 | 1GbE PoE+ | U6-Pro Access Point | WHT-01 AP |
-| 3 | 1GbE PoE+ | Studio (via PP-03) | GRN-01 Studio |
-| 4 | 1GbE PoE+ | Living Room (via PP-04) | GRN-02 Living |
-| 5 | 1GbE PoE+ | Bedroom (via PP-05) | GRN-03 Bedroom |
-| 6-12 | 1GbE PoE+ | — (available) | — |
-| 13-16 | 2.5GbE PoE++ | — (available) | — |
-| SFP+ 1 | 10GbE | Uplink to UDM-SE | — |
-| SFP+ 2 | 10GbE | QNAP NAS | — |
+| Port | Type | Profile | VLAN | Device/Destination | Cable Label |
+|------|------|---------|------|-------------------|-------------|
+| 1 | 1GbE PoE+ | — | — | — (reserved) | — |
+| 2 | 1GbE PoE+ | Management | 2 | U6-Pro Access Point | WHT-01 AP |
+| 3 | 1GbE PoE+ | Media | 4 | Studio (via PP-03) | GRN-01 Studio |
+| 4 | 1GbE PoE+ | Media | 4 | Living Room (via PP-04) | GRN-02 Living |
+| 5 | 1GbE PoE+ | Media | 4 | Bedroom (via PP-05) | GRN-03 Bedroom |
+| 6-12 | 1GbE PoE+ | — | — | — (available) | — |
+| 13-16 | 2.5GbE PoE++ | — | — | — (available) | — |
+| SFP+ 1 | 10GbE | All | Trunk | Uplink to UDM-SE | — |
+| SFP+ 2 | 10GbE | Servers | 3 | QNAP NAS | — |
 
 ### U5 — UniFi Dream Machine SE (UDM-SE-EU)
 
@@ -105,12 +105,12 @@
 
 #### Port Assignments
 
-| Patch Port | Room/Destination | Switch Port | Cable Label |
-|------------|------------------|-------------|-------------|
-| PP-03 | Studio | Port 3 | GRN-01 Studio |
-| PP-04 | Living Room | Port 4 | GRN-02 Living |
-| PP-05 | Bedroom | Port 5 | GRN-03 Bedroom |
-| PP-01, 02, 06-12 | — (available) | — | — |
+| Patch Port | Room/Destination | Switch Port | VLAN | Cable Label |
+|------------|------------------|-------------|------|-------------|
+| PP-03 | Studio | Port 3 | Media (4) | GRN-01 Studio |
+| PP-04 | Living Room | Port 4 | Media (4) | GRN-02 Living |
+| PP-05 | Bedroom | Port 5 | Media (4) | GRN-03 Bedroom |
+| PP-01, 02, 06-12 | — (available) | — | — | — |
 
 > [!TIP]
 > Patch panel ports mirror switch port numbers for easy troubleshooting.
