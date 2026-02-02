@@ -49,17 +49,20 @@ Infrastructure-as-code for a homelab: QNAP NAS (Docker media stack) + Lenovo Min
 
 ```
 homelab/
-├── Makefile                 # Stack management (run `make help`)
+├── Makefile                      # Stack management (run `make help`)
 ├── docker/
-│   ├── compose.yml          # Infrastructure: Pi-hole, Home Assistant, Portainer, Traefik
-│   ├── compose.media.yml    # Media stack: *arr apps, download clients, monitoring
-│   ├── .env.example         # Non-sensitive config template
-│   └── .env.secrets.example # Credentials template (gitignored)
-├── scripts/                 # Operational scripts (setup, backup, certs)
+│   ├── compose.yml               # Infrastructure: networking, auth, monitoring, backups
+│   ├── compose.media.yml         # Media stack: *arr apps, download clients (VPN/no-VPN)
+│   ├── compose.homeassistant.yml # Home Assistant (separate for Proxmox deployment)
+│   ├── recyclarr.yml             # Recyclarr quality profiles config
+│   ├── config/                   # Service configs (Authelia, Traefik rules, etc.)
+│   ├── .env.example              # Non-sensitive config template
+│   └── .env.secrets.example      # Credentials template (gitignored)
+├── scripts/                      # Operational scripts (setup, backup, certs)
 └── docs/
-    ├── setup/               # Initial setup guides
-    ├── network/             # Hardware layout, IP plan, firewall rules
-    └── operations/          # Runbooks
+    ├── setup/                    # Initial setup guides
+    ├── network/                  # Hardware layout, IP plan, firewall rules
+    └── operations/               # Runbooks
 ```
 
 ---
