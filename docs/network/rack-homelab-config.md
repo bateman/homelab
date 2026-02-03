@@ -253,13 +253,13 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 | Bazarr | 6767 | Automatic subtitles |
 | qBittorrent | 8080 | Torrent client |
 | NZBGet | 6789 | Usenet client |
-| Recyclarr | - | Trash Guides profile sync |
+| Recyclarr | — | Trash Guides profile sync |
 | Huntarr | 9705 | *arr monitoring |
 | Cleanuparr | 11011 | Automatic cleanup |
 | FlareSolverr | 8191 | Cloudflare bypass |
 | Pi-hole | 8081 | DNS ad-blocking |
 | Portainer | 9443 | Docker management |
-| Authelia | 9091 | SSO authentication (via auth.home.local) |
+| Authelia | — | SSO authentication (via auth.home.local only) |
 | Duplicati | 8200 | Incremental backup |
 | Uptime Kuma | 3001 | Monitoring and alerting |
 | Watchtower | 8383 | Container auto-update |
