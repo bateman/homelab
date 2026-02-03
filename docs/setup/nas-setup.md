@@ -247,7 +247,7 @@ cd mediastack
 
 ### Initial Setup and .env Configuration
 
-The `make setup` command creates the folder structure and `.env` file. **It must be run before first startup.**
+The `make setup` command creates the folder structure and environment files (`.env` and `.env.secrets`). **It must be run before first startup.**
 
 ```bash
 cd /share/container/mediastack
