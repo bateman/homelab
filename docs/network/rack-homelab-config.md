@@ -253,17 +253,20 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 | Bazarr | 6767 | Automatic subtitles |
 | qBittorrent | 8080 | Torrent client |
 | NZBGet | 6789 | Usenet client |
-| Recyclarr | - | Trash Guides profile sync |
+| Recyclarr | — | Trash Guides profile sync |
 | Huntarr | 9705 | *arr monitoring |
 | Cleanuparr | 11011 | Automatic cleanup |
 | FlareSolverr | 8191 | Cloudflare bypass |
 | Pi-hole | 8081 | DNS ad-blocking |
-| Home Assistant | 8123 | Home automation |
 | Portainer | 9443 | Docker management |
+| Authelia | — | SSO authentication (via auth.home.local only) |
 | Duplicati | 8200 | Incremental backup |
 | Uptime Kuma | 3001 | Monitoring and alerting |
 | Watchtower | 8383 | Container auto-update |
 | Traefik | 80/443 | Reverse proxy (dashboard via traefik.home.local) |
+
+> [!NOTE]
+> **Optional service:** Home Assistant (port 8123) is available via `compose.homeassistant.yml` but not included in the default stack. To enable, add `-f compose.homeassistant.yml` to your docker compose command.
 
 ### Proxmox Mini PC (192.168.3.20)
 
