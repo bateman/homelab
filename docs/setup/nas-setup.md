@@ -247,7 +247,7 @@ cd mediastack
 
 ### Initial Setup and .env Configuration
 
-The `make setup` command creates the folder structure and `.env` file. **It must be run before first startup.**
+The `make setup` command creates the folder structure and environment files (`.env` and `.env.secrets`). **It must be run before first startup.**
 
 ```bash
 cd /share/container/mediastack
@@ -257,6 +257,9 @@ make setup
 
 # Edit .env with correct values
 nano docker/.env
+
+# Edit .env.secrets with passwords and credentials
+nano docker/.env.secrets
 ```
 
 **Mandatory** configuration in `docker/.env`:
@@ -270,9 +273,18 @@ PGID=100     # ← replace with dockeruser gid
 
 # Timezone
 TZ=Europe/Rome
+```
 
-# Password for Pi-hole (generate with: openssl rand -base64 24)
+**Mandatory** credentials in `docker/.env.secrets`:
+
+```bash
+# Password for Pi-hole web interface (generate with: openssl rand -base64 24)
 PIHOLE_PASSWORD=<secure-password>
+
+# VPN credentials (if using vpn profile) — see docs/setup/vpn-setup.md
+# VPN_SERVICE_PROVIDER=nordvpn
+# OPENVPN_USER=...
+# OPENVPN_PASSWORD=...
 ```
 
 > [!IMPORTANT]
@@ -348,13 +360,20 @@ make logs | grep -i error
 - [ ] Bazarr: `http://192.168.3.10:6767` responds
 - [ ] qBittorrent: `http://192.168.3.10:8080` responds
 - [ ] NZBGet: `http://192.168.3.10:6789` responds
+- [ ] Gluetun (if using VPN profile): `docker inspect --format='{{.State.Health.Status}}' gluetun` returns `healthy`
 - [ ] Pi-hole: `http://192.168.3.10:8081/admin` responds
-- [ ] Home Assistant: `http://192.168.3.10:8123` responds
 - [ ] Portainer: `https://192.168.3.10:9443` responds
 - [ ] Uptime Kuma: `http://192.168.3.10:3001` responds
 - [ ] Duplicati: `http://192.168.3.10:8200` responds
 - [ ] Huntarr: `http://192.168.3.10:9705` responds
 - [ ] Cleanuparr: `http://192.168.3.10:11011` responds
+- [ ] FlareSolverr: `http://192.168.3.10:8191/health` responds
+- [ ] Watchtower: `http://192.168.3.10:8383/v1/metrics` responds
+- [ ] Traefik: `http://192.168.3.10:80` redirects to HTTPS
+- [ ] Authelia: `https://auth.home.local` responds (requires DNS/hosts entry)
+
+> [!NOTE]
+> **Optional service:** Home Assistant (`http://192.168.3.10:8123`) is only available if you started the stack with `compose.homeassistant.yml`. See the compose file for details.
 
 ---
 
@@ -417,15 +436,18 @@ make logs | grep -i error
   - Root Folders → Add: `/data/media/tv`
 - [ ] Settings → Download Clients:
   - Add → qBittorrent
-    - Host: `qbittorrent`
+    - Host: `gluetun` (if using VPN profile) or `qbittorrent` (if using novpn profile)
     - Port: `8080`
     - Category: `tv`
   - Add → NZBGet
-    - Host: `nzbget`
+    - Host: `gluetun` (if using VPN profile) or `nzbget` (if using novpn profile)
     - Port: `6789`
     - Username/Password: (from NZBGet)
     - Category: `tv`
 - [ ] Settings → General → API Key: note (for Prowlarr)
+
+> [!IMPORTANT]
+> **VPN Profile:** When using `COMPOSE_PROFILES=vpn`, download clients (qBittorrent/NZBGet) run inside the Gluetun container's network. Use `gluetun` as the hostname in *arr apps, not `qbittorrent` or `nzbget`.
 
 ### Radarr
 - [ ] Access `http://192.168.3.10:7878`
@@ -495,7 +517,7 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 ## Pi-hole Configuration
 
 - [ ] Access `http://192.168.3.10:8081/admin`
-- [ ] Login with password from `.env`
+- [ ] Login with password from `.env.secrets` (PIHOLE_PASSWORD)
 - [ ] Settings → DNS:
   - Upstream DNS: verify 1.1.1.1, 1.0.0.1
   - Interface: respond on all interfaces
@@ -581,7 +603,7 @@ docker exec recyclarr recyclarr sync
 cd /share/container/mediastack
 make backup
 ```
-- [ ] Backup created in `./backups/`
+- [ ] Backup created in `/share/backup` (Duplicati destination)
 - [ ] Copy backup offsite (USB, cloud)
 
 ### QTS Config Backup
