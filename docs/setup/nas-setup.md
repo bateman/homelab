@@ -257,6 +257,9 @@ make setup
 
 # Edit .env with correct values
 nano docker/.env
+
+# Edit .env.secrets with passwords and credentials
+nano docker/.env.secrets
 ```
 
 **Mandatory** configuration in `docker/.env`:
@@ -357,6 +360,7 @@ make logs | grep -i error
 - [ ] Bazarr: `http://192.168.3.10:6767` responds
 - [ ] qBittorrent: `http://192.168.3.10:8080` responds
 - [ ] NZBGet: `http://192.168.3.10:6789` responds
+- [ ] Gluetun (if using VPN profile): `docker inspect --format='{{.State.Health.Status}}' gluetun` returns `healthy`
 - [ ] Pi-hole: `http://192.168.3.10:8081/admin` responds
 - [ ] Portainer: `https://192.168.3.10:9443` responds
 - [ ] Uptime Kuma: `http://192.168.3.10:3001` responds
@@ -513,7 +517,7 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 ## Pi-hole Configuration
 
 - [ ] Access `http://192.168.3.10:8081/admin`
-- [ ] Login with password from `.env`
+- [ ] Login with password from `.env.secrets` (PIHOLE_PASSWORD)
 - [ ] Settings → DNS:
   - Upstream DNS: verify 1.1.1.1, 1.0.0.1
   - Interface: respond on all interfaces
@@ -599,7 +603,7 @@ docker exec recyclarr recyclarr sync
 cd /share/container/mediastack
 make backup
 ```
-- [ ] Backup created in `./backups/`
+- [ ] Backup created in `/share/backup` (Duplicati destination)
 - [ ] Copy backup offsite (USB, cloud)
 
 ### QTS Config Backup
