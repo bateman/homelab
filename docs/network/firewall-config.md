@@ -160,7 +160,7 @@ Rules are organized in logical groups for easier maintenance.
 
 ### IP Groups
 
-Before creating rules, define these groups in Settings -> Profiles -> IP Groups:
+Before creating rules, define these groups in **UDM-SE** (Network application): Settings → Profiles → IP Groups:
 
 | Group Name | Type | Content |
 |------------|------|---------|
@@ -177,7 +177,7 @@ Before creating rules, define these groups in Settings -> Profiles -> IP Groups:
 
 ### Port Groups
 
-Define in Settings -> Profiles -> Port Groups:
+Define in **UDM-SE** (Network application): Settings → Profiles → Port Groups:
 
 | Group Name | Ports |
 |------------|-------|
@@ -197,7 +197,7 @@ Define in Settings -> Profiles -> Port Groups:
 
 ## LAN In Rules (Inter-VLAN)
 
-Path: Settings -> Firewall & Security -> Firewall Rules -> LAN In
+In **UDM-SE** (Network application): Settings → Firewall & Security → Firewall Rules → LAN In
 
 Rules are processed in order, from first to last. Order matters.
 
@@ -362,7 +362,7 @@ Rules are processed in order, from first to last. Order matters.
 
 ## mDNS Reflection
 
-Path: Settings -> Networks -> (select VLAN) -> Advanced -> Multicast DNS
+In **UDM-SE** (Network application): Settings → Networks → (select VLAN) → Advanced → Multicast DNS
 
 Enable mDNS reflection to allow automatic discovery across VLANs:
 - **Printer**: discovery from Media devices
@@ -384,7 +384,7 @@ Enable mDNS reflection to allow automatic discovery across VLANs:
 
 ## Threat Management (IDS/IPS)
 
-Path: Settings -> Firewall & Security -> Threat Management
+In **UDM-SE** (Network application): Settings → Firewall & Security → Threat Management
 
 | Parameter | Value |
 |-----------|-------|
@@ -400,7 +400,7 @@ Path: Settings -> Firewall & Security -> Threat Management
 
 ## Traffic Rules (QoS)
 
-Path: Settings -> Traffic Management -> Traffic Rules
+In **UDM-SE** (Network application): Settings → Traffic Management → Traffic Rules
 
 ### Plex Priority
 
@@ -432,7 +432,7 @@ Pi-hole (192.168.3.10) is the primary DNS for all VLANs, providing ad-blocking a
 
 ### Per-VLAN Configuration
 
-Path: Settings -> Networks -> (select VLAN) -> DHCP -> DHCP DNS Server
+In **UDM-SE** (Network application): Settings → Networks → (select VLAN) → DHCP → DHCP DNS Server
 
 | VLAN | Primary DNS | Secondary DNS | Notes |
 |------|-------------|---------------|-------|
@@ -504,9 +504,9 @@ If in the future you need to open specific ports (e.g., for remote Plex without 
 ## Configuration Checklist
 
 1. [ ] Verify Iliad Box IP (192.168.1.254) and DMZ to 192.168.1.1
-2. [ ] Create VLANs 2, 3, 4, 5, 6 in Settings -> Networks
-3. [ ] Create IP Groups in Settings -> Profiles
-4. [ ] Create Port Groups in Settings -> Profiles
+2. [ ] Create VLANs 2, 3, 4, 5, 6 in UDM-SE: Settings → Networks
+3. [ ] Create IP Groups in UDM-SE: Settings → Profiles
+4. [ ] Create Port Groups in UDM-SE: Settings → Profiles
 5. [ ] Configure firewall rules in order
 6. [ ] Enable mDNS reflection on VLANs 3, 4, and 6
 7. [ ] Configure Threat Management
@@ -535,7 +535,7 @@ ping 192.168.1.254
 
 ### Firewall logs
 
-Path: Settings -> Firewall & Security -> Firewall Rules -> (rule) -> Enable Logging
+In **UDM-SE** (Network application): Settings → Firewall & Security → Firewall Rules → (rule) → Enable Logging
 
 Enable logging on Drop rules to diagnose blocked traffic.
 

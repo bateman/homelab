@@ -486,7 +486,7 @@ For greater security, configure Plex with read-only access to media:
 
 #### Scheduled Tasks
 
-Settings → Scheduled Tasks:
+In **Plex** (web interface): Settings → Scheduled Tasks:
 - [ ] **Perform extensive media analysis during maintenance**: Consider disabling if causing slowdowns
 - [ ] **Backup database every three days**: ✅ Enabled
 - [ ] **Optimize database every week**: ✅ Enabled

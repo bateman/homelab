@@ -37,7 +37,7 @@
 
 ### 1.3 Firmware Update
 
-1. [ ] Settings → System → Firmware
+1. [ ] In **UDM-SE** (Network application): Settings → System → Firmware
 2. [ ] Check for available updates
 3. [ ] Install latest stable version
 4. [ ] Wait for reboot (~5 minutes)
@@ -51,11 +51,11 @@
 > [!NOTE]
 > You may want to keep the default network for transition
 
-Settings → Networks → Default → Delete (after creating VLAN 3 for Servers)
+In **UDM-SE** (Network application): Settings → Networks → Default → Delete (after creating VLAN 3 for Servers)
 
 ### 2.2 Create Management VLAN (VLAN 2)
 
-Settings → Networks → Create New Network
+In **UDM-SE** (Network application): Settings → Networks → Create New Network
 
 | Field | Value |
 |-------|-------|
@@ -122,7 +122,7 @@ Click "Add Network"
 
 ### Verify Created VLANs
 
-Settings → Networks should show:
+In **UDM-SE** (Network application): Settings → Networks should show:
 
 ```
 Management  192.168.2.0/24  VLAN 2
@@ -146,7 +146,7 @@ IoT         192.168.6.0/24  VLAN 6
 
 ### 3.2 Switch Port Configuration
 
-Settings → Devices → USW-Pro-Max-16-PoE → Ports
+In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE → Ports
 
 | Port | Profile | VLAN | Device |
 |------|---------|------|--------|
@@ -161,7 +161,7 @@ Settings → Devices → USW-Pro-Max-16-PoE → Ports
 
 ### 3.3 Create Port Profiles
 
-Settings → Profiles → Switch Ports → Create New Profile
+In **UDM-SE** (Network application): Settings → Profiles → Switch Ports → Create New Profile
 
 **Profile "Servers":**
 - Native Network: Servers (VLAN 3)
@@ -204,13 +204,13 @@ Configure static IPs directly on:
 If you prefer managing IPs centrally from UniFi:
 
 1. Temporarily connect devices to make them appear in Client Devices
-2. Settings → Client Devices → (search by MAC address)
+2. In **UDM-SE** (Network application): Settings → Client Devices → (search by MAC address)
 3. Settings → Fixed IP Address: assign desired IP
 
 ### 4.3 Fixed IP for Switch
 
 Switch should already have IP in Management VLAN after adoption.
-Verify: Settings → Devices → Switch → IP: should be 192.168.2.x
+Verify in **UDM-SE** (Network application): Settings → Devices → Switch → IP: should be 192.168.2.x
 
 ---
 
@@ -220,7 +220,7 @@ Verify: Settings → Devices → Switch → IP: should be 192.168.2.x
 
 ### 5.1 Create IP Groups
 
-Settings → Profiles → IP Groups → Create New Group
+In **UDM-SE** (Network application): Settings → Profiles → IP Groups → Create New Group
 
 **Group: RFC1918 (Private Networks)**
 - Type: IPv4 Address/Subnet
@@ -246,7 +246,7 @@ Settings → Profiles → IP Groups → Create New Group
 
 ### 5.2 Create Port Groups
 
-Settings → Profiles → Port Groups → Create New Group
+In **UDM-SE** (Network application): Settings → Profiles → Port Groups → Create New Group
 
 **Group: Media Services Ports**
 - Ports:
@@ -281,7 +281,7 @@ Settings → Profiles → Port Groups → Create New Group
 
 Rules are processed in order. Insert exactly in this sequence:
 
-Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
+In **UDM-SE** (Network application): Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
 
 ### Rule 1: Allow Established/Related
 
@@ -355,13 +355,13 @@ Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
 > [!TIP]
 > DMZ forwards all incoming traffic to UDM-SE. Useful for port forwarding managed by UniFi.
 
-1. Settings → NAT/Firewall → DMZ
+1. In **Iliad Box** web interface: Settings → NAT/Firewall → DMZ
 2. Enable DMZ
 3. DMZ Host IP: UDM-SE WAN IP (check in Iliad Box → Connected devices)
 
 ### 7.3 Disable Iliad Wi-Fi (Recommended)
 
-1. Settings → Wi-Fi
+1. In **Iliad Box** web interface: Settings → Wi-Fi
 2. Disable all Wi-Fi networks
 3. Wi-Fi will be managed by UniFi AP
 
