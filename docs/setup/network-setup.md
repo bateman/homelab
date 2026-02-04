@@ -23,6 +23,22 @@
 3. Open browser: `https://192.168.1.1`
 4. Accept self-signed certificate
 
+> [!TIP]
+> **Mac users:** If DHCP doesn't assign an IP automatically, configure a static IP:
+>
+> 1. System Settings → Network → select your Ethernet adapter
+> 2. Click "Details..." → TCP/IP tab
+> 3. Configure IPv4: **Manually**
+> 4. IP Address: `192.168.1.100`
+> 5. Subnet Mask: `255.255.255.0`
+> 6. Router: `192.168.1.1`
+> 7. Click OK, then navigate to `https://192.168.1.1`
+>
+> **Using USB-C/Thunderbolt to Ethernet adapter?** Ensure macOS recognizes it:
+> - Check System Settings → Network for a new "USB 10/100/1000 LAN" or similar entry
+> - Try unplugging and reconnecting the adapter
+> - Some adapters need a few seconds after plugging in before the link comes up
+
 ### 1.2 Initial Wizard
 
 1. [ ] Select "Set up a new UniFi Console"
