@@ -317,7 +317,7 @@ certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Homelab" -i home.local.crt
 ```
 
 **Firefox (all systems):**
-1. Settings → Privacy & Security → Certificates → View Certificates
+1. In Firefox: Settings → Privacy & Security → Certificates → View Certificates
 2. **Authorities** tab → **Import**
 3. Select `home.local.crt`
 4. Select **Trust this CA to identify websites**

@@ -113,7 +113,7 @@ The UniFi U6-Pro can be scheduled to disable radios overnight when Wi-Fi isn't n
 
 ### 3.1 UniFi Controller Configuration
 
-1. Access UniFi Controller: `https://192.168.2.1`
+1. Access **UDM-SE** (Network application): `https://192.168.2.1`
 2. Settings → WiFi → Select Network
 3. Advanced → WLAN Schedule
 4. Enable scheduling:
@@ -137,7 +137,7 @@ To completely power off the AP (saves more power than radio disable):
 > [!NOTE]
 > Native PoE scheduling is not available in all UniFi controller versions. You can manually toggle PoE or use automation:
 
-**Manual toggle:**
+**Manual toggle (in UDM-SE Network application):**
 1. Settings → Devices → USW-Pro-Max-16-PoE
 2. Ports → Select AP port
 3. Port Profile → PoE → Off/On
@@ -156,7 +156,7 @@ curl -k -X PUT "https://192.168.2.1:443/api/s/default/rest/device/<switch_id>" \
 
 ### 3.3 Guest Network Scheduling
 
-For the Guest VLAN WiFi:
+For the Guest VLAN WiFi (in **UDM-SE** Network application):
 
 1. Settings → WiFi → Guest Network
 2. WLAN Schedule → Enable

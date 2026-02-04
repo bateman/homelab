@@ -486,7 +486,7 @@ For greater security, configure Plex with read-only access to media:
 
 #### Scheduled Tasks
 
-Settings → Scheduled Tasks:
+In **Plex** (web interface): Settings → Scheduled Tasks:
 - [ ] **Perform extensive media analysis during maintenance**: Consider disabling if causing slowdowns
 - [ ] **Backup database every three days**: ✅ Enabled
 - [ ] **Optimize database every week**: ✅ Enabled
@@ -885,7 +885,7 @@ vainfo: Supported profile and entrypoints
 
 #### 8.3.6 Configure Plex for Hardware Transcoding
 
-1. Access Plex: `http://192.168.3.21:32400/web`
+1. Access **Plex** web interface: `http://192.168.3.21:32400/web`
 2. Settings → Transcoder
 3. [ ] **Hardware transcoding**: Enabled (requires Plex Pass)
 4. [ ] **Use hardware acceleration when available**: Checked
