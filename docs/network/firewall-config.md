@@ -668,4 +668,4 @@ To eliminate Double NAT:
 - **Double NAT**: See dedicated section above.
 - **Tailscale**: Installed on Mini PC Proxmox, provides mesh VPN access without port forwarding.
 - **Home Assistant**: Accessible from Media VLAN (phones/tablets) and IoT VLAN (smart devices).
-- **Config backup**: Export regularly from Settings -> System -> Backup.
+- **Config backup**: Export regularly from UDM-SE: Settings → System → Backup.
