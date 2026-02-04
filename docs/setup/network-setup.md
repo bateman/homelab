@@ -19,8 +19,8 @@
 ### 1.1 First Access
 
 1. Connect PC directly to a UDM-SE LAN port
-2. PC will receive IP via DHCP (192.168.1.x)
-3. Open browser: `https://192.168.1.1`
+2. PC will receive IP via DHCP (192.168.0.x)
+3. Open browser: `https://192.168.0.1`
 4. Accept self-signed certificate
 
 ### 1.2 Initial Wizard
@@ -32,7 +32,7 @@
    - Type: DHCP (Iliad Box will assign IP)
    - Verify Internet connection
 5. [ ] Default LAN configuration:
-   - Leave temporarily at 192.168.1.0/24
+   - Leave at default 192.168.0.0/24
    - We'll modify later
 
 ### 1.3 Firmware Update
