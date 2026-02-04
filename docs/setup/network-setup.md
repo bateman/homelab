@@ -205,7 +205,7 @@ If you prefer managing IPs centrally from UniFi:
 
 1. Temporarily connect devices to make them appear in Client Devices
 2. In **UDM-SE** (Network application): Settings → Client Devices → (search by MAC address)
-3. Settings → Fixed IP Address: assign desired IP
+3. Click device → Fixed IP Address: assign desired IP
 
 ### 4.3 Fixed IP for Switch
 
