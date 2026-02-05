@@ -342,15 +342,102 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 
 ---
 
-## Phase 7: Iliad Box Configuration
+## Phase 7: Wi-Fi Access Point Setup
 
-### 7.1 Access Iliad Box
+### 7.1 AP Adoption
+
+1. [ ] Connect U6-Pro to switch port 2 (PoE+, Management VLAN 2)
+2. [ ] In **UDM-SE** (Network application): Devices → should show "U6-Pro"
+3. [ ] Click "Adopt"
+4. [ ] Wait for provisioning (~2 minutes)
+5. [ ] Update firmware if available
+
+**Verify AP details after adoption:**
+
+| Spec | Value |
+|------|-------|
+| Model | U6-Pro |
+| Location | Ceiling/wall mounted (not in rack) |
+| Power | PoE from USW-Pro-Max-16-PoE port 2 |
+| IP | 192.168.2.20 (DHCP or fixed in Management VLAN) |
+
+### 7.2 Create WiFi Networks (SSIDs)
+
+In **UDM-SE** (Network application): Settings → WiFi → Create New WiFi Network
+
+**Network 1: Casa-Media**
+
+| Field | Value |
+|-------|-------|
+| Name/SSID | Casa-Media |
+| Network | Media (VLAN 4) |
+| Security | WPA3/WPA2 |
+| Password | (set a strong password) |
+| Notes | TVs, phones, tablets |
+
+**Network 2: Casa-Guest**
+
+| Field | Value |
+|-------|-------|
+| Name/SSID | Casa-Guest |
+| Network | Guest (VLAN 5) |
+| Security | WPA3/WPA2 |
+| Password | (set a strong password) |
+| Notes | Guests, complete isolation |
+
+**Network 3: Casa-IoT**
+
+| Field | Value |
+|-------|-------|
+| Name/SSID | Casa-IoT |
+| Network | IoT (VLAN 6) |
+| Security | WPA3/WPA2 |
+| Password | (set a strong password) |
+| Notes | Alexa, smart WiFi devices |
+
+> [!NOTE]
+> No SSID needed for Management (wired access only) or Servers (wired devices with static IPs).
+
+### 7.3 WLAN Scheduling (Optional)
+
+Wi-Fi radios can be scheduled to disable overnight when not needed, reducing power consumption.
+
+In **UDM-SE** (Network application): Settings → WiFi → Select Network → Advanced → WLAN Schedule
+
+| Day | Active Hours | Notes |
+|-----|--------------|-------|
+| Mon–Fri | 06:00–00:00 | Off overnight |
+| Sat–Sun | 06:00–02:00 | Extended weekend |
+
+**Guest network scheduling** (shorter window):
+
+1. Settings → WiFi → Casa-Guest
+2. WLAN Schedule → Enable
+3. Active: 08:00–23:00
+
+> [!TIP]
+> WLAN scheduling disables the radio but keeps the AP powered for management. For complete power-off options (PoE control, smart plugs), see [`energy-saving-strategies.md`](../operations/energy-saving-strategies.md#32-alternative-device-level-scheduling).
+
+### 7.4 Verify WiFi
+
+1. Connect a phone to each SSID
+2. Verify correct VLAN assignment:
+   - Casa-Media → should get 192.168.4.x IP
+   - Casa-Guest → should get 192.168.5.x IP
+   - Casa-IoT → should get 192.168.6.x IP
+3. Verify Internet connectivity on each network
+
+---
+
+## Phase 8: Iliad Box Configuration
+
+### 8.1 Access Iliad Box
 
 1. Connect PC directly to Iliad Box (temporarily)
 2. Access `http://192.168.1.254`
 3. Login with Iliad credentials
 
-### 7.2 DMZ Configuration (Optional)
+### 8.2 DMZ Configuration (Optional)
 
 > [!TIP]
 > DMZ forwards all incoming traffic to UDM-SE. Useful for port forwarding managed by UniFi.
@@ -359,15 +446,15 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 2. Enable DMZ
 3. DMZ Host IP: UDM-SE WAN IP (check in Iliad Box → Connected devices)
 
-### 7.3 Disable Iliad Wi-Fi (Recommended)
+### 8.3 Disable Iliad Wi-Fi (Recommended)
 
 1. In **Iliad Box** web interface: Settings → Wi-Fi
 2. Disable all Wi-Fi networks
-3. Wi-Fi will be managed by UniFi AP
+3. Wi-Fi is now managed by the UniFi AP (configured in Phase 7)
 
 ---
 
-## Phase 8: Configuration Verification
+## Phase 9: Configuration Verification
 
 ### Basic Connectivity Test
 

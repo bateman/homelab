@@ -162,13 +162,11 @@
 |------|-------|
 | Model | U6-Pro |
 | Location | Ceiling/wall mounted (not in rack) |
-| Power | PoE from USW-Pro-Max-16-PoE |
-| Switch Port | Port 2 (PoE+) |
+| Power | PoE from USW-Pro-Max-16-PoE port 2 |
 | IP | 192.168.2.20 |
 | VLAN | Management (VLAN 2) |
 
-> [!NOTE]
-> The Access Point is powered via PoE from the switch and mounted centrally for optimal WiFi coverage. It broadcasts SSIDs for Media, Guest, and IoT VLANs.
+> For AP adoption, WiFi SSID setup, and WLAN scheduling, see [`network-setup.md` Phase 7](../setup/network-setup.md#phase-7-wi-fi-access-point-setup).
 
 ---
 

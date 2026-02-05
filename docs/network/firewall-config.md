@@ -139,14 +139,7 @@ Internet
 
 ## WiFi Networks (SSID)
 
-| SSID | VLAN | Security | Notes |
-|------|------|----------|-------|
-| Casa-Media | 4 | WPA3/WPA2 | TV, phones, tablets |
-| Casa-Guest | 5 | WPA3/WPA2 | Guests, complete isolation |
-| Casa-IoT | 6 | WPA3/WPA2 | Alexa, smart WiFi devices |
-
-> [!NOTE]
-> No SSID needed for Management (wired access only) or Servers (wired devices with static IPs).
+> WiFi SSID configuration (Casa-Media, Casa-Guest, Casa-IoT) is documented in [`network-setup.md` Phase 7](../setup/network-setup.md#phase-7-wi-fi-access-point-setup).
 
 ---
 
@@ -510,7 +503,7 @@ If in the future you need to open specific ports (e.g., for remote Plex without 
 5. [ ] Configure firewall rules in order
 6. [ ] Enable mDNS reflection on VLANs 3, 4, and 6
 7. [ ] Configure Threat Management
-8. [ ] Create WiFi SSIDs (Casa-Media, Casa-Guest, Casa-IoT)
+8. [ ] Create WiFi SSIDs (see [`network-setup.md` Phase 7](../setup/network-setup.md#phase-7-wi-fi-access-point-setup))
 9. [ ] Assign static IPs to Server devices
 10. [ ] Test inter-VLAN communication
 
