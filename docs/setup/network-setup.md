@@ -365,31 +365,31 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 
 In **UDM-SE** (Network application): Settings → WiFi → Create New WiFi Network
 
-**Network 1: Casa-Media**
+**Network 1: Homelab**
 
 | Field | Value |
 |-------|-------|
-| Name/SSID | Casa-Media |
+| Name/SSID | Homelab |
 | Network | Media (VLAN 4) |
 | Security | WPA3/WPA2 |
 | Password | (set a strong password) |
 | Notes | TVs, phones, tablets |
 
-**Network 2: Casa-Guest**
+**Network 2: Homelab-Guest**
 
 | Field | Value |
 |-------|-------|
-| Name/SSID | Casa-Guest |
+| Name/SSID | Homelab-Guest |
 | Network | Guest (VLAN 5) |
 | Security | WPA3/WPA2 |
 | Password | (set a strong password) |
 | Notes | Guests, complete isolation |
 
-**Network 3: Casa-IoT**
+**Network 3: Homelab-IoT**
 
 | Field | Value |
 |-------|-------|
-| Name/SSID | Casa-IoT |
+| Name/SSID | Homelab-IoT |
 | Network | IoT (VLAN 6) |
 | Security | WPA3/WPA2 |
 | Password | (set a strong password) |
@@ -411,7 +411,7 @@ In **UDM-SE** (Network application): Settings → WiFi → Select Network → Ad
 
 **Guest network scheduling** (shorter window):
 
-1. Settings → WiFi → Casa-Guest
+1. Settings → WiFi → Homelab-Guest
 2. WLAN Schedule → Enable
 3. Active: 08:00–23:00
 
@@ -422,9 +422,9 @@ In **UDM-SE** (Network application): Settings → WiFi → Select Network → Ad
 
 1. Connect a phone to each SSID
 2. Verify correct VLAN assignment:
-   - Casa-Media → should get 192.168.4.x IP
-   - Casa-Guest → should get 192.168.5.x IP
-   - Casa-IoT → should get 192.168.6.x IP
+   - Homelab → should get 192.168.4.x IP
+   - Homelab-Guest → should get 192.168.5.x IP
+   - Homelab-IoT → should get 192.168.6.x IP
 3. Verify Internet connectivity on each network
 
 ---

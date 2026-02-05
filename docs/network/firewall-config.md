@@ -139,7 +139,7 @@ Internet
 
 ## WiFi Networks (SSID)
 
-> WiFi SSID configuration (Casa-Media, Casa-Guest, Casa-IoT) is documented in [`network-setup.md` Phase 7](../setup/network-setup.md#phase-7-wi-fi-access-point-setup).
+> WiFi SSID configuration (Homelab, Homelab-Guest, Homelab-IoT) is documented in [`network-setup.md` Phase 7](../setup/network-setup.md#phase-7-wi-fi-access-point-setup).
 
 ---
 
