@@ -84,6 +84,20 @@
 | SFP+ 1 | 10GbE | All | Trunk | Uplink to UDM-SE | — |
 | SFP+ 2 | 10GbE | Servers | 3 | QNAP NAS | — |
 
+#### Global Switch Settings
+
+| Setting | Value |
+|---------|-------|
+| IGMP Snooping | Enabled (Management, IoT) |
+| Device Isolation | Enabled (IoT) |
+| Spanning Tree | RSTP |
+| Rogue DHCP Detection | Enabled |
+| Jumbo Frames | Enabled |
+| L3 Network Isolation | Disabled |
+| 802.1X | Disabled |
+
+> For detailed configuration and rationale, see [`network-setup.md` Phase 3.5](../setup/network-setup.md#35-global-switch-settings).
+
 ### U5 — UniFi Dream Machine SE (UDM-SE-EU)
 
 | Spec | Value |

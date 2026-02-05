@@ -120,6 +120,10 @@ Click "Add Network"
 | DHCP Range | 192.168.6.100 - 192.168.6.200 |
 | Domain Name | iot.local |
 
+**Advanced Options:**
+- [ ] IGMP Snooping: Enabled
+- [ ] Multicast DNS: Enabled
+
 ### Verify Created VLANs
 
 In **UDM-SE** (Network application): Settings → Networks should show:
@@ -183,6 +187,40 @@ In **UDM-SE** (Network application): Settings → Profiles → Switch Ports → 
 ### 3.4 Apply Profiles to Ports
 
 For each port, click → Port Profile → select appropriate profile
+
+### 3.5 Global Switch Settings
+
+In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE → Settings
+
+#### IGMP Snooping
+
+- [ ] IGMP Snooping: Enabled
+- [ ] VLANs: Management, IoT
+- [ ] Forward Unknown Multicast Traffic: Drop
+- [ ] Flood Known Protocols: Enabled
+
+> [!NOTE]
+> IGMP Snooping controls multicast traffic per-VLAN. Enable it on Management (network devices) and IoT (mDNS/SSDP discovery). Media and Servers VLANs don't need it — media clients use unicast (Plex) and servers communicate via Docker networking.
+
+#### Device Isolation (ACL)
+
+- [ ] Device Isolation: Enabled
+- [ ] Networks: IoT
+
+> [!NOTE]
+> Prevents IoT devices from communicating with each other within VLAN 6. A compromised smart device cannot pivot to attack other devices on the same VLAN. This works because IoT devices communicate through Home Assistant (on Servers VLAN), not directly with each other.
+>
+> Device Isolation does not apply to clients connected directly to the UDM-SE's built-in LAN ports — only to devices connected via the switch or Wi-Fi AP.
+
+#### Other Global Settings
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| Spanning Tree Protocol | RSTP | Rapid convergence, prevents loops |
+| Rogue DHCP Server Detection | Enabled | Prevents compromised devices from serving rogue DHCP |
+| Jumbo Frames | Enabled | Benefits 10GbE NAS link; ignored by devices that don't support it |
+| 802.1X Control | Disabled | IoT devices don't support 802.1X |
+| L3 Network Isolation (ACL) | Disabled | UDM-SE firewall handles inter-VLAN blocking with stateful rules and port-level control |
 
 ---
 
