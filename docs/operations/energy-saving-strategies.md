@@ -109,19 +109,9 @@ If your usage pattern is predictable:
 
 ## 3. Wi-Fi Access Point Scheduling
 
-The UniFi U6-Pro can be scheduled to disable radios overnight when Wi-Fi isn't needed.
+> WLAN scheduling and guest network scheduling are configured during initial setup. See [`network-setup.md` Phase 7.3](../setup/network-setup.md#73-wlan-scheduling-optional).
 
-### 3.1 UniFi Controller Configuration
-
-1. Access **UDM-SE** (Network application): `https://192.168.2.1`
-2. Settings → WiFi → Select Network
-3. Advanced → WLAN Schedule
-4. Enable scheduling:
-
-| Day | Active Hours | Notes |
-|-----|--------------|-------|
-| Mon–Fri | 06:00–00:00 | Off overnight |
-| Sat–Sun | 06:00–02:00 | Extended weekend |
+This section covers additional power-saving options beyond radio scheduling.
 
 ### 3.2 Alternative: Device-Level Scheduling
 
@@ -152,15 +142,7 @@ curl -k -X PUT "https://192.168.2.1:443/api/s/default/rest/device/<switch_id>" \
 ```
 
 > [!TIP]
-> For simplicity, use WLAN scheduling (Section 3.1) instead of PoE control. WLAN scheduling disables the radio but keeps the AP powered for management.
-
-### 3.3 Guest Network Scheduling
-
-For the Guest VLAN WiFi (in **UDM-SE** Network application):
-
-1. Settings → WiFi → Guest Network
-2. WLAN Schedule → Enable
-3. Active: 08:00–23:00 (shorter window for guests)
+> For simplicity, use WLAN scheduling instead of PoE control. WLAN scheduling disables the radio but keeps the AP powered for management.
 
 ---
 
@@ -482,7 +464,7 @@ Home Assistant can centralize power management with intelligent automations.
 > Choose either cron (Section 4.3) OR Home Assistant automations for power save scheduling, not both.
 
 > [!TIP]
-> For UniFi AP PoE control, the built-in UniFi integration doesn't support PoE port toggling directly. Use the UniFi Controller's WLAN scheduling instead (Section 3.1), or create custom shell commands using the UniFi API.
+> For UniFi AP PoE control, the built-in UniFi integration doesn't support PoE port toggling directly. Use the UniFi Controller's WLAN scheduling instead (see [`network-setup.md` Phase 7.3](../setup/network-setup.md#73-wlan-scheduling-optional)), or create custom shell commands using the UniFi API.
 
 **Shell commands** (`docker/config/homeassistant/configuration.yaml`):
 
@@ -598,7 +580,7 @@ echo "powersave" > /sys/module/pcie_aspm/parameters/policy
 
 - [ ] Configure HDD spindown on NAS (30 min)
 - [ ] Set LED brightness schedule on NAS
-- [ ] Enable Wi-Fi WLAN scheduling in UniFi
+- [ ] Enable Wi-Fi WLAN scheduling (see [`network-setup.md` Phase 7.3](../setup/network-setup.md#73-wlan-scheduling-optional))
 
 ### Phase 2: Proxmox Optimization
 
