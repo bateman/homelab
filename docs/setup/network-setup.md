@@ -74,7 +74,6 @@ In **UDM-SE** (Network application): Settings → Networks → Create New Networ
 
 **Advanced Options:**
 - [ ] IGMP Snooping: Enabled
-- [ ] Multicast DNS: Enabled
 
 Click "Add Network"
 
@@ -87,6 +86,9 @@ Click "Add Network"
 | VLAN ID | 3 |
 | DHCP Mode | None (static IPs) |
 | Domain Name | servers.local |
+
+**Advanced Options:**
+- [ ] Multicast DNS: Enabled
 
 > [!NOTE]
 > Servers VLAN uses static IPs. Assign manually: NAS=.10, Proxmox=.20, Printer=.30, PC=.40
@@ -106,6 +108,9 @@ Click "Add Network"
 - [ ] Auto DNS Server: Disabled
 - [ ] DNS Server 1: `192.168.3.10` (Pi-hole)
 - [ ] DNS Server 2: `1.1.1.1` (Cloudflare fallback)
+
+**Advanced Options:**
+- [ ] Multicast DNS: Enabled
 
 ### 2.5 Create Guest VLAN (VLAN 5)
 
