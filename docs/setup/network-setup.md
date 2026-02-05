@@ -67,9 +67,13 @@ In **UDM-SE** (Network application): Settings → Networks → Create New Networ
 | DHCP Range | 192.168.2.100 - 192.168.2.200 |
 | Domain Name | management.local |
 
+**DHCP Options:**
+- [ ] Auto DNS Server: Disabled
+- [ ] DNS Server 1: `192.168.3.10` (Pi-hole)
+- [ ] DNS Server 2: `1.1.1.1` (Cloudflare fallback)
+
 **Advanced Options:**
 - [ ] IGMP Snooping: Enabled
-- [ ] Multicast DNS: Enabled
 
 Click "Add Network"
 
@@ -83,6 +87,9 @@ Click "Add Network"
 | DHCP Mode | None (static IPs) |
 | Domain Name | servers.local |
 
+**Advanced Options:**
+- [ ] Multicast DNS: Enabled
+
 > [!NOTE]
 > Servers VLAN uses static IPs. Assign manually: NAS=.10, Proxmox=.20, Printer=.30, PC=.40
 
@@ -93,8 +100,17 @@ Click "Add Network"
 | Name | Media |
 | Gateway IP/Subnet | 192.168.4.1/24 |
 | VLAN ID | 4 |
+| DHCP Mode | DHCP Server |
 | DHCP Range | 192.168.4.100 - 192.168.4.200 |
 | Domain Name | media.local |
+
+**DHCP Options:**
+- [ ] Auto DNS Server: Disabled
+- [ ] DNS Server 1: `192.168.3.10` (Pi-hole)
+- [ ] DNS Server 2: `1.1.1.1` (Cloudflare fallback)
+
+**Advanced Options:**
+- [ ] Multicast DNS: Enabled
 
 ### 2.5 Create Guest VLAN (VLAN 5)
 
@@ -103,8 +119,14 @@ Click "Add Network"
 | Name | Guest |
 | Gateway IP/Subnet | 192.168.5.1/24 |
 | VLAN ID | 5 |
+| DHCP Mode | DHCP Server |
 | DHCP Range | 192.168.5.100 - 192.168.5.200 |
 | Network Type | Guest Network |
+
+**DHCP Options:**
+- [ ] Auto DNS Server: Disabled
+- [ ] DNS Server 1: `1.1.1.1` (Cloudflare)
+- [ ] DNS Server 2: `1.0.0.1` (Cloudflare fallback)
 
 **Guest Options:**
 - [ ] Guest Network Isolation: Enabled
@@ -117,8 +139,14 @@ Click "Add Network"
 | Name | IoT |
 | Gateway IP/Subnet | 192.168.6.1/24 |
 | VLAN ID | 6 |
+| DHCP Mode | DHCP Server |
 | DHCP Range | 192.168.6.100 - 192.168.6.200 |
 | Domain Name | iot.local |
+
+**DHCP Options:**
+- [ ] Auto DNS Server: Disabled
+- [ ] DNS Server 1: `192.168.3.10` (Pi-hole)
+- [ ] DNS Server 2: `1.1.1.1` (Cloudflare fallback)
 
 **Advanced Options:**
 - [ ] IGMP Snooping: Enabled
