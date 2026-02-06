@@ -121,26 +121,14 @@ Click "Add Network"
 | VLAN ID | 5 |
 | DHCP Mode | DHCP Server |
 | DHCP Range | 192.168.5.100 - 192.168.5.200 |
-| Network Type | Guest Network |
 
 **DHCP Options:**
 - [ ] Auto DNS Server: Disabled
 - [ ] DNS Server 1: `1.1.1.1` (Cloudflare)
 - [ ] DNS Server 2: `1.0.0.1` (Cloudflare fallback)
 
-**Guest Options:**
-- [ ] Guest Network Isolation: Enabled
-- [ ] Apply Guest Policies: Enabled
-- [ ] Guest Portal/Hotspot: Disabled
-
-**Advanced Options:**
-- [ ] IGMP Snooping: Disabled (guests don't use multicast services)
-- [ ] Multicast DNS: Disabled (no service discovery for guests)
-
 > [!NOTE]
-> The Guest Network type provides built-in client isolation — guests cannot see or reach other clients on the same VLAN, nor access devices on other VLANs. This is stronger than Device Isolation (ACL) and doesn't need to be configured separately in Global Switch Settings.
->
-> DNS is pointed to Cloudflare (not Pi-hole) so guest traffic doesn't depend on local infrastructure.
+> Guest isolation is enforced by firewall rules (see [firewall-config.md](../network/firewall-config.md)), not at the network level. DNS is pointed to Cloudflare (not Pi-hole) so guest traffic doesn't depend on local infrastructure.
 
 ### 2.6 Create IoT VLAN (VLAN 6)
 
@@ -239,7 +227,7 @@ In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE
 - [ ] Fast Leave: Disabled
 
 > [!NOTE]
-> IGMP Snooping controls multicast traffic per-VLAN. Enable it on Management (network devices) and IoT (mDNS/SSDP discovery). Media and Servers VLANs don't need it — media clients use unicast (Plex) and servers communicate via Docker networking. Guest VLAN is excluded because guests don't use multicast services and the Guest Network type already isolates traffic.
+> IGMP Snooping controls multicast traffic per-VLAN. Enable it on Management (network devices) and IoT (mDNS/SSDP discovery). Media and Servers VLANs don't need it — media clients use unicast (Plex) and servers communicate via Docker networking. Guest VLAN is excluded because guests don't use multicast services.
 >
 > Fast Leave is disabled because it can cause brief multicast interruptions on ports with multiple clients — only useful for single-receiver setups (e.g., IPTV set-top boxes).
 
@@ -251,7 +239,7 @@ In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE
 > [!NOTE]
 > Prevents IoT devices from communicating with each other within VLAN 6. A compromised smart device cannot pivot to attack other devices on the same VLAN. This works because IoT devices communicate through Home Assistant (on Servers VLAN), not directly with each other.
 >
-> Guest VLAN is not included here because UniFi's Guest Network type already provides stronger client isolation — guests are automatically prevented from accessing other clients and local network resources.
+> Guest VLAN is not included here because guest isolation is handled by firewall rules (see [firewall-config.md](../network/firewall-config.md)).
 >
 > Device Isolation does not apply to clients connected directly to the UDM-SE's built-in LAN ports — only to devices connected via the switch or Wi-Fi AP.
 
