@@ -10,9 +10,9 @@
 | Severity | Count |
 |----------|-------|
 | HIGH | 2 |
-| MEDIUM | 5 |
-| LOW | 5 |
-| INFO | 3 |
+| MEDIUM | 7 |
+| LOW | 6 |
+| INFO | 4 |
 
 Overall the firewall follows sound principles ("deny all, allow specific") with proper rule ordering. However, there are gaps where the authentication layer (Authelia) is undermined by firewall rules that force direct-port access, and an overly broad API bypass that affects critical services.
 
@@ -34,11 +34,13 @@ Overall the firewall follows sound principles ("deny all, allow specific") with 
 
 ...exempts any `/api/` path on *every* `*.home.local` service from authentication. While intended for *arr inter-service communication (which uses API keys), it also applies to:
 - **Portainer** (`portainer.home.local/api/...`) — full Docker control, despite having `two_factor` policy on the UI
-- **Duplicati** — backup management
-- **Uptime Kuma** — monitoring data
-- **Pi-hole** — DNS configuration
+- **Duplicati** (`duplicati.home.local/api/...`) — backup management
+- **Uptime Kuma** (`uptime.home.local/api/...`) — monitoring data
+- **Pi-hole** (`pihole.home.local/api/...`) — DNS configuration
 
-This directly undermines the `two_factor` policy set on Portainer.
+This directly undermines the `two_factor` policy set on Portainer. Authelia rules are evaluated first-match-wins, so the `*.home.local` bypass fires before the domain-specific `two_factor` rule for `portainer.home.local`.
+
+**Current exploitability:** Currently limited to intra-VLAN access from the Servers VLAN (e.g., Desktop PC at 192.168.3.40 → Traefik at NAS:443) and Tailscale remote access, because Media VLAN cannot reach port 443 (see H2). However, this becomes **immediately exploitable from Media VLAN** if H2 is fixed by adding a port 443 rule. It is a latent vulnerability that undermines an explicit security intent.
 
 **Recommendation:** Restrict the bypass to specific *arr service domains:
 ```yaml
@@ -58,19 +60,23 @@ This directly undermines the `two_factor` policy set on Portainer.
     - "^/healthcheck$"
 ```
 
-### H2 — No firewall rule for Traefik (port 443) from Media VLAN
+### H2 — No firewall rule for Traefik (port 443) from Media VLAN — forces auth bypass
 
 **Location:** `docs/network/firewall-config.md` — LAN In Rules
 
 **Issue:** Traefik listens on ports 80/443 on the NAS (192.168.3.10) and provides Authelia SSO authentication for all services. However, there is no firewall rule allowing Media VLAN (192.168.4.0/24) to reach NAS port 443.
 
-Rule 5 allows Media to NAS only on the `Arr-Stack` port group (specific service ports like 8989, 7878, etc.), which does not include 443.
+Rule 5 allows Media → NAS only on the `Arr-Stack` port group (specific service ports like 8989, 7878, etc.), which does **not** include 443.
 
-**Consequence:** Media VLAN clients (phones, tablets) are forced to access services via direct IP:port (e.g., `192.168.3.10:8989`) rather than through Traefik (`https://sonarr.home.local`). Direct-port access **bypasses Authelia authentication entirely**, since Authelia is a Traefik middleware.
+**Verified by rule trace:** Media (192.168.4.x) → NAS (192.168.3.10):443 — Rules 1-12 don't match → Rule 13 (Block All Inter-VLAN) → **DROP**.
 
-This creates a security paradox where the firewall forces users to bypass the auth layer.
+**Consequence — two-part problem:**
+1. Media VLAN clients cannot use `https://sonarr.home.local` (Traefik) — blocked by firewall.
+2. Media VLAN clients *can* reach `192.168.3.10:8989` directly (via Rule 5 Arr-Stack ports) — this **bypasses Traefik and therefore bypasses Authelia authentication entirely**, since Docker publishes service ports directly on the host.
 
-**Recommendation:** Add a firewall rule (before Rule 13) allowing Media VLAN to NAS on TCP port 443. Then consider removing individual service ports from the `Arr-Stack` group so all Media access is funneled through Traefik+Authelia:
+The firewall forces users to bypass the authentication layer.
+
+**Recommendation:** Add a firewall rule (before Rule 13) allowing Media VLAN to NAS on TCP port 443, then consider removing individual service ports from the `Arr-Stack` group so all Media access is funneled through Traefik+Authelia:
 
 | Field | Value |
 |-------|-------|
@@ -81,52 +87,109 @@ This creates a security paradox where the firewall forces users to bypass the au
 | Destination | NAS (192.168.3.10) |
 | Port | 443 |
 
+If this rule is added, **fix H1 first** — otherwise the Authelia API bypass immediately becomes exploitable from Media VLAN.
+
 ---
 
 ## MEDIUM Severity
 
-### M1 — Rule 12 is overly permissive (Servers -> Management)
+### M1 — Rule 6 grants Media VLAN direct access to Portainer
+
+**Location:** `docs/network/firewall-config.md` — Rule 6
+
+**Issue:** Rule 6 explicitly allows Media VLAN (192.168.4.0/24) → NAS on port 9443 (Portainer). This means consumer devices — phones, tablets, Smart TVs — have direct network access to the Docker management interface.
+
+**Verified by rule trace:** Media (192.168.4.x) → NAS (192.168.3.10):9443 — Rule 6 → **ACCEPT**.
+
+Portainer with direct Docker socket access (`/var/run/docker.sock`) has full control over all containers. A compromised Portainer instance means full Docker and effective host compromise. Portainer has its own authentication, but exposing it to the Media VLAN:
+- Increases attack surface (brute-force from compromised TV/phone)
+- Bypasses the defense-in-depth Authelia layer (direct port, not through Traefik)
+
+**Recommendation:** Remove Rule 6. Portainer should only be accessible from the Servers VLAN (intra-VLAN, no firewall rule needed) via the Desktop PC. If remote management is needed, use Tailscale.
+
+### M2 — Rule 12 is overly permissive (Servers → Management)
 
 **Location:** `docs/network/firewall-config.md` — Rule 12
 
-**Issue:** Rule 12 allows **all protocols** from the entire VLAN-Servers subnet (192.168.3.0/24) to the entire VLAN-Management subnet (192.168.2.0/24). The stated purpose is "desktop PC to access switch and AP management interfaces," but the rule grants access from every device on VLAN 3 (NAS, Proxmox, Printer, Desktop PC).
+**Issue:** Rule 12 allows **all protocols** from the entire VLAN-Servers subnet (192.168.3.0/24) to the entire VLAN-Management subnet (192.168.2.0/24). The stated purpose is "desktop PC to access switch and AP management interfaces," but the rule grants access from every device on VLAN 3 (NAS, Proxmox, Printer, Desktop PC) to every device on VLAN 2 (UDM-SE, Switch, AP).
 
-A compromised NAS or Proxmox host could pivot to the Management VLAN and access the UDM-SE controller, switch, and access point management interfaces.
+A compromised NAS or Proxmox host could pivot to the Management VLAN and access the UDM-SE controller (192.168.2.1), switch (192.168.2.10), and access point (192.168.2.20) management interfaces.
 
 **Recommendation:** Restrict source to Desktop PC (`192.168.3.40`) and limit to TCP port 443 (HTTPS for UniFi management UIs). Create a `DesktopPC` IP group.
 
-### M2 — Arr-Stack port group exposes admin services to Media VLAN
+### M3 — Arr-Stack port group exposes admin services to Media VLAN
 
 **Location:** `docs/network/firewall-config.md` — Port Groups, Rule 5
 
-**Issue:** The `Arr-Stack` port group bundles 13 service ports. Rule 5 allows all Media VLAN devices to access all of them. This exposes admin-only services to consumer devices:
+**Issue:** The `Arr-Stack` port group bundles 13 service ports. Rule 5 allows all Media VLAN devices to access all of them. This exposes admin-only and internal services to consumer devices:
 
 | Service | Port | Media VLAN needs it? |
 |---------|------|---------------------|
-| FlareSolverr | 8191 | No — internal only, no auth |
-| Duplicati | 8200 | No — backup admin |
-| Pi-hole admin | 8081 | No — DNS admin |
-| qBittorrent | 8080 | Questionable |
-| NZBGet | 6789 | Questionable |
-| Prowlarr | 9696 | Questionable |
+| FlareSolverr | 8191 | **No** — internal Prowlarr helper, has no authentication |
+| Duplicati | 8200 | **No** — backup administration is sensitive |
+| Pi-hole admin | 8081 | **No** — DNS admin interface |
+| qBittorrent | 8080 | Questionable — download client |
+| NZBGet | 6789 | Questionable — download client |
+| Prowlarr | 9696 | Questionable — indexer management |
+| Uptime Kuma | 3001 | Questionable — monitoring dashboard |
+| Huntarr | 9705 | Questionable — monitoring tool |
+| Cleanuparr | 11011 | Questionable — cleanup automation |
+| Sonarr | 8989 | Yes |
+| Radarr | 7878 | Yes |
+| Lidarr | 8686 | Yes |
+| Bazarr | 6767 | Yes |
+
+FlareSolverr is especially concerning — it accepts arbitrary URL fetch requests and has no authentication mechanism at all.
 
 **Recommendation:** Split into two port groups:
 - `Arr-Media`: 8989 (Sonarr), 7878 (Radarr), 8686 (Lidarr), 6767 (Bazarr) — for Media VLAN
 - `Arr-Admin`: remaining ports — accessible only within Servers VLAN (no firewall rule needed)
 
-### M3 — No DNS egress filtering (Pi-hole bypass possible)
+Or better: fix H2 (allow port 443) and route all Media traffic through Traefik+Authelia, removing direct-port access entirely.
+
+### M4 — No DNS egress filtering (Pi-hole bypass possible)
 
 **Location:** `docs/network/firewall-config.md` — Rule 2
 
-**Issue:** Rule 2 allows any VLAN to reach Pi-hole on port 53, but there is no rule blocking devices from querying external DNS servers directly (e.g., 8.8.8.8:53). A compromised IoT device or malware on a Media device can bypass Pi-hole entirely.
+**Issue:** Rule 2 allows any VLAN to reach Pi-hole on port 53, but there is no rule blocking devices from querying external DNS servers directly (e.g., `8.8.8.8:53`). Since IoT and Media VLAN devices have Internet access (only RFC1918 is blocked, not public IPs), they can bypass Pi-hole entirely by querying public DNS.
 
-**Recommendation:** Add a rule (after Rule 2, before IoT/Guest blocks) that drops outbound DNS (TCP/UDP 53) from VLANs 2, 4, and 6 to any destination except NAS. Guest VLAN should be exempt since it uses Cloudflare directly by design.
+This undermines Pi-hole's ad-blocking and any DNS-based security filtering.
 
-### M4 — No brute-force protection in Authelia
+**Recommendation:** Add a LAN Out or Internet Out rule that drops outbound DNS (TCP/UDP 53) from VLANs 2, 4, and 6 to any destination except NAS (192.168.3.10). Guest VLAN should be exempt since it uses Cloudflare directly by design.
+
+### M5 — Guest VLAN can reach Pi-hole DNS (information leak)
+
+**Location:** `docs/network/firewall-config.md` — Rules 2 and 11
+
+**Issue:** Rule 2 (`Allow Any → NAS:53`) fires **before** Rule 11 (`Block Guest → RFC1918`). This means Guest devices can reach Pi-hole.
+
+**Verified by rule trace:** Guest (192.168.5.x) → NAS (192.168.3.10):53 — Rule 2 matches → **ACCEPT**. Rule 11 never evaluates.
+
+While DHCP only configures Cloudflare DNS for Guest VLAN, a technically savvy guest can manually set their DNS to `192.168.3.10` and:
+- Resolve `*.home.local` names (sonarr.home.local, portainer.home.local, etc.)
+- Discover internal service topology and hostnames
+- Identify the NAS IP address and running services
+
+This is an information leak that aids reconnaissance, though the guest still cannot reach those services (blocked by Rule 11 on other ports).
+
+**Recommendation:** Add a rule before Rule 2 that blocks Guest VLAN → NAS:53 specifically, or restructure Rule 2 to exclude Guest VLAN as a source:
+
+| Field | Value |
+|-------|-------|
+| Name | Block Guest DNS to Pi-hole |
+| Action | Drop |
+| Protocol | TCP/UDP |
+| Source | VLAN-Guest |
+| Destination | NAS (192.168.3.10) |
+| Port | DNS (53) |
+
+Place this **before** Rule 2.
+
+### M6 — No brute-force protection in Authelia
 
 **Location:** `docker/config/authelia/configuration.yml`
 
-**Issue:** The Authelia configuration has no `regulation` block. Without it, there is no account lockout after failed login attempts. An attacker on any VLAN with access to Traefik can attempt unlimited password guesses.
+**Issue:** The Authelia configuration has no `regulation` block. Without it, there is no account lockout after failed login attempts. An attacker on any VLAN with access to Traefik (currently only Servers VLAN, but Media if H2 is fixed) can attempt unlimited password guesses.
 
 **Recommendation:** Add:
 ```yaml
@@ -136,51 +199,82 @@ regulation:
   ban_time: 10m
 ```
 
-### M5 — Default admin user with known password hash committed
+### M7 — Default admin user with known password hash committed
 
 **Location:** `docker/config/authelia/users_database.yml`
 
-**Issue:** The file ships with user `admin` and the argon2id hash of password `changeme`. While comments warn to change it, the hash is committed to the repository. If deployed as-is (or if the user forgets to change it), anyone on the local network can authenticate as admin.
+**Issue:** The file ships with user `admin` and the argon2id hash of password `changeme`. While comments warn to change it, the hash is committed to the repository. If deployed as-is (or if the user forgets to change it), anyone on the network who can reach Authelia can authenticate as admin.
 
-**Recommendation:** Replace the password hash with a placeholder that cannot be used to authenticate (e.g., `CHANGE_ME`), or use a `.example` pattern for this file.
+**Recommendation:** Replace the password hash with a placeholder that cannot be used to authenticate (e.g., `CHANGE_ME`), or move this file to a `.example` pattern like the `.env.secrets.example` approach.
 
 ---
 
 ## LOW Severity
 
-### L1 — Plex IP may be mismatched
+### L1 — Plex IP likely mismatched in firewall rules
 
 **Location:** `docs/network/firewall-config.md` Rules 3-4; `docs/network/rack-homelab-config.md` service table
 
-**Issue:** Firewall Rules 3-4 allow Media VLAN to reach Plex at MiniPC (`192.168.3.20`), but the rack config shows Plex runs in an LXC container at `192.168.3.21`. If the LXC has its own IP, traffic to `.20` would not reach Plex.
+**Issue:** Firewall Rules 3-4 allow Media VLAN to reach Plex at MiniPC IP group (`192.168.3.20`). However, the rack config documents Plex running in an LXC container at `192.168.3.21`:
 
-**Recommendation:** Verify whether Plex binds to host IP (`.20`) or LXC IP (`.21`). Update firewall rules or IP groups accordingly.
+| Source | IP |
+|--------|----|
+| Firewall MiniPC group | 192.168.3.20 |
+| rack-homelab-config.md Plex entry | 192.168.3.21 |
 
-### L2 — `Servers-All` IP group is inconsistent
+If the LXC container has its own network interface at `.21`, Proxmox host at `.20` does not forward traffic to it. Rules 3-4 would allow traffic to `.20:32400` where nothing is listening, while Plex at `.21:32400` has no matching allow rule and is **blocked by Rule 13**.
+
+**Potential impact:** Plex may be unreachable from Media VLAN, which is a functional failure of the primary media streaming use case.
+
+**Recommendation:** Verify the actual Plex network configuration. If Plex binds to `.21`, create a `Plex-LXC` IP group and update Rules 3-4 to target it.
+
+### L2 — Home Assistant Traefik route has no Authelia middleware
+
+**Location:** `docker/config/traefik/homeassistant.yml`
+
+**Issue:** The Home Assistant Traefik dynamic configuration defines a router without Authelia middleware:
+```yaml
+routers:
+  homeassistant:
+    rule: "Host(`ha.home.local`)"
+    service: homeassistant
+    entryPoints:
+      - websecure
+    tls: {}
+    # No middlewares reference to authelia
+```
+
+Every other service routed through Traefik has `middlewares=authelia@docker`. HA relies solely on its own authentication. While likely intentional (HA webhooks and API integrations need direct access), this is inconsistent with the defense-in-depth approach applied to all other services.
+
+**Note:** If H2 is fixed (adding port 443 for Media VLAN), `ha.home.local` becomes accessible from Media VLAN through Traefik without Authelia protection.
+
+### L3 — `Servers-All` IP group is inconsistent
 
 **Location:** `docs/network/firewall-config.md` — IP Groups
 
-**Issue:** `Servers-All` contains NAS (`.10`), MiniPC (`.20`), and Printer (`.30`) but excludes Desktop PC (`.40`). The name "Servers-All" is misleading. This group is not used in any current rule but could cause issues if referenced in the future.
+**Issue:** `Servers-All` contains NAS (`.10`), MiniPC (`.20`), and Printer (`.30`) but excludes Desktop PC (`.40`). The name "Servers-All" is misleading. Additionally, if the Plex LXC at `.21` is a separate network entity, it is also missing. This group is not used in any current rule but could cause issues if referenced in the future.
 
-### L3 — TLS minimum version could be TLS 1.3
-
-**Location:** `docker/config/traefik/tls.yml`
-
-**Issue:** `minVersion: VersionTLS12`. All modern clients in this homelab (recent phones, PCs, TVs) support TLS 1.3. Raising the minimum would eliminate older cipher negotiation.
-
-**Risk:** Low — TLS 1.2 with the configured cipher suites is still secure.
-
-### L4 — `sniStrict: false` allows unknown hostname connections
+### L4 — TLS minimum version could be TLS 1.3
 
 **Location:** `docker/config/traefik/tls.yml`
 
-**Issue:** Requests to the NAS IP on port 443 without a valid `Host` header (or with an unknown hostname) will still receive a TLS connection and potentially reach a service. Setting `sniStrict: true` would reject these.
+**Issue:** `minVersion: VersionTLS12`. All modern clients in this homelab (recent phones, PCs, TVs) support TLS 1.3. Raising the minimum would eliminate older cipher negotiation and remove the TLS 1.2 cipher suites entirely (TLS 1.3 uses its own fixed set).
 
-### L5 — Uptime Kuma has direct Docker socket access
+**Risk:** Low — TLS 1.2 with the configured cipher suites (ECDHE + AEAD only) is still secure.
 
-**Location:** `docker/compose.yml` (uptime-kuma service)
+### L5 — `sniStrict: false` allows unknown hostname connections
 
-**Issue:** Uptime Kuma mounts `/var/run/docker.sock:/var/run/docker.sock:ro`. While read-only, this exposes container metadata (names, environment variables, labels). Consider routing through the socket-proxy if Docker monitoring is needed.
+**Location:** `docker/config/traefik/tls.yml`
+
+**Issue:** With `sniStrict: false`, requests to the NAS IP on port 443 without a valid `Host` header (or with an unknown hostname) will still receive a TLS connection and the default certificate. This could allow probing of the Traefik instance. Setting `sniStrict: true` would reject TLS connections to unknown hostnames at the handshake level.
+
+### L6 — Uptime Kuma has direct Docker socket access
+
+**Location:** `docker/compose.yml` line 291
+
+**Issue:** Uptime Kuma mounts `/var/run/docker.sock:/var/run/docker.sock:ro`. While read-only, this still exposes full container metadata (names, environment variables, labels, network configuration) to Uptime Kuma. If Uptime Kuma is compromised, the attacker gains visibility into the entire Docker environment.
+
+The existing socket-proxy was designed specifically to prevent this pattern. Consider routing Uptime Kuma's Docker monitoring through the socket-proxy instead.
 
 ---
 
@@ -188,7 +282,7 @@ regulation:
 
 ### I1 — mDNS port group defined but unused
 
-The `mDNS` port group (5353) is defined in UDM-SE profiles but never referenced in any firewall rule. mDNS reflection operates at the UDM-SE level and does not require a firewall rule. Not a security issue, but unused configuration could cause confusion.
+The `mDNS` port group (5353) is defined in UDM-SE profiles but never referenced in any firewall rule. mDNS reflection operates at the UDM-SE level and does not require a firewall rule. Not a security issue, but unused configuration could cause confusion during maintenance.
 
 ### I2 — No WAN Local / WAN In rules documented
 
@@ -198,24 +292,29 @@ The firewall config only documents LAN In rules. The "Legacy Network Security Co
 
 Home Assistant uses `network_mode: host` for device discovery (Zigbee, Bluetooth, mDNS). This gives it full access to all host network interfaces. A compromised HA instance would have NAS-level network access to all VLANs. This is standard for HA and the trade-off is documented.
 
+### I4 — Docker socket-proxy runs as privileged
+
+The `socket-proxy` container (`docker/compose.yml` line 67) runs with `privileged: true`, which is required for the Tecnativa docker-socket-proxy to function. However, this gives the container nearly equivalent permissions to root on the host. The entire security model (isolating Traefik and Watchtower from the raw Docker socket) depends on the integrity of this single container image. A supply-chain compromise of `tecnativa/docker-socket-proxy:latest` would bypass all socket restrictions.
+
 ---
 
 ## Positive Findings
 
 The following security measures are well-implemented:
 
-- **Rule ordering**: Established/Related first, catch-all deny last
+- **Rule ordering**: Established/Related first, catch-all deny last — correct and robust
 - **VLAN segmentation**: Clean separation of Management, Servers, Media, Guest, IoT
-- **Guest isolation**: Complete RFC1918 block + external-only DNS
-- **IoT isolation**: RFC1918 block with targeted HA exception
-- **Docker socket proxy**: Deny-by-default with explicit permissions
-- **Socket proxy network**: `internal: true` prevents external access
-- **IDS/IPS**: Enabled in prevention mode on IoT and Guest
-- **QoS**: Plex traffic prioritized, Guest bandwidth limited
-- **VPN for downloads**: Gluetun kill switch protects torrent traffic
-- **Authelia 2FA**: Required for Portainer and Traefik dashboard
+- **Guest isolation**: Complete RFC1918 block (Rule 11) prevents access to internal services
+- **IoT isolation**: RFC1918 block (Rule 10) with targeted HA exception (Rule 9) — well-scoped
+- **Docker socket proxy**: Deny-by-default with explicit API permissions (11 endpoints explicitly denied)
+- **Socket proxy network**: `internal: true` prevents external access to the socket proxy
+- **IDS/IPS**: Enabled in prevention mode (not just detection) on IoT and Guest VLANs
+- **QoS**: Plex traffic prioritized (DSCP 46/EF), Guest bandwidth limited (50/10 Mbps)
+- **VPN for downloads**: Gluetun with kill switch protects torrent traffic; IPv6 disabled to prevent leaks
+- **Authelia 2FA**: Required for Portainer and Traefik dashboard (the two most sensitive admin tools)
 - **WebAuthn/Passkey**: Modern passwordless authentication supported
-- **Argon2id**: Strong password hashing with good parameters
-- **TLS cipher suites**: Modern, secure selection (ECDHE + AEAD only)
-- **Self-signed cert**: 4096-bit RSA key, SHA-256, 10-year validity with SAN
-- **Tailscale**: Remote access without port forwarding
+- **Argon2id**: Strong password hashing (65536 KiB memory, 3 iterations, 4 parallelism)
+- **TLS cipher suites**: Modern, secure selection (ECDHE + AEAD only; no CBC, no RSA key exchange)
+- **Self-signed cert**: 4096-bit RSA key, SHA-256, SAN with wildcard — appropriate for internal use
+- **Tailscale**: Remote access via NAT traversal without port forwarding — eliminates WAN exposure
+- **Legacy network risk assessment**: Documented with clear risk acceptance rationale
