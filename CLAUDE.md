@@ -28,7 +28,7 @@ Changes to these files usually require checking the others:
 |------------------|---------------|
 | `docker/compose*.yml` (service) | `Makefile`, `scripts/setup-folders.sh`, `docs/network/rack-homelab-config.md` |
 | `docs/network/rack-homelab-config.md` (IPs/ports) | `docs/network/firewall-config.md`, `docs/setup/*.md` |
-| `docs/network/firewall-config.md` (rules) | `docs/network/rack-homelab-config.md` (IP groups referenced) |
+| `docs/network/firewall-config.md` (rules) | `docs/network/rack-homelab-config.md` (network lists referenced) |
 | Any service port or IP | ALL docs in `docs/network/` and `docs/setup/` |
 | Service hostname/container name | `docker/compose*.yml`, any *arr app config references |
 
@@ -108,7 +108,7 @@ When using VPN, configure *arr apps with hostname `gluetun` (not `qbittorrent`/`
 ### Firewall Rules
 1. Rule order matters - processed sequentially
 2. "Allow Established/Related" must be first
-3. Use IP/Port groups for maintainability
+3. Use network lists for maintainability
 4. Block rules come after specific allow rules
 5. End with catch-all "Block All Inter-VLAN"
 

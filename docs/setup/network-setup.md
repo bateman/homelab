@@ -295,13 +295,13 @@ Verify in **UDM-SE** (Network application): Settings → Devices → Switch → 
 
 ---
 
-## Phase 5: IP and Port Groups
+## Phase 5: Network Lists
 
 > Required for firewall rules. See [`firewall-config.md`](../network/firewall-config.md) for the complete list.
 
-### 5.1 Create IP Groups
+### 5.1 Create IP Address Network Lists
 
-In **UDM-SE** (Network application): Settings → Profiles → IP Groups → Create New Group
+In **UDM-SE** (Network application): Settings → Profiles → Network Lists → Create New
 
 **Group: RFC1918 (Private Networks)**
 - Type: IPv4 Address/Subnet
@@ -313,7 +313,7 @@ In **UDM-SE** (Network application): Settings → Profiles → IP Groups → Cre
 **Group: NAS Server**
 - Type: IPv4 Address/Subnet
 - Addresses:
-  - `192.168.3.10/32`
+  - `192.168.3.10`
 
 **Group: Media Clients**
 - Type: IPv4 Address/Subnet
@@ -323,11 +323,11 @@ In **UDM-SE** (Network application): Settings → Profiles → IP Groups → Cre
 **Group: Plex Server**
 - Type: IPv4 Address/Subnet
 - Addresses:
-  - `192.168.3.21/32`
+  - `192.168.3.21`
 
-### 5.2 Create Port Groups
+### 5.2 Create Port Network Lists
 
-In **UDM-SE** (Network application): Settings → Profiles → Port Groups → Create New Group
+In **UDM-SE** (Network application): Settings → Profiles → Network Lists → Create New
 
 **Group: Media Services Ports**
 - Ports:
@@ -383,8 +383,8 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 | Description | Media VLAN to NAS Media Services |
 | Action | Allow |
 | Source | Network: Media |
-| Destination | IP Group: NAS Server |
-| Port Group | Media Services Ports |
+| Destination | Network List: NAS Server |
+| Port | Network List: Media Services Ports |
 
 ### Rule 3: Allow Media to Plex
 
@@ -394,7 +394,7 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 | Description | Media VLAN to Plex |
 | Action | Allow |
 | Source | Network: Media |
-| Destination | IP Group: Plex Server |
+| Destination | Network List: Plex Server |
 | Port | 32400 |
 
 ### Rule 4: Allow IoT to Home Assistant
@@ -405,7 +405,7 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 | Description | IoT to Home Assistant |
 | Action | Allow |
 | Source | Network: IoT |
-| Destination | IP Group: NAS Server |
+| Destination | Network List: NAS Server |
 | Port | 8123 |
 
 ### Rule 5: Block All Inter-VLAN (LAST)
@@ -415,8 +415,8 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 | Type | LAN In |
 | Description | Block All Inter-VLAN Traffic |
 | Action | Drop |
-| Source | IP Group: RFC1918 |
-| Destination | IP Group: RFC1918 |
+| Source | Network List: RFC1918 |
+| Destination | Network List: RFC1918 |
 
 > [!WARNING]
 > This rule MUST be last. It blocks all inter-VLAN traffic not explicitly allowed.

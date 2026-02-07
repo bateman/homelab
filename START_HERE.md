@@ -103,8 +103,8 @@ Create the following networks in **Settings → Networks**:
 
 **Reference:** [`docs/network/firewall-config.md`](docs/network/firewall-config.md)
 
-1. [ ] Create IP groups (see `firewall-config.md` section "IP Groups")
-2. [ ] Create port groups (see `firewall-config.md` section "Port Groups")
+1. [ ] Create IP address network lists (see `firewall-config.md` section "IP Address Network Lists")
+2. [ ] Create port network lists (see `firewall-config.md` section "Port Network Lists")
 3. [ ] Insert firewall rules in the exact order specified
 
 ### Phase 2 Verification
