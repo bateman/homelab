@@ -56,7 +56,7 @@ With sides closed, you only have **two openings** for cable entry and exit:
 
 ## Cable Inventory
 
-> Every cable in the build, its label, color, route, and when it gets handled. Use this table as a checklist — each cable has exactly two events: **routed** (physically placed) and **connected** (plugged in).
+> Master list of all cables. Use this to verify you have everything before starting. The **Routed** column = when the cable is physically placed in the rack. The **Connected** column = when it gets plugged in.
 
 ### Ethernet Cables
 
@@ -73,7 +73,7 @@ Labeled using the [color coding system](../network/rack-homelab-config.md#networ
 
 ### Front Patch Cables (Patch Panel → Switch)
 
-Pre-made short cables. Use **green** to match the room drops they extend — same label, same color.
+Short (~30 cm) pre-made cables that connect the front of the patch panel (U4) to the switch (U6). Use green cables with the same labels as the room drops they serve.
 
 | Label | Color | Length | From | To | Connected |
 |-------|-------|--------|------|----|-----------|
@@ -109,15 +109,12 @@ Do as much work as possible **outside** the rack — it is always easier on a fl
 
 ### 1.1 Prepare the Patch Panel
 
-Lay out patch panel materials on a workbench:
+Get the patch panel frame and keystone jacks ready on a workbench. **Do not punch down (terminate) cables yet** — that happens later in Phase 3.5.
 
 1. Unpack the keystone patch panel frame and verify all 12 keystone slots are intact
-2. Lay out one keystone jack (Cat6A/Cat7) per in-wall cable run
+2. Lay out one keystone jack (Cat6A/Cat7) per in-wall cable run — you need 3 (Studio, Living, Bedroom)
 3. Have ready: punch-down tool (or toolless keystones), cable stripper, cable tester
 4. Label each keystone slot on the panel frame (PP-03 Studio, PP-04 Living, PP-05 Bedroom — see [patch panel port assignments](../network/rack-homelab-config.md#u4--deleycon-patch-panel))
-
-> [!NOTE]
-> Actual cable termination happens after cables are routed into the rack (Phase 2). The panel will be terminated on the workbench in Phase 3.5 before it is mounted.
 
 ### 1.2 Pre-Label Everything
 
@@ -144,7 +141,7 @@ Label **both ends** of every cable before it enters the rack. Use the color codi
 | GRN-03 Bedroom | 🟢 Green | Front patch cable ~30 cm | PP-05 front (U4) → Switch Port 5 (U6) |
 
 > [!TIP]
-> The front patch cables carry the **same label and color** as the in-wall run they extend. This means you can trace a room connection end-to-end: green cable in the wall → green keystone at patch panel rear → green patch cable on front → switch port.
+> Front patch cables use the **same label and color** as the in-wall run they connect to. This makes it easy to trace a room connection from wall plate to switch port.
 
 ### 1.3 Dry-Fit Equipment
 
@@ -155,7 +152,7 @@ Confirm every device fits its intended U position with the correct mounting hard
 - Depth clearance is sufficient (measure from front rail to wall)
 
 > [!WARNING]
-> The NAS and UPS are the deepest devices. Verify they clear the wall behind the rack **before** installation — you do not want to discover a fit problem with 15kg already on the rails.
+> The NAS and UPS are the deepest devices. Measure the distance from the front rail to the wall and confirm both fit **before** installation.
 
 ---
 
@@ -241,7 +238,7 @@ The UPS is the heaviest single item (~15 kg). Install it first.
 4. **Do NOT plug the mains cable into the wall outlet yet** — no power until Phase 5
 
 > [!WARNING]
-> Have a second person help lift the UPS into position. Lifting 15 kg at an awkward angle into a wall-mounted rack is a common cause of dropped equipment and stripped cage nuts.
+> Use two people. The UPS weighs ~15 kg and lifting it at an angle into a wall-mounted rack risks dropping it or stripping cage nuts.
 
 ### 3.2 Insulation — Neoprene 5mm
 
@@ -256,35 +253,28 @@ Place the neoprene pad on top of the UPS in U1, before the NAS goes in. It absor
 ### 3.4 U3 — Rack Power Strip
 
 1. Mount the power strip in U3
-2. Route its IEC C14 input cable **downward** to UPS C13 outlet #4
-3. Connect the input cable to the UPS — this is a short internal cable so it can be done now
+2. Connect its IEC C14 input cable to UPS C13 outlet #4 (short cable, runs straight down to U1)
 
-### 3.5 U4 — Patch Panel (Critical Step)
+### 3.5 U4 — Patch Panel
 
-This is the most timing-sensitive installation in the entire build. The upper half of the rack is still empty — use this window to terminate and mount the panel.
+**Do this before installing the UDM-SE (U5) and Switch (U6).** Once those are in place above U4, you cannot reach the back of the patch panel through the top opening.
+
+Only the three 🟢 green room-drop cables get terminated here. The ⚪ white cables (WHT-WAN, WHT-01 AP) stay in the rack — they plug directly into devices later.
 
 **Step A — Terminate on the workbench (not in the rack):**
 
-Only the three 🟢 green room-drop cables get terminated onto the patch panel. The ⚪ white cables (WHT-WAN, WHT-01 AP) stay in the rack — they connect directly to devices later.
-
-1. Pull the three green cables (GRN-01, GRN-02, GRN-03) from their service loops at U4 level out through the top opening with enough slack to reach your workbench
-2. For each green cable: strip the jacket → punch down onto a keystone jack (or use toolless keystones) → snap the keystone into the correct panel slot:
+1. Pull the three green cables (GRN-01, GRN-02, GRN-03) out through the top opening, using the service loops at U4 level. Pull enough slack to reach your workbench.
+2. For each cable: strip the jacket, punch down onto a keystone jack (or use toolless keystones), and snap the keystone into the correct panel slot:
    - GRN-01 Studio → slot PP-03
    - GRN-02 Living → slot PP-04
    - GRN-03 Bedroom → slot PP-05
 3. Test every terminated port with a cable tester before the panel goes into the rack
 
-> [!TIP]
-> Terminating keystones on a flat, well-lit surface is significantly easier than working inside a closed-side rack. This is the single biggest time-saver in the entire build.
-
 **Step B — Mount the panel:**
 
-4. Carefully feed the terminated cables back through the top opening
+4. Feed the terminated cables back through the top opening
 5. Slide the patch panel into U4 and secure with front screws
-6. Dress the rear cables neatly — tuck excess into service loops held with velcro
-
-> [!IMPORTANT]
-> **Why now?** The patch panel sits at U4. Above it will be the UDM-SE (U5) and Switch (U6). Once those are installed, the space above U4 is occupied and reaching the patch panel's rear through the top opening becomes very difficult. This is your last comfortable chance to work behind the patch panel.
+6. Tidy up the rear cables — tuck excess into service loops held with velcro
 
 ### 3.6 Checkpoint — Lower Half Complete
 
@@ -298,13 +288,13 @@ Before proceeding to the upper half, verify:
 - [ ] Cable bundle is tidy along rear edge, no loose loops hanging
 
 > [!TIP]
-> Take a photo of the rear cable routing now. If you ever need to re-terminate a cable, this photo is your reference for how everything was dressed.
+> Take a photo of the rear cable routing now for future reference.
 
 ### 3.7 U5 — UDM-SE
 
 1. Slide the UDM-SE into U5
 2. Secure with front screws
-3. Take the ⚪ white WAN cable (**WHT-WAN**, hanging from Phase 2.1 at U5 level) and connect it to the WAN RJ45 port on the UDM-SE rear
+3. Connect the ⚪ white WAN cable (**WHT-WAN**, at U5 from Phase 2.1) to the UDM-SE rear WAN RJ45 port
 
 ### 3.8 U6 — PoE Switch (USW-Pro-Max-16-PoE)
 
