@@ -334,7 +334,7 @@ PHASE 3 — INSTALL BOTTOM → UP   PHASE 4 — CABLE FROM FRONT
 │ ░░  Neoprene ........ ② │      │   devices)              │
 │ U2  NAS ............. ③ │      │ ✦ SFP+ backbone         │
 │ U3  Power Strip ..... ④ │      │ ✦ Patch cables (PP →    │
-│ U4  Patch Panel ..... ⑤ │      │   switch, short 15-30cm)│
+│ U4  Patch Panel ..... ⑤ │      │   switch, short ~30cm)  │
 │  ►  TERMINATE REAR  ◄   │      │ ✦ AP & Mini PC ethernet │
 │ U5  UDM-SE .......... ⑥ │      │ ✦ Cable dress & labels  │
 │ U6  Switch .......... ⑦ │      └─────────────────────────┘
