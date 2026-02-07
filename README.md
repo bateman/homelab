@@ -22,7 +22,7 @@ Infrastructure-as-code configuration for a homelab based on QNAP NAS and Proxmox
 | [Ubiquiti UniFi Dream Machine SE](https://store.ui.com/us/en/category/cloud-gateways-large-scale/products/udm-se) | Router/Firewall | 192.168.2.1 |
 | [Ubiquiti USW-Pro-Max-16-PoE](https://store.ui.com/us/en/products/usw-pro-max-16-poe) | PoE Switch | 192.168.2.10 |
 | [Ubiquiti U6-Pro](https://store.ui.com/us/en/category/wifi-flagship-high-capacity/products/u6-pro) | Wi-Fi 6 Access Point | DHCP |
-| [Eaton 5P 650i Rack G2](https://www.eaton.com/us/en-us/catalog/backup-power-ups-surge-it-power-distribution/eaton-5p-ups.html) | UPS / Uninterruptible Power Supply | - |
+| [Eaton 5P 650i Rack G2](https://www.eaton.com/content/dam/eaton/products/backup-power-ups-surge-it-power-distribution/backup-power-ups/5P-Gen2-UPS---EMEA/eaton-5p-gen2-ups-emea-resources/eaton-5pgen2-rack-user-manual-en-us.pdf) | UPS / Uninterruptible Power Supply | - |
 
 ## Docker Stack (NAS)
 
