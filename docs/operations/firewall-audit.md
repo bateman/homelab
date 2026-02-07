@@ -155,7 +155,11 @@ Or better: fix H2 (allow port 443) and route all Media traffic through Traefik+A
 
 This undermines Pi-hole's ad-blocking and any DNS-based security filtering.
 
-**Recommendation:** Add a LAN Out or Internet Out rule that drops outbound DNS (TCP/UDP 53) from VLANs 2, 4, and 6 to any destination except NAS (192.168.3.10). Guest VLAN should be exempt since it uses Cloudflare directly by design.
+**Trade-off:** The DNS architecture intentionally configures Cloudflare (1.1.1.1) as secondary DNS on VLANs 2, 4, and 6 so that DNS continues working during Pi-hole outages (`firewall-config.md` → DNS Configuration → Fallback Behavior). Blocking external DNS would break this fallback, leaving all VLANs with no DNS resolution when Pi-hole is down.
+
+**Recommendation (choose one):**
+- **Option A — Keep fallback, accept bypass risk:** No change. Accept that devices can bypass Pi-hole. This is the current trade-off.
+- **Option B — Block external DNS, deploy redundant Pi-hole:** Add a LAN In rule (after Rule 2) that drops DNS (TCP/UDP 53) from VLANs 2, 4, and 6 to any destination except NAS. Then deploy a second Pi-hole on Proxmox with Gravity Sync (as suggested in the DNS doc) to restore redundancy. Guest VLAN should be exempt since it uses Cloudflare by design.
 
 ### M5 — Guest VLAN can reach Pi-hole DNS (information leak)
 
@@ -304,9 +308,9 @@ The following security measures are well-implemented:
 
 - **Rule ordering**: Established/Related first, catch-all deny last — correct and robust
 - **VLAN segmentation**: Clean separation of Management, Servers, Media, Guest, IoT
-- **Guest isolation**: Complete RFC1918 block (Rule 11) prevents access to internal services
+- **Guest isolation**: RFC1918 block (Rule 11) prevents access to internal services (note: DNS exception exists per M5)
 - **IoT isolation**: RFC1918 block (Rule 10) with targeted HA exception (Rule 9) — well-scoped
-- **Docker socket proxy**: Deny-by-default with explicit API permissions (11 endpoints explicitly denied)
+- **Docker socket proxy**: Deny-by-default with explicit API permissions (14 endpoints explicitly denied)
 - **Socket proxy network**: `internal: true` prevents external access to the socket proxy
 - **IDS/IPS**: Enabled in prevention mode (not just detection) on IoT and Guest VLANs
 - **QoS**: Plex traffic prioritized (DSCP 46/EF), Guest bandwidth limited (50/10 Mbps)
