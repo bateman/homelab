@@ -109,7 +109,7 @@ If your usage pattern is predictable:
 
 ## 3. Wi-Fi Access Point Scheduling
 
-> WLAN scheduling and guest network scheduling are configured during initial setup. See [`network-setup.md` Phase 7.3](../setup/network-setup.md#73-wlan-scheduling-optional).
+> WLAN scheduling and guest network scheduling are configured during initial setup. See [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wlan-scheduling-optional).
 
 This section covers additional power-saving options beyond radio scheduling.
 
@@ -464,7 +464,7 @@ Home Assistant can centralize power management with intelligent automations.
 > Choose either cron (Section 4.3) OR Home Assistant automations for power save scheduling, not both.
 
 > [!TIP]
-> For UniFi AP PoE control, the built-in UniFi integration doesn't support PoE port toggling directly. Use the UniFi Controller's WLAN scheduling instead (see [`network-setup.md` Phase 7.3](../setup/network-setup.md#73-wlan-scheduling-optional)), or create custom shell commands using the UniFi API.
+> For UniFi AP PoE control, the built-in UniFi integration doesn't support PoE port toggling directly. Use the UniFi Controller's WLAN scheduling instead (see [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wlan-scheduling-optional)), or create custom shell commands using the UniFi API.
 
 **Shell commands** (`docker/config/homeassistant/configuration.yaml`):
 
@@ -580,7 +580,7 @@ echo "powersave" > /sys/module/pcie_aspm/parameters/policy
 
 - [ ] Configure HDD spindown on NAS (30 min)
 - [ ] Set LED brightness schedule on NAS
-- [ ] Enable Wi-Fi WLAN scheduling (see [`network-setup.md` Phase 7.3](../setup/network-setup.md#73-wlan-scheduling-optional))
+- [ ] Enable Wi-Fi WLAN scheduling (see [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wlan-scheduling-optional))
 
 ### Phase 2: Proxmox Optimization
 

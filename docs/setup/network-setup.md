@@ -442,7 +442,33 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 | Power | PoE from USW-Pro-Max-16-PoE port 2 |
 | IP | 192.168.2.20 (DHCP or fixed in Management VLAN) |
 
-### 7.2 Create WiFi Networks (SSIDs)
+### 7.2 Radio Settings
+
+In **UDM-SE** (Network application): Devices → U6-Pro → Settings (gear icon) → Radios
+
+**2.4 GHz**
+
+| Setting | Value | Reason |
+|---------|-------|--------|
+| Channel Width | **20 MHz** | Only 3 non-overlapping channels (1, 6, 11) at 20 MHz — wider channels cause co-channel interference |
+| Channel | **Auto** | Fine for single AP; manually pick 1, 6, or 11 if you know your RF environment |
+| Transmit Power | **Auto** | Appropriate for single AP |
+| Minimum RSSI | **Unchecked** | Only useful with multiple APs for roaming |
+
+**5 GHz**
+
+| Setting | Value | Reason |
+|---------|-------|--------|
+| Channel Width | **80 MHz** | Sweet spot for Wi-Fi 6 throughput; 40 MHz leaves performance on the table, 160 MHz is limited by DFS channel constraints |
+| Channel | **Auto** | Fine for single AP |
+| Transmit Power | **Auto** | Appropriate for single AP |
+| Roaming Assistant | **Unchecked** | Only useful with multiple APs |
+| Minimum RSSI | **Unchecked** | Only useful with multiple APs for roaming |
+
+> [!NOTE]
+> If you add a second AP in the future, revisit Transmit Power (set to Medium/Low to reduce overlap), enable Minimum RSSI (~-75 dBm), and consider enabling Roaming Assistant to improve client handoff.
+
+### 7.3 Create WiFi Networks (SSIDs)
 
 In **UDM-SE** (Network application): Settings → WiFi → Create New WiFi Network
 
@@ -481,7 +507,7 @@ In **UDM-SE** (Network application): Settings → WiFi → Create New WiFi Netwo
 >
 > **You can still manage everything from WiFi.** The UniFi controller on the UDM-SE is accessible at the gateway IP of whichever VLAN you're connected to. From "Homelab" WiFi (Media VLAN): open `https://192.168.4.1` or use the UniFi mobile app. This manages the UDM-SE, switch, and AP — no need to be on the Management VLAN itself.
 
-### 7.3 WLAN Scheduling (Optional)
+### 7.4 WLAN Scheduling (Optional)
 
 Wi-Fi radios can be scheduled to disable overnight when not needed, reducing power consumption.
 
@@ -501,7 +527,7 @@ In **UDM-SE** (Network application): Settings → WiFi → Select Network → Ad
 > [!TIP]
 > WLAN scheduling disables the radio but keeps the AP powered for management. For complete power-off options (PoE control, smart plugs), see [`energy-saving-strategies.md`](../operations/energy-saving-strategies.md#32-alternative-device-level-scheduling).
 
-### 7.4 Verify WiFi
+### 7.5 Verify WiFi
 
 1. Connect a phone to each SSID
 2. Verify correct VLAN assignment:
