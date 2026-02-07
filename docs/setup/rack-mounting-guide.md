@@ -57,16 +57,17 @@ With sides closed, you only have **two openings** for cable entry and exit:
 
 Do as much work as possible **outside** the rack — it is always easier on a flat surface.
 
-### 1.1 Pre-Terminate the Patch Panel
+### 1.1 Prepare the Patch Panel
 
-Mount keystone jacks into the patch panel on a workbench:
+Lay out patch panel materials on a workbench:
 
-1. Punch down all in-wall cable runs onto their keystone jacks using a punch-down tool or toolless keystones
-2. Snap keystones into the patch panel in the correct port positions (see [patch panel port assignments](../network/rack-homelab-config.md#u4--deleycon-patch-panel))
-3. Test each terminated port with a cable tester before the panel goes into the rack
+1. Unpack the keystone patch panel frame and verify all 12 keystone slots are intact
+2. Lay out one keystone jack (Cat6A/Cat7) per in-wall cable run
+3. Have ready: punch-down tool (or toolless keystones), cable stripper, cable tester
+4. Label each keystone slot on the panel frame (PP-03 Studio, PP-04 Living, PP-05 Bedroom — see [patch panel port assignments](../network/rack-homelab-config.md#u4--deleycon-patch-panel))
 
-> [!TIP]
-> This is by far the most important time-saving step. Terminating keystones inside a closed-side rack — hunched over, with limited visibility — is frustrating and error-prone. Do it on the bench.
+> [!NOTE]
+> Actual cable termination happens after cables are routed into the rack (Phase 2). The panel will be terminated on the workbench in Phase 3.5 before it is mounted.
 
 ### 1.2 Pre-Label Everything
 
@@ -173,13 +174,22 @@ Place the neoprene pad on top of the UPS in U1, before the NAS goes in. It absor
 
 ### 3.5 U4 — Patch Panel (Critical Step)
 
-This is the most timing-sensitive installation in the entire build.
+This is the most timing-sensitive installation in the entire build. The upper half of the rack is still empty — use this window to terminate and mount the panel.
 
-1. Slide the pre-terminated patch panel into U4
-2. Secure with front screws
-3. **Immediately connect the rear cables:**
-   - Take each in-wall cable from the service loops (routed in Phase 2) and connect to the corresponding rear keystone jack
-   - Dress the cables neatly behind the panel — tuck excess into service loops held with velcro
+**Step A — Terminate on the workbench (not in the rack):**
+
+1. Pull each in-wall cable from its service loop (routed in Phase 2) out through the top opening with enough slack to reach your workbench
+2. For each cable: strip the jacket → punch down onto a keystone jack (or use toolless keystones) → snap the keystone into the correct panel slot
+3. Test every terminated port with a cable tester before the panel goes into the rack
+
+> [!TIP]
+> Terminating keystones on a flat, well-lit surface is significantly easier than working inside a closed-side rack. This is the single biggest time-saver in the entire build.
+
+**Step B — Mount the panel:**
+
+4. Carefully feed the terminated cables back through the top opening
+5. Slide the patch panel into U4 and secure with front screws
+6. Dress the rear cables neatly — tuck excess into service loops held with velcro
 
 > [!IMPORTANT]
 > **Why now?** The patch panel sits at U4. Above it will be the UDM-SE (U5) and Switch (U6). Once those are installed, the space above U4 is occupied and reaching the patch panel's rear through the top opening becomes very difficult. This is your last comfortable chance to work behind the patch panel.
@@ -192,7 +202,7 @@ Before proceeding to the upper half, verify:
 - [ ] Neoprene insulation in place
 - [ ] NAS seated and secured at U2
 - [ ] Power strip mounted at U3, connected to UPS
-- [ ] Patch panel seated at U4 with all rear cables terminated and dressed
+- [ ] Patch panel mounted at U4 with all keystones terminated, tested, and cables dressed
 - [ ] Cable bundle is tidy along rear edge, no loose loops hanging
 
 > [!TIP]
@@ -321,8 +331,8 @@ Power on devices in this order, waiting for each to fully boot before starting t
 ```
 PHASE 1 — WORKBENCH              PHASE 2 — EMPTY RACK
 ┌─────────────────────────┐      ┌─────────────────────────┐
-│ ✦ Terminate patch panel │      │ ✦ Route in-wall cables  │
-│   keystones on bench    │      │   through TOP opening   │
+│ ✦ Prepare patch panel   │      │ ✦ Route in-wall cables  │
+│   and keystone jacks    │      │   through TOP opening   │
 │ ✦ Label all cables      │      │ ✦ Route UPS mains cable │
 │ ✦ Dry-fit equipment     │      │   through BOTTOM opening│
 └─────────────────────────┘      └─────────────────────────┘
@@ -335,7 +345,7 @@ PHASE 3 — INSTALL BOTTOM → UP   PHASE 4 — CABLE FROM FRONT
 │ U2  NAS ............. ③ │      │ ✦ SFP+ backbone         │
 │ U3  Power Strip ..... ④ │      │ ✦ Patch cables (PP →    │
 │ U4  Patch Panel ..... ⑤ │      │   switch, short ~30cm)  │
-│  ►  TERMINATE REAR  ◄   │      │ ✦ AP & Mini PC ethernet │
+│  ► TERMINATE + MOUNT ◄  │      │ ✦ AP & Mini PC ethernet │
 │ U5  UDM-SE .......... ⑥ │      │ ✦ Cable dress & labels  │
 │ U6  Switch .......... ⑦ │      └─────────────────────────┘
 │ U7  Vented Panel .... ⑧ │                  │
