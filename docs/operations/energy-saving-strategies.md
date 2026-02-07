@@ -109,7 +109,7 @@ If your usage pattern is predictable:
 
 ## 3. Wi-Fi Access Point Scheduling
 
-> WLAN scheduling and guest network scheduling are configured during initial setup. See [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wlan-scheduling-optional).
+> WiFi Blackout Schedule and guest network scheduling are configured during initial setup. See [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wifi-blackout-schedule-optional).
 
 This section covers additional power-saving options beyond radio scheduling.
 
@@ -142,7 +142,7 @@ curl -k -X PUT "https://192.168.2.1:443/api/s/default/rest/device/<switch_id>" \
 ```
 
 > [!TIP]
-> For simplicity, use WLAN scheduling instead of PoE control. WLAN scheduling disables the radio but keeps the AP powered for management.
+> For simplicity, use WiFi Blackout Schedule instead of PoE control. WiFi Blackout Schedule disables the radio but keeps the AP powered for management.
 
 ---
 
@@ -464,7 +464,7 @@ Home Assistant can centralize power management with intelligent automations.
 > Choose either cron (Section 4.3) OR Home Assistant automations for power save scheduling, not both.
 
 > [!TIP]
-> For UniFi AP PoE control, the built-in UniFi integration doesn't support PoE port toggling directly. Use the UniFi Controller's WLAN scheduling instead (see [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wlan-scheduling-optional)), or create custom shell commands using the UniFi API.
+> For UniFi AP PoE control, the built-in UniFi integration doesn't support PoE port toggling directly. Use the UniFi Controller's WiFi Blackout Schedule instead (see [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wifi-blackout-schedule-optional)), or create custom shell commands using the UniFi API.
 
 **Shell commands** (`docker/config/homeassistant/configuration.yaml`):
 
@@ -580,7 +580,7 @@ echo "powersave" > /sys/module/pcie_aspm/parameters/policy
 
 - [ ] Configure HDD spindown on NAS (30 min)
 - [ ] Set LED brightness schedule on NAS
-- [ ] Enable Wi-Fi WLAN scheduling (see [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wlan-scheduling-optional))
+- [ ] Enable WiFi Blackout Schedule (see [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wifi-blackout-schedule-optional))
 
 ### Phase 2: Proxmox Optimization
 
@@ -657,7 +657,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 
 - [Proxmox WOL Setup](../setup/proxmox-setup.md#82-wake-on-lan-wol)
 - [QNAP Power Management Documentation](https://www.qnap.com/en/how-to/faq/article/how-to-configure-hard-drive-standby-mode)
-- [UniFi WLAN Scheduling](https://help.ui.com/hc/en-us/articles/115012723447)
+- [UniFi WiFi Blackout Schedule](https://help.ui.com/hc/en-us/articles/115012723447)
 - [NUT Documentation](https://networkupstools.org/docs/man/)
 - [Home Assistant WOL Integration](https://www.home-assistant.io/integrations/wake_on_lan/)
 

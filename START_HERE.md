@@ -430,7 +430,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 
 1. [ ] Configure HDD spindown on NAS (30 minutes idle)
 2. [ ] Set LED brightness schedule (dim overnight)
-3. [ ] Enable Wi-Fi WLAN scheduling in UniFi (disable overnight if not needed)
+3. [ ] Enable WiFi Blackout Schedule in UniFi (disable overnight if not needed)
 
 ### 9.2 Proxmox Power Management
 

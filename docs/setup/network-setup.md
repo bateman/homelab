@@ -507,11 +507,11 @@ In **UDM-SE** (Network application): Settings → WiFi → Create New WiFi Netwo
 >
 > **You can still manage everything from WiFi.** The UniFi controller on the UDM-SE is accessible at the gateway IP of whichever VLAN you're connected to. From "Homelab" WiFi (Media VLAN): open `https://192.168.4.1` or use the UniFi mobile app. This manages the UDM-SE, switch, and AP — no need to be on the Management VLAN itself.
 
-### 7.4 WLAN Scheduling (Optional)
+### 7.4 WiFi Blackout Schedule (Optional)
 
 Wi-Fi radios can be scheduled to disable overnight when not needed, reducing power consumption.
 
-In **UDM-SE** (Network application): Settings → WiFi → Select Network → Advanced → WLAN Schedule
+In **UDM-SE** (Network application): Settings → WiFi → Select Network → Advanced → WiFi Blackout Schedule
 
 | Day | Active Hours | Notes |
 |-----|--------------|-------|
@@ -521,11 +521,11 @@ In **UDM-SE** (Network application): Settings → WiFi → Select Network → Ad
 **Guest network scheduling** (shorter window):
 
 1. Settings → WiFi → Homelab-Guest
-2. WLAN Schedule → Enable
+2. WiFi Blackout Schedule → Enable
 3. Active: 08:00–23:00
 
 > [!TIP]
-> WLAN scheduling disables the radio but keeps the AP powered for management. For complete power-off options (PoE control, smart plugs), see [`energy-saving-strategies.md`](../operations/energy-saving-strategies.md#32-alternative-device-level-scheduling).
+> WiFi Blackout Schedule disables the radio but keeps the AP powered for management. For complete power-off options (PoE control, smart plugs), see [`energy-saving-strategies.md`](../operations/energy-saving-strategies.md#32-alternative-device-level-scheduling).
 
 ### 7.5 Verify WiFi
 

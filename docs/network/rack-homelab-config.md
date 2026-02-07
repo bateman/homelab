@@ -180,7 +180,7 @@
 | IP | 192.168.2.20 |
 | VLAN | Management (VLAN 2) |
 
-> For AP adoption, WiFi SSID setup, and WLAN scheduling, see [`network-setup.md` Phase 7](../setup/network-setup.md#phase-7-wi-fi-access-point-setup).
+> For AP adoption, WiFi SSID setup, and WiFi Blackout Schedule, see [`network-setup.md` Phase 7](../setup/network-setup.md#phase-7-wi-fi-access-point-setup).
 
 ---
 
