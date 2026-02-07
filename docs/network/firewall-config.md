@@ -194,6 +194,16 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 
 Rules are processed in order, from first to last. Order matters.
 
+> [!TIP]
+> **UI field mapping:** Use the **Advanced** tab when creating rules. The simplified table fields below map to:
+> - **Source** → Source > Address Group
+> - **Destination** → Destination > Address Group
+> - **Port** → **Destination > Port List** (select or create a port group)
+> - **Protocol** → Protocol dropdown (must be TCP, UDP, or TCP/UDP for port-based rules — not "All")
+> - **States** → Advanced > set to Manual, then check the states
+>
+> For step-by-step UI screenshots, see [`network-setup.md` Phase 6](../setup/network-setup.md#phase-6-firewall-rules).
+
 ### Rule 1 — Allow Established/Related
 
 | Field | Value |

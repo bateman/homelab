@@ -360,63 +360,89 @@ In **UDM-SE** (Network application): Settings → Profiles → Port Groups → C
 
 ### 6.1 Rule Order (CRITICAL)
 
-Rules are processed in order. Insert exactly in this sequence:
+Rules are processed in order. Insert exactly in this sequence.
 
 In **UDM-SE** (Network application): Settings → Firewall & Security → Firewall Rules → LAN → Create New Rule
+
+> [!IMPORTANT]
+> **Use the "Advanced" tab** (top right of rule editor) — the "Simple" tab hides fields you need.
+>
+> **UI field mapping** — each rule below maps to these fields in the Advanced UI:
+>
+> | Rule field | UI location |
+> |------------|-------------|
+> | Type | Type dropdown (top) |
+> | Name | Name text field |
+> | Action | Accept / Reject / Drop buttons |
+> | Protocol | Protocol dropdown — **set to TCP or TCP/UDP for port-based rules** (default "All" hides port filtering) |
+> | Source > Address Group | Source → Address Group dropdown |
+> | Destination > Address Group | Destination → Address Group dropdown |
+> | Destination > Port List | Destination → Port List dropdown — **this is where you specify the service port** |
+> | Advanced > Match State | Advanced → set to Manual, then check Established/Related |
+>
+> **"Before Predefined"** checkbox should remain **checked** for all rules (ensures your rules are evaluated before UniFi's built-in rules).
 
 ### Rule 1: Allow Established/Related
 
 | Field | Value |
 |-------|-------|
 | Type | LAN In |
-| Description | Allow Established and Related |
-| Action | Allow |
-| States | Established, Related |
-| Source | Any |
-| Destination | Any |
+| Name | Allow Established and Related |
+| Action | Accept |
+| Protocol | All |
+| Source > Address Group | Any |
+| Destination > Address Group | Any |
+| Advanced | Set to **Manual**, check: **Established**, **Related** |
 
 ### Rule 2: Allow Media to NAS Media Services
 
 | Field | Value |
 |-------|-------|
 | Type | LAN In |
-| Description | Media VLAN to NAS Media Services |
-| Action | Allow |
-| Source | Network: Media |
-| Destination | IP Group: NAS Server |
-| Port Group | Media Services Ports |
+| Name | Media VLAN to NAS Media Services |
+| Action | Accept |
+| Protocol | TCP |
+| Source > Address Group | Media (VLAN network) |
+| Destination > Address Group | NAS Server |
+| Destination > Port List | Media Services Ports |
 
 ### Rule 3: Allow Media to Plex
 
 | Field | Value |
 |-------|-------|
 | Type | LAN In |
-| Description | Media VLAN to Plex |
-| Action | Allow |
-| Source | Network: Media |
-| Destination | IP Group: Plex Server |
-| Port | 32400 |
+| Name | Media VLAN to Plex |
+| Action | Accept |
+| Protocol | TCP |
+| Source > Address Group | Media (VLAN network) |
+| Destination > Address Group | Plex Server |
+| Destination > Port List | Plex (32400) |
+
+> [!TIP]
+> If you haven't created a "Plex" port group yet, click **New** next to the Port List dropdown to create one with port `32400`.
 
 ### Rule 4: Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
 | Type | LAN In |
-| Description | IoT to Home Assistant |
-| Action | Allow |
-| Source | Network: IoT |
-| Destination | IP Group: NAS Server |
-| Port | 8123 |
+| Name | IoT to Home Assistant |
+| Action | Accept |
+| Protocol | TCP |
+| Source > Address Group | IoT (VLAN network) |
+| Destination > Address Group | NAS Server |
+| Destination > Port List | HomeAssistant (8123) |
 
 ### Rule 5: Block All Inter-VLAN (LAST)
 
 | Field | Value |
 |-------|-------|
 | Type | LAN In |
-| Description | Block All Inter-VLAN Traffic |
+| Name | Block All Inter-VLAN Traffic |
 | Action | Drop |
-| Source | IP Group: RFC1918 |
-| Destination | IP Group: RFC1918 |
+| Protocol | All |
+| Source > Address Group | RFC1918 |
+| Destination > Address Group | RFC1918 |
 
 > [!WARNING]
 > This rule MUST be last. It blocks all inter-VLAN traffic not explicitly allowed.
