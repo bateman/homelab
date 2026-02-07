@@ -1,6 +1,6 @@
 # 19" 8U Rack — Mounting & Installation Guide
 
-> Step-by-step order of operations for populating a wall-mounted 8U rack that is **open on top and bottom only** (sides closed).
+> Step-by-step order of operations for filling a wall-mounted 8U rack that is **open on top and bottom only** (sides closed).
 
 ---
 
@@ -20,12 +20,14 @@
 With sides closed, you only have **two openings** for cable entry and exit:
 
 ```
+       ▲ wall outlets (power + network) above rack
         ┌──── TOP OPENING ─────┐
         │                      │
         │   Cable entry from:  │
-        │   • In-wall runs     │
+        │   • In-wall cables   │
         │   • WAN (ISP)        │
         │   • AP PoE cable     │
+        │   • UPS mains power  │
         │                      │
    ┌────┴──────────────────────┴────┐
    │  ┌──────────────────────────┐  │
@@ -41,21 +43,20 @@ With sides closed, you only have **two openings** for cable entry and exit:
    └────┬──────────────────────┬────┘
         │                      │
         │  BOTTOM OPENING      │
-        │   Cable exit for:    │
-        │   • UPS mains power  │
+        │   (unused — wall     │
+        │    outlets are above) │
         │                      │
         └──────────────────────┘
-              ▼ to wall outlet
 ```
 
 > [!IMPORTANT]
-> The **top opening** is your primary cable entry point. Once upper equipment (U5–U8) is installed, routing new cables down to the middle and lower units becomes significantly harder. Plan all cable routes **before** filling the upper half of the rack.
+> The **top opening** is your only cable entry point — wall outlets (power and network) are located above the rack. Once upper equipment (U5–U8) is installed, routing new cables down to the middle and lower units becomes significantly harder. Plan all cable routes — **including the UPS mains power cable** — **before** filling the upper half of the rack.
 
 ---
 
 ## Cable Inventory
 
-> Every cable in the build, its label, color, route, and when it gets handled. Use this table as a checklist — each cable has exactly two events: **routed** (physically placed) and **connected** (plugged in).
+> Master list of all cables. Use this to verify you have everything before starting. The **Routed** column = when the cable is physically placed in the rack. The **Connected** column = when it gets plugged in.
 
 ### Ethernet Cables
 
@@ -63,16 +64,16 @@ Labeled using the [color coding system](../network/rack-homelab-config.md#networ
 
 | Label | Color | Cable Type | From | To | Entry Point | Routed | Connected |
 |-------|-------|-----------|------|-----|-------------|--------|-----------|
-| GRN-01 Studio | 🟢 Green | Cat6A in-wall run | Studio wall plate | PP-03 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
-| GRN-02 Living | 🟢 Green | Cat6A in-wall run | Living room wall plate | PP-04 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
-| GRN-03 Bedroom | 🟢 Green | Cat6A in-wall run | Bedroom wall plate | PP-05 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
+| GRN-01 Studio | 🟢 Green | Cat6A in-wall cable | Studio wall plate | PP-03 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
+| GRN-02 Living | 🟢 Green | Cat6A in-wall cable | Living room wall plate | PP-04 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
+| GRN-03 Bedroom | 🟢 Green | Cat6A in-wall cable | Bedroom wall plate | PP-05 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
 | WHT-WAN | ⚪ White | Cat6 ethernet | ISP router (Iliad Box) | UDM-SE WAN RJ45 port (U5) | Top | Phase 2.1 | Phase 3.7 |
 | WHT-01 AP | ⚪ White | Cat6 PoE | U6-Pro AP (ceiling) | Switch Port 2 (U6) | Top | Phase 2.1 | Phase 4.4 |
 | BLK-01 Proxmox | ⚫ Black | Cat6 ethernet | Mini PC (U8) | Switch port or UDM-SE LAN | Internal | — | Phase 4.4 |
 
 ### Front Patch Cables (Patch Panel → Switch)
 
-Pre-made short cables. Use **green** to match the room drops they extend — same label, same color.
+Short (~30 cm) pre-made cables that connect the front of the patch panel (U4) to the switch (U6). Use green cables with the same labels as the room cables they serve.
 
 | Label | Color | Length | From | To | Connected |
 |-------|-------|--------|------|----|-----------|
@@ -93,7 +94,9 @@ Standard IEC and Schuko cables — not color-coded, but label the UPS mains cabl
 | — | IEC C14→C13 | UPS C13 #3 (U1) | Switch rear (U6) | Phase 4.1 |
 | — | Schuko + adapter | Power strip #1 (U3) | Mini PC (U8) | Phase 4.1 |
 
-### SFP+ Cables (10GbE Backbone)
+### SFP+ Cables (10GbE Links)
+
+DAC = Direct Attach Copper — a short, thick cable with SFP+ connectors on both ends. No separate transceivers needed.
 
 | Label | Cable Type | From | To | Connected |
 |-------|-----------|------|----|-----------|
@@ -108,30 +111,27 @@ Do as much work as possible **outside** the rack — it is always easier on a fl
 
 ### 1.1 Prepare the Patch Panel
 
-Lay out patch panel materials on a workbench:
+Get the patch panel frame and keystone jacks ready on a workbench. **Do not punch down (terminate) cables yet** — that happens later in Phase 3.5.
 
 1. Unpack the keystone patch panel frame and verify all 12 keystone slots are intact
-2. Lay out one keystone jack (Cat6A/Cat7) per in-wall cable run
+2. Lay out one keystone jack (Cat6A/Cat7) per in-wall cable — you need 3 (Studio, Living, Bedroom)
 3. Have ready: punch-down tool (or toolless keystones), cable stripper, cable tester
 4. Label each keystone slot on the panel frame (PP-03 Studio, PP-04 Living, PP-05 Bedroom — see [patch panel port assignments](../network/rack-homelab-config.md#u4--deleycon-patch-panel))
-
-> [!NOTE]
-> Actual cable termination happens after cables are routed into the rack (Phase 2). The panel will be terminated on the workbench in Phase 3.5 before it is mounted.
 
 ### 1.2 Pre-Label Everything
 
 Label **both ends** of every cable before it enters the rack. Use the color coding from the [Cable Inventory](#cable-inventory): 🟢 Green = room devices, ⚪ White = management/uplink, ⚫ Black = rack internal.
 
-**In-wall and external cables** (routed through rack openings):
+**In-wall and external cables** (routed through the top opening):
 
 | Label | Color | Cable | Route |
 |-------|-------|-------|-------|
-| GRN-01 Studio | 🟢 Green | Studio room drop | Top opening → PP-03 rear (U4) |
-| GRN-02 Living | 🟢 Green | Living room drop | Top opening → PP-04 rear (U4) |
-| GRN-03 Bedroom | 🟢 Green | Bedroom room drop | Top opening → PP-05 rear (U4) |
+| GRN-01 Studio | 🟢 Green | Studio room cable | Top opening → PP-03 rear (U4) |
+| GRN-02 Living | 🟢 Green | Living room cable | Top opening → PP-04 rear (U4) |
+| GRN-03 Bedroom | 🟢 Green | Bedroom room cable | Top opening → PP-05 rear (U4) |
 | WHT-WAN | ⚪ White | WAN uplink (ISP) | Top opening → UDM-SE WAN port (U5) |
-| WHT-01 AP | ⚪ White | AP PoE feed | Top opening → Switch Port 2 (U6) |
-| PWR-UPS | — | UPS mains power | Bottom opening → wall outlet |
+| WHT-01 AP | ⚪ White | AP PoE cable | Top opening → Switch Port 2 (U6) |
+| PWR-UPS | — | UPS mains power | Top opening → UPS rear input (U1) |
 
 **Internal rack cables** (never leave the rack):
 
@@ -143,22 +143,22 @@ Label **both ends** of every cable before it enters the rack. Use the color codi
 | GRN-03 Bedroom | 🟢 Green | Front patch cable ~30 cm | PP-05 front (U4) → Switch Port 5 (U6) |
 
 > [!TIP]
-> The front patch cables carry the **same label and color** as the in-wall run they extend. This means you can trace a room connection end-to-end: green cable in the wall → green keystone at patch panel rear → green patch cable on front → switch port.
+> Front patch cables use the **same label and color** as the in-wall cable they connect to. This makes it easy to trace a room connection from wall plate to switch port.
 
-### 1.3 Dry-Fit Equipment
+### 1.3 Test-Fit Equipment
 
-Confirm every device fits its intended U position with the correct mounting hardware:
+Before installing anything, confirm every device physically fits its intended U position:
 
 - Rack ears / rail adapters attached
 - Screws and cage nuts match (M6 is most common for 19" racks)
 - Depth clearance is sufficient (measure from front rail to wall)
 
 > [!WARNING]
-> The NAS and UPS are the deepest devices. Verify they clear the wall behind the rack **before** installation — you do not want to discover a fit problem with 15kg already on the rails.
+> The NAS and UPS are the deepest devices. Measure the distance from the front rail to the wall and confirm both fit **before** installation.
 
 ---
 
-## Phase 2: Cable Rough-In (Empty Rack)
+## Phase 2: Cable Routing (Empty Rack)
 
 **Do this while the rack is still empty.** This is your only chance to route cables freely through the full depth and height of the rack interior.
 
@@ -166,25 +166,25 @@ Confirm every device fits its intended U position with the correct mounting hard
 
 Feed all five external ethernet cables down through the **top opening**, one group at a time:
 
-**Step 1 — Room drops (🟢 Green):** Route the three green in-wall cables together as a bundle.
+**Step 1 — Room cables (🟢 Green):** Route the three green in-wall cables together as a bundle.
 
 | Cable | Label | Destination | Pull down to |
 |-------|-------|-------------|-------------|
-| Studio run | GRN-01 Studio | PP-03 rear keystone (U4) | U4 level |
-| Living room run | GRN-02 Living | PP-04 rear keystone (U4) | U4 level |
-| Bedroom run | GRN-03 Bedroom | PP-05 rear keystone (U4) | U4 level |
+| Studio cable | GRN-01 Studio | PP-03 rear keystone (U4) | U4 level |
+| Living room cable | GRN-02 Living | PP-04 rear keystone (U4) | U4 level |
+| Bedroom cable | GRN-03 Bedroom | PP-05 rear keystone (U4) | U4 level |
 
 **Step 2 — Management/uplink (⚪ White):** Route the two white cables alongside the green bundle.
 
 | Cable | Label | Destination | Pull down to |
 |-------|-------|-------------|-------------|
 | WAN uplink | WHT-WAN | UDM-SE WAN RJ45 port (U5) | U5 level |
-| AP PoE feed | WHT-01 AP | Switch Port 2 (U6) | U6 level |
+| AP PoE cable | WHT-01 AP | Switch Port 2 (U6) | U6 level |
 
 **Step 3 — Secure the bundle:**
 
 1. Route all five cables down the **left or right rear edge** of the rack interior (pick one side and stay consistent)
-2. Leave a **30–40 cm service loop** on each cable at its destination level
+2. Leave **30–40 cm of extra cable** (a service loop) coiled at each cable's destination level — this spare slack lets you pull cables out later for termination or rework
 3. Temporarily secure the bundle to the rear rail or rack frame with velcro straps (not zip ties — you may need to adjust later)
 
 ```
@@ -196,9 +196,9 @@ Feed all five external ethernet cables down through the **top opening**, one gro
     │ along   │◄──── one rear edge (left or right)
     │ rear    │
     │ edge    │
-    │  ⚪─────│──── WHT-01 AP service loop at U6
-    │  ⚪─────│──── WHT-WAN service loop at U5
-    │  🟢🟢🟢│──── GRN-01/02/03 service loops at U4
+    │  ⚪─────│──── WHT-01 AP extra slack at U6
+    │  ⚪─────│──── WHT-WAN extra slack at U5
+    │  🟢🟢🟢│──── GRN-01/02/03 extra slack at U4
     │         │
     └────┬────┘
      BOTTOM
@@ -206,16 +206,19 @@ Feed all five external ethernet cables down through the **top opening**, one gro
 
 ### 2.2 Route the UPS Mains Cable
 
-Feed the UPS power cable **up** through the **bottom opening** and leave it coiled at the U1 position. Do not plug it into the wall yet.
+Feed the UPS power cable **down** through the **top opening** (on the **opposite rear edge** from the ethernet bundle) and leave it coiled at the U1 position. Do not plug it into the wall outlet yet.
+
+> [!TIP]
+> Keep the mains power cable on the **opposite side** of the rack from the ethernet bundle. Separating power and data cables reduces electromagnetic interference.
 
 ### 2.3 Verify Before Proceeding
 
-- [ ] Three green cables (GRN-01/02/03) reach U4 level with service loop to spare
-- [ ] WAN cable (WHT-WAN) reaches U5 level with service loop
-- [ ] AP cable (WHT-01 AP) reaches U6 level with service loop
+- [ ] Three green cables (GRN-01/02/03) reach U4 level with 30–40 cm of extra slack
+- [ ] WAN cable (WHT-WAN) reaches U5 level with extra slack
+- [ ] AP cable (WHT-01 AP) reaches U6 level with extra slack
 - [ ] All five cables secured along one rear edge, not blocking the middle of the rack
-- [ ] UPS mains cable (PWR-UPS) accessible at U1
-- [ ] Top and bottom openings still have clearance for equipment to slide in
+- [ ] UPS mains cable (PWR-UPS) routed from top opening down to U1, on opposite side from ethernet bundle
+- [ ] Top opening still has clearance for equipment to slide in
 
 ---
 
@@ -237,11 +240,11 @@ The UPS is the heaviest single item (~15 kg). Install it first.
 4. **Do NOT plug the mains cable into the wall outlet yet** — no power until Phase 5
 
 > [!WARNING]
-> Have a second person help lift the UPS into position. Lifting 15 kg at an awkward angle into a wall-mounted rack is a common cause of dropped equipment and stripped cage nuts.
+> Use two people. The UPS weighs ~15 kg and lifting it at an angle into a wall-mounted rack risks dropping it or stripping cage nuts.
 
 ### 3.2 Insulation — Neoprene 5mm
 
-Place the neoprene pad on top of the UPS in U1, before the NAS goes in. It absorbs vibrations from HDD spindles and provides thermal separation.
+Place the neoprene pad on top of the UPS in U1, before the NAS goes in. It absorbs hard drive vibrations and provides thermal separation.
 
 ### 3.3 U2 — QNAP NAS (TS-435XeU)
 
@@ -252,35 +255,28 @@ Place the neoprene pad on top of the UPS in U1, before the NAS goes in. It absor
 ### 3.4 U3 — Rack Power Strip
 
 1. Mount the power strip in U3
-2. Route its IEC C14 input cable **downward** to UPS C13 outlet #4
-3. Connect the input cable to the UPS — this is a short internal cable so it can be done now
+2. Connect its IEC C14 input cable to UPS C13 outlet #4 (short cable, runs straight down to U1)
 
-### 3.5 U4 — Patch Panel (Critical Step)
+### 3.5 U4 — Patch Panel
 
-This is the most timing-sensitive installation in the entire build. The upper half of the rack is still empty — use this window to terminate and mount the panel.
+**Do this before installing the UDM-SE (U5) and Switch (U6).** Once those are in place above U4, you cannot reach the back of the patch panel through the top opening.
+
+Only the three 🟢 green room cables get terminated here. The ⚪ white cables (WHT-WAN, WHT-01 AP) stay in the rack — they plug directly into devices later.
 
 **Step A — Terminate on the workbench (not in the rack):**
 
-Only the three 🟢 green room-drop cables get terminated onto the patch panel. The ⚪ white cables (WHT-WAN, WHT-01 AP) stay in the rack — they connect directly to devices later.
-
-1. Pull the three green cables (GRN-01, GRN-02, GRN-03) from their service loops at U4 level out through the top opening with enough slack to reach your workbench
-2. For each green cable: strip the jacket → punch down onto a keystone jack (or use toolless keystones) → snap the keystone into the correct panel slot:
+1. Grab the three green cables (GRN-01, GRN-02, GRN-03) at U4 level where you left extra slack in Phase 2.1. Pull them up and out through the top opening — you need enough cable outside the rack to reach your workbench.
+2. For each cable: strip the outer sheath, punch down onto a keystone jack (or use toolless keystones), and snap the keystone into the correct panel slot:
    - GRN-01 Studio → slot PP-03
    - GRN-02 Living → slot PP-04
    - GRN-03 Bedroom → slot PP-05
 3. Test every terminated port with a cable tester before the panel goes into the rack
 
-> [!TIP]
-> Terminating keystones on a flat, well-lit surface is significantly easier than working inside a closed-side rack. This is the single biggest time-saver in the entire build.
-
 **Step B — Mount the panel:**
 
-4. Carefully feed the terminated cables back through the top opening
+4. Feed the terminated cables back through the top opening
 5. Slide the patch panel into U4 and secure with front screws
-6. Dress the rear cables neatly — tuck excess into service loops held with velcro
-
-> [!IMPORTANT]
-> **Why now?** The patch panel sits at U4. Above it will be the UDM-SE (U5) and Switch (U6). Once those are installed, the space above U4 is occupied and reaching the patch panel's rear through the top opening becomes very difficult. This is your last comfortable chance to work behind the patch panel.
+6. Tidy up the rear cables — coil any excess and secure the coils with velcro
 
 ### 3.6 Checkpoint — Lower Half Complete
 
@@ -290,17 +286,17 @@ Before proceeding to the upper half, verify:
 - [ ] Neoprene insulation in place
 - [ ] NAS seated and secured at U2
 - [ ] Power strip mounted at U3, connected to UPS
-- [ ] Patch panel mounted at U4 with all keystones terminated, tested, and cables dressed
+- [ ] Patch panel mounted at U4 with all keystones terminated, tested, and rear cables tidy
 - [ ] Cable bundle is tidy along rear edge, no loose loops hanging
 
 > [!TIP]
-> Take a photo of the rear cable routing now. If you ever need to re-terminate a cable, this photo is your reference for how everything was dressed.
+> Take a photo of the rear cable routing now for future reference.
 
 ### 3.7 U5 — UDM-SE
 
 1. Slide the UDM-SE into U5
 2. Secure with front screws
-3. Take the ⚪ white WAN cable (**WHT-WAN**, hanging from Phase 2.1 at U5 level) and connect it to the WAN RJ45 port on the UDM-SE rear
+3. Connect the ⚪ white WAN cable (**WHT-WAN**, at U5 from Phase 2.1) to the UDM-SE rear WAN RJ45 port
 
 ### 3.8 U6 — PoE Switch (USW-Pro-Max-16-PoE)
 
@@ -310,7 +306,7 @@ Before proceeding to the upper half, verify:
 ### 3.9 U7 — Vented Panel
 
 1. Snap/screw the vented panel into U7
-2. No cabling required — this is a passive thermal barrier
+2. No cabling required — it allows airflow between the switch and Mini PC
 
 ### 3.10 U8 — Lenovo Mini PC (Proxmox)
 
@@ -344,9 +340,9 @@ Connect power cables from the UPS and power strip to each device:
 > [!TIP]
 > Route power cables along one side rail and network cables along the other. This reduces electromagnetic interference and makes troubleshooting easier.
 
-### 4.2 Network Backbone (SFP+ 10GbE)
+### 4.2 10GbE Links (SFP+)
 
-Connect the high-speed backbone using DAC (Direct Attach Copper) or SFP+ transceivers + fiber:
+Connect the 10GbE links using DAC (Direct Attach Copper) cables or SFP+ transceivers + fiber:
 
 | Connection | From | To |
 |-----------|------|-----|
@@ -369,13 +365,13 @@ These are **separate pre-made 🟢 green cables** (~30 cm) — not the in-wall r
 Use **~30 cm** patch cables. The patch panel (U4) and switch (U6) are 2U apart with the UDM-SE between them — keep cables short to avoid clutter.
 
 > [!NOTE]
-> The full signal path for each room is now: **room wall plate → 🟢 green in-wall cable → patch panel rear keystone → patch panel front port → 🟢 green patch cable → switch port**.
+> The full connection path for each room is now: **room wall plate → 🟢 green in-wall cable → patch panel rear keystone → patch panel front port → 🟢 green patch cable → switch port**.
 
 ### 4.4 Remaining Ethernet Connections
 
 | Label | Color | From | To | Notes |
 |-------|-------|------|-----|-------|
-| WHT-01 AP | ⚪ White | Switch Port 2 (U6) | Top opening → ceiling AP | Routed in Phase 2.1, now plug the rack-end into the switch |
+| WHT-01 AP | ⚪ White | Switch Port 2 (U6) | Top opening → ceiling AP | Routed in Phase 2.1, now plug the end inside the rack into the switch |
 | BLK-01 Proxmox | ⚫ Black | Mini PC (U8) | Switch port or UDM-SE LAN | Short internal cable, does not leave the rack |
 
 ### 4.5 Cable Management Final Pass
@@ -397,7 +393,7 @@ Power on devices in this order, waiting for each to fully boot before starting t
 |------|--------|----------|
 | 1 | Plug UPS mains cable into wall outlet | UPS LCD shows "Online", battery charging indicator |
 | 2 | Power on UDM-SE | White status LED steady (boot takes ~3–5 min) |
-| 3 | Power on PoE Switch | Status LED steady, PoE ports energize |
+| 3 | Power on PoE Switch | Status LED steady, PoE ports become active |
 | 4 | Power on QNAP NAS | System ready beep, LCD shows IP |
 | 5 | Power on Mini PC | Proxmox boot to login prompt |
 
@@ -425,7 +421,7 @@ PHASE 1 — WORKBENCH              PHASE 2 — EMPTY RACK
 │ ✦ Prepare patch panel   │      │ ✦ Route ethernet cables │
 │   and keystone jacks    │      │   through TOP opening   │
 │ ✦ Label all cables      │      │ ✦ Route UPS mains cable │
-│ ✦ Dry-fit equipment     │      │   through BOTTOM opening│
+│ ✦ Test-fit equipment    │      │   through TOP opening   │
 └─────────────────────────┘      └─────────────────────────┘
             │                                │
             ▼                                ▼
@@ -433,11 +429,11 @@ PHASE 3 — INSTALL BOTTOM → UP   PHASE 4 — CABLE FROM FRONT
 ┌─────────────────────────┐      ┌─────────────────────────┐
 │ U1  UPS ............. ① │      │ ✦ Power cables (UPS →   │
 │ ░░  Neoprene ........ ② │      │   devices)              │
-│ U2  NAS ............. ③ │      │ ✦ SFP+ backbone         │
+│ U2  NAS ............. ③ │      │ ✦ SFP+ 10GbE links      │
 │ U3  Power Strip ..... ④ │      │ ✦ Patch cables (PP →    │
 │ U4  Patch Panel ..... ⑤ │      │   switch, short ~30cm)  │
 │  ► TERMINATE + MOUNT ◄  │      │ ✦ AP & Mini PC ethernet │
-│ U5  UDM-SE .......... ⑥ │      │ ✦ Cable dress & labels  │
+│ U5  UDM-SE .......... ⑥ │      │ ✦ Tidy cables & labels  │
 │ U6  Switch .......... ⑦ │      └─────────────────────────┘
 │ U7  Vented Panel .... ⑧ │                  │
 │ U8  Mini PC ......... ⑨ │                  ▼
@@ -454,7 +450,7 @@ PHASE 3 — INSTALL BOTTOM → UP   PHASE 4 — CABLE FROM FRONT
 
 | Problem | Likely Cause | Fix |
 |---------|-------------|-----|
-| Cable won't reach patch panel rear | Insufficient service loop | Pull more slack through top opening; may need to remove upper equipment temporarily |
+| Cable won't reach patch panel rear | Not enough extra slack | Pull more cable through top opening; may need to remove upper equipment temporarily |
 | No link light after patching | Bad keystone termination | Re-test with cable tester; re-punch if needed |
 | UPS overload alarm on power-on | Too many devices started simultaneously | Power on one device at a time, wait for each to stabilize |
 | NAS not reachable after boot | Switch/UDM-SE not ready yet | Follow the power-on sequence — network gear first |
