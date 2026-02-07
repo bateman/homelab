@@ -323,7 +323,7 @@ In **UDM-SE** (Network application): Settings → Profiles → IP Groups → Cre
 **Group: Plex Server**
 - Type: IPv4 Address/Subnet
 - Addresses:
-  - `192.168.3.20/32`
+  - `192.168.3.21/32`
 
 ### 5.2 Create Port Groups
 

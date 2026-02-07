@@ -229,7 +229,7 @@ Rules are processed in order, from first to last. Order matters.
 | Action | Accept |
 | Protocol | TCP |
 | Source | VLAN-Media |
-| Destination | MiniPC (192.168.3.20) |
+| Destination | Plex LXC (192.168.3.21) |
 | Port | Plex (32400) |
 
 ### Rule 4 — Allow Media -> Plex Discovery
@@ -240,7 +240,7 @@ Rules are processed in order, from first to last. Order matters.
 | Action | Accept |
 | Protocol | UDP |
 | Source | VLAN-Media |
-| Destination | MiniPC (192.168.3.20) |
+| Destination | Plex LXC (192.168.3.21) |
 | Port | Plex-Discovery (32410-32414) |
 
 ### Rule 5 — Allow Media -> Arr Stack
@@ -402,7 +402,7 @@ In **UDM-SE** (Network application): Settings → Traffic Management → Traffic
 | Name | Prioritize Plex |
 | Action | Set DSCP |
 | DSCP Value | 46 (EF - Expedited Forwarding) |
-| Source | MiniPC (192.168.3.20) |
+| Source | Plex LXC (192.168.3.21) |
 | Port | 32400 |
 
 ### Guest Bandwidth Limiting
@@ -487,7 +487,7 @@ If in the future you need to open specific ports (e.g., for remote Plex without 
 
 | Name | External Port | Internal Port | Destination | Protocol |
 |------|---------------|---------------|-------------|----------|
-| Plex Remote | 32400 | 32400 | 192.168.3.20 | TCP |
+| Plex Remote | 32400 | 32400 | 192.168.3.21 | TCP |
 
 > [!WARNING]
 > Opening ports exposes services to the Internet. Prefer Tailscale when possible.
@@ -520,7 +520,7 @@ From desktop PC (192.168.3.40):
 nslookup google.com 192.168.3.10
 
 # Test Plex
-curl -I http://192.168.3.20:32400/web
+curl -I http://192.168.3.21:32400/web
 
 # Test Iliad Box reachability (from Servers VLAN)
 ping 192.168.1.254
