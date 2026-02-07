@@ -1,6 +1,6 @@
 # 19" 8U Rack — Home Lab Configuration v3
 
-> Configuration optimized for passive ventilation (rack open on sides and top)
+> Configuration optimized for passive ventilation (rack open on top and bottom)
 
 ## Rack Diagram
 
@@ -33,7 +33,7 @@
 
         ↑↑↑ HOT AIR EXITS FROM OPEN TOP ↑↑↑
 
-   <-  cool air enters from sides  ->
+        ↓↓↓ COOL AIR ENTERS FROM BOTTOM ↓↓↓
 ```
 
 ---
@@ -304,10 +304,11 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 
 ## Notes
 
-- **Rack**: Open on sides and top (optimal passive ventilation)
+- **Rack**: Open on top and bottom only (cable entry/exit points); sides closed
 - **Vented panel**: In U7 to thermally isolate Mini PC from networking
 - **Rack power strip**: In U3, connected to UPS for devices with standard plugs
 - **UPS**: Consider upgrade to 1000-1500VA if using PoE intensively
+- **Installation order**: See [Rack Mounting Guide](../setup/rack-mounting-guide.md) for recommended bottom-up installation sequence
 
 ---
 
