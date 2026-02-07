@@ -511,7 +511,7 @@ In **UDM-SE** (Network application): Settings → WiFi → Create New WiFi Netwo
 
 Wi-Fi radios can be scheduled to disable overnight when not needed, reducing power consumption.
 
-In **UDM-SE** (Network application): Settings → WiFi → Select Network → Advanced → WiFi Blackout Schedule
+In **UDM-SE** (Network application): Settings → WiFi → Select Network → WiFi Blackout Schedule
 
 | Day | Active Hours | Notes |
 |-----|--------------|-------|
