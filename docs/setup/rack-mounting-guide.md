@@ -9,7 +9,7 @@
 - [ ] Empty rack already wall-mounted (studs/anchors rated for total load)
 - [ ] Rack is level (use a spirit level on the front rails)
 - [ ] All equipment unpacked and inventoried (see [rack-homelab-config.md](../network/rack-homelab-config.md) for full component list)
-- [ ] All cables purchased and labeled on both ends (see [Cable Color Coding](#cable-labeling-reference))
+- [ ] All cables purchased and labeled on both ends (see [Pre-Label Everything](#12-pre-label-everything))
 - [ ] Cage nuts / clip nuts installed in correct rail positions for all 8U
 - [ ] Basic toolkit: cage nut tool, Phillips screwdriver, cable ties, velcro straps
 
@@ -268,7 +268,7 @@ Connect short patch cables from the **front** of the patch panel (U4) **up** to 
 | PP-04 | Port 4 | GRN-02 Living | Media (4) |
 | PP-05 | Port 5 | GRN-03 Bedroom | Media (4) |
 
-Use **15–30 cm** patch cables. The patch panel and switch are only 1U apart, so keep cables short to avoid clutter.
+Use **30 cm** patch cables. The patch panel (U4) and switch (U6) are 2U apart with the UDM-SE between them — keep cables short to avoid clutter.
 
 ### 4.4 Remaining Front Connections
 

@@ -190,7 +190,7 @@
 |------|-------|----------|
 | Top (U8) | Mini PC | Maximum dissipation outward |
 | U7 | Vented | Cuts heat rise from networking |
-| Center (U4-U6) | Networking + Patch | Moderate heat, good side ventilation |
+| Center (U4-U6) | Networking + Patch | Moderate heat, ventilated via top/bottom airflow |
 | U3 | Power Strip | Passive, no heat generated |
 | Bottom (U1-U2) | NAS + UPS | Coolest zone, ideal for HDDs (< 40C) |
 
