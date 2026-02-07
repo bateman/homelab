@@ -20,12 +20,14 @@
 With sides closed, you only have **two openings** for cable entry and exit:
 
 ```
+       ▲ wall outlets (power + network) above rack
         ┌──── TOP OPENING ─────┐
         │                      │
         │   Cable entry from:  │
         │   • In-wall runs     │
         │   • WAN (ISP)        │
         │   • AP PoE cable     │
+        │   • UPS mains power  │
         │                      │
    ┌────┴──────────────────────┴────┐
    │  ┌──────────────────────────┐  │
@@ -41,15 +43,14 @@ With sides closed, you only have **two openings** for cable entry and exit:
    └────┬──────────────────────┬────┘
         │                      │
         │  BOTTOM OPENING      │
-        │   Cable exit for:    │
-        │   • UPS mains power  │
+        │   (unused — wall     │
+        │    outlets are above) │
         │                      │
         └──────────────────────┘
-              ▼ to wall outlet
 ```
 
 > [!IMPORTANT]
-> The **top opening** is your primary cable entry point. Once upper equipment (U5–U8) is installed, routing new cables down to the middle and lower units becomes significantly harder. Plan all cable routes **before** filling the upper half of the rack.
+> The **top opening** is your only cable entry point — wall outlets (power and network) are located above the rack. Once upper equipment (U5–U8) is installed, routing new cables down to the middle and lower units becomes significantly harder. Plan all cable routes — **including the UPS mains power cable** — **before** filling the upper half of the rack.
 
 ---
 
@@ -131,7 +132,7 @@ Label **both ends** of every cable before it enters the rack. Use the color codi
 | GRN-03 Bedroom | 🟢 Green | Bedroom room drop | Top opening → PP-05 rear (U4) |
 | WHT-WAN | ⚪ White | WAN uplink (ISP) | Top opening → UDM-SE WAN port (U5) |
 | WHT-01 AP | ⚪ White | AP PoE feed | Top opening → Switch Port 2 (U6) |
-| PWR-UPS | — | UPS mains power | Bottom opening → wall outlet |
+| PWR-UPS | — | UPS mains power | Top opening → wall outlet above rack |
 
 **Internal rack cables** (never leave the rack):
 
@@ -206,7 +207,10 @@ Feed all five external ethernet cables down through the **top opening**, one gro
 
 ### 2.2 Route the UPS Mains Cable
 
-Feed the UPS power cable **up** through the **bottom opening** and leave it coiled at the U1 position. Do not plug it into the wall yet.
+Feed the UPS power cable **down** through the **top opening** (alongside the ethernet bundle but on the opposite rear edge) and leave it coiled at the U1 position. Do not plug it into the wall outlet yet.
+
+> [!TIP]
+> Keep the mains power cable on the **opposite side** of the rack from the ethernet bundle. Separating power and data cables reduces electromagnetic interference.
 
 ### 2.3 Verify Before Proceeding
 
@@ -214,8 +218,8 @@ Feed the UPS power cable **up** through the **bottom opening** and leave it coil
 - [ ] WAN cable (WHT-WAN) reaches U5 level with service loop
 - [ ] AP cable (WHT-01 AP) reaches U6 level with service loop
 - [ ] All five cables secured along one rear edge, not blocking the middle of the rack
-- [ ] UPS mains cable (PWR-UPS) accessible at U1
-- [ ] Top and bottom openings still have clearance for equipment to slide in
+- [ ] UPS mains cable (PWR-UPS) routed from top opening down to U1, on opposite side from ethernet bundle
+- [ ] Top opening still has clearance for equipment to slide in
 
 ---
 
@@ -425,7 +429,7 @@ PHASE 1 — WORKBENCH              PHASE 2 — EMPTY RACK
 │ ✦ Prepare patch panel   │      │ ✦ Route ethernet cables │
 │   and keystone jacks    │      │   through TOP opening   │
 │ ✦ Label all cables      │      │ ✦ Route UPS mains cable │
-│ ✦ Dry-fit equipment     │      │   through BOTTOM opening│
+│ ✦ Dry-fit equipment     │      │   through TOP opening   │
 └─────────────────────────┘      └─────────────────────────┘
             │                                │
             ▼                                ▼
