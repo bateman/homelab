@@ -303,24 +303,24 @@ Verify in **UDM-SE** (Network application): Settings → Devices → Switch → 
 
 In **UDM-SE** (Network application): Settings → Profiles → Network Lists → Create New
 
-**Group: RFC1918 (Private Networks)**
+**List: RFC1918 (Private Networks)**
 - Type: IPv4 Address/Subnet
 - Addresses:
   - `10.0.0.0/8`
   - `172.16.0.0/12`
   - `192.168.0.0/16`
 
-**Group: NAS Server**
+**List: NAS Server**
 - Type: IPv4 Address/Subnet
 - Addresses:
   - `192.168.3.10`
 
-**Group: Media Clients**
+**List: Media Clients**
 - Type: IPv4 Address/Subnet
 - Addresses:
   - `192.168.4.0/24`
 
-**Group: Plex Server**
+**List: Plex Server**
 - Type: IPv4 Address/Subnet
 - Addresses:
   - `192.168.3.21`
@@ -329,7 +329,7 @@ In **UDM-SE** (Network application): Settings → Profiles → Network Lists →
 
 In **UDM-SE** (Network application): Settings → Profiles → Network Lists → Create New
 
-**Group: Media Services Ports**
+**List: Media Services Ports**
 - Ports:
   - `8989` (Sonarr)
   - `7878` (Radarr)
@@ -339,7 +339,7 @@ In **UDM-SE** (Network application): Settings → Profiles → Network Lists →
 > [!NOTE]
 > Plex (32400) is not included because it runs on Mini PC, not NAS. qBittorrent (8080) and NZBGet (6789) are not included because Media VLAN devices (TVs, phones) don't need direct access. *arr services communicate with download clients internally via Docker network, not through firewall.
 
-**Group: Infrastructure Ports**
+**List: Infrastructure Ports**
 - Ports:
   - `53` (DNS)
   - `8081` (Pi-hole)
