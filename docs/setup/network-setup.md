@@ -477,7 +477,9 @@ In **UDM-SE** (Network application): Settings → WiFi → Create New WiFi Netwo
 | Notes | Alexa, smart WiFi devices |
 
 > [!NOTE]
-> No SSID needed for Management (wired access only) or Servers (wired devices with static IPs).
+> No SSID needed for Management or Servers — the devices on these VLANs (switch, AP, NAS, Proxmox) are all wired.
+>
+> **You can still manage everything from WiFi.** The UniFi controller on the UDM-SE is accessible at the gateway IP of whichever VLAN you're connected to. From "Homelab" WiFi (Media VLAN): open `https://192.168.4.1` or use the UniFi mobile app. This manages the UDM-SE, switch, and AP — no need to be on the Management VLAN itself.
 
 ### 7.3 WLAN Scheduling (Optional)
 
