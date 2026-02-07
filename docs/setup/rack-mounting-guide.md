@@ -20,7 +20,7 @@
 With sides closed, you only have **two openings** for cable entry and exit:
 
 ```
-        ┌──── TOP OPENING ────┐
+        ┌──── TOP OPENING ─────┐
         │                      │
         │   Cable entry from:  │
         │   • In-wall runs     │
