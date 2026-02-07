@@ -156,7 +156,7 @@ Confirm every device fits its intended U position with the correct mounting hard
 
 ---
 
-## Phase 2: Cable Rough-In (Empty Rack)
+## Phase 2: Cable Routing (Empty Rack)
 
 **Do this while the rack is still empty.** This is your only chance to route cables freely through the full depth and height of the rack interior.
 
@@ -182,7 +182,7 @@ Feed all five external ethernet cables down through the **top opening**, one gro
 **Step 3 — Secure the bundle:**
 
 1. Route all five cables down the **left or right rear edge** of the rack interior (pick one side and stay consistent)
-2. Leave a **30–40 cm service loop** on each cable at its destination level
+2. Leave **30–40 cm of extra cable** (a service loop) coiled at each cable's destination level — this spare slack lets you pull cables out later for termination or rework
 3. Temporarily secure the bundle to the rear rail or rack frame with velcro straps (not zip ties — you may need to adjust later)
 
 ```
@@ -194,9 +194,9 @@ Feed all five external ethernet cables down through the **top opening**, one gro
     │ along   │◄──── one rear edge (left or right)
     │ rear    │
     │ edge    │
-    │  ⚪─────│──── WHT-01 AP service loop at U6
-    │  ⚪─────│──── WHT-WAN service loop at U5
-    │  🟢🟢🟢│──── GRN-01/02/03 service loops at U4
+    │  ⚪─────│──── WHT-01 AP extra slack at U6
+    │  ⚪─────│──── WHT-WAN extra slack at U5
+    │  🟢🟢🟢│──── GRN-01/02/03 extra slack at U4
     │         │
     └────┬────┘
      BOTTOM
@@ -211,9 +211,9 @@ Feed the UPS power cable **down** through the **top opening** (on the **opposite
 
 ### 2.3 Verify Before Proceeding
 
-- [ ] Three green cables (GRN-01/02/03) reach U4 level with service loop to spare
-- [ ] WAN cable (WHT-WAN) reaches U5 level with service loop
-- [ ] AP cable (WHT-01 AP) reaches U6 level with service loop
+- [ ] Three green cables (GRN-01/02/03) reach U4 level with 30–40 cm of extra slack
+- [ ] WAN cable (WHT-WAN) reaches U5 level with extra slack
+- [ ] AP cable (WHT-01 AP) reaches U6 level with extra slack
 - [ ] All five cables secured along one rear edge, not blocking the middle of the rack
 - [ ] UPS mains cable (PWR-UPS) routed from top opening down to U1, on opposite side from ethernet bundle
 - [ ] Top opening still has clearance for equipment to slide in
@@ -263,7 +263,7 @@ Only the three 🟢 green room-drop cables get terminated here. The ⚪ white ca
 
 **Step A — Terminate on the workbench (not in the rack):**
 
-1. Pull the three green cables (GRN-01, GRN-02, GRN-03) out through the top opening, using the service loops at U4 level. Pull enough slack to reach your workbench.
+1. Grab the three green cables (GRN-01, GRN-02, GRN-03) at U4 level where you left extra slack in Phase 2.1. Pull them up and out through the top opening — you need enough cable outside the rack to reach your workbench.
 2. For each cable: strip the jacket, punch down onto a keystone jack (or use toolless keystones), and snap the keystone into the correct panel slot:
    - GRN-01 Studio → slot PP-03
    - GRN-02 Living → slot PP-04
@@ -274,7 +274,7 @@ Only the three 🟢 green room-drop cables get terminated here. The ⚪ white ca
 
 4. Feed the terminated cables back through the top opening
 5. Slide the patch panel into U4 and secure with front screws
-6. Tidy up the rear cables — tuck excess into service loops held with velcro
+6. Tidy up the rear cables — coil any excess and secure the coils with velcro
 
 ### 3.6 Checkpoint — Lower Half Complete
 
@@ -284,7 +284,7 @@ Before proceeding to the upper half, verify:
 - [ ] Neoprene insulation in place
 - [ ] NAS seated and secured at U2
 - [ ] Power strip mounted at U3, connected to UPS
-- [ ] Patch panel mounted at U4 with all keystones terminated, tested, and cables dressed
+- [ ] Patch panel mounted at U4 with all keystones terminated, tested, and rear cables tidy
 - [ ] Cable bundle is tidy along rear edge, no loose loops hanging
 
 > [!TIP]
@@ -431,7 +431,7 @@ PHASE 3 — INSTALL BOTTOM → UP   PHASE 4 — CABLE FROM FRONT
 │ U3  Power Strip ..... ④ │      │ ✦ Patch cables (PP →    │
 │ U4  Patch Panel ..... ⑤ │      │   switch, short ~30cm)  │
 │  ► TERMINATE + MOUNT ◄  │      │ ✦ AP & Mini PC ethernet │
-│ U5  UDM-SE .......... ⑥ │      │ ✦ Cable dress & labels  │
+│ U5  UDM-SE .......... ⑥ │      │ ✦ Tidy cables & labels  │
 │ U6  Switch .......... ⑦ │      └─────────────────────────┘
 │ U7  Vented Panel .... ⑧ │                  │
 │ U8  Mini PC ......... ⑨ │                  ▼
@@ -448,7 +448,7 @@ PHASE 3 — INSTALL BOTTOM → UP   PHASE 4 — CABLE FROM FRONT
 
 | Problem | Likely Cause | Fix |
 |---------|-------------|-----|
-| Cable won't reach patch panel rear | Insufficient service loop | Pull more slack through top opening; may need to remove upper equipment temporarily |
+| Cable won't reach patch panel rear | Not enough extra slack | Pull more cable through top opening; may need to remove upper equipment temporarily |
 | No link light after patching | Bad keystone termination | Re-test with cable tester; re-punch if needed |
 | UPS overload alarm on power-on | Too many devices started simultaneously | Power on one device at a time, wait for each to stabilize |
 | NAS not reachable after boot | Switch/UDM-SE not ready yet | Follow the power-on sequence — network gear first |
