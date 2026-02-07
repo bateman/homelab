@@ -9,7 +9,7 @@
 - [ ] Empty rack already wall-mounted (studs/anchors rated for total load)
 - [ ] Rack is level (use a spirit level on the front rails)
 - [ ] All equipment unpacked and inventoried (see [rack-homelab-config.md](../network/rack-homelab-config.md) for full component list)
-- [ ] All cables purchased and labeled on both ends (see [Pre-Label Everything](#12-pre-label-everything))
+- [ ] All cables purchased per the [Cable Inventory](#cable-inventory) and labeled on both ends (see [Pre-Label Everything](#12-pre-label-everything))
 - [ ] Cage nuts / clip nuts installed in correct rail positions for all 8U
 - [ ] Basic toolkit: cage nut tool, Phillips screwdriver, cable ties, velcro straps
 
@@ -53,6 +53,55 @@ With sides closed, you only have **two openings** for cable entry and exit:
 
 ---
 
+## Cable Inventory
+
+> Every cable in the build, its label, color, route, and when it gets handled. Use this table as a checklist — each cable has exactly two events: **routed** (physically placed) and **connected** (plugged in).
+
+### Ethernet Cables
+
+Labeled using the [color coding system](../network/rack-homelab-config.md#network-cable-color-coding): 🟢 Green = room devices, ⚪ White = management/uplink, ⚫ Black = rack internal.
+
+| Label | Color | Cable Type | From | To | Entry Point | Routed | Connected |
+|-------|-------|-----------|------|-----|-------------|--------|-----------|
+| GRN-01 Studio | 🟢 Green | Cat6A in-wall run | Studio wall plate | PP-03 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
+| GRN-02 Living | 🟢 Green | Cat6A in-wall run | Living room wall plate | PP-04 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
+| GRN-03 Bedroom | 🟢 Green | Cat6A in-wall run | Bedroom wall plate | PP-05 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
+| WHT-WAN | ⚪ White | Cat6 ethernet | ISP router (Iliad Box) | UDM-SE WAN RJ45 port (U5) | Top | Phase 2.1 | Phase 3.7 |
+| WHT-01 AP | ⚪ White | Cat6 PoE | U6-Pro AP (ceiling) | Switch Port 2 (U6) | Top | Phase 2.1 | Phase 4.4 |
+| BLK-01 Proxmox | ⚫ Black | Cat6 ethernet | Mini PC (U8) | Switch port or UDM-SE LAN | Internal | — | Phase 4.4 |
+
+### Front Patch Cables (Patch Panel → Switch)
+
+Pre-made short cables. Use **green** to match the room drops they extend — same label, same color.
+
+| Label | Color | Length | From | To | Connected |
+|-------|-------|--------|------|----|-----------|
+| GRN-01 Studio | 🟢 Green | ~30 cm | PP-03 front (U4) | Switch Port 3 (U6) | Phase 4.3 |
+| GRN-02 Living | 🟢 Green | ~30 cm | PP-04 front (U4) | Switch Port 4 (U6) | Phase 4.3 |
+| GRN-03 Bedroom | 🟢 Green | ~30 cm | PP-05 front (U4) | Switch Port 5 (U6) | Phase 4.3 |
+
+### Power Cables
+
+Standard IEC and Schuko cables — not color-coded, but label the UPS mains cable for easy identification.
+
+| Label | Cable Type | From | To | Connected |
+|-------|-----------|------|----|-----------|
+| PWR-UPS | Schuko mains | Wall outlet | UPS rear input (U1) | Phase 3.1 |
+| — | IEC C14→C13 | UPS C13 #4 (U1) | Power strip input (U3) | Phase 3.4 |
+| — | IEC C14→C13 | UPS C13 #1 (U1) | NAS rear (U2) | Phase 4.1 |
+| — | IEC C14→C13 | UPS C13 #2 (U1) | UDM-SE rear (U5) | Phase 4.1 |
+| — | IEC C14→C13 | UPS C13 #3 (U1) | Switch rear (U6) | Phase 4.1 |
+| — | Schuko + adapter | Power strip #1 (U3) | Mini PC (U8) | Phase 4.1 |
+
+### SFP+ Cables (10GbE Backbone)
+
+| Label | Cable Type | From | To | Connected |
+|-------|-----------|------|----|-----------|
+| — | SFP+ DAC 10GbE | UDM-SE LAN SFP+ (U5) | Switch SFP+ Port 1 (U6) | Phase 4.2 |
+| — | SFP+ DAC 10GbE | Switch SFP+ Port 2 (U6) | NAS SFP+ Port 1 (U2) | Phase 4.2 |
+
+---
+
 ## Phase 1: Pre-Rack Preparation (Workbench)
 
 Do as much work as possible **outside** the rack — it is always easier on a flat surface.
@@ -71,16 +120,30 @@ Lay out patch panel materials on a workbench:
 
 ### 1.2 Pre-Label Everything
 
-Label **both ends** of every cable before it enters the rack:
+Label **both ends** of every cable before it enters the rack. Use the color coding from the [Cable Inventory](#cable-inventory): 🟢 Green = room devices, ⚪ White = management/uplink, ⚫ Black = rack internal.
 
-| Cable | Label | Route |
-|-------|-------|-------|
-| Studio run | GRN-01 Studio | Top opening → patch panel rear |
-| Living Room run | GRN-02 Living | Top opening → patch panel rear |
-| Bedroom run | GRN-03 Bedroom | Top opening → patch panel rear |
-| WAN (ISP) | WHT-WAN | Top opening → UDM-SE WAN port |
-| AP PoE | WHT-01 AP | Top opening → switch port 2 |
-| UPS mains | PWR-UPS | Bottom opening → wall outlet |
+**In-wall and external cables** (routed through rack openings):
+
+| Label | Color | Cable | Route |
+|-------|-------|-------|-------|
+| GRN-01 Studio | 🟢 Green | Studio room drop | Top opening → PP-03 rear (U4) |
+| GRN-02 Living | 🟢 Green | Living room drop | Top opening → PP-04 rear (U4) |
+| GRN-03 Bedroom | 🟢 Green | Bedroom room drop | Top opening → PP-05 rear (U4) |
+| WHT-WAN | ⚪ White | WAN uplink (ISP) | Top opening → UDM-SE WAN port (U5) |
+| WHT-01 AP | ⚪ White | AP PoE feed | Top opening → Switch Port 2 (U6) |
+| PWR-UPS | — | UPS mains power | Bottom opening → wall outlet |
+
+**Internal rack cables** (never leave the rack):
+
+| Label | Color | Cable | Route |
+|-------|-------|-------|-------|
+| BLK-01 Proxmox | ⚫ Black | Mini PC ethernet | Mini PC (U8) → Switch or UDM-SE LAN |
+| GRN-01 Studio | 🟢 Green | Front patch cable ~30 cm | PP-03 front (U4) → Switch Port 3 (U6) |
+| GRN-02 Living | 🟢 Green | Front patch cable ~30 cm | PP-04 front (U4) → Switch Port 4 (U6) |
+| GRN-03 Bedroom | 🟢 Green | Front patch cable ~30 cm | PP-05 front (U4) → Switch Port 5 (U6) |
+
+> [!TIP]
+> The front patch cables carry the **same label and color** as the in-wall run they extend. This means you can trace a room connection end-to-end: green cable in the wall → green keystone at patch panel rear → green patch cable on front → switch port.
 
 ### 1.3 Dry-Fit Equipment
 
@@ -99,25 +162,43 @@ Confirm every device fits its intended U position with the correct mounting hard
 
 **Do this while the rack is still empty.** This is your only chance to route cables freely through the full depth and height of the rack interior.
 
-### 2.1 Route In-Wall Cables Through the Top
+### 2.1 Route Ethernet Cables Through the Top
 
-Feed all in-wall ethernet cables (room runs, WAN, AP) down through the **top opening**:
+Feed all five external ethernet cables down through the **top opening**, one group at a time:
 
-1. Bundle cables loosely and feed them through the top
-2. Route them down the **left or right rear edge** of the rack interior (pick one side and stay consistent)
-3. Pull each cable down to the **U4 level** (patch panel position) and leave a **30–40 cm service loop**
-4. Temporarily secure the bundle to the rear rail or rack frame with velcro straps (not zip ties — you may need to adjust later)
+**Step 1 — Room drops (🟢 Green):** Route the three green in-wall cables together as a bundle.
+
+| Cable | Label | Destination | Pull down to |
+|-------|-------|-------------|-------------|
+| Studio run | GRN-01 Studio | PP-03 rear keystone (U4) | U4 level |
+| Living room run | GRN-02 Living | PP-04 rear keystone (U4) | U4 level |
+| Bedroom run | GRN-03 Bedroom | PP-05 rear keystone (U4) | U4 level |
+
+**Step 2 — Management/uplink (⚪ White):** Route the two white cables alongside the green bundle.
+
+| Cable | Label | Destination | Pull down to |
+|-------|-------|-------------|-------------|
+| WAN uplink | WHT-WAN | UDM-SE WAN RJ45 port (U5) | U5 level |
+| AP PoE feed | WHT-01 AP | Switch Port 2 (U6) | U6 level |
+
+**Step 3 — Secure the bundle:**
+
+1. Route all five cables down the **left or right rear edge** of the rack interior (pick one side and stay consistent)
+2. Leave a **30–40 cm service loop** on each cable at its destination level
+3. Temporarily secure the bundle to the rear rail or rack frame with velcro straps (not zip ties — you may need to adjust later)
 
 ```
      TOP OPENING
          │
     ┌────┴────┐
-    │ cables  │
-    │ routed  │      Keep cables tight against
+    │ ⚪⚪🟢 │
+    │ 🟢🟢   │      Keep cables tight against
     │ along   │◄──── one rear edge (left or right)
     │ rear    │
     │ edge    │
-    │    ○────│──── Service loops at U4 level
+    │  ⚪─────│──── WHT-01 AP service loop at U6
+    │  ⚪─────│──── WHT-WAN service loop at U5
+    │  🟢🟢🟢│──── GRN-01/02/03 service loops at U4
     │         │
     └────┬────┘
      BOTTOM
@@ -129,9 +210,11 @@ Feed the UPS power cable **up** through the **bottom opening** and leave it coil
 
 ### 2.3 Verify Before Proceeding
 
-- [ ] All in-wall cables reach U4 with service loop to spare
-- [ ] Cable bundle is secured to one side and does not block the middle of the rack
-- [ ] UPS mains cable is accessible at U1
+- [ ] Three green cables (GRN-01/02/03) reach U4 level with service loop to spare
+- [ ] WAN cable (WHT-WAN) reaches U5 level with service loop
+- [ ] AP cable (WHT-01 AP) reaches U6 level with service loop
+- [ ] All five cables secured along one rear edge, not blocking the middle of the rack
+- [ ] UPS mains cable (PWR-UPS) accessible at U1
 - [ ] Top and bottom openings still have clearance for equipment to slide in
 
 ---
@@ -178,8 +261,13 @@ This is the most timing-sensitive installation in the entire build. The upper ha
 
 **Step A — Terminate on the workbench (not in the rack):**
 
-1. Pull each in-wall cable from its service loop (routed in Phase 2) out through the top opening with enough slack to reach your workbench
-2. For each cable: strip the jacket → punch down onto a keystone jack (or use toolless keystones) → snap the keystone into the correct panel slot
+Only the three 🟢 green room-drop cables get terminated onto the patch panel. The ⚪ white cables (WHT-WAN, WHT-01 AP) stay in the rack — they connect directly to devices later.
+
+1. Pull the three green cables (GRN-01, GRN-02, GRN-03) from their service loops at U4 level out through the top opening with enough slack to reach your workbench
+2. For each green cable: strip the jacket → punch down onto a keystone jack (or use toolless keystones) → snap the keystone into the correct panel slot:
+   - GRN-01 Studio → slot PP-03
+   - GRN-02 Living → slot PP-04
+   - GRN-03 Bedroom → slot PP-05
 3. Test every terminated port with a cable tester before the panel goes into the rack
 
 > [!TIP]
@@ -212,7 +300,7 @@ Before proceeding to the upper half, verify:
 
 1. Slide the UDM-SE into U5
 2. Secure with front screws
-3. Route the **WAN cable** (already hanging from Phase 2) to the WAN RJ45 port on the UDM-SE rear
+3. Take the ⚪ white WAN cable (**WHT-WAN**, hanging from Phase 2.1 at U5 level) and connect it to the WAN RJ45 port on the UDM-SE rear
 
 ### 3.8 U6 — PoE Switch (USW-Pro-Max-16-PoE)
 
@@ -268,24 +356,27 @@ Connect the high-speed backbone using DAC (Direct Attach Copper) or SFP+ transce
 > [!NOTE]
 > The NAS SFP+ cable runs from U6 down to U2 — this is the longest internal cable. Use a 1m DAC cable and route it along the side rail to keep it tidy.
 
-### 4.3 Patch Cables (Patch Panel → Switch)
+### 4.3 Front Patch Cables (Patch Panel → Switch)
 
-Connect short patch cables from the **front** of the patch panel (U4) **up** to the switch (U6):
+These are **separate pre-made 🟢 green cables** (~30 cm) — not the in-wall runs. They bridge the **front** of the patch panel (U4) **up** to the switch (U6), completing the room-to-switch path.
 
-| Patch Panel Port | Switch Port | Cable Label | VLAN |
-|-----------------|-------------|-------------|------|
-| PP-03 | Port 3 | GRN-01 Studio | Media (4) |
-| PP-04 | Port 4 | GRN-02 Living | Media (4) |
-| PP-05 | Port 5 | GRN-03 Bedroom | Media (4) |
+| Patch Cable Label | From | To | VLAN |
+|-------------------|------|----|------|
+| GRN-01 Studio | PP-03 front (U4) | Switch Port 3 (U6) | Media (4) |
+| GRN-02 Living | PP-04 front (U4) | Switch Port 4 (U6) | Media (4) |
+| GRN-03 Bedroom | PP-05 front (U4) | Switch Port 5 (U6) | Media (4) |
 
-Use **30 cm** patch cables. The patch panel (U4) and switch (U6) are 2U apart with the UDM-SE between them — keep cables short to avoid clutter.
+Use **~30 cm** patch cables. The patch panel (U4) and switch (U6) are 2U apart with the UDM-SE between them — keep cables short to avoid clutter.
 
-### 4.4 Remaining Front Connections
+> [!NOTE]
+> The full signal path for each room is now: **room wall plate → 🟢 green in-wall cable → patch panel rear keystone → patch panel front port → 🟢 green patch cable → switch port**.
 
-| Cable | From | To | Notes |
-|-------|------|-----|-------|
-| AP PoE | Switch Port 2 (U6) | Top opening → ceiling AP | WHT-01, routed out the top |
-| Mini PC Ethernet | Mini PC (U8) | Switch port or UDM-SE LAN | BLK, short internal cable |
+### 4.4 Remaining Ethernet Connections
+
+| Label | Color | From | To | Notes |
+|-------|-------|------|-----|-------|
+| WHT-01 AP | ⚪ White | Switch Port 2 (U6) | Top opening → ceiling AP | Routed in Phase 2.1, now plug the rack-end into the switch |
+| BLK-01 Proxmox | ⚫ Black | Mini PC (U8) | Switch port or UDM-SE LAN | Short internal cable, does not leave the rack |
 
 ### 4.5 Cable Management Final Pass
 
@@ -331,7 +422,7 @@ Power on devices in this order, waiting for each to fully boot before starting t
 ```
 PHASE 1 — WORKBENCH              PHASE 2 — EMPTY RACK
 ┌─────────────────────────┐      ┌─────────────────────────┐
-│ ✦ Prepare patch panel   │      │ ✦ Route in-wall cables  │
+│ ✦ Prepare patch panel   │      │ ✦ Route ethernet cables │
 │   and keystone jacks    │      │   through TOP opening   │
 │ ✦ Label all cables      │      │ ✦ Route UPS mains cable │
 │ ✦ Dry-fit equipment     │      │   through BOTTOM opening│
