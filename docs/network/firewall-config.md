@@ -151,9 +151,9 @@ The firewall follows the "deny all, allow specific" principle: all inter-VLAN tr
 
 Rules are organized in logical groups for easier maintenance.
 
-### IP Groups
+### IP Address Network Lists
 
-Before creating rules, define these groups in **UDM-SE** (Network application): Settings → Profiles → IP Groups:
+Before creating rules, define these lists in **UDM-SE** (Network application): Settings → Profiles → Network Lists:
 
 | Group Name | Type | Content |
 |------------|------|---------|
@@ -168,9 +168,9 @@ Before creating rules, define these groups in **UDM-SE** (Network application): 
 | VLAN-IoT | Subnet | 192.168.6.0/24 |
 | RFC1918 | Subnet | 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12 |
 
-### Port Groups
+### Port Network Lists
 
-Define in **UDM-SE** (Network application): Settings → Profiles → Port Groups:
+Define in **UDM-SE** (Network application): Settings → Profiles → Network Lists:
 
 | Group Name | Ports |
 |------------|-------|
@@ -498,8 +498,8 @@ If in the future you need to open specific ports (e.g., for remote Plex without 
 
 1. [ ] Verify Iliad Box IP (192.168.1.254) and DMZ to 192.168.1.1
 2. [ ] Create VLANs 2, 3, 4, 5, 6 in UDM-SE: Settings → Networks
-3. [ ] Create IP Groups in UDM-SE: Settings → Profiles
-4. [ ] Create Port Groups in UDM-SE: Settings → Profiles
+3. [ ] Create IP address network lists in UDM-SE: Settings → Profiles → Network Lists
+4. [ ] Create port network lists in UDM-SE: Settings → Profiles → Network Lists
 5. [ ] Configure firewall rules in order
 6. [ ] Enable mDNS reflection on VLANs 3, 4, and 6
 7. [ ] Configure Threat Management
