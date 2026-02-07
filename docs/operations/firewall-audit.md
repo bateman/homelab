@@ -248,7 +248,7 @@ routers:
     # No middlewares reference to authelia
 ```
 
-Every other service routed through Traefik has `middlewares=authelia@docker`. HA relies solely on its own authentication. While likely intentional (HA webhooks and API integrations need direct access), this is inconsistent with the defense-in-depth approach applied to all other services.
+All other services routed through Traefik have `middlewares=authelia@docker` (except Authelia itself at `auth.home.local`, which cannot self-protect — that is expected). HA is the only *protectable* service that relies solely on its own authentication. While likely intentional (HA webhooks and API integrations need direct access), this is inconsistent with the defense-in-depth approach applied to all other protected services.
 
 **Note:** If H2 is fixed (adding port 443 for Media VLAN), `ha.home.local` becomes accessible from Media VLAN through Traefik without Authelia protection.
 
