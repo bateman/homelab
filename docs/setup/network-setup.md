@@ -313,7 +313,7 @@ In **UDM-SE** (Network application): Settings → Profiles → Network Lists →
 **Group: NAS Server**
 - Type: IPv4 Address/Subnet
 - Addresses:
-  - `192.168.3.10/32`
+  - `192.168.3.10`
 
 **Group: Media Clients**
 - Type: IPv4 Address/Subnet
@@ -323,7 +323,7 @@ In **UDM-SE** (Network application): Settings → Profiles → Network Lists →
 **Group: Plex Server**
 - Type: IPv4 Address/Subnet
 - Addresses:
-  - `192.168.3.21/32`
+  - `192.168.3.21`
 
 ### 5.2 Create Port Network Lists
 
