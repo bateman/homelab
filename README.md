@@ -88,6 +88,7 @@ Details in [`docs/setup/network-setup.md`](docs/setup/network-setup.md).
 
 ### Installation Guides
 - [`START_HERE.md`](START_HERE.md) - **Complete installation guide (start here)**
+- [`docs/setup/rack-mounting-guide.md`](docs/setup/rack-mounting-guide.md) - Rack mounting order and cable routing
 - [`docs/setup/network-setup.md`](docs/setup/network-setup.md) - UniFi network and VLAN setup
 - [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) - QNAP NAS and Docker setup
 - [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md) - Proxmox and Plex setup
