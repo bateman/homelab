@@ -134,6 +134,7 @@ When facing trade-offs, **ask the user**:
 | Topic | File |
 |-------|------|
 | Hardware & IP plan | `docs/network/rack-homelab-config.md` |
+| Rack mounting guide | `docs/setup/rack-mounting-guide.md` |
 | Firewall & VLAN config | `docs/network/firewall-config.md` |
 | Proxmox setup | `docs/setup/proxmox-setup.md` |
 | NAS setup | `docs/setup/nas-setup.md` |
