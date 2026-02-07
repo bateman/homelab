@@ -19,7 +19,7 @@ Before starting, make sure you have:
 
 | Phase | Description | Reference Documents |
 |-------|-------------|---------------------|
-| 1 | Hardware Installation | [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) |
+| 1 | Hardware Installation | [`docs/setup/rack-mounting-guide.md`](docs/setup/rack-mounting-guide.md), [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) |
 | 2 | UniFi Network Setup | [`docs/setup/network-setup.md`](docs/setup/network-setup.md) |
 | 3 | QNAP NAS Setup | [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) |
 | 4 | Docker Stack Deploy | [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md), [`Makefile`](Makefile) |
@@ -34,7 +34,7 @@ Before starting, make sure you have:
 
 ## Phase 1: Hardware Installation
 
-**Reference:** [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md)
+**Reference:** [`docs/setup/rack-mounting-guide.md`](docs/setup/rack-mounting-guide.md) (installation order), [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) (component specs)
 
 ### Rack Layout (bottom to top)
 
@@ -506,6 +506,7 @@ For specific problems, consult the Troubleshooting section in [`docs/setup/nas-s
 |----------|----------|
 | [`CLAUDE.md`](CLAUDE.md) | Project guide and development guidelines |
 | [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md) | Hardware layout and IP plan |
+| [`docs/setup/rack-mounting-guide.md`](docs/setup/rack-mounting-guide.md) | Rack mounting order and cable routing |
 | [`docs/network/firewall-config.md`](docs/network/firewall-config.md) | Complete firewall rules |
 | [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) | Detailed QNAP checklist |
 | [`docs/setup/network-setup.md`](docs/setup/network-setup.md) | UniFi network setup |
