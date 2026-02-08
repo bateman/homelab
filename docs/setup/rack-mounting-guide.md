@@ -211,24 +211,25 @@ The StarTech WALLSHELF8U has **closed side panels** and **10-32 threaded rail ho
 **Technique — thread through two rail holes:**
 
 1. Push the velcro strap in through one unused 10-32 hole from the front
-2. Loop it behind the rail and back out through the adjacent hole above or below
-3. Wrap the strap around the cable bundle sitting behind the rail
-4. Fold the velcro back on itself to close
+2. Behind the rail, loop the strap around the cable bundle (cables sit between the rail and side panel)
+3. Thread the strap back out through the adjacent hole above or below
+4. Pull both ends snug from the front and fold the velcro back on itself to close
 
 ```
-    RAIL (side view — looking from      RAIL (front view — you only see
-    the open top or bottom)             the strap ends entering the holes)
+    RAIL (side view — looking              RAIL (front view — you only
+    from the open top or bottom)           see strap ends at the holes)
 
-    front │ rear                        ┌──────────┐
-          │                             │  ○       │ ◄── equipment screw
-     ━━━━►├─────  strap in              │          │
-          │ ┃     through hole 1        │  ● ← strap disappears into hole
-          │ ┃                           │  ┆       │ (loops behind rail,
-     ◄━━━━├─────  strap out             │  ┆       │  around cables,
-          │       through hole 2        │  ● ← strap comes back out
-          │             ○○○             │          │
-          │            cables           │  ○       │ ◄── equipment screw
-          │                             └──────────┘
+    front │ rear                           ┌──────────┐
+          │                                │  ○       │ ◄── equipment screw
+     ━━━━►├──────────────┓ strap in        │          │
+          │              ┃ through hole 1  │  ● ← strap disappears into hole
+          │           ○○○┃ loops behind    │  ┆       │ (loops behind rail,
+          │           ○○○┃ cable bundle    │  ┆       │  around cables,
+          │              ┃                 │  ┆       │  comes back)
+     ◄━━━━├──────────────┛ strap out       │  ● ← strap comes back out
+          │                through hole 2  │          │
+          │                                │  ○       │ ◄── equipment screw
+          │                                └──────────┘
 ```
 
 > [!NOTE]
