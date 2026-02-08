@@ -292,7 +292,7 @@ The UPS is the heaviest single item (~15 kg). Install it first.
 4. **Do NOT plug the mains cable into the wall outlet yet** — no power until Phase 5
 
 > [!WARNING]
-> Use two people. The UPS weighs ~15 kg and lifting it at an angle into a wall-mounted rack risks dropping it or stripping cage nuts.
+> Use two people. The UPS weighs ~15 kg and lifting it at an angle into a wall-mounted rack risks dropping it or stripping the threaded rail holes.
 
 ### 3.2 Insulation — Neoprene 5mm
 
