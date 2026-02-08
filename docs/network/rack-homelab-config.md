@@ -123,11 +123,11 @@
 | LAN SFP+ | 1x 10GbE (uplink to switch) |
 | IP | 192.168.2.1 |
 
-### U4 — deleyCON Patch Panel
+### U4 — LogiLink NK4077 Patch Panel
 
 | Spec | Value |
 |------|-------|
-| Ports | 12x RJ45 Keystone |
+| Ports | 16x RJ45 Keystone |
 | Category | CAT6A/CAT7 |
 | Certification | 10 Gbit/s |
 
@@ -138,7 +138,7 @@
 | PP-03 | Studio | Port 3 | Media (4) | GRN-01 Studio |
 | PP-04 | Living Room | Port 4 | Media (4) | GRN-02 Living |
 | PP-05 | Bedroom | Port 5 | Media (4) | GRN-03 Bedroom |
-| PP-01, 02, 06-12 | — (available) | — | — | — |
+| PP-01, 02, 06-16 | — (available) | — | — | — |
 
 > [!TIP]
 > Patch panel ports mirror switch port numbers for easy troubleshooting.

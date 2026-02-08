@@ -113,10 +113,10 @@ Do as much work as possible **outside** the rack — it is always easier on a fl
 
 Get the patch panel frame and keystone jacks ready on a workbench. **Do not punch down (terminate) cables yet** — that happens later in Phase 3.5.
 
-1. Unpack the keystone patch panel frame and verify all 12 keystone slots are intact
+1. Unpack the keystone patch panel frame and verify all 16 keystone slots are intact
 2. Lay out one keystone jack (Cat6A/Cat7) per in-wall cable — you need 3 (Studio, Living, Bedroom)
 3. Have ready: punch-down tool (or toolless keystones), cable stripper, cable tester
-4. Label each keystone slot on the panel frame (PP-03 Studio, PP-04 Living, PP-05 Bedroom — see [patch panel port assignments](../network/rack-homelab-config.md#u4--deleycon-patch-panel))
+4. Label each keystone slot on the panel frame (PP-03 Studio, PP-04 Living, PP-05 Bedroom — see [patch panel port assignments](../network/rack-homelab-config.md#u4--logilink-nk4077-patch-panel))
 
 ### 1.2 Pre-Label Everything
 
