@@ -10,7 +10,6 @@ Before starting, make sure you have:
 
 - [ ] All hardware listed in [`docs/network/rack-homelab-config.md`](docs/network/rack-homelab-config.md)
 - [ ] Access to local network and a computer for configuration
-- [ ] Accounts for cloud services (optional: Google Drive or Dropbox for offsite backup)
 - [ ] Indexer/Usenet subscriptions (for media stack)
 
 ---
