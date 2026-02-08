@@ -202,39 +202,36 @@
                     ┌─────────────────────────────────────────┐
                     │           UPS Eaton 5P 650i             │
                     │              (4x C13)                   │
-                    └─────┬─────┬─────┬─────┬─────────────────┘
-                          │     │     │     │
-                    C13 #1│     │     │     │C13 #4
-                          │     │     │     │
-                          ▼     │     │     ▼
-                      ┌───────┐ │     │ ┌────────────────┐
-                      │  NAS  │ │     │ │ Power Strip 1U │
-                      │ QNAP  │ │     │ │   (U3)         │
-                      └───────┘ │     │ └───────┬────────┘
-                                │     │         │
-                          C13 #2│     │C13 #3   │ Schuko
-                                │     │         │
-                                ▼     ▼         ▼
-                          ┌───────┐ ┌───────┐ ┌─────────┐
-                          │UDM-SE │ │Switch │ │ Mini PC │
-                          │       │ │  PoE  │ │ Lenovo  │
-                          └───────┘ └───────┘ └─────────┘
+                    └──────────────────┬──────────────────────┘
+                                      │ C13 (IEC C14→C13)
+                                      ▼
+                              ┌────────────────┐
+                              │ Power Strip 1U │
+                              │     (U3)       │
+                              └──┬──┬──┬──┬────┘
+                                 │  │  │  │  Schuko
+                                 ▼  ▼  ▼  ▼
+                      ┌───────┐ ┌──────┐ ┌──────┐ ┌─────────┐
+                      │  NAS  │ │UDM-SE│ │Switch│ │ Mini PC │
+                      │ QNAP  │ │      │ │ PoE  │ │ Lenovo  │
+                      └───────┘ └──────┘ └──────┘ └─────────┘
 ```
 
-| UPS Outlet | Device | Connector |
-|-----------|--------|-----------|
-| C13 #1 | QNAP NAS | IEC C14 |
-| C13 #2 | UDM-SE | IEC C14 |
-| C13 #3 | PoE Switch | IEC C14 |
-| C13 #4 | Rack Power Strip (U3) | IEC C14 |
+| UPS Outlet | Device | Cable |
+|-----------|--------|-------|
+| C13 | Rack Power Strip (U3) | IEC C14→C13 |
+| C13 #2-4 | Available | Future expansion |
 
-| Power Strip Outlet | Device | Notes |
+| Power Strip Outlet | Device | Cable |
 |-------------------|--------|-------|
-| Schuko #1 | Lenovo Mini PC | External power supply |
-| Schuko #2-8 | Available | Future expansion |
+| Schuko #1 | QNAP NAS (U2) | Schuko, included with NAS |
+| Schuko #2 | UDM-SE (U5) | Schuko, included with UDM-SE |
+| Schuko #3 | PoE Switch (U6) | Schuko, included with Switch |
+| Schuko #4 | Lenovo Mini PC (U8) | Schuko + power brick, included with Mini PC |
+| Schuko #5-8 | Available | Future expansion |
 
 > [!NOTE]
-> All devices are protected by UPS battery. Devices with IEC connectors go directly to UPS, those with standard plugs go through the power strip.
+> All devices are protected by UPS battery. Only the power strip connects to the UPS (IEC C14→C13). All devices plug into the power strip with their included Schuko cables.
 
 ---
 
@@ -306,7 +303,7 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 
 - **Rack**: Open on top and bottom only (cable entry/exit points); sides closed
 - **Vented panel**: In U7 to thermally isolate Mini PC from networking
-- **Rack power strip**: In U3, connected to UPS for devices with standard plugs
+- **Rack power strip**: In U3, sole device connected to UPS; all other devices plug into it with Schuko
 - **UPS**: Consider upgrade to 1000-1500VA if using PoE intensively
 - **Installation order**: See [Rack Mounting Guide](../setup/rack-mounting-guide.md) for recommended bottom-up installation sequence
 
