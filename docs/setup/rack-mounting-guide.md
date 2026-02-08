@@ -83,16 +83,16 @@ Short (~30 cm) pre-made cables that connect the front of the patch panel (U4) to
 
 ### Power Cables
 
-Standard IEC and Schuko cables — not color-coded, but label the UPS mains cable for easy identification.
+Standard IEC and Schuko cables. The UPS powers only the power strip; all devices plug into the power strip with their included Schuko cables.
 
 | Label | Cable Type | From | To | Connected |
 |-------|-----------|------|----|-----------|
 | PWR-UPS | Schuko mains | Wall outlet | UPS rear input (U1) | Phase 3.1 |
-| — | IEC C14→C13 | UPS C13 #4 (U1) | Power strip input (U3) | Phase 3.4 |
-| — | IEC C14→C13 | UPS C13 #1 (U1) | NAS rear (U2) | Phase 4.1 |
-| — | IEC C14→C13 | UPS C13 #2 (U1) | UDM-SE rear (U5) | Phase 4.1 |
-| — | IEC C14→C13 | UPS C13 #3 (U1) | Switch rear (U6) | Phase 4.1 |
-| — | Schuko + adapter | Power strip #1 (U3) | Mini PC (U8) | Phase 4.1 |
+| — | IEC C14→C13 | UPS C13 outlet (U1) | Power strip input (U3) | Phase 3.4 |
+| — | Schuko (included with NAS) | Power strip (U3) | NAS rear (U2) | Phase 4.1 |
+| — | Schuko (included with UDM-SE) | Power strip (U3) | UDM-SE rear (U5) | Phase 4.1 |
+| — | Schuko (included with Switch) | Power strip (U3) | Switch rear (U6) | Phase 4.1 |
+| — | Schuko + adapter (included with Mini PC) | Power strip (U3) | Mini PC (U8) | Phase 4.1 |
 
 ### SFP+ Cables (10GbE Links)
 
@@ -255,7 +255,7 @@ Place the neoprene pad on top of the UPS in U1, before the NAS goes in. It absor
 ### 3.4 U3 — Rack Power Strip
 
 1. Mount the power strip in U3
-2. Connect its IEC C14 input cable to UPS C13 outlet #4 (short cable, runs straight down to U1)
+2. Connect its IEC C14 input cable to a UPS C13 outlet (short cable, runs straight down to U1)
 
 ### 3.5 U4 — Patch Panel
 
@@ -324,18 +324,14 @@ All equipment is now installed. The remaining connections are made from the **fr
 
 ### 4.1 Power Connections
 
-Connect power cables from the UPS and power strip to each device:
+The UPS powers only the power strip (already connected in Phase 3.4). All devices plug into the power strip with their included Schuko cables:
 
-| UPS Outlet | Device | Cable Route |
-|-----------|--------|-------------|
-| C13 #1 | QNAP NAS (U2) | Short IEC cable, route along side rail upward |
-| C13 #2 | UDM-SE (U5) | IEC cable, route along side rail upward |
-| C13 #3 | PoE Switch (U6) | IEC cable, route along side rail upward |
-| C13 #4 | Power Strip (U3) | Already connected in Phase 3.4 |
-
-| Power Strip Outlet | Device | Notes |
-|-------------------|--------|-------|
-| Schuko #1 | Lenovo Mini PC (U8) | External power supply brick |
+| Power Strip Outlet | Device | Cable comes from | Included with device |
+|-------------------|--------|-----------------|---------------------|
+| Schuko #1 | QNAP NAS (U2) | Below (U2→U3, 1U) | Yes |
+| Schuko #2 | UDM-SE (U5) | Above (U5→U3, 2U) | Yes |
+| Schuko #3 | PoE Switch (U6) | Above (U6→U3, 3U) | Yes |
+| Schuko #4 | Lenovo Mini PC (U8) | Above (U8→U3, 5U) | Yes (external power brick) |
 
 > [!TIP]
 > Route power cables along one side rail and network cables along the other. This reduces electromagnetic interference and makes troubleshooting easier.
@@ -427,7 +423,7 @@ PHASE 1 — WORKBENCH              PHASE 2 — EMPTY RACK
             ▼                                ▼
 PHASE 3 — INSTALL BOTTOM → UP   PHASE 4 — CABLE FROM FRONT
 ┌─────────────────────────┐      ┌─────────────────────────┐
-│ U1  UPS ............. ① │      │ ✦ Power cables (UPS →   │
+│ U1  UPS ............. ① │      │ ✦ Schuko cables (strip →│
 │ ░░  Neoprene ........ ② │      │   devices)              │
 │ U2  NAS ............. ③ │      │ ✦ SFP+ 10GbE links      │
 │ U3  Power Strip ..... ④ │      │ ✦ Patch cables (PP →    │
