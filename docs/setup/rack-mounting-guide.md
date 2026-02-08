@@ -10,8 +10,8 @@
 - [ ] Rack is level (use a spirit level on the front rails)
 - [ ] All equipment unpacked and inventoried (see [rack-homelab-config.md](../network/rack-homelab-config.md) for full component list)
 - [ ] All cables purchased per the [Cable Inventory](#cable-inventory) and labeled on both ends (see [Pre-Label Everything](#12-pre-label-everything))
-- [ ] Cage nuts / clip nuts installed in correct rail positions for all 8U
-- [ ] Basic toolkit: cage nut tool, Phillips screwdriver, cable ties, velcro straps
+- [ ] Rack rails verified — StarTech WALLSHELF8U uses **10-32 threaded holes** (screw directly into rails, no cage nuts needed)
+- [ ] Basic toolkit: Phillips screwdriver, 10-32 rack screws, cable ties, narrow velcro straps (8mm / 5/16" width — standard 12mm won't fit through rail holes, see [cable securing](#how-to-attach-cables-to-the-rack-posts))
 
 ---
 
@@ -150,7 +150,7 @@ Label **both ends** of every cable before it enters the rack. Use the color codi
 Before installing anything, confirm every device physically fits its intended U position:
 
 - Rack ears / rail adapters attached
-- Screws and cage nuts match (M6 is most common for 19" racks)
+- Screws match the rail thread (10-32 for this rack — no cage nuts needed)
 - Depth clearance is sufficient (measure from front rail to wall)
 
 > [!WARNING]
@@ -185,7 +185,7 @@ Feed all five external ethernet cables down through the **top opening**, one gro
 
 1. Route all five cables down the **left or right rear edge** of the rack interior (pick one side and stay consistent)
 2. Leave **30–40 cm of extra cable** (a service loop) coiled at each cable's destination level — this spare slack lets you pull cables out later for termination or rework
-3. Temporarily secure the bundle to the rear rail or rack frame with velcro straps (not zip ties — you may need to adjust later)
+3. Secure the bundle to the rack post using velcro straps (not zip ties — you may need to adjust later). See [How to attach cables to the rack posts](#how-to-attach-cables-to-the-rack-posts) below for technique
 
 ```
      TOP OPENING
@@ -204,9 +204,62 @@ Feed all five external ethernet cables down through the **top opening**, one gro
      BOTTOM
 ```
 
+#### How to Attach Cables to the Rack Posts
+
+The StarTech WALLSHELF8U has **closed side panels** and **10-32 threaded rail holes**. Since the sides are closed, you cannot wrap a strap around the post. Instead, thread the velcro strap through **two adjacent unused 10-32 holes** on the rail to create an anchor loop.
+
+**Technique — thread through two rail holes:**
+
+1. Push the velcro strap in through one unused 10-32 hole from the front
+2. Behind the rail, loop the strap around the cable bundle (cables sit between the rail and side panel)
+3. Thread the strap back out through the adjacent hole above or below
+4. Pull both ends snug from the front and fold the velcro back on itself to close
+
+```
+    RAIL (side view — looking              RAIL (front view — you only
+    from the open top or bottom)           see strap ends at the holes)
+
+    front │ rear                           ┌──────────┐
+          │                                │  ○       │ ◄── equipment screw
+     ━━━━►├──────────────┓ strap in        │          │
+          │              ┃ through hole 1  │  ● ← strap disappears into hole
+          │           ○○○┃ loops behind    │  ┆       │ (loops behind rail,
+          │           ○○○┃ cable bundle    │  ┆       │  around cables,
+          │              ┃                 │  ┆       │  comes back)
+     ◄━━━━├──────────────┛ strap out       │  ● ← strap comes back out
+          │                through hole 2  │          │
+          │                                │  ○       │ ◄── equipment screw
+          │                                └──────────┘
+```
+
+> [!NOTE]
+> Standard 10-32 holes are ~5mm. Use **narrow velcro cable ties** (8mm / 5/16" width) which fit through the holes. Standard 12mm (1/2") velcro ties are too wide.
+
+**Placement — one strap every 1–2U along the rail:**
+
+```
+    RAIL
+    ┌──┐
+    │  ┝━━○○○  U6 level — strap holds ethernet bundle
+    │  │
+    │  ┝━━○○○  U4 level — strap holds ethernet bundle
+    │  │
+    │  │
+    │  │
+    └──┘
+
+    (Repeat on opposite rail for power cable)
+```
+
+> [!TIP]
+> Since the ethernet bundle mixes 🟢 green and ⚪ white cables, use a neutral color (black or grey) velcro strap for the shared bundle.
+
+> [!WARNING]
+> **Do not use adhesive-backed cable mounts** (stick-on anchor pads). The rack generates enough heat from the UPS, NAS, switch, and UDM-SE to soften the adhesive over time, causing mounts to detach and cables to sag.
+
 ### 2.2 Route the UPS Mains Cable
 
-Feed the UPS power cable **down** through the **top opening** (on the **opposite rear edge** from the ethernet bundle) and leave it coiled at the U1 position. Do not plug it into the wall outlet yet.
+Feed the UPS power cable **down** through the **top opening** (on the **opposite rear edge** from the ethernet bundle) and leave it coiled at the U1 position. Secure it to the opposite rail with a velcro strap using the same [thread-through-holes technique](#how-to-attach-cables-to-the-rack-posts). Do not plug it into the wall outlet yet.
 
 > [!TIP]
 > Keep the mains power cable on the **opposite side** of the rack from the ethernet bundle. Separating power and data cables reduces electromagnetic interference.
@@ -240,7 +293,7 @@ The UPS is the heaviest single item (~15 kg). Install it first.
 4. **Do NOT plug the mains cable into the wall outlet yet** — no power until Phase 5
 
 > [!WARNING]
-> Use two people. The UPS weighs ~15 kg and lifting it at an angle into a wall-mounted rack risks dropping it or stripping cage nuts.
+> Use two people. The UPS weighs ~15 kg and lifting it at an angle into a wall-mounted rack risks dropping it or stripping the threaded rail holes.
 
 ### 3.2 Insulation — Neoprene 5mm
 

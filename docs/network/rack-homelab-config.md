@@ -40,6 +40,20 @@
 
 ## Component Details
 
+### Rack — StarTech WALLSHELF8U
+
+| Spec | Value |
+|------|-------|
+| Model | [WALLSHELF8U](https://www.startech.com/en-us/server-management/wallshelf8u) |
+| Type | 2-post wall-mount, closed side panels, open top and bottom |
+| Rack Units | 8U |
+| Rail Type | 10-32 tapped (threaded) — no cage nuts needed |
+| Mounting Depth | 12"–18" (adjustable) |
+| Dimensions | 17.6" H x 19.0" W x 18.0" D (44.6 x 48.3 x 45.7 cm) |
+| Weight Capacity | 75 lb (34 kg) |
+| Shelf | Built-in 12" dual-position shelf (top or bottom) |
+| Wall Studs | Mounting holes at 16" spacing (standard US framing) |
+
 ### U8 — Lenovo ThinkCentre neo 50q Gen 4
 
 | Spec | Value |
@@ -301,7 +315,7 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 
 ## Notes
 
-- **Rack**: Open on top and bottom only (cable entry/exit points); sides closed
+- **Rack**: StarTech WALLSHELF8U — 2-post wall-mount, closed side panels, open top and bottom, 10-32 threaded rails (see [product page](https://www.startech.com/en-us/server-management/wallshelf8u))
 - **Vented panel**: In U7 to thermally isolate Mini PC from networking
 - **Rack power strip**: In U3, sole device connected to UPS; all other devices plug into it with Schuko
 - **UPS**: Consider upgrade to 1000-1500VA if using PoE intensively
