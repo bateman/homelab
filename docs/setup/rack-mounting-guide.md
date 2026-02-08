@@ -11,7 +11,7 @@
 - [ ] All equipment unpacked and inventoried (see [rack-homelab-config.md](../network/rack-homelab-config.md) for full component list)
 - [ ] All cables purchased per the [Cable Inventory](#cable-inventory) and labeled on both ends (see [Pre-Label Everything](#12-pre-label-everything))
 - [ ] Rack rails verified — StarTech WALLSHELF8U uses **10-32 threaded holes** (screw directly into rails, no cage nuts needed)
-- [ ] Basic toolkit: Phillips screwdriver, 10-32 rack screws, cable ties, velcro straps
+- [ ] Basic toolkit: Phillips screwdriver, 10-32 rack screws, cable ties, narrow velcro straps (8mm / 5/16" width — standard 12mm won't fit through rail holes, see [cable securing](#how-to-attach-cables-to-the-rack-posts))
 
 ---
 
@@ -216,17 +216,19 @@ The StarTech WALLSHELF8U has **closed side panels** and **10-32 threaded rail ho
 4. Fold the velcro back on itself to close
 
 ```
-    RAIL (side view)                RAIL (front view)
+    RAIL (side view — looking from      RAIL (front view — you only see
+    the open top or bottom)             the strap ends entering the holes)
 
-    front │ rear                    ┌──────────┐
-          │                         │  ○       │ ◄── equipment screw
-     ━━━━►├─────  strap in          │          │
-          │ ┃     through hole 1    │  ●━━━━━━━━━━┓ strap in
-          │ ┃                       │  ┃       │  ┃
-     ◄━━━━├─────  strap out         │  ●━━━━━━━━━━┛ strap out
-          │       through hole 2    │          │  wraps cable
-          │             ○○○         │  ○       │  bundle behind
-          │            cables       └──────────┘  the rail
+    front │ rear                        ┌──────────┐
+          │                             │  ○       │ ◄── equipment screw
+     ━━━━►├─────  strap in              │          │
+          │ ┃     through hole 1        │  ● ← strap disappears into hole
+          │ ┃                           │  ┆       │ (loops behind rail,
+     ◄━━━━├─────  strap out             │  ┆       │  around cables,
+          │       through hole 2        │  ● ← strap comes back out
+          │             ○○○             │          │
+          │            cables           │  ○       │ ◄── equipment screw
+          │                             └──────────┘
 ```
 
 > [!NOTE]
@@ -256,7 +258,7 @@ The StarTech WALLSHELF8U has **closed side panels** and **10-32 threaded rail ho
 
 ### 2.2 Route the UPS Mains Cable
 
-Feed the UPS power cable **down** through the **top opening** (on the **opposite rear edge** from the ethernet bundle) and leave it coiled at the U1 position. Secure it to the opposite post with a velcro strap using the same [wrap-around technique](#how-to-attach-cables-to-the-rack-posts). Do not plug it into the wall outlet yet.
+Feed the UPS power cable **down** through the **top opening** (on the **opposite rear edge** from the ethernet bundle) and leave it coiled at the U1 position. Secure it to the opposite rail with a velcro strap using the same [thread-through-holes technique](#how-to-attach-cables-to-the-rack-posts). Do not plug it into the wall outlet yet.
 
 > [!TIP]
 > Keep the mains power cable on the **opposite side** of the rack from the ethernet bundle. Separating power and data cables reduces electromagnetic interference.
