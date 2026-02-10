@@ -36,7 +36,7 @@ With sides closed, you only have **two openings** for cable entry and exit:
    │  │ U6  Switch               │  │     access point)
    │  │ U5  UDM-SE               │  │
    │  │ U4  Patch Panel          │  │
-   │  │ U3  Vented Panel          │  │
+   │  │ U3  Vented Panel         │  │
    │  │ U2  NAS                  │  │
    │  │ U1  UPS                  │  │
    │  └──────────────────────────┘  │
