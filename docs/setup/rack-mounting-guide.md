@@ -137,6 +137,10 @@ Label **both ends** of every cable before it enters the rack. Use the color codi
 | Label | Color | Cable | Route |
 |-------|-------|-------|-------|
 | BLK-01 Proxmox | ⚫ Black | Mini PC ethernet | Mini PC (U8) → Switch or UDM-SE LAN |
+| PWR-UDM | — | IEC C13→C14, 1.0 m | UPS C13 #1 always-on (U1) → UDM-SE (U5) |
+| PWR-SW | — | IEC C13→C14, 1.0 m | UPS C13 #2 always-on (U1) → Switch (U6) |
+| PWR-NAS | — | IEC C13→C14, 0.5 m | UPS C13 #3 manageable (U1) → NAS (U2) |
+| PWR-PC | — | IEC C13→Schuko adapter, 1.5 m | UPS C13 #4 manageable (U1) → Mini PC (U8) |
 | GRN-01 Studio | 🟢 Green | Front patch cable ~30 cm | PP-03 front (U4) → Switch Port 3 (U6) |
 | GRN-02 Living | 🟢 Green | Front patch cable ~30 cm | PP-04 front (U4) → Switch Port 4 (U6) |
 | GRN-03 Bedroom | 🟢 Green | Front patch cable ~30 cm | PP-05 front (U4) → Switch Port 5 (U6) |
@@ -382,8 +386,8 @@ All devices connect directly to UPS C13 outlets (U1). Route power cables along o
 |-----------|------|--------|-------|--------|-------|
 | C13 #1 | Always-on | UDM-SE (U5) | IEC C13→C14 | 1.0 m | U1→U5, 4U |
 | C13 #2 | Always-on | PoE Switch (U6) | IEC C13→C14 | 1.0 m | U1→U6, 5U |
-| C13 #3 | Manageable | QNAP NAS (U2) | IEC C13→C14 | 0.5 m | U1→U2, 1U |
-| C13 #4 | Manageable | Mini PC (U8) | IEC C13→Schuko adapter + power brick | 1.5 m | U1→U8, 7U |
+| C13 #3 | Remotely manageable | QNAP NAS (U2) | IEC C13→C14 | 0.5 m | U1→U2, 1U |
+| C13 #4 | Remotely manageable | Mini PC (U8) | IEC C13→Schuko adapter + power brick | 1.5 m | U1→U8, 7U |
 
 > [!NOTE]
 > Network infrastructure (UDM-SE, Switch) on **always-on** outlets. Storage and compute (NAS, Mini PC) on **remotely manageable** outlets — NUT can shut them down during extended outages to extend battery runtime for the network.
@@ -428,7 +432,7 @@ Use **~30 cm** patch cables. The patch panel (U4) and switch (U6) are 2U apart w
 ### 4.5 Cable Management Final Pass
 
 1. Bundle front-facing patch cables with velcro straps
-2. Ensure no cables obstruct the vented panel (U7) airflow
+2. Ensure no cables obstruct the vented panels (U3 and U7) airflow
 3. Verify no cables are pinched, kinked, or under tension
 4. Confirm all labels are visible from the front
 
