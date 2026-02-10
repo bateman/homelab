@@ -19,8 +19,8 @@
 ┃ U4  │ 🔌 Patch Panel                                                          ┃
 ┃     │   • Passive, no heat — acts as natural buffer                           ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ U3  │ 🔌 Rack Power Strip                                                     ┃
-┃     │   • Power for devices with standard plugs (e.g. Mini PC)                ┃
+┃ U3  │ 🌀 Vented Panel #2                                                       ┃
+┃     │   • Airflow between NAS and networking                                 ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ U2  │ 💾 QNAP NAS                                                             ┃
 ┃     │   • HDDs in coolest zone of rack                                        ┃
@@ -143,14 +143,10 @@
 > [!TIP]
 > Patch panel ports mirror switch port numbers for easy troubleshooting.
 
-### U3 — 1U Rack Power Strip
+### U3 — Vented Panel #2
 
-| Spec | Value |
-|------|-------|
-| Outlets | 8x Schuko |
-| Input | IEC C14 (connected to UPS) |
-| Function | Power for devices with standard plugs |
-| Connected Devices | Lenovo Mini PC |
+- Ubiquiti UACC-Rack-Panel-Vented-1U
+- Airflow between NAS and networking gear
 
 ### U2 — QNAP TS-435XeU
 
@@ -177,6 +173,8 @@
 |------|-------|
 | Power | 650VA / 420W |
 | Technology | Line-interactive |
+| Outlets | 4x IEC C13 (all battery backed + surge protected) |
+| Outlet types | 2x always-on, 2x remotely manageable |
 | Runtime | ~10-15 min (average load) |
 | Management | USB -> Proxmox (NUT) |
 
@@ -205,47 +203,45 @@
 | Top (U8) | Mini PC | Maximum dissipation outward |
 | U7 | Vented | Cuts heat rise from networking |
 | Center (U4-U6) | Networking + Patch | Moderate heat, ventilated via top/bottom airflow |
-| U3 | Power Strip | Passive, no heat generated |
+| U3 | Vented | Airflow between NAS and networking |
 | Bottom (U1-U2) | NAS + UPS | Coolest zone, ideal for HDDs (< 40C) |
 
 ---
 
 ## Power Distribution
 
+All 4 devices connect **directly** to the UPS C13 outlets — no power strip needed.
+
 ```
-                    ┌─────────────────────────────────────────┐
-                    │           UPS Eaton 5P 650i             │
-                    │              (4x C13)                   │
-                    └──────────────────┬──────────────────────┘
-                                      │ C13 (IEC C14→C13)
-                                      ▼
-                              ┌────────────────┐
-                              │ Power Strip 1U │
-                              │     (U3)       │
-                              └──┬──┬──┬──┬────┘
-                                 │  │  │  │  Schuko
-                                 ▼  ▼  ▼  ▼
-                      ┌───────┐ ┌──────┐ ┌──────┐ ┌─────────┐
-                      │  NAS  │ │UDM-SE│ │Switch│ │ Mini PC │
-                      │ QNAP  │ │      │ │ PoE  │ │ Lenovo  │
-                      └───────┘ └──────┘ └──────┘ └─────────┘
+                         ┌──────────────────────────────────────┐
+                         │          UPS Eaton 5P 650i           │
+                         │             (4x C13)                 │
+                         │  ┌────────────┬────────────────────┐ │
+                         │  │ Always-on  │ Remotely manageable│ │
+                         │  │  C13 #1    │  C13 #3            │ │
+                         │  │  C13 #2    │  C13 #4            │ │
+                         │  └────────────┴────────────────────┘ │
+                         └───┬──────┬──────────┬──────────┬─────┘
+                             │      │          │          │
+                             ▼      ▼          ▼          ▼
+                        ┌──────┐ ┌──────┐ ┌───────┐ ┌─────────┐
+                        │UDM-SE│ │Switch│ │  NAS  │ │ Mini PC │
+                        │      │ │ PoE  │ │ QNAP  │ │ Lenovo  │
+                        └──────┘ └──────┘ └───────┘ └─────────┘
 ```
 
-| UPS Outlet | Device | Cable |
-|-----------|--------|-------|
-| C13 | Rack Power Strip (U3) | IEC C14→C13 |
-| C13 #2-4 | Available | Future expansion |
-
-| Power Strip Outlet | Device | Cable |
-|-------------------|--------|-------|
-| Schuko #1 | QNAP NAS (U2) | Schuko, included with NAS |
-| Schuko #2 | UDM-SE (U5) | Schuko, included with UDM-SE |
-| Schuko #3 | PoE Switch (U6) | Schuko, included with Switch |
-| Schuko #4 | Lenovo Mini PC (U8) | Schuko + power brick, included with Mini PC |
-| Schuko #5-8 | Available | Future expansion |
+| UPS Outlet | Type | Device | Cable | Length |
+|-----------|------|--------|-------|--------|
+| C13 #1 | Always-on | UDM-SE (U5) | IEC C13→C14 | 1.0 m |
+| C13 #2 | Always-on | PoE Switch (U6) | IEC C13→C14 | 1.0 m |
+| C13 #3 | Remotely manageable | QNAP NAS (U2) | IEC C13→C14 | 0.5 m |
+| C13 #4 | Remotely manageable | Lenovo Mini PC (U8) | IEC C13→Schuko adapter + power brick | 1.5 m |
 
 > [!NOTE]
-> All devices are protected by UPS battery. Only the power strip connects to the UPS (IEC C14→C13). All devices plug into the power strip with their included Schuko cables.
+> **Outlet logic:** Network infrastructure (UDM-SE, Switch) on **always-on** outlets — they must stay powered for remote management. Storage and compute (NAS, Mini PC) on **remotely manageable** outlets — NUT can shut them down during extended outages to extend battery runtime for the network.
+
+> [!NOTE]
+> The Mini PC uses an external power brick with Schuko plug. It requires a **C13→Schuko adapter cable** (IEC C14 plug → Schuko socket). All other devices have native IEC C14 power inlets.
 
 ---
 
@@ -316,9 +312,8 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 ## Notes
 
 - **Rack**: StarTech WALLSHELF8U — 2-post wall-mount, closed side panels, open top and bottom, 10-32 threaded rails (see [product page](https://www.startech.com/en-us/server-management/wallshelf8u))
-- **Vented panel**: In U7 to thermally isolate Mini PC from networking
-- **Rack power strip**: In U3, sole device connected to UPS; all other devices plug into it with Schuko
-- **UPS**: Consider upgrade to 1000-1500VA if using PoE intensively
+- **Vented panels**: U7 (thermal isolation between Mini PC and networking) and U3 (airflow between NAS and networking)
+- **UPS**: All 4 devices connect directly to UPS C13 outlets (no power strip). Consider upgrade to 1000-1500VA if using PoE intensively
 - **Installation order**: See [Rack Mounting Guide](../setup/rack-mounting-guide.md) for recommended bottom-up installation sequence
 
 ---
