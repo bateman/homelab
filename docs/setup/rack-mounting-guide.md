@@ -36,7 +36,7 @@ With sides closed, you only have **two openings** for cable entry and exit:
    │  │ U6  Switch               │  │     access point)
    │  │ U5  UDM-SE               │  │
    │  │ U4  Patch Panel          │  │
-   │  │ U3  Power Strip          │  │
+   │  │ U3  Vented Panel         │  │
    │  │ U2  NAS                  │  │
    │  │ U1  UPS                  │  │
    │  └──────────────────────────┘  │
@@ -83,16 +83,15 @@ Short (~30 cm) pre-made cables that connect the front of the patch panel (U4) to
 
 ### Power Cables
 
-Standard IEC and Schuko cables. The UPS powers only the power strip; all devices plug into the power strip with their included Schuko cables.
+All devices connect directly to UPS C13 outlets. No power strip — the UPS has 4x C13 (2 always-on, 2 remotely manageable) which matches the 4 devices exactly.
 
-| Label | Cable Type | From | To | Connected |
-|-------|-----------|------|----|-----------|
-| PWR-UPS | Schuko mains | Wall outlet | UPS rear input (U1) | Phase 3.1 |
-| — | IEC C14→C13 | UPS C13 outlet (U1) | Power strip input (U3) | Phase 3.4 |
-| — | Schuko (included with NAS) | Power strip (U3) | NAS rear (U2) | Phase 4.1 |
-| — | Schuko (included with UDM-SE) | Power strip (U3) | UDM-SE rear (U5) | Phase 4.1 |
-| — | Schuko (included with Switch) | Power strip (U3) | Switch rear (U6) | Phase 4.1 |
-| — | Schuko + adapter (included with Mini PC) | Power strip (U3) | Mini PC (U8) | Phase 4.1 |
+| Label | Cable Type | Length | From | To | Connected |
+|-------|-----------|--------|------|----|-----------|
+| PWR-UPS | Schuko mains | — | Wall outlet | UPS rear input (U1) | Phase 3.1 |
+| PWR-UDM | IEC C13→C14 | 1.0 m | UPS C13 #1 always-on (U1) | UDM-SE rear (U5) | Phase 4.1 |
+| PWR-SW | IEC C13→C14 | 1.0 m | UPS C13 #2 always-on (U1) | Switch rear (U6) | Phase 4.1 |
+| PWR-NAS | IEC C13→C14 | 0.5 m | UPS C13 #3 manageable (U1) | NAS rear (U2) | Phase 4.1 |
+| PWR-PC | IEC C13→Schuko adapter + power brick | 1.5 m | UPS C13 #4 manageable (U1) | Mini PC (U8) | Phase 4.1 |
 
 ### SFP+ Cables (10GbE Links)
 
@@ -138,6 +137,10 @@ Label **both ends** of every cable before it enters the rack. Use the color codi
 | Label | Color | Cable | Route |
 |-------|-------|-------|-------|
 | BLK-01 Proxmox | ⚫ Black | Mini PC ethernet | Mini PC (U8) → Switch or UDM-SE LAN |
+| PWR-UDM | — | IEC C13→C14, 1.0 m | UPS C13 #1 always-on (U1) → UDM-SE (U5) |
+| PWR-SW | — | IEC C13→C14, 1.0 m | UPS C13 #2 always-on (U1) → Switch (U6) |
+| PWR-NAS | — | IEC C13→C14, 0.5 m | UPS C13 #3 manageable (U1) → NAS (U2) |
+| PWR-PC | — | IEC C13→Schuko adapter, 1.5 m | UPS C13 #4 manageable (U1) → Mini PC (U8) |
 | GRN-01 Studio | 🟢 Green | Front patch cable ~30 cm | PP-03 front (U4) → Switch Port 3 (U6) |
 | GRN-02 Living | 🟢 Green | Front patch cable ~30 cm | PP-04 front (U4) → Switch Port 4 (U6) |
 | GRN-03 Bedroom | 🟢 Green | Front patch cable ~30 cm | PP-05 front (U4) → Switch Port 5 (U6) |
@@ -305,10 +308,10 @@ Place the neoprene pad on top of the UPS in U1, before the NAS goes in. It absor
 2. Secure with front screws
 3. **Do not connect any cables yet** — power and network come in Phase 4
 
-### 3.4 U3 — Rack Power Strip
+### 3.4 U3 — Vented Panel #2
 
-1. Mount the power strip in U3
-2. Connect its IEC C14 input cable to a UPS C13 outlet (short cable, runs straight down to U1)
+1. Snap/screw the vented panel into U3
+2. No cabling required — it provides airflow between the NAS and networking gear
 
 ### 3.5 U4 — Patch Panel
 
@@ -338,7 +341,7 @@ Before proceeding to the upper half, verify:
 - [ ] UPS seated and secured at U1, mains cable connected (not plugged in)
 - [ ] Neoprene insulation in place
 - [ ] NAS seated and secured at U2
-- [ ] Power strip mounted at U3, connected to UPS
+- [ ] Vented panel mounted at U3
 - [ ] Patch panel mounted at U4 with all keystones terminated, tested, and rear cables tidy
 - [ ] Cable bundle is tidy along rear edge, no loose loops hanging
 
@@ -377,14 +380,17 @@ All equipment is now installed. The remaining connections are made from the **fr
 
 ### 4.1 Power Connections
 
-The UPS powers only the power strip (already connected in Phase 3.4). All devices plug into the power strip with their included Schuko cables:
+All devices connect directly to UPS C13 outlets (U1). Route power cables along one side rail (opposite from ethernet cables to reduce EMI).
 
-| Power Strip Outlet | Device | Cable comes from | Included with device |
-|-------------------|--------|-----------------|---------------------|
-| Schuko #1 | QNAP NAS (U2) | Below (U2→U3, 1U) | Yes |
-| Schuko #2 | UDM-SE (U5) | Above (U5→U3, 2U) | Yes |
-| Schuko #3 | PoE Switch (U6) | Above (U6→U3, 3U) | Yes |
-| Schuko #4 | Lenovo Mini PC (U8) | Above (U8→U3, 5U) | Yes (external power brick) |
+| UPS Outlet | Type | Device | Cable | Length | Route |
+|-----------|------|--------|-------|--------|-------|
+| C13 #1 | Always-on | UDM-SE (U5) | IEC C13→C14 | 1.0 m | U1→U5, 4U |
+| C13 #2 | Always-on | PoE Switch (U6) | IEC C13→C14 | 1.0 m | U1→U6, 5U |
+| C13 #3 | Remotely manageable | QNAP NAS (U2) | IEC C13→C14 | 0.5 m | U1→U2, 1U |
+| C13 #4 | Remotely manageable | Mini PC (U8) | IEC C13→Schuko adapter + power brick | 1.5 m | U1→U8, 7U |
+
+> [!NOTE]
+> Network infrastructure (UDM-SE, Switch) on **always-on** outlets. Storage and compute (NAS, Mini PC) on **remotely manageable** outlets — NUT can shut them down during extended outages to extend battery runtime for the network.
 
 > [!TIP]
 > Route power cables along one side rail and network cables along the other. This reduces electromagnetic interference and makes troubleshooting easier.
@@ -426,7 +432,7 @@ Use **~30 cm** patch cables. The patch panel (U4) and switch (U6) are 2U apart w
 ### 4.5 Cable Management Final Pass
 
 1. Bundle front-facing patch cables with velcro straps
-2. Ensure no cables obstruct the vented panel (U7) airflow
+2. Ensure no cables obstruct the vented panels (U3 and U7) airflow
 3. Verify no cables are pinched, kinked, or under tension
 4. Confirm all labels are visible from the front
 
@@ -451,7 +457,7 @@ Power on devices in this order, waiting for each to fully boot before starting t
 
 ### 5.2 Verification Checklist
 
-- [ ] UPS shows all outlets active, battery status healthy
+- [ ] UPS shows all 4 outlets active (2 always-on, 2 manageable), battery status healthy
 - [ ] UDM-SE reachable at 192.168.2.1
 - [ ] Switch adopted in UniFi Controller at 192.168.2.10
 - [ ] NAS reachable at 192.168.3.10
@@ -476,10 +482,10 @@ PHASE 1 — WORKBENCH              PHASE 2 — EMPTY RACK
             ▼                                ▼
 PHASE 3 — INSTALL BOTTOM → UP   PHASE 4 — CABLE FROM FRONT
 ┌─────────────────────────┐      ┌─────────────────────────┐
-│ U1  UPS ............. ① │      │ ✦ Schuko cables (strip →│
-│ ░░  Neoprene ........ ② │      │   devices)              │
+│ U1  UPS ............. ① │      │ ✦ IEC power cables      │
+│ ░░  Neoprene ........ ② │      │   (UPS → devices direct)│
 │ U2  NAS ............. ③ │      │ ✦ SFP+ 10GbE links      │
-│ U3  Power Strip ..... ④ │      │ ✦ Patch cables (PP →    │
+│ U3  Vented Panel .... ④ │      │ ✦ Patch cables (PP →    │
 │ U4  Patch Panel ..... ⑤ │      │   switch, short ~30cm)  │
 │  ► TERMINATE + MOUNT ◄  │      │ ✦ AP & Mini PC ethernet │
 │ U5  UDM-SE .......... ⑥ │      │ ✦ Tidy cables & labels  │

@@ -40,7 +40,7 @@ Before starting, make sure you have:
 1. [ ] **U1**: UPS (weight at bottom, minimal heat generation)
 2. [ ] **Insulation**: 5mm neoprene between UPS and NAS
 3. [ ] **U2**: QNAP TS-435XeU (cool zone for HDDs)
-4. [ ] **U3**: Rack power strip (device power)
+4. [ ] **U3**: Vented panel (airflow between NAS and networking)
 5. [ ] **U4**: Patch panel (passive, thermal buffer)
 6. [ ] **U5**: UDM-SE
 7. [ ] **U6**: USW-Pro-Max-16-PoE
@@ -53,7 +53,7 @@ Before starting, make sure you have:
 - [ ] Connect UDM-SE port 1 → Switch port 1 (VLAN trunk)
 - [ ] Connect Switch SFP+ port → NAS SFP+ port (10GbE)
 - [ ] Connect Switch port 2 → Mini PC (2.5GbE via USB-C adapter)
-- [ ] Connect all devices to UPS
+- [ ] Connect all devices directly to UPS C13 outlets (no power strip)
 
 ### Verification
 
