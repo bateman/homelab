@@ -29,8 +29,8 @@ With sides closed, you only have **two openings** for cable entry and exit:
         │   • AP PoE cable     │
         │   • UPS mains power  │
         │                      │
-   ┌────┴──────────────────────┴───┐
-   │  ┌──────────────────────────┐ │
+   ┌────┴──────────────────────┴────┐
+   │  ┌──────────────────────────┐  │
    │  │ U8  Mini PC              │  │◄── FRONT
    │  │ U7  Vented Panel         │  │    (only equipment
    │  │ U6  Switch               │  │     access point)
