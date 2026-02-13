@@ -269,7 +269,7 @@ Feed the UPS power cable **down** through the **top opening** (on the **opposite
 
 ### 2.3 Verify Before Proceeding
 
-- [ ] Three green cables (GRN-01/02/03) reach U4 level with 30–40 cm of extra slack
+- [ ] Three green-strapped cables (GRN-01/02/03) reach U4 level with 30–40 cm of extra slack
 - [ ] WAN cable (WHT-WAN) reaches U5 level with extra slack
 - [ ] AP cable (WHT-01 AP) reaches U6 level with extra slack
 - [ ] All five cables secured along one rear edge, not blocking the middle of the rack
@@ -321,7 +321,7 @@ Only the three 🟢 green-strapped room cables get terminated here. The ⚪ whit
 
 **Step A — Terminate on the workbench (not in the rack):**
 
-1. Grab the three green cables (GRN-01, GRN-02, GRN-03) at U4 level where you left extra slack in Phase 2.1. Pull them up and out through the top opening — you need enough cable outside the rack to reach your workbench.
+1. Grab the three green-strapped cables (GRN-01, GRN-02, GRN-03) at U4 level where you left extra slack in Phase 2.1. Pull them up and out through the top opening — you need enough cable outside the rack to reach your workbench.
 2. For each cable: strip the outer sheath, punch down onto a keystone jack (or use toolless keystones), and snap the keystone into the correct panel slot:
    - GRN-01 Studio → slot PP-03
    - GRN-02 Living → slot PP-04
