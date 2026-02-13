@@ -88,8 +88,8 @@ All devices connect directly to UPS C13 outlets. No power strip — the UPS has 
 | Label | Cable Type | Length | From | To | Connected |
 |-------|-----------|--------|------|----|-----------|
 | PWR-UPS | Schuko mains | — | Wall outlet | UPS rear input (U1) | Phase 3.1 |
-| PWR-UDM | IEC C13→C14 | 1.0 m | UPS C13 #1 always-on (U1) | UDM-SE rear (U5) | Phase 4.1 |
-| PWR-SW | IEC C13→C14 | 1.0 m | UPS C13 #2 always-on (U1) | Switch rear (U6) | Phase 4.1 |
+| PWR-UDM | IEC C13→C14 + C14-to-Schuko adapter (Spina IEC C14 a Presa Schuko 16A) | 1.0 m | UPS C13 #1 always-on (U1) | UDM-SE rear (U5) | Phase 4.1 |
+| PWR-SW | IEC C13→C14 + C14-to-Schuko adapter (Spina IEC C14 a Presa Schuko 16A) | 1.0 m | UPS C13 #2 always-on (U1) | Switch rear (U6) | Phase 4.1 |
 | PWR-NAS | IEC C13→C14 | 0.5 m | UPS C13 #3 manageable (U1) | NAS rear (U2) | Phase 4.1 |
 | PWR-PC | IEC C13→Schuko adapter + power brick | 1.5 m | UPS C13 #4 manageable (U1) | Mini PC (U8) | Phase 4.1 |
 
@@ -137,8 +137,8 @@ Label **both ends** of every cable before it enters the rack. Use the color codi
 | Label | Color | Cable | Route |
 |-------|-------|-------|-------|
 | BLK-01 Proxmox | ⚫ Black | Mini PC ethernet | Mini PC (U8) → Switch or UDM-SE LAN |
-| PWR-UDM | — | IEC C13→C14, 1.0 m | UPS C13 #1 always-on (U1) → UDM-SE (U5) |
-| PWR-SW | — | IEC C13→C14, 1.0 m | UPS C13 #2 always-on (U1) → Switch (U6) |
+| PWR-UDM | — | IEC C13→C14 + C14-to-Schuko adapter, 1.0 m | UPS C13 #1 always-on (U1) → UDM-SE (U5) |
+| PWR-SW | — | IEC C13→C14 + C14-to-Schuko adapter, 1.0 m | UPS C13 #2 always-on (U1) → Switch (U6) |
 | PWR-NAS | — | IEC C13→C14, 0.5 m | UPS C13 #3 manageable (U1) → NAS (U2) |
 | PWR-PC | — | IEC C13→Schuko adapter, 1.5 m | UPS C13 #4 manageable (U1) → Mini PC (U8) |
 | GRN-01 Studio | 🟢 Green | Front patch cable ~30 cm | PP-03 front (U4) → Switch Port 3 (U6) |
@@ -384,8 +384,8 @@ All devices connect directly to UPS C13 outlets (U1). Route power cables along o
 
 | UPS Outlet | Type | Device | Cable | Length | Route |
 |-----------|------|--------|-------|--------|-------|
-| C13 #1 | Always-on | UDM-SE (U5) | IEC C13→C14 | 1.0 m | U1→U5, 4U |
-| C13 #2 | Always-on | PoE Switch (U6) | IEC C13→C14 | 1.0 m | U1→U6, 5U |
+| C13 #1 | Always-on | UDM-SE (U5) | IEC C13→C14 + C14-to-Schuko adapter | 1.0 m | U1→U5, 4U |
+| C13 #2 | Always-on | PoE Switch (U6) | IEC C13→C14 + C14-to-Schuko adapter | 1.0 m | U1→U6, 5U |
 | C13 #3 | Remotely manageable | QNAP NAS (U2) | IEC C13→C14 | 0.5 m | U1→U2, 1U |
 | C13 #4 | Remotely manageable | Mini PC (U8) | IEC C13→Schuko adapter + power brick | 1.5 m | U1→U8, 7U |
 
