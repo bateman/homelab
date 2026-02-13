@@ -298,14 +298,16 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 
 ## Network Cable Color Coding
 
-| Color | Use | Example |
-|-------|-----|---------|
+Cables are identified by **colored straps** (not by cable jacket color). Attach a colored strap near each end of the cable to indicate its role.
+
+| Strap Color | Use | Example |
+|-------------|-----|---------|
 | ⚫ Black | Rack internal | NAS, Mini PC |
 | 🟢 Green | Room devices | Bedroom, Office, Living Room |
 | ⚪ White | Management / Uplink | UDM-SE, Switch, Access Point |
 
 > [!TIP]
-> Every cable must have labels on both ends with: color + number + destination (e.g. "GRN-01 Office/PC")
+> Every cable must have a colored strap and a label on both ends with: color + number + destination (e.g. "GRN-01 Office/PC")
 
 ---
 

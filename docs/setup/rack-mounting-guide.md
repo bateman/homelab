@@ -60,9 +60,9 @@ With sides closed, you only have **two openings** for cable entry and exit:
 
 ### Ethernet Cables
 
-Labeled using the [color coding system](../network/rack-homelab-config.md#network-cable-color-coding): 🟢 Green = room devices, ⚪ White = management/uplink, ⚫ Black = rack internal.
+Identified by colored straps per the [color coding system](../network/rack-homelab-config.md#network-cable-color-coding): 🟢 Green strap = room devices, ⚪ White strap = management/uplink, ⚫ Black strap = rack internal.
 
-| Label | Color | Cable Type | From | To | Entry Point | Routed | Connected |
+| Label | Strap | Cable Type | From | To | Entry Point | Routed | Connected |
 |-------|-------|-----------|------|-----|-------------|--------|-----------|
 | GRN-01 Studio | 🟢 Green | Cat6A in-wall cable | Studio wall plate | PP-03 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
 | GRN-02 Living | 🟢 Green | Cat6A in-wall cable | Living room wall plate | PP-04 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
@@ -73,9 +73,9 @@ Labeled using the [color coding system](../network/rack-homelab-config.md#networ
 
 ### Front Patch Cables (Patch Panel → Switch)
 
-Short (~30 cm) pre-made cables that connect the front of the patch panel (U4) to the switch (U6). Use green cables with the same labels as the room cables they serve.
+Short (~30 cm) pre-made cables that connect the front of the patch panel (U4) to the switch (U6). Attach green straps and the same labels as the room cables they serve.
 
-| Label | Color | Length | From | To | Connected |
+| Label | Strap | Length | From | To | Connected |
 |-------|-------|--------|------|----|-----------|
 | GRN-01 Studio | 🟢 Green | ~30 cm | PP-03 front (U4) | Switch Port 3 (U6) | Phase 4.3 |
 | GRN-02 Living | 🟢 Green | ~30 cm | PP-04 front (U4) | Switch Port 4 (U6) | Phase 4.3 |
@@ -119,11 +119,11 @@ Get the patch panel frame and keystone jacks ready on a workbench. **Do not punc
 
 ### 1.2 Pre-Label Everything
 
-Label **both ends** of every cable before it enters the rack. Use the color coding from the [Cable Inventory](#cable-inventory): 🟢 Green = room devices, ⚪ White = management/uplink, ⚫ Black = rack internal.
+Label **both ends** of every cable and attach a **colored strap** near each end before it enters the rack. Use the color coding from the [Cable Inventory](#cable-inventory): 🟢 Green strap = room devices, ⚪ White strap = management/uplink, ⚫ Black strap = rack internal.
 
 **In-wall and external cables** (routed through the top opening):
 
-| Label | Color | Cable | Route |
+| Label | Strap | Cable | Route |
 |-------|-------|-------|-------|
 | GRN-01 Studio | 🟢 Green | Studio room cable | Top opening → PP-03 rear (U4) |
 | GRN-02 Living | 🟢 Green | Living room cable | Top opening → PP-04 rear (U4) |
@@ -134,7 +134,7 @@ Label **both ends** of every cable before it enters the rack. Use the color codi
 
 **Internal rack cables** (never leave the rack):
 
-| Label | Color | Cable | Route |
+| Label | Strap | Cable | Route |
 |-------|-------|-------|-------|
 | BLK-01 Proxmox | ⚫ Black | Mini PC ethernet | Mini PC (U8) → Switch or UDM-SE LAN |
 | PWR-UDM | — | IEC C13→C14 + C14-to-Schuko adapter, 1.0 m | UPS C13 #1 always-on (U1) → UDM-SE (U5) |
@@ -146,7 +146,7 @@ Label **both ends** of every cable before it enters the rack. Use the color codi
 | GRN-03 Bedroom | 🟢 Green | Front patch cable ~30 cm | PP-05 front (U4) → Switch Port 5 (U6) |
 
 > [!TIP]
-> Front patch cables use the **same label and color** as the in-wall cable they connect to. This makes it easy to trace a room connection from wall plate to switch port.
+> Front patch cables use the **same label and strap color** as the in-wall cable they connect to. This makes it easy to trace a room connection from wall plate to switch port.
 
 ### 1.3 Test-Fit Equipment
 
@@ -169,7 +169,7 @@ Before installing anything, confirm every device physically fits its intended U 
 
 Feed all five external ethernet cables down through the **top opening**, one group at a time:
 
-**Step 1 — Room cables (🟢 Green):** Route the three green in-wall cables together as a bundle.
+**Step 1 — Room cables (🟢 Green strap):** Route the three green-strapped in-wall cables together as a bundle.
 
 | Cable | Label | Destination | Pull down to |
 |-------|-------|-------------|-------------|
@@ -177,7 +177,7 @@ Feed all five external ethernet cables down through the **top opening**, one gro
 | Living room cable | GRN-02 Living | PP-04 rear keystone (U4) | U4 level |
 | Bedroom cable | GRN-03 Bedroom | PP-05 rear keystone (U4) | U4 level |
 
-**Step 2 — Management/uplink (⚪ White):** Route the two white cables alongside the green bundle.
+**Step 2 — Management/uplink (⚪ White strap):** Route the two white-strapped cables alongside the green bundle.
 
 | Cable | Label | Destination | Pull down to |
 |-------|-------|-------------|-------------|
@@ -255,7 +255,7 @@ The StarTech WALLSHELF8U has **closed side panels** and **10-32 threaded rail ho
 ```
 
 > [!TIP]
-> Since the ethernet bundle mixes 🟢 green and ⚪ white cables, use a neutral color (black or grey) velcro strap for the shared bundle.
+> Since the ethernet bundle mixes 🟢 green-strapped and ⚪ white-strapped cables, use a neutral color (black or grey) velcro strap for the shared bundle.
 
 > [!WARNING]
 > **Do not use adhesive-backed cable mounts** (stick-on anchor pads). The rack generates enough heat from the UPS, NAS, switch, and UDM-SE to soften the adhesive over time, causing mounts to detach and cables to sag.
@@ -317,7 +317,7 @@ Place the neoprene pad on top of the UPS in U1, before the NAS goes in. It absor
 
 **Do this before installing the UDM-SE (U5) and Switch (U6).** Once those are in place above U4, you cannot reach the back of the patch panel through the top opening.
 
-Only the three 🟢 green room cables get terminated here. The ⚪ white cables (WHT-WAN, WHT-01 AP) stay in the rack — they plug directly into devices later.
+Only the three 🟢 green-strapped room cables get terminated here. The ⚪ white-strapped cables (WHT-WAN, WHT-01 AP) stay in the rack — they plug directly into devices later.
 
 **Step A — Terminate on the workbench (not in the rack):**
 
@@ -409,7 +409,7 @@ Connect the 10GbE links using DAC (Direct Attach Copper) cables or SFP+ transcei
 
 ### 4.3 Front Patch Cables (Patch Panel → Switch)
 
-These are **separate pre-made 🟢 green cables** (~30 cm) — not the in-wall runs. They bridge the **front** of the patch panel (U4) **up** to the switch (U6), completing the room-to-switch path.
+These are **separate pre-made cables with 🟢 green straps** (~30 cm) — not the in-wall runs. They bridge the **front** of the patch panel (U4) **up** to the switch (U6), completing the room-to-switch path.
 
 | Patch Cable Label | From | To | VLAN |
 |-------------------|------|----|------|
@@ -420,11 +420,11 @@ These are **separate pre-made 🟢 green cables** (~30 cm) — not the in-wall r
 Use **~30 cm** patch cables. The patch panel (U4) and switch (U6) are 2U apart with the UDM-SE between them — keep cables short to avoid clutter.
 
 > [!NOTE]
-> The full connection path for each room is now: **room wall plate → 🟢 green in-wall cable → patch panel rear keystone → patch panel front port → 🟢 green patch cable → switch port**.
+> The full connection path for each room is now: **room wall plate → 🟢 green-strapped in-wall cable → patch panel rear keystone → patch panel front port → 🟢 green-strapped patch cable → switch port**.
 
 ### 4.4 Remaining Ethernet Connections
 
-| Label | Color | From | To | Notes |
+| Label | Strap | From | To | Notes |
 |-------|-------|------|-----|-------|
 | WHT-01 AP | ⚪ White | Switch Port 2 (U6) | Top opening → ceiling AP | Routed in Phase 2.1, now plug the end inside the rack into the switch |
 | BLK-01 Proxmox | ⚫ Black | Mini PC (U8) | Switch port or UDM-SE LAN | Short internal cable, does not leave the rack |
