@@ -302,12 +302,12 @@ Cables are identified by **colored straps** (not by cable jacket color). Attach 
 
 | Strap Color | Use | Example |
 |-------------|-----|---------|
-| ⚫ Black | Rack internal | NAS, Mini PC |
+| 🩶 Grey | Rack internal | NAS, Mini PC |
 | 🟢 Green | Room devices | Bedroom, Office, Living Room |
 | ⚪ White | Management / Uplink | UDM-SE, Switch, Access Point |
 
 > [!TIP]
-> Every cable must have a colored strap and a label on both ends with: color + number + destination (e.g. "GRN-01 Office/PC")
+> Every cable must have a colored strap and a label on both ends with: color + number + destination (e.g. "GRN-01 Office/PC", "GRY-01 Proxmox")
 
 ---
 
