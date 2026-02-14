@@ -150,7 +150,7 @@ Before configuring NFS on Proxmox, enable NFS export on the NAS:
 
 Verify available exports:
 ```bash
-# From Proxmox
+# From NAS
 showmount -e 192.168.3.10
 # Should show /share/data/media and /share/backup
 ```
