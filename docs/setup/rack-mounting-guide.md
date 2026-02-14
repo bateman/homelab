@@ -64,10 +64,10 @@ Identified by colored straps per the [color coding system](../network/rack-homel
 
 | Label | Strap | Cable Type | From | To | Entry Point | Routed | Connected |
 |-------|-------|-----------|------|-----|-------------|--------|-----------|
-| GRN-01 Studio | 🟢 Green | Cat6A in-wall cable | Studio wall plate | PP-03 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
-| GRN-02 Living | 🟢 Green | Cat6A in-wall cable | Living room wall plate | PP-04 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
-| GRN-03 Bedroom | 🟢 Green | Cat6A in-wall cable | Bedroom wall plate | PP-05 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
-| WHT-WAN | ⚪ White | Cat6 ethernet | ISP router (Iliad Box) | UDM-SE WAN RJ45 port (U6) | Top | Phase 2.1 | Phase 3.8 |
+| GRN-01 Studio | 🟢 Green | Cat6A in-wall cable | Studio wall plate | PP-03 rear keystone (U4) | Top | Phase 2.1 | Phase 3.4 |
+| GRN-02 Living | 🟢 Green | Cat6A in-wall cable | Living room wall plate | PP-04 rear keystone (U4) | Top | Phase 2.1 | Phase 3.4 |
+| GRN-03 Bedroom | 🟢 Green | Cat6A in-wall cable | Bedroom wall plate | PP-05 rear keystone (U4) | Top | Phase 2.1 | Phase 3.4 |
+| WHT-WAN | ⚪ White | Cat6 ethernet | ISP router (Iliad Box) | UDM-SE WAN RJ45 port (U6) | Top | Phase 2.1 | Phase 3.7 |
 | WHT-01 AP | ⚪ White | Cat6 PoE | U6-Pro AP (ceiling) | Switch Port 2 (U5) | Top | Phase 2.1 | Phase 4.4 |
 | GRY-01 Proxmox | 🩶 Grey | Cat6 ethernet | Mini PC (U8) | Switch port or UDM-SE LAN | Internal | — | Phase 4.4 |
 
@@ -110,7 +110,7 @@ Do as much work as possible **outside** the rack — it is always easier on a fl
 
 ### 1.1 Prepare the Patch Panel
 
-Get the patch panel frame and keystone jacks ready on a workbench. **Do not punch down (terminate) cables yet** — that happens later in Phase 3.5.
+Get the patch panel frame and keystone jacks ready on a workbench. **Do not punch down (terminate) cables yet** — that happens later in Phase 3.4.
 
 1. Unpack the keystone patch panel frame and verify all 16 keystone slots are intact
 2. Lay out one keystone jack (Cat6A/Cat7) per in-wall cable — you need 3 (Studio, Living, Bedroom)
@@ -298,22 +298,18 @@ The UPS is the heaviest single item (~15 kg). Install it first.
 > [!WARNING]
 > Use two people. The UPS weighs ~15 kg and lifting it at an angle into a wall-mounted rack risks dropping it or stripping the threaded rail holes.
 
-### 3.2 Insulation — Neoprene 5mm
-
-Place the neoprene pad on top of the UPS in U1, before the NAS goes in. It absorbs hard drive vibrations and provides thermal separation.
-
-### 3.3 U2 — QNAP NAS (TS-435XeU)
+### 3.2 U2 — QNAP NAS (TS-435XeU)
 
 1. Slide the NAS into U2
 2. Secure with front screws
 3. **Do not connect any cables yet** — power and network come in Phase 4
 
-### 3.4 U3 — Vented Panel #2
+### 3.3 U3 — Vented Panel #2
 
 1. Snap/screw the vented panel into U3
 2. No cabling required — it provides airflow between the NAS and networking gear
 
-### 3.5 U4 — Patch Panel
+### 3.4 U4 — Patch Panel
 
 **Do this before installing the Switch (U5) and UDM-SE (U6).** Once those are in place above U4, you cannot reach the back of the patch panel through the top opening.
 
@@ -334,12 +330,11 @@ Only the three 🟢 green-strapped room cables get terminated here. The ⚪ whit
 5. Slide the patch panel into U4 and secure with front screws
 6. Tidy up the rear cables — coil any excess and secure the coils with velcro
 
-### 3.6 Checkpoint — Lower Half Complete
+### 3.5 Checkpoint — Lower Half Complete
 
 Before proceeding to the upper half, verify:
 
 - [ ] UPS seated and secured at U1, mains cable connected (not plugged in)
-- [ ] Neoprene insulation in place
 - [ ] NAS seated and secured at U2
 - [ ] Vented panel mounted at U3
 - [ ] Patch panel mounted at U4 with all keystones terminated, tested, and rear cables tidy
@@ -348,23 +343,23 @@ Before proceeding to the upper half, verify:
 > [!TIP]
 > Take a photo of the rear cable routing now for future reference.
 
-### 3.7 U5 — PoE Switch (USW-Pro-Max-16-PoE)
+### 3.6 U5 — PoE Switch (USW-Pro-Max-16-PoE)
 
 1. Slide the switch into U5
 2. Secure with front screws
 
-### 3.8 U6 — UDM-SE
+### 3.7 U6 — UDM-SE
 
 1. Slide the UDM-SE into U6
 2. Secure with front screws
 3. Connect the ⚪ white WAN cable (**WHT-WAN**, at U6 from Phase 2.1) to the UDM-SE rear WAN RJ45 port
 
-### 3.9 U7 — Vented Panel
+### 3.8 U7 — Vented Panel
 
 1. Snap/screw the vented panel into U7
 2. No cabling required — it allows airflow between the switch and Mini PC
 
-### 3.10 U8 — Lenovo Mini PC (Proxmox)
+### 3.9 U8 — Lenovo Mini PC (Proxmox)
 
 1. Place the Mini PC on its shelf/tray at U8
 2. Secure if applicable (shelf strap, bracket, or just positioned)
@@ -483,15 +478,14 @@ PHASE 1 — WORKBENCH              PHASE 2 — EMPTY RACK
 PHASE 3 — INSTALL BOTTOM → UP   PHASE 4 — CABLE FROM FRONT
 ┌─────────────────────────┐      ┌─────────────────────────┐
 │ U1  UPS ............. ① │      │ ✦ IEC power cables      │
-│ ░░  Neoprene ........ ② │      │   (UPS → devices direct)│
-│ U2  NAS ............. ③ │      │ ✦ SFP+ 10GbE links      │
-│ U3  Vented Panel .... ④ │      │ ✦ Patch cables (PP →    │
-│ U4  Patch Panel ..... ⑤ │      │   switch, short ~15cm)  │
-│  ► TERMINATE + MOUNT ◄  │      │ ✦ AP & Mini PC ethernet │
-│ U5  Switch .......... ⑥ │      │ ✦ Tidy cables & labels  │
-│ U6  UDM-SE .......... ⑦ │      └─────────────────────────┘
-│ U7  Vented Panel .... ⑧ │                  │
-│ U8  Mini PC ......... ⑨ │                  ▼
+│ U2  NAS ............. ② │      │   (UPS → devices direct)│
+│ U3  Vented Panel .... ③ │      │ ✦ SFP+ 10GbE links      │
+│ U4  Patch Panel ..... ④ │      │ ✦ Patch cables (PP →    │
+│  ► TERMINATE + MOUNT ◄  │      │   switch, short ~15cm)  │
+│ U5  Switch .......... ⑤ │      │ ✦ AP & Mini PC ethernet │
+│ U6  UDM-SE .......... ⑥ │      │ ✦ Tidy cables & labels  │
+│ U7  Vented Panel .... ⑦ │      └─────────────────────────┘
+│ U8  Mini PC ......... ⑧ │                  ▼
 └─────────────────────────┘      PHASE 5 — POWER ON
                                  ┌─────────────────────────┐
                                  │ UPS → UDM-SE → Switch → │
