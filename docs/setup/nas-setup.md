@@ -8,7 +8,6 @@
 
 ### Rack and Physical
 - [ ] NAS mounted in rack U2 (below vented panel)
-- [ ] 5mm neoprene insulation positioned between NAS and UPS
 - [ ] Side ventilation not obstructed
 - [ ] 10G SFP+ cables connected (port 1 to switch)
 - [ ] 2.5GbE RJ45 backup cable connected (optional)

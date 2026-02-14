@@ -12,9 +12,9 @@
 ┃ U7  │ 🌀 Vented Panel #1                                                      ┃
 ┃     │   • Thermally isolates Mini PC from rest of rack                        ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ U6  │ 🔀 PoE Switch (USW-Pro-Max-16-PoE)                                      ┃
+┃ U6  │ 🌐 UDM-SE                                                               ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ U5  │ 🌐 UDM-SE                                                               ┃
+┃ U5  │ 🔀 PoE Switch (USW-Pro-Max-16-PoE)                                      ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ U4  │ 🔌 Patch Panel                                                          ┃
 ┃     │   • Passive, no heat — acts as natural buffer                           ┃
@@ -24,8 +24,6 @@
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ U2  │ 💾 QNAP NAS                                                             ┃
 ┃     │   • HDDs in coolest zone of rack                                        ┃
-┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃     │ ████ INSULATION: Neoprene 5mm ████████████████████████████████████████  ┃
 ┣━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ U1  │ ⚡ UPS                                                                  ┃
 ┃     │   • Weight at bottom, minimal heat generation                           ┃
@@ -72,7 +70,7 @@
 - Ubiquiti UACC-Rack-Panel-Vented-1U
 - Thermal isolation between Mini PC and networking
 
-### U6 — UniFi USW-Pro-Max-16-PoE
+### U5 — UniFi USW-Pro-Max-16-PoE
 
 | Spec | Value |
 |------|-------|
@@ -112,7 +110,7 @@
 
 > For detailed configuration and rationale, see [`network-setup.md` Phase 3.5](../setup/network-setup.md#35-global-switch-settings).
 
-### U5 — UniFi Dream Machine SE (UDM-SE-EU)
+### U6 — UniFi Dream Machine SE (UDM-SE-EU)
 
 | Spec | Value |
 |------|-------|
@@ -160,12 +158,6 @@
 | RJ45 | 2x 2.5GbE (management/backup) |
 | Function | Media, Docker volumes, Backup |
 | IP | 192.168.3.10 |
-
-### Insulation — Neoprene 5mm
-
-- Positioned between NAS (U2) and UPS (U1)
-- Absorbs HDD vibrations
-- Protects UPS from residual heat
 
 ### U1 — UPS Eaton 5P 650i Rack G2
 
@@ -232,8 +224,8 @@ All 4 devices connect **directly** to the UPS C13 outlets — no power strip nee
 
 | UPS Outlet | Type | Device | Cable | Length |
 |-----------|------|--------|-------|--------|
-| C13 #1 | Always-on | UDM-SE (U5) | IEC C13→C14 | 1.0 m |
-| C13 #2 | Always-on | PoE Switch (U6) | IEC C13→C14 | 1.0 m |
+| C13 #1 | Always-on | UDM-SE (U6) | IEC C13→C14 | 1.0 m |
+| C13 #2 | Always-on | PoE Switch (U5) | IEC C13→C14 | 1.0 m |
 | C13 #3 | Remotely manageable | QNAP NAS (U2) | IEC C13→C14 | 0.5 m |
 | C13 #4 | Remotely manageable | Lenovo Mini PC (U8) | IEC C13→Schuko adapter + power brick | 1.5 m |
 

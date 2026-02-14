@@ -38,14 +38,13 @@ Before starting, make sure you have:
 ### Rack Layout (bottom to top)
 
 1. [ ] **U1**: UPS (weight at bottom, minimal heat generation)
-2. [ ] **Insulation**: 5mm neoprene between UPS and NAS
-3. [ ] **U2**: QNAP TS-435XeU (cool zone for HDDs)
-4. [ ] **U3**: Vented panel (airflow between NAS and networking)
-5. [ ] **U4**: Patch panel (passive, thermal buffer)
-6. [ ] **U5**: UDM-SE
-7. [ ] **U6**: USW-Pro-Max-16-PoE
-8. [ ] **U7**: Vented panel (thermal isolation)
-9. [ ] **U8**: Lenovo Mini PC (top, dissipation upward)
+2. [ ] **U2**: QNAP TS-435XeU (cool zone for HDDs)
+3. [ ] **U3**: Vented panel (airflow between NAS and networking)
+4. [ ] **U4**: Patch panel (passive, thermal buffer)
+5. [ ] **U5**: USW-Pro-Max-16-PoE
+6. [ ] **U6**: UDM-SE
+7. [ ] **U7**: Vented panel (thermal isolation)
+8. [ ] **U8**: Lenovo Mini PC (top, dissipation upward)
 
 ### Cabling
 
