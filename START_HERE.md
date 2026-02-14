@@ -42,8 +42,8 @@ Before starting, make sure you have:
 3. [ ] **U2**: QNAP TS-435XeU (cool zone for HDDs)
 4. [ ] **U3**: Vented panel (airflow between NAS and networking)
 5. [ ] **U4**: Patch panel (passive, thermal buffer)
-6. [ ] **U5**: UDM-SE
-7. [ ] **U6**: USW-Pro-Max-16-PoE
+6. [ ] **U5**: USW-Pro-Max-16-PoE
+7. [ ] **U6**: UDM-SE
 8. [ ] **U7**: Vented panel (thermal isolation)
 9. [ ] **U8**: Lenovo Mini PC (top, dissipation upward)
 

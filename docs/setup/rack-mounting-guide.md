@@ -33,8 +33,8 @@ With sides closed, you only have **two openings** for cable entry and exit:
    │  ┌──────────────────────────┐  │
    │  │ U8  Mini PC              │  │◄── FRONT
    │  │ U7  Vented Panel         │  │    (only equipment
-   │  │ U6  Switch               │  │     access point)
-   │  │ U5  UDM-SE               │  │
+   │  │ U6  UDM-SE               │  │     access point)
+   │  │ U5  Switch               │  │
    │  │ U4  Patch Panel          │  │
    │  │ U3  Vented Panel         │  │
    │  │ U2  NAS                  │  │
@@ -67,19 +67,19 @@ Identified by colored straps per the [color coding system](../network/rack-homel
 | GRN-01 Studio | 🟢 Green | Cat6A in-wall cable | Studio wall plate | PP-03 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
 | GRN-02 Living | 🟢 Green | Cat6A in-wall cable | Living room wall plate | PP-04 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
 | GRN-03 Bedroom | 🟢 Green | Cat6A in-wall cable | Bedroom wall plate | PP-05 rear keystone (U4) | Top | Phase 2.1 | Phase 3.5 |
-| WHT-WAN | ⚪ White | Cat6 ethernet | ISP router (Iliad Box) | UDM-SE WAN RJ45 port (U5) | Top | Phase 2.1 | Phase 3.7 |
-| WHT-01 AP | ⚪ White | Cat6 PoE | U6-Pro AP (ceiling) | Switch Port 2 (U6) | Top | Phase 2.1 | Phase 4.4 |
+| WHT-WAN | ⚪ White | Cat6 ethernet | ISP router (Iliad Box) | UDM-SE WAN RJ45 port (U6) | Top | Phase 2.1 | Phase 3.8 |
+| WHT-01 AP | ⚪ White | Cat6 PoE | U6-Pro AP (ceiling) | Switch Port 2 (U5) | Top | Phase 2.1 | Phase 4.4 |
 | GRY-01 Proxmox | 🩶 Grey | Cat6 ethernet | Mini PC (U8) | Switch port or UDM-SE LAN | Internal | — | Phase 4.4 |
 
 ### Front Patch Cables (Patch Panel → Switch)
 
-Short (~30 cm) pre-made cables that connect the front of the patch panel (U4) to the switch (U6). Attach green straps and the same labels as the room cables they serve.
+Short (~15 cm) pre-made cables that connect the front of the patch panel (U4) to the switch (U5) directly above. Attach green straps and the same labels as the room cables they serve.
 
 | Label | Strap | Length | From | To | Connected |
 |-------|-------|--------|------|----|-----------|
-| GRN-01 Studio | 🟢 Green | ~30 cm | PP-03 front (U4) | Switch Port 3 (U6) | Phase 4.3 |
-| GRN-02 Living | 🟢 Green | ~30 cm | PP-04 front (U4) | Switch Port 4 (U6) | Phase 4.3 |
-| GRN-03 Bedroom | 🟢 Green | ~30 cm | PP-05 front (U4) | Switch Port 5 (U6) | Phase 4.3 |
+| GRN-01 Studio | 🟢 Green | ~15 cm | PP-03 front (U4) | Switch Port 3 (U5) | Phase 4.3 |
+| GRN-02 Living | 🟢 Green | ~15 cm | PP-04 front (U4) | Switch Port 4 (U5) | Phase 4.3 |
+| GRN-03 Bedroom | 🟢 Green | ~15 cm | PP-05 front (U4) | Switch Port 5 (U5) | Phase 4.3 |
 
 ### Power Cables
 
@@ -88,8 +88,8 @@ All devices connect directly to UPS C13 outlets. No power strip — the UPS has 
 | Label | Cable Type | Length | From | To | Connected |
 |-------|-----------|--------|------|----|-----------|
 | PWR-UPS | Schuko mains | — | Wall outlet | UPS rear input (U1) | Phase 3.1 |
-| PWR-UDM | IEC C13→C14 + C14-to-Schuko adapter (Spina IEC C14 a Presa Schuko 16A) | 1.0 m | UPS C13 #1 always-on (U1) | UDM-SE rear (U5) | Phase 4.1 |
-| PWR-SW | IEC C13→C14 + C14-to-Schuko adapter (Spina IEC C14 a Presa Schuko 16A) | 1.0 m | UPS C13 #2 always-on (U1) | Switch rear (U6) | Phase 4.1 |
+| PWR-UDM | IEC C13→C14 + C14-to-Schuko adapter (Spina IEC C14 a Presa Schuko 16A) | 1.0 m | UPS C13 #1 always-on (U1) | UDM-SE rear (U6) | Phase 4.1 |
+| PWR-SW | IEC C13→C14 + C14-to-Schuko adapter (Spina IEC C14 a Presa Schuko 16A) | 1.0 m | UPS C13 #2 always-on (U1) | Switch rear (U5) | Phase 4.1 |
 | PWR-NAS | IEC C13→C14 | 0.5 m | UPS C13 #3 manageable (U1) | NAS rear (U2) | Phase 4.1 |
 | PWR-PC | IEC C13→Schuko adapter + power brick | 1.5 m | UPS C13 #4 manageable (U1) | Mini PC (U8) | Phase 4.1 |
 
@@ -99,8 +99,8 @@ DAC = Direct Attach Copper — a short, thick cable with SFP+ connectors on both
 
 | Label | Cable Type | From | To | Connected |
 |-------|-----------|------|----|-----------|
-| — | SFP+ DAC 10GbE | UDM-SE LAN SFP+ (U5) | Switch SFP+ Port 1 (U6) | Phase 4.2 |
-| — | SFP+ DAC 10GbE | Switch SFP+ Port 2 (U6) | NAS SFP+ Port 1 (U2) | Phase 4.2 |
+| — | SFP+ DAC 10GbE | UDM-SE LAN SFP+ (U6) | Switch SFP+ Port 1 (U5) | Phase 4.2 |
+| — | SFP+ DAC 10GbE | Switch SFP+ Port 2 (U5) | NAS SFP+ Port 1 (U2) | Phase 4.2 |
 
 ---
 
@@ -128,8 +128,8 @@ Label **both ends** of every cable and attach a **colored strap** near each end 
 | GRN-01 Studio | 🟢 Green | Studio room cable | Top opening → PP-03 rear (U4) |
 | GRN-02 Living | 🟢 Green | Living room cable | Top opening → PP-04 rear (U4) |
 | GRN-03 Bedroom | 🟢 Green | Bedroom room cable | Top opening → PP-05 rear (U4) |
-| WHT-WAN | ⚪ White | WAN uplink (ISP) | Top opening → UDM-SE WAN port (U5) |
-| WHT-01 AP | ⚪ White | AP PoE cable | Top opening → Switch Port 2 (U6) |
+| WHT-WAN | ⚪ White | WAN uplink (ISP) | Top opening → UDM-SE WAN port (U6) |
+| WHT-01 AP | ⚪ White | AP PoE cable | Top opening → Switch Port 2 (U5) |
 | PWR-UPS | — | UPS mains power | Top opening → UPS rear input (U1) |
 
 **Internal rack cables** (never leave the rack):
@@ -137,13 +137,13 @@ Label **both ends** of every cable and attach a **colored strap** near each end 
 | Label | Strap | Cable | Route |
 |-------|-------|-------|-------|
 | GRY-01 Proxmox | 🩶 Grey | Mini PC ethernet | Mini PC (U8) → Switch or UDM-SE LAN |
-| PWR-UDM | — | IEC C13→C14 + C14-to-Schuko adapter, 1.0 m | UPS C13 #1 always-on (U1) → UDM-SE (U5) |
-| PWR-SW | — | IEC C13→C14 + C14-to-Schuko adapter, 1.0 m | UPS C13 #2 always-on (U1) → Switch (U6) |
+| PWR-UDM | — | IEC C13→C14 + C14-to-Schuko adapter, 1.0 m | UPS C13 #1 always-on (U1) → UDM-SE (U6) |
+| PWR-SW | — | IEC C13→C14 + C14-to-Schuko adapter, 1.0 m | UPS C13 #2 always-on (U1) → Switch (U5) |
 | PWR-NAS | — | IEC C13→C14, 0.5 m | UPS C13 #3 manageable (U1) → NAS (U2) |
 | PWR-PC | — | IEC C13→Schuko adapter, 1.5 m | UPS C13 #4 manageable (U1) → Mini PC (U8) |
-| GRN-01 Studio | 🟢 Green | Front patch cable ~30 cm | PP-03 front (U4) → Switch Port 3 (U6) |
-| GRN-02 Living | 🟢 Green | Front patch cable ~30 cm | PP-04 front (U4) → Switch Port 4 (U6) |
-| GRN-03 Bedroom | 🟢 Green | Front patch cable ~30 cm | PP-05 front (U4) → Switch Port 5 (U6) |
+| GRN-01 Studio | 🟢 Green | Front patch cable ~15 cm | PP-03 front (U4) → Switch Port 3 (U5) |
+| GRN-02 Living | 🟢 Green | Front patch cable ~15 cm | PP-04 front (U4) → Switch Port 4 (U5) |
+| GRN-03 Bedroom | 🟢 Green | Front patch cable ~15 cm | PP-05 front (U4) → Switch Port 5 (U5) |
 
 > [!TIP]
 > Front patch cables use the **same label and strap color** as the in-wall cable they connect to. This makes it easy to trace a room connection from wall plate to switch port.
@@ -181,8 +181,8 @@ Feed all five external ethernet cables down through the **top opening**, one gro
 
 | Cable | Label | Destination | Pull down to |
 |-------|-------|-------------|-------------|
-| WAN uplink | WHT-WAN | UDM-SE WAN RJ45 port (U5) | U5 level |
-| AP PoE cable | WHT-01 AP | Switch Port 2 (U6) | U6 level |
+| WAN uplink | WHT-WAN | UDM-SE WAN RJ45 port (U6) | U6 level |
+| AP PoE cable | WHT-01 AP | Switch Port 2 (U5) | U5 level |
 
 **Step 3 — Secure the bundle:**
 
@@ -199,8 +199,8 @@ Feed all five external ethernet cables down through the **top opening**, one gro
     │ along   │◄──── one rear edge (left or right)
     │ rear    │
     │ edge    │
-    │  ⚪─────│──── WHT-01 AP extra slack at U6
-    │  ⚪─────│──── WHT-WAN extra slack at U5
+    │  ⚪─────│──── WHT-WAN extra slack at U6
+    │  ⚪─────│──── WHT-01 AP extra slack at U5
     │  🟢🟢🟢│──── GRN-01/02/03 extra slack at U4
     │         │
     └────┬────┘
@@ -243,7 +243,7 @@ The StarTech WALLSHELF8U has **closed side panels** and **10-32 threaded rail ho
 ```
     RAIL
     ┌──┐
-    │  ┝━━○○○  U6 level — strap holds ethernet bundle
+    │  ┝━━○○○  U5 level — strap holds ethernet bundle
     │  │
     │  ┝━━○○○  U4 level — strap holds ethernet bundle
     │  │
@@ -270,8 +270,8 @@ Feed the UPS power cable **down** through the **top opening** (on the **opposite
 ### 2.3 Verify Before Proceeding
 
 - [ ] Three green-strapped cables (GRN-01/02/03) reach U4 level with 30–40 cm of extra slack
-- [ ] WAN cable (WHT-WAN) reaches U5 level with extra slack
-- [ ] AP cable (WHT-01 AP) reaches U6 level with extra slack
+- [ ] WAN cable (WHT-WAN) reaches U6 level with extra slack
+- [ ] AP cable (WHT-01 AP) reaches U5 level with extra slack
 - [ ] All five cables secured along one rear edge, not blocking the middle of the rack
 - [ ] UPS mains cable (PWR-UPS) routed from top opening down to U1, on opposite side from ethernet bundle
 - [ ] Top opening still has clearance for equipment to slide in
@@ -315,7 +315,7 @@ Place the neoprene pad on top of the UPS in U1, before the NAS goes in. It absor
 
 ### 3.5 U4 — Patch Panel
 
-**Do this before installing the UDM-SE (U5) and Switch (U6).** Once those are in place above U4, you cannot reach the back of the patch panel through the top opening.
+**Do this before installing the Switch (U5) and UDM-SE (U6).** Once those are in place above U4, you cannot reach the back of the patch panel through the top opening.
 
 Only the three 🟢 green-strapped room cables get terminated here. The ⚪ white-strapped cables (WHT-WAN, WHT-01 AP) stay in the rack — they plug directly into devices later.
 
@@ -348,16 +348,16 @@ Before proceeding to the upper half, verify:
 > [!TIP]
 > Take a photo of the rear cable routing now for future reference.
 
-### 3.7 U5 — UDM-SE
+### 3.7 U5 — PoE Switch (USW-Pro-Max-16-PoE)
 
-1. Slide the UDM-SE into U5
+1. Slide the switch into U5
 2. Secure with front screws
-3. Connect the ⚪ white WAN cable (**WHT-WAN**, at U5 from Phase 2.1) to the UDM-SE rear WAN RJ45 port
 
-### 3.8 U6 — PoE Switch (USW-Pro-Max-16-PoE)
+### 3.8 U6 — UDM-SE
 
-1. Slide the switch into U6
+1. Slide the UDM-SE into U6
 2. Secure with front screws
+3. Connect the ⚪ white WAN cable (**WHT-WAN**, at U6 from Phase 2.1) to the UDM-SE rear WAN RJ45 port
 
 ### 3.9 U7 — Vented Panel
 
@@ -384,8 +384,8 @@ All devices connect directly to UPS C13 outlets (U1). Route power cables along o
 
 | UPS Outlet | Type | Device | Cable | Length | Route |
 |-----------|------|--------|-------|--------|-------|
-| C13 #1 | Always-on | UDM-SE (U5) | IEC C13→C14 + C14-to-Schuko adapter | 1.0 m | U1→U5, 4U |
-| C13 #2 | Always-on | PoE Switch (U6) | IEC C13→C14 + C14-to-Schuko adapter | 1.0 m | U1→U6, 5U |
+| C13 #1 | Always-on | UDM-SE (U6) | IEC C13→C14 + C14-to-Schuko adapter | 1.0 m | U1→U6, 5U |
+| C13 #2 | Always-on | PoE Switch (U5) | IEC C13→C14 + C14-to-Schuko adapter | 1.0 m | U1→U5, 4U |
 | C13 #3 | Remotely manageable | QNAP NAS (U2) | IEC C13→C14 | 0.5 m | U1→U2, 1U |
 | C13 #4 | Remotely manageable | Mini PC (U8) | IEC C13→Schuko adapter + power brick | 1.5 m | U1→U8, 7U |
 
@@ -401,32 +401,32 @@ Connect the 10GbE links using DAC (Direct Attach Copper) cables or SFP+ transcei
 
 | Connection | From | To |
 |-----------|------|-----|
-| 10GbE Link 1 | UDM-SE LAN SFP+ (U5) | Switch SFP+ Port 1 (U6) |
-| 10GbE Link 2 | Switch SFP+ Port 2 (U6) | QNAP NAS SFP+ Port 1 (U2) |
+| 10GbE Link 1 | UDM-SE LAN SFP+ (U6) | Switch SFP+ Port 1 (U5) |
+| 10GbE Link 2 | Switch SFP+ Port 2 (U5) | QNAP NAS SFP+ Port 1 (U2) |
 
 > [!NOTE]
-> The NAS SFP+ cable runs from U6 down to U2 — this is the longest internal cable. Use a 1m DAC cable and route it along the side rail to keep it tidy.
+> The NAS SFP+ cable runs from U5 down to U2 (3U). Use a 1m DAC cable and route it along the side rail to keep it tidy.
 
 ### 4.3 Front Patch Cables (Patch Panel → Switch)
 
-These are **separate pre-made cables with 🟢 green straps** (~30 cm) — not the in-wall runs. They bridge the **front** of the patch panel (U4) **up** to the switch (U6), completing the room-to-switch path.
+These are **separate pre-made cables with 🟢 green straps** (~15 cm) — not the in-wall runs. They bridge the **front** of the patch panel (U4) **up** to the switch (U5) directly above, completing the room-to-switch path.
 
 | Patch Cable Label | From | To | VLAN |
 |-------------------|------|----|------|
-| GRN-01 Studio | PP-03 front (U4) | Switch Port 3 (U6) | Media (4) |
-| GRN-02 Living | PP-04 front (U4) | Switch Port 4 (U6) | Media (4) |
-| GRN-03 Bedroom | PP-05 front (U4) | Switch Port 5 (U6) | Media (4) |
+| GRN-01 Studio | PP-03 front (U4) | Switch Port 3 (U5) | Media (4) |
+| GRN-02 Living | PP-04 front (U4) | Switch Port 4 (U5) | Media (4) |
+| GRN-03 Bedroom | PP-05 front (U4) | Switch Port 5 (U5) | Media (4) |
 
-Use **~30 cm** patch cables. The patch panel (U4) and switch (U6) are 2U apart with the UDM-SE between them — keep cables short to avoid clutter.
+Use **~15 cm** patch cables. The patch panel (U4) and switch (U5) are directly adjacent — short cables keep the front clean.
 
 > [!NOTE]
-> The full connection path for each room is now: **room wall plate → 🟢 green-strapped in-wall cable → patch panel rear keystone → patch panel front port → 🟢 green-strapped patch cable → switch port**.
+> The full connection path for each room is now: **room wall plate → 🟢 green-strapped in-wall cable → patch panel rear keystone (U4) → patch panel front port → 🟢 green-strapped ~15 cm patch cable → switch port (U5)**.
 
 ### 4.4 Remaining Ethernet Connections
 
 | Label | Strap | From | To | Notes |
 |-------|-------|------|-----|-------|
-| WHT-01 AP | ⚪ White | Switch Port 2 (U6) | Top opening → ceiling AP | Routed in Phase 2.1, now plug the end inside the rack into the switch |
+| WHT-01 AP | ⚪ White | Switch Port 2 (U5) | Top opening → ceiling AP | Routed in Phase 2.1, now plug the end inside the rack into the switch |
 | GRY-01 Proxmox | 🩶 Grey | Mini PC (U8) | Switch port or UDM-SE LAN | Short internal cable, does not leave the rack |
 
 ### 4.5 Cable Management Final Pass
@@ -486,10 +486,10 @@ PHASE 3 — INSTALL BOTTOM → UP   PHASE 4 — CABLE FROM FRONT
 │ ░░  Neoprene ........ ② │      │   (UPS → devices direct)│
 │ U2  NAS ............. ③ │      │ ✦ SFP+ 10GbE links      │
 │ U3  Vented Panel .... ④ │      │ ✦ Patch cables (PP →    │
-│ U4  Patch Panel ..... ⑤ │      │   switch, short ~30cm)  │
+│ U4  Patch Panel ..... ⑤ │      │   switch, short ~15cm)  │
 │  ► TERMINATE + MOUNT ◄  │      │ ✦ AP & Mini PC ethernet │
-│ U5  UDM-SE .......... ⑥ │      │ ✦ Tidy cables & labels  │
-│ U6  Switch .......... ⑦ │      └─────────────────────────┘
+│ U5  Switch .......... ⑥ │      │ ✦ Tidy cables & labels  │
+│ U6  UDM-SE .......... ⑦ │      └─────────────────────────┘
 │ U7  Vented Panel .... ⑧ │                  │
 │ U8  Mini PC ......... ⑨ │                  ▼
 └─────────────────────────┘      PHASE 5 — POWER ON
