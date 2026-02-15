@@ -168,6 +168,8 @@
 | Outlets | 4x IEC C13 (all battery backed + surge protected) |
 | Outlet types | 2x always-on, 2x remotely manageable |
 | Runtime | ~10-15 min (average load) |
+| Output Voltage | 230V (adjustable: 200 / 208 / 220 / 230 / 240V) |
+| Power Quality | Good (tightest thresholds) |
 | Management | USB -> Proxmox (NUT) |
 
 ---

@@ -442,15 +442,48 @@ Power on devices in this order, waiting for each to fully boot before starting t
 | Step | Action | Wait For |
 |------|--------|----------|
 | 1 | Plug UPS mains cable into wall outlet | UPS LCD shows "Online", battery charging indicator |
-| 2 | Power on UDM-SE | White status LED steady (boot takes ~3–5 min) |
-| 3 | Power on PoE Switch | Status LED steady, PoE ports become active |
-| 4 | Power on QNAP NAS | System ready beep, LCD shows IP |
-| 5 | Power on Mini PC | Proxmox boot to login prompt |
+| 2 | Configure UPS LCD settings (first startup only) | See [5.2 UPS Initial Configuration](#52-ups-initial-configuration-first-startup-only) below |
+| 3 | Power on UDM-SE | White status LED steady (boot takes ~3–5 min) |
+| 4 | Power on PoE Switch | Status LED steady, PoE ports become active |
+| 5 | Power on QNAP NAS | System ready beep, LCD shows IP |
+| 6 | Power on Mini PC | Proxmox boot to login prompt |
 
 > [!IMPORTANT]
 > Power on the UDM-SE and switch **before** the NAS. The NAS needs a working network to obtain its IP and become reachable. The Mini PC (Plex) depends on the NAS media shares being available.
 
-### 5.2 Verification Checklist
+### 5.2 UPS Initial Configuration (First Startup Only)
+
+On the very first power-on, the Eaton 5P Gen2 LCD prompts you to configure output voltage and date/time. Use the LCD front panel buttons to navigate:
+
+- **⮠ (Enter)** — activate menu / confirm selection
+- **⯅ ⯆ (Up/Down)** — scroll through options
+- **ESC** — cancel / go back
+
+Configure the following settings via **⮠ → Settings**:
+
+| Setting | Menu Path | Recommended Value | Notes |
+|---------|-----------|-------------------|-------|
+| Output Voltage | Settings → Output Voltage | **230V** | Default. Options: 200 / 208 / 220 / 230 / 240V. Match your country's mains voltage |
+| Date / Time | Settings → Date/Time | **Set current date and time** | Used for event log timestamps |
+| Power Quality | Settings → Power Quality → Mode | **Good** | Default. Tightest voltage/frequency thresholds — transfers to battery at smallest deviation. Best for sensitive homelab equipment |
+| Buzzer | Settings → Buzzer | **Enabled** | Default. Audible alarm on power events. Disable only if the rack is in a bedroom |
+
+**Power Quality modes explained:**
+
+| Mode | Behaviour | Use When |
+|------|-----------|----------|
+| **Good** (default) | Tightest thresholds — transfers to battery at smallest voltage/frequency deviation | Servers, NAS, networking gear (recommended) |
+| Fair | Tolerates slight voltage and frequency variation before transferring | Equipment that handles minor fluctuations |
+| Poor | Extended thresholds — tolerates significant deviation and distorted waveforms | Rugged or non-sensitive equipment |
+| Custom | Independently set Voltage (Normal/Extended), Frequency (Normal/Extended), Sensitivity (High/Normal/Low) | Advanced tuning only |
+
+> [!NOTE]
+> **IP Address / Network card**: The 5P 650i connects via **USB to Proxmox** for monitoring (NUT). It has no built-in network interface. An optional Eaton Network-M2 or Network-M3 card can be installed in the communication bay for SNMP/web management, but this is unnecessary when using NUT over USB. See [energy-saving-strategies.md Section 5](../operations/energy-saving-strategies.md#5-ups-monitoring-with-nut) for NUT configuration.
+
+> [!TIP]
+> After configuration, verify settings with: **⮠ → Measurements** to check input/output voltage and load percentage. You can also verify later via NUT: `upsc eaton` once configured on Proxmox.
+
+### 5.3 Verification Checklist
 
 - [ ] UPS shows all 4 outlets active (2 always-on, 2 manageable), battery status healthy
 - [ ] UDM-SE reachable at 192.168.2.1
