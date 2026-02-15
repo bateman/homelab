@@ -14,8 +14,25 @@
 
 ### Storage
 - [ ] HDDs installed in bays (check compatibility: qnap.com/compatibility)
+- [ ] **HDDs sector size: 512n or 512e** (NOT 4Kn — see warning below)
 - [ ] HDDs of same model/capacity for RAID
 - [ ] M.2 NVMe SSD for caching installed (optional but recommended)
+
+> [!CAUTION]
+> **The TS-435XeU (ARM-based, Marvell Octeon TX2) does NOT support 4Kn (4K native) disks.**
+> Disks with 4096/4096 byte sectors will not be detected at all — QTS won't show them in Storage & Snapshots.
+> Only **512n** (512/512) and **512e** (512/4096) sector sizes are supported.
+>
+> Most NAS-rated drives (WD Red Plus, Seagate IronWolf) use 512e and work fine.
+> High-capacity enterprise drives (Ultrastar, Exos) are often 4Kn — check the datasheet before buying.
+>
+> To verify sector size on a Linux/Mac PC:
+> ```bash
+> sudo smartctl -i /dev/sdX | grep "Sector Size"
+> # 512 bytes / 512 bytes   → 512n  ✓
+> # 512 bytes / 4096 bytes  → 512e  ✓
+> # 4096 bytes / 4096 bytes → 4Kn   ✗ NOT SUPPORTED
+> ```
 
 ---
 
@@ -620,6 +637,7 @@ make backup
 
 | Problem | Probable Cause | Solution |
 |---------|----------------|----------|
+| **HDDs not detected at all** | **4Kn sector size** | TS-435XeU (ARM) only supports 512n/512e — check disk datasheet or `smartctl -i` |
 | Container won't start | Folder permissions | `chown -R $PUID:$PGID ./config` (use values from .env) |
 | Hardlink doesn't work | Paths on different filesystems | Verify mount points |
 | qBittorrent "stalled" | Port not reachable | Verify port forwarding 50413 |
