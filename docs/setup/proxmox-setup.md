@@ -692,17 +692,25 @@ ssh root@192.168.3.20
 # Install WOL tools
 apt install -y ethtool wakeonlan
 
-# Identify network interface (usually enp* or eth0)
+# Identify network interface (usually enp*, eth0, or nic*)
 ip link show
-# Note the interface name (e.g., enp2s0)
+# Note the interface name (e.g., enp2s0, nic1)
 
 # Check current WOL status
 ethtool enp2s0 | grep Wake-on
-# Output: Wake-on: d (disabled) or g (enabled)
+# Expected output:
+#   Supports Wake-on: pumbg
+#   Wake-on: g
+#
+# "Supports Wake-on: pumbg" = NIC supports WOL (p=PHY, u=unicast, m=multicast, b=broadcast, g=magic packet)
+# "Wake-on: g" = WOL is enabled (magic packet). If "d", WOL is disabled — enable it below
 
-# Enable WOL (replace enp2s0 with your interface)
+# Enable WOL only if Wake-on shows "d" (replace enp2s0 with your interface)
 ethtool -s enp2s0 wol g
 ```
+
+> [!TIP]
+> If `Wake-on: g` is already shown (typically set by BIOS), you can skip the `ethtool -s` command above. However, some drivers reset WOL on reboot even when BIOS enables it, so the persistent configuration below is still recommended as a safeguard.
 
 #### 8.2.3 Make WOL Persistent on Reboot
 
@@ -710,7 +718,7 @@ Create a systemd-networkd configuration file:
 
 ```bash
 # Identify the correct interface name
-IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(enp|eth)' | head -1)
+IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(enp|eth|nic)' | head -1)
 echo "Detected interface: $IFACE"
 
 # Create persistent WOL configuration
