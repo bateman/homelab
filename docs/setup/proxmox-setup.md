@@ -698,7 +698,12 @@ ip link show
 
 # Check current WOL status
 ethtool enp2s0 | grep Wake-on
-# Output: Wake-on: d (disabled) or g (enabled)
+# Expected output:
+#   Supports Wake-on: pumbg
+#   Wake-on: g
+#
+# "Supports Wake-on: pumbg" = NIC supports WOL (p=PHY, u=unicast, m=multicast, b=broadcast, g=magic packet)
+# "Wake-on: g" = WOL is enabled (magic packet). If "d", WOL is disabled — enable it below
 
 # Enable WOL (replace enp2s0 with your interface)
 ethtool -s enp2s0 wol g
