@@ -679,8 +679,10 @@ when Plex is not in use and powering it on only when needed.
 #### 8.2.1 Enable WOL in BIOS
 
 1. Power on the Mini PC and press F1 (or F2) to enter BIOS
-2. Navigate to: Power → Wake on LAN
-3. Set to **Enabled** (or "Primary" if available)
+2. **First, disable ErP/Deep Sleep** — if the WOL option is greyed out, this is why:
+   - Navigate to: **Power → ErP Ready** (or "Enhanced Power Saving Mode" / "Deep Sleep Control") → set to **Disabled**
+   - ErP cuts all standby power when the system is off, which prevents the NIC from listening for magic packets
+3. Navigate to: **Power → Wake on LAN** → set to **Enabled** (or "Primary" if available)
 4. Save and exit (F10)
 
 #### 8.2.2 Configure Persistent WOL on Proxmox
@@ -809,6 +811,7 @@ ssh admin@100.x.x.x "wakeonlan AA:BB:CC:DD:EE:FF"
 
 | Problem | Cause | Solution |
 |---------|-------|----------|
+| WOL option greyed out in BIOS | ErP/Deep Sleep enabled | Disable ErP Ready in BIOS Power settings |
 | WOL doesn't work | Not enabled in BIOS | Verify BIOS settings |
 | Wake-on: d after reboot | Config not persistent | Verify 99-wol.link |
 | Works only sometimes | Fast Startup Windows | Not applicable (Proxmox) |
