@@ -692,9 +692,9 @@ ssh root@192.168.3.20
 # Install WOL tools
 apt install -y ethtool wakeonlan
 
-# Identify network interface (usually enp* or eth0)
+# Identify network interface (usually enp*, eth0, or nic*)
 ip link show
-# Note the interface name (e.g., enp2s0)
+# Note the interface name (e.g., enp2s0, nic1)
 
 # Check current WOL status
 ethtool enp2s0 | grep Wake-on
@@ -715,7 +715,7 @@ Create a systemd-networkd configuration file:
 
 ```bash
 # Identify the correct interface name
-IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(enp|eth)' | head -1)
+IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(enp|eth|nic)' | head -1)
 echo "Detected interface: $IFACE"
 
 # Create persistent WOL configuration
