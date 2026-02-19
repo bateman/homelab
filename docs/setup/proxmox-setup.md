@@ -717,8 +717,8 @@ ethtool -s enp2s0 wol g
 Create a systemd-networkd configuration file:
 
 ```bash
-# Identify the correct interface name
-IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(enp|eth|nic)' | head -1)
+# Identify the active physical interface (state UP, excluding bridges/loopback)
+IFACE=$(ip -o link show up | awk -F': ' '{print $2}' | grep -vE '^(lo|vmbr|wl|docker|fwbr|fwpr|tap|veth)' | head -1)
 echo "Detected interface: $IFACE"
 
 # Create persistent WOL configuration
