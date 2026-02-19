@@ -705,9 +705,12 @@ ethtool enp2s0 | grep Wake-on
 # "Supports Wake-on: pumbg" = NIC supports WOL (p=PHY, u=unicast, m=multicast, b=broadcast, g=magic packet)
 # "Wake-on: g" = WOL is enabled (magic packet). If "d", WOL is disabled — enable it below
 
-# Enable WOL (replace enp2s0 with your interface)
+# Enable WOL only if Wake-on shows "d" (replace enp2s0 with your interface)
 ethtool -s enp2s0 wol g
 ```
+
+> [!TIP]
+> If `Wake-on: g` is already shown (typically set by BIOS), you can skip the `ethtool -s` command above. However, some drivers reset WOL on reboot even when BIOS enables it, so the persistent configuration below is still recommended as a safeguard.
 
 #### 8.2.3 Make WOL Persistent on Reboot
 
