@@ -215,11 +215,15 @@ Download: `debian-13-standard` (Trixie)
 
 Datacenter → proxmox → Create CT
 
+> [!IMPORTANT]
+> **Uncheck "Unprivileged container"** — GPU passthrough for Intel Quick Sync hardware transcoding (Phase 8.3) requires a privileged container. Unprivileged containers need complex UID/GID mapping to access `/dev/dri` devices.
+
 **Tab General:**
 | Field | Value |
 |-------|--------|
 | CT ID | 100 |
 | Hostname | plex |
+| Unprivileged | ❌ Unchecked (privileged — required for GPU passthrough) |
 | Password | (secure password) |
 | SSH Public Key | (optional) |
 
