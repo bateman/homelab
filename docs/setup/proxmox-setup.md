@@ -109,8 +109,20 @@ Open browser: `https://192.168.3.20:8006`
 # SSH into Proxmox
 ssh root@192.168.3.20
 
-# Comment out enterprise repo
-sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/pve-enterprise.list
+# Disable enterprise repo
+# Proxmox 8+ uses .sources (DEB822 format), older versions use .list
+if [ -f /etc/apt/sources.list.d/pve-enterprise.sources ]; then
+    mv /etc/apt/sources.list.d/pve-enterprise.sources /etc/apt/sources.list.d/pve-enterprise.sources.disabled
+elif [ -f /etc/apt/sources.list.d/pve-enterprise.list ]; then
+    sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/pve-enterprise.list
+fi
+
+# Also disable Ceph enterprise repo if present
+if [ -f /etc/apt/sources.list.d/ceph.sources ]; then
+    mv /etc/apt/sources.list.d/ceph.sources /etc/apt/sources.list.d/ceph.sources.disabled
+elif [ -f /etc/apt/sources.list.d/ceph.list ]; then
+    sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/ceph.list
+fi
 
 # Add no-subscription repo
 echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
