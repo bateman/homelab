@@ -233,7 +233,7 @@ Datacenter → proxmox → Create CT
 | Disk size | 16 GB |
 
 **Tab CPU:**
-- Cores: 4 (or as available)
+- Cores: 8 (i5-13420H has 12 threads; 8 for Plex, 4 reserved for Proxmox host)
 
 **Tab Memory:**
 | Field | Value |
