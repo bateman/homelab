@@ -225,7 +225,29 @@ Datacenter → proxmox → Create CT
 | Hostname | plex |
 | Unprivileged | ❌ Unchecked (privileged — required for GPU passthrough) |
 | Password | (secure password) |
-| SSH Public Key | (optional) |
+| SSH Public Key | (optional, see below) |
+
+> [!TIP]
+> **Optional: Generate SSH key for container access**
+>
+> On the machine you'll SSH from:
+> ```bash
+> # Generate key with custom name
+> ssh-keygen -t ed25519 -C "your@email.com" -f ~/.ssh/proxmox_plex
+>
+> # Copy public key to clipboard
+> cat ~/.ssh/proxmox_plex.pub
+> ```
+> Paste the output into the SSH Public Key field above.
+>
+> Then add to `~/.ssh/config` for easy access:
+> ```
+> Host plex
+>     HostName 192.168.3.21
+>     User root
+>     IdentityFile ~/.ssh/proxmox_plex
+> ```
+> Connect with just `ssh plex`.
 
 **Tab Template:**
 - Template: debian-13-standard
