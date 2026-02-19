@@ -125,7 +125,7 @@ elif [ -f /etc/apt/sources.list.d/ceph.list ]; then
 fi
 
 # Add no-subscription repo
-echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
+echo "deb http://download.proxmox.com/debian/pve trixie pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
 ```
 
 ### 3.2 Update System
@@ -201,7 +201,7 @@ Also add storage for backup:
 
 Datacenter → proxmox → local → CT Templates → Templates
 
-Download: `debian-12-standard` (Bookworm)
+Download: `debian-13-standard` (Trixie)
 
 > [!TIP]
 > **Why Debian instead of Ubuntu?**
@@ -224,7 +224,7 @@ Datacenter → proxmox → Create CT
 | SSH Public Key | (optional) |
 
 **Tab Template:**
-- Template: debian-12-standard
+- Template: debian-13-standard
 
 **Tab Disks:**
 | Field | Value |
@@ -233,7 +233,7 @@ Datacenter → proxmox → Create CT
 | Disk size | 16 GB |
 
 **Tab CPU:**
-- Cores: 4 (or as available)
+- Cores: 8 (i5-13420H has 12 threads; 8 for Plex, 4 reserved for Proxmox host)
 
 **Tab Memory:**
 | Field | Value |
