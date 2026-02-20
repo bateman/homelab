@@ -69,7 +69,8 @@ Identified by colored straps per the [color coding system](../network/rack-homel
 | GRN-03 Bedroom | 🟢 Green | Cat6A in-wall cable | Bedroom wall plate | PP-05 rear keystone (U4) | Top | Phase 2.1 | Phase 3.4 |
 | WHT-WAN | ⚪ White | Cat6 ethernet | ISP router (Iliad Box) | UDM-SE WAN RJ45 port (U6) | Top | Phase 2.1 | Phase 3.7 |
 | WHT-01 AP | ⚪ White | Cat6 PoE | U6-Pro AP (ceiling) | Switch Port 2 (U5) | Top | Phase 2.1 | Phase 4.4 |
-| GRY-01 Proxmox | 🩶 Grey | Cat6 ethernet | Mini PC (U8) | Switch port or UDM-SE LAN | Internal | — | Phase 4.4 |
+| GRY-01 Proxmox Mgmt | 🩶 Grey | Cat6 ethernet | Mini PC USB-C adapter (U8) | Switch Port 13 (U5) | Internal | — | Phase 4.4 |
+| GRY-02 Proxmox WOL | 🩶 Grey | Cat6 ethernet | Mini PC integrated NIC (U8) | Switch Port 1 (U5) | Internal | — | Phase 4.4 |
 
 ### Front Patch Cables (Patch Panel → Switch)
 
@@ -136,7 +137,8 @@ Label **both ends** of every cable and attach a **colored strap** near each end 
 
 | Label | Strap | Cable | Route |
 |-------|-------|-------|-------|
-| GRY-01 Proxmox | 🩶 Grey | Mini PC ethernet | Mini PC (U8) → Switch or UDM-SE LAN |
+| GRY-01 Proxmox Mgmt | 🩶 Grey | Mini PC USB-C ethernet | Mini PC USB-C adapter (U8) → Switch Port 13 (U5) |
+| GRY-02 Proxmox WOL | 🩶 Grey | Mini PC integrated ethernet | Mini PC integrated NIC (U8) → Switch Port 1 (U5) |
 | PWR-UDM | — | IEC C13→C14 + C14-to-Schuko adapter, 1.0 m | UPS C13 #1 always-on (U1) → UDM-SE (U6) |
 | PWR-SW | — | IEC C13→C14 + C14-to-Schuko adapter, 1.0 m | UPS C13 #2 always-on (U1) → Switch (U5) |
 | PWR-NAS | — | IEC C13→C14, 0.5 m | UPS C13 #3 manageable (U1) → NAS (U2) |
@@ -422,7 +424,8 @@ Use **~15 cm** patch cables. The patch panel (U4) and switch (U5) are directly a
 | Label | Strap | From | To | Notes |
 |-------|-------|------|-----|-------|
 | WHT-01 AP | ⚪ White | Switch Port 2 (U5) | Top opening → ceiling AP | Routed in Phase 2.1, now plug the end inside the rack into the switch |
-| GRY-01 Proxmox | 🩶 Grey | Mini PC (U8) | Switch port or UDM-SE LAN | Short internal cable, does not leave the rack |
+| GRY-01 Proxmox Mgmt | 🩶 Grey | Mini PC USB-C adapter (U8) | Switch Port 13 (U5) | 2.5GbE management, short internal cable |
+| GRY-02 Proxmox WOL | 🩶 Grey | Mini PC integrated NIC (U8) | Switch Port 1 (U5) | 1GbE WOL only, short internal cable |
 
 ### 4.5 Cable Management Final Pass
 

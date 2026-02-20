@@ -314,7 +314,7 @@ Cables are identified by **colored straps** (not by cable jacket color). Attach 
 | ⚪ White | Management / Uplink | UDM-SE, Switch, Access Point |
 
 > [!TIP]
-> Every cable must have a colored strap and a label on both ends with: color + number + destination (e.g. "GRN-01 Office/PC", "GRY-01 Proxmox")
+> Every cable must have a colored strap and a label on both ends with: color + number + destination (e.g. "GRN-01 Office/PC", "GRY-01 Proxmox Mgmt", "GRY-02 Proxmox WOL")
 
 ---
 
