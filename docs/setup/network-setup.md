@@ -305,7 +305,11 @@ If you prefer managing IPs centrally from UniFi:
 
 ### 4.3 Fixed IP for Switch
 
-Switch should already have IP in Management VLAN after adoption.
+The switch gets its management IP from the **native (untagged) VLAN** on the SFP+ trunk, not from the physical connection itself.
+
+- **If you deleted the Default network** (step 2.1): the switch should already have a 192.168.2.x IP in the Management VLAN after adoption.
+- **If you kept the Default network**: the switch will have a 192.168.0.x IP from the Default network. Delete the Default network (Settings → Networks → Default → Delete) and the switch will re-provision onto the Management VLAN.
+
 Verify in **UDM-SE** (Network application): Settings → Devices → Switch → IP: should be 192.168.2.x
 
 ---
