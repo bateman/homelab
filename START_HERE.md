@@ -51,7 +51,7 @@ Before starting, make sure you have:
 - [ ] Connect UDM-SE WAN port → Iliad Box LAN
 - [ ] Connect UDM-SE port 1 → Switch port 1 (VLAN trunk)
 - [ ] Connect Switch SFP+ port → NAS SFP+ port (10GbE)
-- [ ] Connect Switch port 2 → Mini PC (2.5GbE via USB-C adapter)
+- [ ] Connect Switch port 6 → Mini PC (USB adapter)
 - [ ] Connect all devices directly to UPS C13 outlets (no power strip)
 
 ### Verification

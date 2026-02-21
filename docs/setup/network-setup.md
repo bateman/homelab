@@ -192,13 +192,13 @@ In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE
 
 | Port | Profile | VLAN | Device |
 |------|---------|------|--------|
-| 1 | Servers | 3 | Mini PC — integrated NIC (WOL only) |
-| 2 | Management | 2 | U6-Pro Access Point |
-| 3 | Media | 4 | Studio (via PP-03) |
-| 4 | Media | 4 | Living Room (via PP-04) |
-| 5 | Media | 4 | Bedroom (via PP-05) |
-| 6 | IoT | 6 | (available) |
-| 13 | Servers | 3 | Mini PC — USB-C 2.5GbE (management) |
+| 1 | Management | 2 | U6-Pro Access Point (via PP-01) |
+| 2 | Media | 4 | Living Room (via PP-02) |
+| 3 | Media | 4 | Bedroom (via PP-03) |
+| 4 | Media | 4 | Studio (via PP-04) |
+| 5 | Servers | 3 | Mini PC — integrated NIC (1G) |
+| 6 | Servers | 3 | Mini PC — USB adapter (2.5G) |
+| 15 | Servers | 3 | Printer (via PP-15) |
 | SFP+ 1 | All | Trunk | UDM-SE Uplink (10GbE) |
 | SFP+ 2 | Servers | 3 | NAS QNAP 10GbE |
 
@@ -428,7 +428,7 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 
 ### 7.1 AP Adoption
 
-1. [ ] Connect U6-Pro to switch port 2 (PoE+, Management VLAN 2)
+1. [ ] Connect U6-Pro to switch port 1 (PoE+, Management VLAN 2)
 2. [ ] In **UDM-SE** (Network application): Devices → should show "U6-Pro"
 3. [ ] Click "Adopt"
 4. [ ] Wait for provisioning (~2 minutes)
@@ -440,7 +440,7 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 |------|-------|
 | Model | U6-Pro |
 | Location | Ceiling/wall mounted (not in rack) |
-| Power | PoE from USW-Pro-Max-16-PoE port 2 |
+| Power | PoE from USW-Pro-Max-16-PoE port 1 |
 | IP | 192.168.2.20 (DHCP or fixed in Management VLAN) |
 
 ### 7.2 Radio Settings

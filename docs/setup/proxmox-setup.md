@@ -7,7 +7,7 @@
 ## Prerequisites
 
 - [ ] Lenovo ThinkCentre neo 50q Gen 4 Mini PC rack-mounted
-- [ ] Connected to switch VLAN 3 (Servers) — Port 13 (2.5GbE management) + Port 1 (1GbE WOL)
+- [ ] Connected to switch VLAN 3 (Servers) — Port 6 (management) + Port 5 (1GbE WOL)
 - [ ] Monitor and keyboard for initial installation
 - [ ] USB drive (8GB+) for Proxmox ISO
 - [ ] VLAN 3 configured (see [network-setup.md](network-setup.md))
@@ -988,8 +988,8 @@ Connect both interfaces to the switch:
 
 | Interface | Switch Port | Type | Profile | Purpose |
 |-----------|-------------|------|---------|---------|
-| 2.5GbE USB-C | Port 13 | 2.5GbE | Servers (VLAN 3) | Management + traffic |
-| 1GbE integrated | Port 1 | 1GbE | Servers (VLAN 3) | WOL only (no IP) |
+| 2.5GbE USB adapter | Port 6 | 1GbE | Servers (VLAN 3) | Management + traffic |
+| 1GbE integrated | Port 5 | 1GbE | Servers (VLAN 3) | WOL only (no IP) |
 
 #### 8.4.2 Identify Interface Names
 
