@@ -86,14 +86,16 @@
 
 | Port | Type | Profile | VLAN | Device/Destination | Cable Label |
 |------|------|---------|------|-------------------|-------------|
-| 1 | 1GbE PoE+ | Servers | 3 | Mini PC — integrated NIC (WOL only) | — |
-| 2 | 1GbE PoE+ | Management | 2 | U6-Pro Access Point | WHT-01 AP |
-| 3 | 1GbE PoE+ | Media | 4 | Studio (via PP-03) | GRN-01 Studio |
-| 4 | 1GbE PoE+ | Media | 4 | Living Room (via PP-04) | GRN-02 Living |
-| 5 | 1GbE PoE+ | Media | 4 | Bedroom (via PP-05) | GRN-03 Bedroom |
-| 6-12 | 1GbE PoE+ | — | — | — (available) | — |
-| 13 | 2.5GbE PoE++ | Servers | 3 | Mini PC — USB-C 2.5GbE (management) | — |
-| 14-16 | 2.5GbE PoE++ | — | — | — (available) | — |
+| 1 | 1GbE PoE+ | Management | 2 | U6-Pro Access Point (via PP-01) | 01 AP |
+| 2 | 1GbE PoE+ | Media | 4 | Living Room (via PP-02) | 02 Living |
+| 3 | 1GbE PoE+ | Media | 4 | Bedroom (via PP-03) | 03 Bedroom |
+| 4 | 1GbE PoE+ | Media | 4 | Studio (via PP-04) | 04 Studio |
+| 5 | 1GbE PoE+ | Servers | 3 | Mini PC — integrated NIC (1G) | 05 Mini PC |
+| 6 | 1GbE PoE+ | Servers | 3 | Mini PC — USB adapter (2.5G) | 06 Mini PC |
+| 7-8 | 1GbE PoE+ | — | — | — (available) | — |
+| 9 | 1GbE PoE+ | Servers | 3 | Printer (via PP-09) | 09 Printer |
+| 10-12 | 1GbE PoE+ | — | — | — (available) | — |
+| 13-16 | 2.5GbE PoE++ | — | — | — (available) | — |
 | SFP+ 1 | 10GbE | All | Trunk | Uplink to UDM-SE | — |
 | SFP+ 2 | 10GbE | Servers | 3 | QNAP NAS | — |
 
@@ -132,15 +134,19 @@
 
 #### Port Assignments
 
-| Patch Port | Room/Destination | Switch Port | VLAN | Cable Label |
-|------------|------------------|-------------|------|-------------|
-| PP-03 | Studio | Port 3 | Media (4) | GRN-01 Studio |
-| PP-04 | Living Room | Port 4 | Media (4) | GRN-02 Living |
-| PP-05 | Bedroom | Port 5 | Media (4) | GRN-03 Bedroom |
-| PP-01, 02, 06-16 | — (available) | — | — | — |
+| Patch Port | Room/Destination | Switch Port / Target | VLAN | Cable Label |
+|------------|------------------|----------------------|------|-------------|
+| PP-01 | Access Point | Switch Port 1 | Management (2) | 01 AP |
+| PP-02 | Living Room | Switch Port 2 | Media (4) | 02 Living |
+| PP-03 | Bedroom | Switch Port 3 | Media (4) | 03 Bedroom |
+| PP-04 | Studio | Switch Port 4 | Media (4) | 04 Studio |
+| PP-05 to PP-08 | — (available) | — | — | — |
+| PP-09 | Printer | Switch Port 9 | Servers (3) | 09 Printer |
+| PP-10 to PP-14 | — (available) | — | — | — |
+| PP-16 | WAN (ISP) | UDM-SE WAN RJ45 port | — | 16 WAN |
 
 > [!TIP]
-> Patch panel ports mirror switch port numbers for easy troubleshooting.
+> Patch panel ports mirror switch port numbers for easy troubleshooting. PP-16 is the exception — it connects to the UDM-SE WAN port, not the switch.
 
 ### U3 — Vented Panel #2
 
@@ -183,7 +189,7 @@
 |------|-------|
 | Model | U6-Pro |
 | Location | Ceiling/wall mounted (not in rack) |
-| Power | PoE from USW-Pro-Max-16-PoE port 2 |
+| Power | PoE from USW-Pro-Max-16-PoE port 1 |
 | IP | 192.168.2.20 |
 | VLAN | Management (VLAN 2) |
 
@@ -251,17 +257,17 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
                                    ↓
                              NAS (SFP+ Port 1)
 
-                             Switch (Port 13)
-                                   │
-                                   │ 2.5G (management)
-                                   ↓
-                             Mini PC (USB-C adapter)
-
-                             Switch (Port 1)
+                             Switch (Port 5)
                                    │
                                    │ 1G (WOL only)
                                    ↓
                              Mini PC (integrated NIC)
+
+                             Switch (Port 6)
+                                   │
+                                   │ 1G (management)
+                                   ↓
+                             Mini PC (USB adapter)
 ```
 
 ---
@@ -303,18 +309,20 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 
 ---
 
-## Network Cable Color Coding
+## Cable Labeling
 
-Cables are identified by **colored straps** (not by cable jacket color). Attach a colored strap near each end of the cable to indicate its role.
+Every cable has a label on both ends with: **number + destination** (e.g. "01 AP", "02 Living", "05 Mini PC"). The label number matches the patch panel port number (and the switch port number where applicable).
 
-| Strap Color | Use | Example |
-|-------------|-----|---------|
-| 🩶 Grey | Rack internal | NAS, Mini PC |
-| 🟢 Green | Room devices | Bedroom, Office, Living Room |
-| ⚪ White | Management / Uplink | UDM-SE, Switch, Access Point |
-
-> [!TIP]
-> Every cable must have a colored strap and a label on both ends with: color + number + destination (e.g. "GRN-01 Office/PC", "GRY-01 Proxmox Mgmt", "GRY-02 Proxmox WOL")
+| Cable Label | Destination |
+|-------------|-------------|
+| 01 AP | U6-Pro Access Point |
+| 02 Living | Living Room |
+| 03 Bedroom | Bedroom |
+| 04 Studio | Studio |
+| 05 Mini PC | Mini PC — integrated NIC (1G) |
+| 06 Mini PC | Mini PC — USB adapter (2.5G) |
+| 09 Printer | Printer |
+| 16 WAN | ISP router (Iliad Box) |
 
 ---
 
