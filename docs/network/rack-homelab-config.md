@@ -92,10 +92,10 @@
 | 4 | 1GbE PoE+ | Media | 4 | Studio (via PP-04) | 04 Studio |
 | 5 | 1GbE PoE+ | Servers | 3 | Mini PC — integrated NIC (1G) | 05 Mini PC |
 | 6 | 1GbE PoE+ | Servers | 3 | Mini PC — USB adapter (2.5G) | 06 Mini PC |
-| 7-12 | 1GbE PoE+ | — | — | — (available) | — |
-| 13-14 | 2.5GbE PoE++ | — | — | — (available) | — |
-| 15 | 2.5GbE PoE++ | Servers | 3 | Printer (via PP-15) | 15 Printer |
-| 16 | 2.5GbE PoE++ | — | — | — (available) | — |
+| 7-8 | 1GbE PoE+ | — | — | — (available) | — |
+| 9 | 1GbE PoE+ | Servers | 3 | Printer (via PP-09) | 09 Printer |
+| 10-12 | 1GbE PoE+ | — | — | — (available) | — |
+| 13-16 | 2.5GbE PoE++ | — | — | — (available) | — |
 | SFP+ 1 | 10GbE | All | Trunk | Uplink to UDM-SE | — |
 | SFP+ 2 | 10GbE | Servers | 3 | QNAP NAS | — |
 
@@ -140,8 +140,9 @@
 | PP-02 | Living Room | Switch Port 2 | Media (4) | 02 Living |
 | PP-03 | Bedroom | Switch Port 3 | Media (4) | 03 Bedroom |
 | PP-04 | Studio | Switch Port 4 | Media (4) | 04 Studio |
-| PP-05 to PP-14 | — (available) | — | — | — |
-| PP-15 | Printer | Switch Port 15 | Servers (3) | 15 Printer |
+| PP-05 to PP-08 | — (available) | — | — | — |
+| PP-09 | Printer | Switch Port 9 | Servers (3) | 09 Printer |
+| PP-10 to PP-14 | — (available) | — | — | — |
 | PP-16 | WAN (ISP) | UDM-SE WAN RJ45 port | — | 16 WAN |
 
 > [!TIP]
@@ -320,7 +321,7 @@ Every cable has a label on both ends with: **number + destination** (e.g. "01 AP
 | 04 Studio | Studio |
 | 05 Mini PC | Mini PC — integrated NIC (1G) |
 | 06 Mini PC | Mini PC — USB adapter (2.5G) |
-| 15 Printer | Printer |
+| 09 Printer | Printer |
 | 16 WAN | ISP router (Iliad Box) |
 
 ---

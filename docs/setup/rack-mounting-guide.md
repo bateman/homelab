@@ -70,7 +70,7 @@ See the [cable labeling system](../network/rack-homelab-config.md#cable-labeling
 | 04 Studio | Cat6A in-wall cable | Studio wall plate | PP-04 rear keystone (U4) | Top | Phase 2.1 | Phase 3.4 |
 | 05 Mini PC | Cat6 ethernet | Mini PC integrated NIC (U8) | Switch Port 5 (U5) | Internal | — | Phase 4.4 |
 | 06 Mini PC | Cat6 ethernet | Mini PC USB adapter (U8) | Switch Port 6 (U5) | Internal | — | Phase 4.4 |
-| 15 Printer | Cat6A in-wall cable | Printer | PP-15 rear keystone (U4) | Top | Phase 2.1 | Phase 4.3 |
+| 09 Printer | Cat6A in-wall cable | Printer | PP-09 rear keystone (U4) | Top | Phase 2.1 | Phase 4.3 |
 | 16 WAN | Cat6 ethernet | ISP router (Iliad Box) | PP-16 rear keystone (U4) | Top | Phase 2.1 | Phase 4.3 |
 
 ### Front Patch Cables (Patch Panel → Switch / UDM-SE)
@@ -83,7 +83,7 @@ Short pre-made cables that connect the front of the patch panel (U4) to the swit
 | 02 Living | ~15 cm | PP-02 front (U4) | Switch Port 2 (U5) | Phase 4.3 |
 | 03 Bedroom | ~15 cm | PP-03 front (U4) | Switch Port 3 (U5) | Phase 4.3 |
 | 04 Studio | ~15 cm | PP-04 front (U4) | Switch Port 4 (U5) | Phase 4.3 |
-| 15 Printer | ~15 cm | PP-15 front (U4) | Switch Port 15 (U5) | Phase 4.3 |
+| 09 Printer | ~15 cm | PP-09 front (U4) | Switch Port 9 (U5) | Phase 4.3 |
 | 16 WAN | ~30 cm | PP-16 front (U4) | UDM-SE WAN RJ45 port (U6) | Phase 4.3 |
 
 ### Power Cables
@@ -120,7 +120,7 @@ Get the patch panel frame and keystone jacks ready on a workbench. **Do not punc
 1. Unpack the keystone patch panel frame and verify all 16 keystone slots are intact
 2. Lay out one keystone jack (Cat6A/Cat7) per external cable — you need 6 (AP, Living, Bedroom, Studio, Printer, WAN)
 3. Have ready: punch-down tool (or toolless keystones), cable stripper, cable tester
-4. Label each keystone slot on the panel frame (PP-01 AP, PP-02 Living, PP-03 Bedroom, PP-04 Studio, PP-15 Printer, PP-16 WAN — see [patch panel port assignments](../network/rack-homelab-config.md#u4--logilink-nk4077-patch-panel))
+4. Label each keystone slot on the panel frame (PP-01 AP, PP-02 Living, PP-03 Bedroom, PP-04 Studio, PP-09 Printer, PP-16 WAN — see [patch panel port assignments](../network/rack-homelab-config.md#u4--logilink-nk4077-patch-panel))
 
 ### 1.2 Pre-Label Everything
 
@@ -134,7 +134,7 @@ Label **both ends** of every cable before it enters the rack. Use the label form
 | 02 Living | Living room cable | Top opening → PP-02 rear (U4) |
 | 03 Bedroom | Bedroom room cable | Top opening → PP-03 rear (U4) |
 | 04 Studio | Studio room cable | Top opening → PP-04 rear (U4) |
-| 15 Printer | Printer cable | Top opening → PP-15 rear (U4) |
+| 09 Printer | Printer cable | Top opening → PP-09 rear (U4) |
 | 16 WAN | WAN uplink (ISP) | Top opening → PP-16 rear (U4) |
 | PWR-UPS | UPS mains power | Top opening → UPS rear input (U1) |
 
@@ -152,7 +152,7 @@ Label **both ends** of every cable before it enters the rack. Use the label form
 | 02 Living | Front patch cable ~15 cm | PP-02 front (U4) → Switch Port 2 (U5) |
 | 03 Bedroom | Front patch cable ~15 cm | PP-03 front (U4) → Switch Port 3 (U5) |
 | 04 Studio | Front patch cable ~15 cm | PP-04 front (U4) → Switch Port 4 (U5) |
-| 15 Printer | Front patch cable ~15 cm | PP-15 front (U4) → Switch Port 15 (U5) |
+| 09 Printer | Front patch cable ~15 cm | PP-09 front (U4) → Switch Port 9 (U5) |
 | 16 WAN | Front patch cable ~30 cm | PP-16 front (U4) → UDM-SE WAN RJ45 port (U6) |
 
 > [!TIP]
@@ -185,7 +185,7 @@ Feed all external ethernet cables down through the **top opening**, as a single 
 | Living room cable | 02 Living | PP-02 rear keystone (U4) | U4 level |
 | Bedroom cable | 03 Bedroom | PP-03 rear keystone (U4) | U4 level |
 | Studio cable | 04 Studio | PP-04 rear keystone (U4) | U4 level |
-| Printer cable | 15 Printer | PP-15 rear keystone (U4) | U4 level |
+| Printer cable | 09 Printer | PP-09 rear keystone (U4) | U4 level |
 | WAN uplink | 16 WAN | PP-16 rear keystone (U4) | U4 level |
 
 **Secure the bundle:**
@@ -270,7 +270,7 @@ Feed the UPS power cable **down** through the **top opening** (on the **opposite
 
 ### 2.3 Verify Before Proceeding
 
-- [ ] All six external cables (01 AP, 02 Living, 03 Bedroom, 04 Studio, 15 Printer, 16 WAN) reach U4 level with 30–40 cm of extra slack
+- [ ] All six external cables (01 AP, 02 Living, 03 Bedroom, 04 Studio, 09 Printer, 16 WAN) reach U4 level with 30–40 cm of extra slack
 - [ ] All cables secured along one rear edge, not blocking the middle of the rack
 - [ ] UPS mains cable (PWR-UPS) routed from top opening down to U1, on opposite side from ethernet bundle
 - [ ] Top opening still has clearance for equipment to slide in
@@ -322,7 +322,7 @@ All external cables get terminated here — they connect to the patch panel rear
    - 02 Living → slot PP-02
    - 03 Bedroom → slot PP-03
    - 04 Studio → slot PP-04
-   - 15 Printer → slot PP-15
+   - 09 Printer → slot PP-09
    - 16 WAN → slot PP-16
 3. Test every terminated port with a cable tester before the panel goes into the rack
 
@@ -413,7 +413,7 @@ These are **separate pre-made patch cables** — not the in-wall runs. They brid
 | 02 Living | PP-02 front (U4) | Switch Port 2 (U5) | Media (4) |
 | 03 Bedroom | PP-03 front (U4) | Switch Port 3 (U5) | Media (4) |
 | 04 Studio | PP-04 front (U4) | Switch Port 4 (U5) | Media (4) |
-| 15 Printer | PP-15 front (U4) | Switch Port 15 (U5) | Servers (3) |
+| 09 Printer | PP-09 front (U4) | Switch Port 9 (U5) | Servers (3) |
 | 16 WAN | PP-16 front (U4) | UDM-SE WAN RJ45 port (U6) | — |
 
 Use **~15 cm** patch cables for U4→U5 connections (1U distance). Use **~30 cm** for the WAN patch cable to U6 (2U distance).

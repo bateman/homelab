@@ -198,7 +198,7 @@ In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE
 | 4 | Media | 4 | Studio (via PP-04) |
 | 5 | Servers | 3 | Mini PC — integrated NIC (1G) |
 | 6 | Servers | 3 | Mini PC — USB adapter (2.5G) |
-| 15 | Servers | 3 | Printer (via PP-15) |
+| 9 | Servers | 3 | Printer (via PP-09) |
 | SFP+ 1 | All | Trunk | UDM-SE Uplink (10GbE) |
 | SFP+ 2 | Servers | 3 | NAS QNAP 10GbE |
 
