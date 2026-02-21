@@ -192,12 +192,13 @@ In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE
 
 | Port | Profile | VLAN | Device |
 |------|---------|------|--------|
-| 1 | Servers | 3 | Mini PC Proxmox |
+| 1 | Servers | 3 | Mini PC — integrated NIC (WOL only) |
 | 2 | Management | 2 | U6-Pro Access Point |
 | 3 | Media | 4 | Studio (via PP-03) |
 | 4 | Media | 4 | Living Room (via PP-04) |
 | 5 | Media | 4 | Bedroom (via PP-05) |
 | 6 | IoT | 6 | (available) |
+| 13 | Servers | 3 | Mini PC — USB-C 2.5GbE (management) |
 | SFP+ 1 | All | Trunk | UDM-SE Uplink (10GbE) |
 | SFP+ 2 | Servers | 3 | NAS QNAP 10GbE |
 

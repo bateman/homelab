@@ -7,7 +7,7 @@
 ## Prerequisites
 
 - [ ] Lenovo ThinkCentre neo 50q Gen 4 Mini PC rack-mounted
-- [ ] Connected to switch port VLAN 3 (Servers)
+- [ ] Connected to switch VLAN 3 (Servers) — Port 13 (2.5GbE management) + Port 1 (1GbE WOL)
 - [ ] Monitor and keyboard for initial installation
 - [ ] USB drive (8GB+) for Proxmox ISO
 - [ ] VLAN 3 configured (see [network-setup.md](network-setup.md))
@@ -676,6 +676,9 @@ The guide documents:
 The Mini PC can be powered on remotely via Wake-on-LAN, useful for saving energy
 when Plex is not in use and powering it on only when needed.
 
+> [!IMPORTANT]
+> **Dual-NIC setup:** WOL only works on the integrated Intel NIC (enp2s0), not on the USB-C 2.5GbE adapter. USB ports lose power when the system is off. If you migrated management to the USB-C adapter (see [Section 8.4](#84-network-interface-migration-25gbe-usb-c-adapter)), ensure WOL is configured on the integrated NIC and that the WOL magic packet uses the integrated NIC's MAC address.
+
 #### 8.2.1 Enable WOL in BIOS
 
 1. Power on the Mini PC and press F1 (or F2) to enter BIOS
@@ -717,9 +720,13 @@ ethtool -s enp2s0 wol g
 Create a systemd-networkd configuration file:
 
 ```bash
-# Identify the active physical interface (state UP, excluding bridges/loopback)
-IFACE=$(ip -o link show up | awk -F': ' '{print $2}' | grep -vE '^(lo|vmbr|wl|docker|fwbr|fwpr|tap|veth)' | head -1)
+# Identify the integrated NIC (enp*, eth*, nic* — NOT enx* USB adapters)
+IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(enp|eth|nic)' | head -1)
 echo "Detected interface: $IFACE"
+
+# IMPORTANT: if using dual-NIC setup (see Section 8.4), ensure this
+# matches the INTEGRATED Intel NIC, not the USB-C adapter.
+# USB adapters use enx* names and do NOT support WOL.
 
 # Create persistent WOL configuration
 cat > /etc/systemd/network/99-wol.link << EOF
@@ -963,6 +970,168 @@ the codec during transcoding.
 
 > [!IMPORTANT]
 > Hardware transcoding requires **Plex Pass** subscription.
+
+### 8.4 Network Interface Migration (2.5GbE USB-C Adapter)
+
+The Mini PC has two network interfaces:
+- **Integrated**: 1x 1GbE RJ45 (Intel) — supports WOL
+- **USB-C adapter**: 1x 2.5GbE (StarTech US2GC30) — does NOT support WOL
+
+This section documents how to move Proxmox management to the 2.5GbE adapter while keeping the integrated 1GbE connected for Wake-on-LAN only.
+
+> [!IMPORTANT]
+> USB network adapters cannot receive magic packets when the system is powered off (USB ports lose power in S5 state). The integrated Intel NIC must remain connected to the switch for WOL to work.
+
+#### 8.4.1 Physical Cabling
+
+Connect both interfaces to the switch:
+
+| Interface | Switch Port | Type | Profile | Purpose |
+|-----------|-------------|------|---------|---------|
+| 2.5GbE USB-C | Port 13 | 2.5GbE | Servers (VLAN 3) | Management + traffic |
+| 1GbE integrated | Port 1 | 1GbE | Servers (VLAN 3) | WOL only (no IP) |
+
+#### 8.4.2 Identify Interface Names
+
+```bash
+# SSH into Proxmox
+ssh root@192.168.3.20
+
+# List all network interfaces
+ip link show
+
+# Identify which is which:
+# - Integrated Intel NIC: typically enp* (e.g., enp2s0)
+# - USB-C adapter: typically enx* (MAC-based name) or usb0
+#
+# Verify with ethtool:
+ethtool enp2s0 | grep -i speed    # Should show 1000Mb/s
+ethtool enxAABBCCDDEEFF | grep -i speed  # Should show 2500Mb/s
+```
+
+> [!TIP]
+> USB network adapters on Linux typically get a name starting with `enx` followed by the MAC address (e.g., `enxaabbccddeeff`). This naming is deterministic and won't change across reboots.
+
+#### 8.4.3 Reconfigure Network Interfaces
+
+Edit the Proxmox network configuration:
+
+```bash
+# Backup current configuration
+cp /etc/network/interfaces /etc/network/interfaces.bak
+
+# Edit network configuration
+nano /etc/network/interfaces
+```
+
+Replace the network configuration with (adjust interface names to match your system):
+
+```bash
+auto lo
+iface lo inet loopback
+
+# Integrated 1GbE Intel NIC — WOL only, no IP
+auto enp2s0
+iface enp2s0 inet manual
+    # Keep link up for WOL but no IP address
+
+# 2.5GbE USB-C adapter — Proxmox management
+auto enxAABBCCDDEEFF
+iface enxAABBCCDDEEFF inet manual
+
+# Bridge on 2.5GbE adapter (management + LXC containers)
+auto vmbr0
+iface vmbr0 inet static
+    address 192.168.3.20/24
+    gateway 192.168.3.1
+    bridge-ports enxAABBCCDDEEFF
+    bridge-stp off
+    bridge-fd 0
+```
+
+> [!WARNING]
+> **This will disconnect your SSH session.** You'll need physical access (monitor + keyboard) or apply via the Proxmox WebUI (System → Network) if the change doesn't work.
+
+#### 8.4.4 Apply Configuration
+
+**Option A: Via Proxmox WebUI (safer)**
+
+1. Navigate to: proxmox → System → Network
+2. Edit `vmbr0`: change Bridge ports from the old interface to the USB-C adapter name
+3. Add the integrated NIC as a standalone interface (no IP, manual)
+4. Click "Apply Configuration"
+
+**Option B: Via command line**
+
+```bash
+# Apply the new configuration (this WILL disconnect SSH if connected via the old interface)
+ifreload -a
+
+# If something goes wrong, reboot — Proxmox will apply /etc/network/interfaces on boot
+# Worst case, connect monitor + keyboard and restore backup:
+# cp /etc/network/interfaces.bak /etc/network/interfaces && ifreload -a
+```
+
+#### 8.4.5 Verify Configuration
+
+```bash
+# Verify bridge is on the 2.5GbE adapter
+bridge link show
+# Should show enxAABBCCDDEEFF as member of vmbr0
+
+# Verify IP is on vmbr0
+ip addr show vmbr0
+# Should show 192.168.3.20/24
+
+# Verify 2.5GbE link speed
+ethtool enxAABBCCDDEEFF | grep Speed
+# Should show: Speed: 2500Mb/s
+
+# Verify integrated NIC is up (for WOL) but has no IP
+ip addr show enp2s0
+# Should show UP but no inet address
+
+# Verify connectivity
+ping 192.168.3.1   # Gateway
+ping 192.168.3.10  # NAS
+```
+
+#### 8.4.6 Update WOL Configuration
+
+Since WOL must use the integrated NIC, update the persistent WOL configuration:
+
+```bash
+# WOL must target the integrated NIC (enp2s0), NOT the USB adapter
+cat > /etc/systemd/network/99-wol.link << EOF
+[Match]
+# Match the integrated Intel NIC by MAC address for reliability
+MACAddress=XX:XX:XX:XX:XX:XX
+
+[Link]
+WakeOnLan=magic
+EOF
+
+# Restart networking
+systemctl restart systemd-networkd
+
+# Verify WOL is enabled on the integrated NIC
+ethtool enp2s0 | grep Wake-on
+# Should show: Wake-on: g
+```
+
+> [!NOTE]
+> **Update your saved MAC address.** The MAC for WOL magic packets must be the integrated NIC's MAC (enp2s0), not the USB adapter's.
+
+#### 8.4.7 Dual-NIC Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| USB adapter not detected | Driver missing | `apt install r8152` or check `dmesg \| grep usb` |
+| Interface name changes after reboot | USB enumeration order | Use `enx*` MAC-based name (stable) |
+| No link on 2.5GbE | Wrong switch port speed | Verify switch port is 2.5GbE (ports 13-16) |
+| WOL stopped working | WOL configured on wrong NIC | Must be on integrated NIC (enp2s0) |
+| LXC containers lose network | Bridge on wrong interface | Verify `bridge-ports` in vmbr0 |
+| Lost SSH after change | New interface not up | Use Proxmox console (monitor+keyboard) to fix |
 
 ---
 
