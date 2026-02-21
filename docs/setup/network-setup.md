@@ -227,7 +227,21 @@ In **UDM-SE** (Network application): Settings → Profiles → Switch Ports → 
 
 For each port, click → Port Profile → select appropriate profile
 
-### 3.5 Global Switch Settings
+### 3.5 Disable Unused Ports
+
+Unused ports should be disabled to prevent unauthorized devices from gaining network access. A port left on the default "All" profile trunks every VLAN — anyone plugging into it could reach all networks.
+
+In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE → Ports
+
+For each unused port (7, 8, 10, 11, 12, 13, 14, 15, 16):
+
+1. [ ] Click the port
+2. [ ] Port Profile → **Disabled**
+
+> [!TIP]
+> When you need to connect a new device in the future, enable the port and assign the appropriate VLAN profile before plugging in the cable.
+
+### 3.6 Global Switch Settings
 
 In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE → Settings
 

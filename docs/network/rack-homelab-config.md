@@ -92,10 +92,10 @@
 | 4 | 1GbE PoE+ | Media | 4 | Studio (via PP-04) | 04 Studio |
 | 5 | 1GbE PoE+ | Servers | 3 | Mini PC — integrated NIC (1G) | 05 Mini PC |
 | 6 | 1GbE PoE+ | Servers | 3 | Mini PC — USB adapter (2.5G) | 06 Mini PC |
-| 7-8 | 1GbE PoE+ | — | — | — (available) | — |
+| 7-8 | 1GbE PoE+ | Disabled | — | — (available) | — |
 | 9 | 1GbE PoE+ | Servers | 3 | Printer (via PP-09) | 09 Printer |
-| 10-12 | 1GbE PoE+ | — | — | — (available) | — |
-| 13-16 | 2.5GbE PoE++ | — | — | — (available) | — |
+| 10-12 | 1GbE PoE+ | Disabled | — | — (available) | — |
+| 13-16 | 2.5GbE PoE++ | Disabled | — | — (available) | — |
 | SFP+ 1 | 10GbE | All | Trunk | Uplink to UDM-SE | — |
 | SFP+ 2 | 10GbE | Servers | 3 | QNAP NAS | — |
 
@@ -111,7 +111,7 @@
 | L3 Network Isolation | Disabled |
 | 802.1X | Disabled |
 
-> For detailed configuration and rationale, see [`network-setup.md` Phase 3.5](../setup/network-setup.md#35-global-switch-settings).
+> For detailed configuration and rationale, see [`network-setup.md` Phase 3.6](../setup/network-setup.md#36-global-switch-settings).
 
 ### U6 — UniFi Dream Machine SE (UDM-SE-EU)
 
