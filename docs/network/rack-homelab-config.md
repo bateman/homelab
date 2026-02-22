@@ -382,13 +382,15 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (segmented VLANs)
 
 #### VLAN 3 — Servers (192.168.3.0/24)
 
+> IPs assigned via DHCP reservations on UDM-SE. See [`network-setup.md` Phase 4](../setup/network-setup.md#phase-4-dhcp-reservations).
+
 | Device | IP | Notes |
 |--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.3.1 | — |
-| QNAP NAS | 192.168.3.10 | Media stack, Pi-hole |
-| Proxmox Mini PC | 192.168.3.20 | Plex, Tailscale |
-| Printer | 192.168.3.30 | Printing |
-| Desktop PC | 192.168.3.40 | Workstation |
+| QNAP NAS | 192.168.3.10 | DHCP reservation · Media stack, Pi-hole |
+| Proxmox Mini PC | 192.168.3.20 | DHCP reservation · Plex, Tailscale |
+| Printer | 192.168.3.30 | DHCP reservation · Printing |
+| Desktop PC | 192.168.3.40 | DHCP reservation · Workstation |
 
 #### VLAN 4 — Media (192.168.4.0/24)
 

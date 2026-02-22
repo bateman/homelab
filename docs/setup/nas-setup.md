@@ -35,12 +35,12 @@
 - [ ] Disable default "admin" account (optional, after creating another admin)
 
 ### Network Configuration
-- [ ] Assign static IP: `192.168.3.10`
-- [ ] Subnet mask: `255.255.255.0`
-- [ ] Gateway: `192.168.3.1`
-- [ ] Primary DNS: `192.168.3.1` (UDM-SE) or `1.1.1.1`
-- [ ] Secondary DNS: `1.0.0.1`
+
+> IP address (`192.168.3.10`) is assigned via DHCP reservation on the UDM-SE — no static IP configuration needed on the NAS itself. See [`network-setup.md` Phase 4](network-setup.md#phase-4-dhcp-reservations).
+
+- [ ] Verify network adapter is set to **DHCP** (Control Panel → Network → Edit interface → DHCP)
 - [ ] Hostname: `qnap-nas` (or chosen name)
+- [ ] After connecting to the Servers VLAN switch port, verify the NAS receives `192.168.3.10` from the DHCP reservation
 - [ ] Verify MTU 9000 if Jumbo Frames enabled on switch
 
 **Path:** Control Panel → Network & Virtual Switch → Interfaces

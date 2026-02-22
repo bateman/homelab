@@ -66,6 +66,9 @@ sudo dd bs=4M if=proxmox-ve_*.iso of=/dev/sdX conv=fsync status=progress
 
 ### 2.3 Network Configuration
 
+> [!NOTE]
+> The Proxmox installer requires a static IP. Use `192.168.3.20` during installation — after setup, the bridge will be switched to DHCP and the UDM-SE DHCP reservation will assign this same IP. See [Phase 8.4](#84-switch-to-25gbe-usb-adapter).
+
 | Field | Value |
 |-------|--------|
 | Management Interface | eth0 (or main interface) |
@@ -271,9 +274,7 @@ Datacenter → proxmox → Create CT
 | Field | Value |
 |-------|--------|
 | Bridge | vmbr0 |
-| IPv4 | Static |
-| IPv4/CIDR | 192.168.3.21/24 |
-| Gateway | 192.168.3.1 |
+| IPv4 | DHCP |
 
 **Tab DNS:**
 - Use host settings (default)
@@ -1040,10 +1041,9 @@ auto enxAABBCCDDEEFF
 iface enxAABBCCDDEEFF inet manual
 
 # Bridge on 2.5GbE adapter (management + LXC containers)
+# IP 192.168.3.20 assigned via DHCP reservation on UDM-SE
 auto vmbr0
-iface vmbr0 inet static
-    address 192.168.3.20/24
-    gateway 192.168.3.1
+iface vmbr0 inet dhcp
     bridge-ports enxAABBCCDDEEFF
     bridge-stp off
     bridge-fd 0
