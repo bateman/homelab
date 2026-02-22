@@ -280,6 +280,8 @@ In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE
 Configure static IPs directly on:
 - **NAS QNAP**: Control Panel → Network → Static IP `192.168.3.10`
 - **Mini PC Proxmox**: During installation, IP `192.168.3.20`
+- **Printer**: Web admin panel or LCD menu → Network/TCP-IP → Static IP `192.168.3.30`, Subnet `255.255.255.0`, Gateway `192.168.3.1`
+- **Desktop PC**: OS network settings → Static IP `192.168.3.40`, Subnet `255.255.255.0`, Gateway `192.168.3.1`, DNS `192.168.3.10`
 
 ### 4.2 Option B: DHCP Reservation in UniFi (Alternative)
 
@@ -326,6 +328,11 @@ In **UDM-SE** (Network application): Settings → Profiles → Network Lists →
 - Addresses:
   - `192.168.3.21`
 
+**List: Printer**
+- Type: IPv4 Address/Subnet
+- Addresses:
+  - `192.168.3.30`
+
 ### 5.2 Create Port Network Lists
 
 In **UDM-SE** (Network application): Settings → Profiles → Network Lists → Create New
@@ -339,6 +346,11 @@ In **UDM-SE** (Network application): Settings → Profiles → Network Lists →
 
 > [!NOTE]
 > Plex (32400) is not included because it runs on Mini PC, not NAS. qBittorrent (8080) and NZBGet (6789) are not included because Media VLAN devices (TVs, phones) don't need direct access. *arr services communicate with download clients internally via Docker network, not through firewall.
+
+**List: Printing**
+- Ports:
+  - `631` (IPP)
+  - `9100` (raw printing)
 
 **List: Infrastructure Ports**
 - Ports:
@@ -409,7 +421,18 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 | Destination | Network List: NAS Server |
 | Port | 8123 |
 
-### Rule 5: Block All Inter-VLAN (LAST)
+### Rule 5: Allow Media to Printer
+
+| Field | Value |
+|-------|-------|
+| Type | LAN In |
+| Description | Media VLAN to Printer |
+| Action | Allow |
+| Source | Network: Media |
+| Destination | Network List: Printer |
+| Port | Network List: Printing |
+
+### Rule 6: Block All Inter-VLAN (LAST)
 
 | Field | Value |
 |-------|-------|
