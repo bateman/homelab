@@ -84,7 +84,7 @@ Create the following networks in **Settings → Networks**:
 | VLAN ID | Name | Subnet | Gateway | DHCP Range |
 |---------|------|--------|---------|------------|
 | 2 | Management | 192.168.2.0/24 | 192.168.2.1 | .100-.200 |
-| 3 | Servers | 192.168.3.0/24 | 192.168.3.1 | Disabled (static IPs) |
+| 3 | Servers | 192.168.3.0/24 | 192.168.3.1 | .100-.200 (DHCP reservations) |
 | 4 | Media | 192.168.4.0/24 | 192.168.4.1 | .100-.200 |
 | 5 | Guest | 192.168.5.0/24 | 192.168.5.1 | .100-.200 |
 | 6 | IoT | 192.168.6.0/24 | 192.168.6.1 | .100-.200 |
@@ -126,7 +126,7 @@ Follow the complete checklist. Key points:
 
 1. [ ] First boot and initial wizard
 2. [ ] Firmware update
-3. [ ] Static IP configuration: `192.168.3.10`
+3. [ ] Verify DHCP reservation assigns `192.168.3.10` (configured on UDM-SE)
 4. [ ] User creation and security
 
 ### 3.2 Storage Configuration
@@ -332,7 +332,7 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 1. [ ] Download Proxmox VE ISO
 2. [ ] Create bootable USB
 3. [ ] Install on Lenovo Mini PC
-4. [ ] Configure IP: `192.168.3.20`
+4. [ ] Configure IP: `192.168.3.20` (static during install, then switches to DHCP reservation)
 
 ### 6.2 Plex Setup
 

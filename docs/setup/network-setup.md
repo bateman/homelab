@@ -84,14 +84,20 @@ Click "Add Network"
 | Name | Servers |
 | Gateway IP/Subnet | 192.168.3.1/24 |
 | VLAN ID | 3 |
-| DHCP Mode | None (static IPs) |
+| DHCP Mode | DHCP Server |
+| DHCP Range | 192.168.3.100 - 192.168.3.200 |
 | Domain Name | servers.local |
+
+**DHCP Options:**
+- [ ] Auto DNS Server: Disabled
+- [ ] DNS Server 1: `192.168.3.10` (Pi-hole)
+- [ ] DNS Server 2: `1.1.1.1` (Cloudflare fallback)
 
 **Advanced Options:**
 - [ ] Multicast DNS: Enabled
 
 > [!NOTE]
-> Servers VLAN uses static IPs. Assign manually: NAS=.10, Proxmox=.20, Printer=.30, PC=.40
+> Servers VLAN uses DHCP with fixed IP reservations configured on the UDM-SE (see [Phase 4](#phase-4-dhcp-reservations)). This centralizes IP management on the UniFi device instead of configuring static IPs on each server.
 
 ### 2.4 Create Media VLAN (VLAN 4)
 
@@ -225,7 +231,26 @@ In **UDM-SE** (Network application): Settings → Profiles → Switch Ports → 
 
 ### 3.4 Apply Profiles to Ports
 
-For each port, click → Port Profile → select appropriate profile
+In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE → Ports
+
+**RJ45 Ports:**
+
+1. [ ] Click Port 1 → Port Profile → **Management** (AP)
+2. [ ] Click Port 2 → Port Profile → **Media** (Living Room)
+3. [ ] Click Port 3 → Port Profile → **Media** (Bedroom)
+4. [ ] Click Port 4 → Port Profile → **Media** (Studio)
+5. [ ] Click Port 5 → Port Profile → **Servers** (Mini PC — integrated NIC)
+6. [ ] Click Port 6 → Port Profile → **Servers** (Mini PC — USB adapter)
+7. [ ] Click Port 9 → Port Profile → **Servers** (Printer)
+
+**SFP+ Ports:**
+
+> SFP+ ports are listed separately from RJ45 ports in the UniFi UI — scroll down or look for the "SFP+" section on the port panel.
+
+8. [ ] Click SFP+ 1 → Port Profile → **All** (UDM-SE trunk uplink)
+9. [ ] Click SFP+ 2 → Port Profile → **Servers** (QNAP NAS 10GbE)
+
+After applying, verify each port shows the correct profile name in the port overview.
 
 ### 3.5 Global Switch Settings
 
@@ -268,30 +293,38 @@ In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE
 
 ---
 
-## Phase 4: Static IP Configuration
+## Phase 4: DHCP Reservations
 
 > [!IMPORTANT]
-> Static IPs for NAS and Proxmox are configured **directly on the devices** during their initial setup (see [nas-setup.md](nas-setup.md) and [proxmox-setup.md](proxmox-setup.md)).
->
-> "Fixed IP" in UniFi is **optional** and only needed if you prefer DHCP with reservation instead of static IPs configured on devices.
+> All server IPs are managed centrally via **DHCP reservations on the UDM-SE**. Devices on the Servers VLAN use DHCP — the UDM-SE assigns them a fixed IP based on their MAC address. This is the easiest way to manage server IPs: no need to configure static IPs on each device individually.
 
-### 4.1 Option A: Static IPs on Devices (Recommended)
+### 4.1 Create DHCP Reservations in UniFi
 
-Configure static IPs directly on:
-- **NAS QNAP**: Control Panel → Network → Static IP `192.168.3.10`
-- **Mini PC Proxmox**: During installation, IP `192.168.3.20`
-- **Printer**: Web admin panel or LCD menu → Network/TCP-IP → Static IP `192.168.3.30`, Subnet `255.255.255.0`, Gateway `192.168.3.1`
-- **Desktop PC**: OS network settings → Static IP `192.168.3.40`, Subnet `255.255.255.0`, Gateway `192.168.3.1`, DNS `192.168.3.10`
+In **UDM-SE** (Network application): Settings → Networks → Servers → DHCP → Static DHCP Lease
 
-### 4.2 Option B: DHCP Reservation in UniFi (Alternative)
+For each server device:
 
-If you prefer managing IPs centrally from UniFi:
+1. [ ] Connect the device to a switch port assigned to the Servers VLAN
+2. [ ] Wait for it to appear in Client Devices (it will receive a DHCP address from the .100-.200 range)
+3. [ ] Go to Settings → Client Devices → search by MAC address
+4. [ ] Click the device → Fixed IP Address → assign the desired IP:
 
-1. Temporarily connect devices to make them appear in Client Devices
-2. In **UDM-SE** (Network application): Settings → Client Devices → (search by MAC address)
-3. Click device → Fixed IP Address: assign desired IP
+| Device | Fixed IP | MAC Address |
+|--------|----------|-------------|
+| NAS QNAP | 192.168.3.10 | *(find in device admin panel)* |
+| Mini PC Proxmox | 192.168.3.20 | *(find on hardware label or BIOS)* |
+| Printer | 192.168.3.30 | *(find on network config page or label)* |
+| Desktop PC | 192.168.3.40 | *(find in OS network settings)* |
 
-### 4.3 Fixed IP for Switch
+> [!NOTE]
+> **Plex LXC** (`192.168.3.21`) uses a static IP configured in Proxmox (not a DHCP reservation) — see [proxmox-setup.md](proxmox-setup.md).
+
+5. [ ] After assigning, reboot the device (or renew DHCP lease) so it picks up the reserved IP
+
+> [!TIP]
+> To find a device's MAC address before connecting it: check the hardware label, BIOS/UEFI screen, or the device's own admin panel. You can also connect the device first, let it get a random DHCP IP, then identify it in UniFi's Client Devices list and assign the fixed IP.
+
+### 4.2 Fixed IP for Switch
 
 Switch should already have IP in Management VLAN after adoption.
 Verify in **UDM-SE** (Network application): Settings → Devices → Switch → IP: should be 192.168.2.x

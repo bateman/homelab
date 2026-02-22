@@ -50,7 +50,7 @@ Internet
 | VLAN ID | Name | Subnet | Gateway | DHCP Range | Purpose |
 |---------|------|--------|---------|------------|---------|
 | 2 | Management | 192.168.2.0/24 | 192.168.2.1 | .100-.200 | UDM-SE, Switch, Access Point |
-| 3 | Servers | 192.168.3.0/24 | 192.168.3.1 | Disabled* | NAS, Proxmox, printer, desktop PC (static IPs) |
+| 3 | Servers | 192.168.3.0/24 | 192.168.3.1 | .100-.200 | NAS, Proxmox, printer, desktop PC (DHCP reservations) |
 | 4 | Media | 192.168.4.0/24 | 192.168.4.1 | .100-.200 | Smart TV, phones, tablets |
 | 5 | Guest | 192.168.5.0/24 | 192.168.5.1 | .100-.200 | Guest WiFi |
 | 6 | IoT | 192.168.6.0/24 | 192.168.6.1 | .100-.200 | Alexa, new camera, smart WiFi devices |
@@ -59,9 +59,7 @@ Internet
 > The 192.168.1.0/24 subnet is NOT managed by UDM-SE. It remains for Iliad Box and legacy Vimar devices connected to the PoE switch in the electrical panel.
 
 > [!TIP]
-> **DHCP Disabled on VLAN 3**: Server devices use static IPs configured directly on them. If you need to temporarily connect a new device to configure it, you can:
-> 1. Connect it first to another VLAN with DHCP (e.g., Management), configure the static IP, then move it
-> 2. Configure the static IP manually before connecting to the network
+> **VLAN 3 uses DHCP with reservations**: Server devices receive fixed IPs via DHCP reservations configured on the UDM-SE. This centralizes IP management — no need to configure static IPs on each device. See [`network-setup.md` Phase 4](../setup/network-setup.md#phase-4-dhcp-reservations) for setup steps.
 
 ---
 
@@ -90,10 +88,10 @@ Internet
 | Device | IP | Notes |
 |--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.3.1 | — |
-| NAS QNAP | 192.168.3.10 | Media stack, Pi-hole |
-| Mini PC Proxmox | 192.168.3.20 | Plex, Tailscale |
-| Printer | 192.168.3.30 | Printing from PC and Media devices |
-| Desktop PC | 192.168.3.40 | Main workstation |
+| NAS QNAP | 192.168.3.10 | DHCP reservation · Media stack, Pi-hole |
+| Mini PC Proxmox | 192.168.3.20 | DHCP reservation · Plex, Tailscale |
+| Printer | 192.168.3.30 | DHCP reservation · Printing from PC and Media devices |
+| Desktop PC | 192.168.3.40 | DHCP reservation · Main workstation |
 
 ### VLAN 4 — Media (192.168.4.0/24)
 
@@ -430,7 +428,7 @@ In **UDM-SE** (Network application): Settings → Networks → (select VLAN) →
 | VLAN | Primary DNS | Secondary DNS | Notes |
 |------|-------------|---------------|-------|
 | 2 (Management) | 192.168.3.10 | 1.1.1.1 | Pi-hole + Cloudflare fallback |
-| 3 (Servers) | N/A | N/A | Static IPs, DNS configured on each host |
+| 3 (Servers) | 192.168.3.10 | 1.1.1.1 | Pi-hole + Cloudflare fallback |
 | 4 (Media) | 192.168.3.10 | 1.1.1.1 | Pi-hole + Cloudflare fallback |
 | 5 (Guest) | 1.1.1.1 | 1.0.0.1 | Cloudflare only (no Pi-hole) |
 | 6 (IoT) | 192.168.3.10 | 1.1.1.1 | Pi-hole + Cloudflare fallback |
@@ -504,7 +502,7 @@ If in the future you need to open specific ports (e.g., for remote Plex without 
 6. [ ] Enable mDNS reflection on VLANs 3, 4, and 6
 7. [ ] Configure Threat Management
 8. [ ] Create WiFi SSIDs (see [`network-setup.md` Phase 7](../setup/network-setup.md#phase-7-wi-fi-access-point-setup))
-9. [ ] Assign static IPs to Server devices
+9. [ ] Configure DHCP reservations for Server devices in UDM-SE
 10. [ ] Test inter-VLAN communication
 
 ---
