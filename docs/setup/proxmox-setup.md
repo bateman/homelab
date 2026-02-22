@@ -56,8 +56,8 @@ sudo dd bs=4M if=proxmox-ve_*.iso of=/dev/sdX conv=fsync status=progress
    - Select NVMe SSD
    - **Filesystem: ext4** (recommended for single NVMe)
 
-   > [!NOTE]
-   > ZFS requires at least 8GB dedicated RAM and offers advantages (snapshots, integrity) mainly with multi-disk configurations. For single NVMe, ext4 is more resource-efficient.
+> [!NOTE]
+> ZFS requires at least 8GB dedicated RAM and offers advantages (snapshots, integrity) mainly with multi-disk configurations. For single NVMe, ext4 is more resource-efficient.
 
 3. [ ] Locale settings:
    - Country: Italy
