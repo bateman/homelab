@@ -1015,21 +1015,48 @@ ethtool enxAABBCCDDEEFF | grep -i speed  # Should show 2500Mb/s
 > [!TIP]
 > USB network adapters on Linux typically get a name starting with `enx` followed by the MAC address (e.g., `enxaabbccddeeff`). This naming is deterministic and won't change across reboots.
 
-#### 8.4.3 Reconfigure Network Interfaces
+#### 8.4.3 Install DHCP Client
 
-Edit the Proxmox network configuration:
+> [!IMPORTANT]
+> The Proxmox installer sets a static IP. This step switches the host to DHCP so the UDM-SE DHCP reservation assigns `192.168.3.20` based on MAC address. This must be done **before** editing the network configuration.
+
+Proxmox VE 9+ does not ship with `dhclient`. Install `dhcpcd` as the DHCP client:
 
 ```bash
-# Backup current configuration
-cp /etc/network/interfaces /etc/network/interfaces.bak
+ssh root@192.168.3.20
 
-# Edit network configuration
+# Install dhcpcd and remove the (non-functional) ISC client
+apt update
+apt -y install dhcpcd
+apt -y purge isc-dhcp-common isc-dhcp-client
+
+# Restrict dhcpcd to only manage the bridge interface
+# (prevents it from requesting IPs on physical NICs or tap devices)
+cat >> /etc/dhcpcd.conf << 'EOF'
+allowinterfaces vmbr0
+EOF
+```
+
+> [!NOTE]
+> On PVE 8.x, the ISC `dhclient` is available by default and no extra package is needed. You can skip the install step, but the `allowinterfaces` restriction is still recommended if using `dhcpcd`.
+
+#### 8.4.4 Reconfigure Network Interfaces
+
+1. [ ] Backup current configuration:
+
+```bash
+cp /etc/network/interfaces /etc/network/interfaces.bak
+```
+
+2. [ ] Edit `/etc/network/interfaces`:
+
+```bash
 nano /etc/network/interfaces
 ```
 
-Replace the network configuration with (adjust interface names to match your system):
+3. [ ] Replace the network configuration with (adjust interface names to match your system):
 
-```bash
+```
 auto lo
 iface lo inet loopback
 
@@ -1051,24 +1078,23 @@ iface vmbr0 inet dhcp
     bridge-fd 0
 ```
 
+Key changes from the installer defaults:
+- `vmbr0` changed from `inet static` to `inet dhcp` — no `address`/`gateway` lines
+- Bridge ports moved from the integrated NIC to the USB-C adapter
+- Integrated NIC kept as `manual` (link up for WOL, no IP)
+
 > [!WARNING]
 > **This will disconnect your SSH session.** You'll need physical access (monitor + keyboard) or apply via the Proxmox WebUI (System → Network) if the change doesn't work.
 
-> [!WARNING]
-> **PVE 9+**: `dhclient` is missing by default. If DHCP fails after switching, install `dhcpcd`:
-> ```bash
-> apt -y install dhcpcd && apt -y purge isc-dhcp-common isc-dhcp-client
-> ```
-> Then in `/etc/dhcpcd.conf`, add `allowinterfaces vmbr0` so dhcpcd only manages the bridge.
-
-#### 8.4.4 Apply Configuration
+#### 8.4.5 Apply Configuration
 
 **Option A: Via Proxmox WebUI (safer)**
 
 1. Navigate to: proxmox → System → Network
 2. Edit `vmbr0`: change Bridge ports from the old interface to the USB-C adapter name
-3. Add the integrated NIC as a standalone interface (no IP, manual)
-4. Click "Apply Configuration"
+3. Remove the static IPv4 address and gateway, set IPv4/CIDR to `dhcp`
+4. Add the integrated NIC as a standalone interface (no IP, manual)
+5. Click "Apply Configuration"
 
 **Option B: Via command line**
 
@@ -1081,16 +1107,20 @@ ifreload -a
 # cp /etc/network/interfaces.bak /etc/network/interfaces && ifreload -a
 ```
 
-#### 8.4.5 Verify Configuration
+#### 8.4.6 Verify Configuration
 
 ```bash
 # Verify bridge is on the 2.5GbE adapter
 bridge link show
 # Should show enxAABBCCDDEEFF as member of vmbr0
 
-# Verify IP is on vmbr0
+# Verify IP was assigned via DHCP
 ip addr show vmbr0
-# Should show 192.168.3.20/24
+# Should show 192.168.3.20/24 (from UDM-SE DHCP reservation)
+
+# Verify DHCP lease is active
+cat /var/lib/dhcpcd/vmbr0.lease 2>/dev/null || cat /var/lib/dhcp/dhclient.vmbr0.leases 2>/dev/null
+# Should show lease with fixed-address 192.168.3.20
 
 # Verify 2.5GbE link speed
 ethtool enxAABBCCDDEEFF | grep Speed
@@ -1105,7 +1135,7 @@ ping 192.168.3.1   # Gateway
 ping 192.168.3.10  # NAS
 ```
 
-#### 8.4.6 Update WOL Configuration
+#### 8.4.7 Update WOL Configuration
 
 Since WOL must use the integrated NIC, update the persistent WOL configuration:
 
@@ -1131,7 +1161,7 @@ ethtool enp2s0 | grep Wake-on
 > [!NOTE]
 > **Update your saved MAC address.** The MAC for WOL magic packets must be the integrated NIC's MAC (enp2s0), not the USB adapter's.
 
-#### 8.4.7 Dual-NIC Troubleshooting
+#### 8.4.8 Dual-NIC Troubleshooting
 
 | Problem | Cause | Solution |
 |---------|-------|----------|
@@ -1141,6 +1171,8 @@ ethtool enp2s0 | grep Wake-on
 | WOL stopped working | WOL configured on wrong NIC | Must be on integrated NIC (enp2s0) |
 | LXC containers lose network | Bridge on wrong interface | Verify `bridge-ports` in vmbr0 |
 | Lost SSH after change | New interface not up | Use Proxmox console (monitor+keyboard) to fix |
+| No IP after switching to DHCP | `dhclient` missing (PVE 9+) | Install `dhcpcd` (see [8.4.3](#843-install-dhcp-client)) |
+| Wrong IP from DHCP | Reservation not set | Check UDM-SE DHCP reservation matches MAC of `enxAABBCCDDEEFF` |
 
 ---
 
