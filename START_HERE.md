@@ -342,15 +342,19 @@ ls -li /share/data/torrents/movies/file.mkv /share/data/media/movies/Film/file.m
 
 ### 6.3 Tailscale Configuration
 
-1. [ ] Install Tailscale on Proxmox
-2. [ ] Configure as exit node (optional)
-3. [ ] Enable remote access
+> Tailscale runs as a Docker container on the NAS (always-on), not on the Mini PC.
+> See `docker/compose.yml` for configuration.
+
+1. [ ] Generate auth key at https://login.tailscale.com/admin/settings/keys
+2. [ ] Add `TS_AUTHKEY` to `docker/.env.secrets`
+3. [ ] Start the stack: `make up`
+4. [ ] Approve subnet routes at https://login.tailscale.com/admin/machines
 
 ### Phase 6 Verification
 
 - [ ] Proxmox accessible: `https://192.168.3.20:8006`
 - [ ] Plex accessible: `http://192.168.3.21:32400/web` (LXC container)
-- [ ] Tailscale connected
+- [ ] Tailscale connected (`docker exec tailscale tailscale status`)
 
 ---
 

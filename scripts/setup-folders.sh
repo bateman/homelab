@@ -181,6 +181,7 @@ make_dir "${CONFIG_ROOT}/duplicati"
 make_dir "${CONFIG_ROOT}/uptime-kuma"
 make_dir "${CONFIG_ROOT}/traefik"
 make_dir "${CONFIG_ROOT}/authelia"
+make_dir "${CONFIG_ROOT}/tailscale"
 
 # Secrets directory (for Authelia secrets)
 SECRETS_ROOT="${SCRIPT_DIR}/../docker/secrets"

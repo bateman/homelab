@@ -305,6 +305,19 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:3001,UptimeKuma)
 	$(call check_service,http://localhost:8383/v1/metrics,Watchtower)
 	$(call check_service,http://localhost:80,Traefik)
+	@# Tailscale health check
+	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^tailscale$$'; then \
+		HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' tailscale 2>/dev/null); \
+		if [ "$$HEALTH" = "healthy" ]; then \
+			echo "Tailscale: $(GREEN)OK (connected)$(NC)"; \
+		elif [ "$$HEALTH" = "starting" ]; then \
+			echo "Tailscale: $(YELLOW)STARTING$(NC)"; \
+		else \
+			echo "Tailscale: $(RED)UNHEALTHY$(NC)"; \
+		fi; \
+	else \
+		echo "Tailscale: $(YELLOW)NOT RUNNING$(NC)"; \
+	fi
 	@# Authelia health check
 	@HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' authelia 2>/dev/null); \
 	if [ "$$HEALTH" = "healthy" ]; then \
@@ -358,6 +371,9 @@ show-urls:
 	@echo "  Portainer:    https://$(HOST_IP):9443"
 	@echo "  Duplicati:    http://$(HOST_IP):8200"
 	@echo "  Traefik:      https://traefik.home.local (requires DNS)"
+	@echo ""
+	@echo "$(GREEN)Remote Access$(NC)"
+	@echo "  Tailscale:    https://login.tailscale.com/admin/machines"
 	@echo ""
 	@echo "$(GREEN)Authentication (SSO)$(NC)"
 	@echo "  Authelia:     https://auth.home.local (requires DNS)"

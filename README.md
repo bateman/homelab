@@ -45,13 +45,13 @@ Infrastructure-as-code configuration for a homelab based on QNAP NAS and Proxmox
 - **[Uptime Kuma](https://github.com/louislam/uptime-kuma)** (3001) - Monitoring and alerting
 - **[Watchtower](https://containrrr.dev/watchtower/)** (8383) - Container auto-update
 - **[Traefik](https://traefik.io/traefik/)** (80/443) - Reverse proxy
+- **[Tailscale](https://tailscale.com/)** - Mesh VPN remote access (subnet router for 192.168.3.0/24 and 192.168.4.0/24)
 
 ## Proxmox Stack (Mini PC)
 
 The Mini PC runs Proxmox VE as hypervisor with LXC containers:
 
 - **[Plex Media Server](https://www.plex.tv/)** (32400) - Media streaming with Intel Quick Sync hardware transcoding
-- **[Tailscale](https://tailscale.com/)** - Mesh VPN remote access (subnet router for 192.168.3.0/24 and 192.168.4.0/24)
 
 Proxmox WebUI: `https://192.168.3.20:8006`
 

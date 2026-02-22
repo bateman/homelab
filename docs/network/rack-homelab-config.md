@@ -62,7 +62,7 @@
 | Network | 1x 1GbE RJ45 (integrated) + 1x 2.5GbE USB-C (adapter) |
 | Adapter | StarTech US2GC30 (USB-C 3.0 to 2.5GbE) |
 | OS | Proxmox VE |
-| Services | Plex, Docker, Tailscale |
+| Services | Plex, Docker |
 | IP | 192.168.3.20 |
 
 ### U7 — Vented Panel #1
@@ -296,6 +296,7 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 | Uptime Kuma | 3001 | Monitoring and alerting |
 | Watchtower | 8383 | Container auto-update |
 | Traefik | 80/443 | Reverse proxy (dashboard via traefik.home.local) |
+| Tailscale | — | Mesh VPN remote access (subnet router, `network_mode: host`) |
 
 > [!NOTE]
 > **Optional service:** Home Assistant (port 8123) is available via `compose.homeassistant.yml` but not included in the default stack. To enable, add `-f compose.homeassistant.yml` to your docker compose command.
@@ -305,7 +306,6 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 | Service | Port | IP | Description |
 |---------|------|-----|-------------|
 | Plex | 32400 | 192.168.3.21 | Media server (LXC container) |
-| Tailscale | — | 192.168.3.20 | Mesh VPN (host) |
 
 ---
 
@@ -387,8 +387,8 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (segmented VLANs)
 | Device | IP | Notes |
 |--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.3.1 | — |
-| QNAP NAS | 192.168.3.10 | DHCP reservation · Media stack, Pi-hole |
-| Proxmox Mini PC | 192.168.3.20 | DHCP reservation · Plex, Tailscale |
+| QNAP NAS | 192.168.3.10 | DHCP reservation · Media stack, Pi-hole, Tailscale |
+| Proxmox Mini PC | 192.168.3.20 | DHCP reservation · Plex |
 | Printer | 192.168.3.30 | DHCP reservation · Printing |
 | Desktop PC | 192.168.3.40 | DHCP reservation · Workstation |
 
