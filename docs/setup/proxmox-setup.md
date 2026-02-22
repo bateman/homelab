@@ -274,7 +274,9 @@ Datacenter → proxmox → Create CT
 | Field | Value |
 |-------|--------|
 | Bridge | vmbr0 |
-| IPv4 | DHCP |
+| IPv4 | Static |
+| IPv4/CIDR | 192.168.3.21/24 |
+| Gateway | 192.168.3.1 |
 
 **Tab DNS:**
 - Use host settings (default)
@@ -1051,6 +1053,13 @@ iface vmbr0 inet dhcp
 
 > [!WARNING]
 > **This will disconnect your SSH session.** You'll need physical access (monitor + keyboard) or apply via the Proxmox WebUI (System → Network) if the change doesn't work.
+
+> [!WARNING]
+> **PVE 9+**: `dhclient` is missing by default. If DHCP fails after switching, install `dhcpcd`:
+> ```bash
+> apt -y install dhcpcd && apt -y purge isc-dhcp-common isc-dhcp-client
+> ```
+> Then in `/etc/dhcpcd.conf`, add `allowinterfaces vmbr0` so dhcpcd only manages the bridge.
 
 #### 8.4.4 Apply Configuration
 
