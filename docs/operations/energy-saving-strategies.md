@@ -37,8 +37,8 @@ ssh root@192.168.3.20 "shutdown -h now"
 # Wake Mini PC (from NAS or any LAN device)
 wakeonlan AA:BB:CC:DD:EE:FF  # Replace with actual MAC
 
-# Wake via Tailscale (from remote, through NAS)
-ssh admin@100.x.x.x "wakeonlan AA:BB:CC:DD:EE:FF"
+# Wake via Tailscale (from remote — Tailscale runs on NAS)
+ssh admin@192.168.3.10 "wakeonlan AA:BB:CC:DD:EE:FF"
 ```
 
 ### Automation Options

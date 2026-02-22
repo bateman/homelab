@@ -440,3 +440,47 @@ services:
       - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
       - "traefik.http.routers.traefik-dashboard.tls=true"
       - "traefik.http.routers.traefik-dashboard.middlewares=authelia@docker"
+
+  # ---------------------------------------------------------------------------
+  # Remote Access (Tailscale)
+  # ---------------------------------------------------------------------------
+  # Tailscale: mesh VPN for secure remote access without port forwarding
+  # Runs as subnet router to expose entire homelab network remotely
+  # Docs: https://tailscale.com/kb/1282/docker
+  #
+  # First time setup:
+  #   1. Generate auth key: https://login.tailscale.com/admin/settings/keys
+  #   2. Add TS_AUTHKEY to .env.secrets
+  #   3. Start stack: make up
+  #   4. Approve subnet routes: https://login.tailscale.com/admin/machines
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    hostname: nas-tailscale
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:-}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_ROUTES: ${TS_ROUTES:-192.168.3.0/24,192.168.4.0/24}
+      TS_EXTRA_ARGS: ${TS_EXTRA_ARGS:---accept-routes}
+      TS_USERSPACE: "false"
+    volumes:
+      - ./config/tailscale:/var/lib/tailscale
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    network_mode: host
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "tailscale", "status", "--json"]
+      <<: *common-healthcheck
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"

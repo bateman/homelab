@@ -1,6 +1,6 @@
 # Proxmox Setup - Lenovo ThinkCentre neo 50q Gen 4
 
-> Guide for installing Proxmox VE on the Mini PC and configuring Plex with remote access via Tailscale
+> Guide for installing Proxmox VE on the Mini PC and configuring Plex
 
 ---
 
@@ -560,69 +560,19 @@ If it shows "Transcoding":
 
 ---
 
-## Phase 6: Tailscale Installation
+## Phase 6: Remote Access (Tailscale)
 
 > [!NOTE]
-> Tailscale provides secure remote access without port forwarding
+> Tailscale runs as a Docker container on the NAS (always-on) instead of on the Mini PC, so remote access remains available even when the Mini PC is powered off.
 
-### 6.1 Install on Proxmox Host
+See the Tailscale service in `docker/compose.yml` for configuration. Setup steps:
 
-```bash
-# SSH into Proxmox
-ssh root@192.168.3.20
+1. Generate an auth key at https://login.tailscale.com/admin/settings/keys
+2. Add `TS_AUTHKEY` to `docker/.env.secrets`
+3. Start the stack: `make up`
+4. Approve subnet routes at https://login.tailscale.com/admin/machines
 
-# Install Tailscale
-curl -fsSL https://tailscale.com/install.sh | sh
-
-# Start and authenticate
-tailscale up
-
-# Follow link for browser authentication
-```
-
-### 6.2 Configure as Subnet Router
-
-To access the entire local network via Tailscale:
-
-```bash
-# Enable IP forwarding
-echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
-echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
-sysctl -p
-
-# Restart Tailscale as subnet router
-tailscale up --advertise-routes=192.168.3.0/24,192.168.4.0/24
-```
-
-### 6.3 Approve Routes in Tailscale Admin
-
-1. Access https://login.tailscale.com/admin/machines
-2. Find "proxmox"
-3. Click "..." → Edit route settings
-4. Approve the advertised subnet routes
-
-### 6.4 Install Tailscale in Plex Container (Alternative)
-
-If you prefer direct access only to Plex:
-
-```bash
-# Enter container
-pct enter 100
-
-# Install Tailscale
-curl -fsSL https://tailscale.com/install.sh | sh
-tailscale up
-```
-
-### Verify Tailscale
-
-```bash
-# On Proxmox
-tailscale status
-
-# From remote device with Tailscale
-ping 192.168.3.20  # Should work via Tailscale
-```
+For full details, see the Tailscale section in `docker/compose.yml` and `docker/.env.secrets.example`.
 
 ---
 
@@ -805,14 +755,14 @@ You can create an iOS shortcut to power on the Mini PC and open Plex:
 
 To power on the Mini PC when away from home:
 
-1. The NAS (192.168.3.10) must be always on
-2. Install Tailscale on the NAS
+1. The NAS (192.168.3.10) must be always on (it is)
+2. Tailscale runs on the NAS as a Docker container (see `docker/compose.yml`)
 3. From remote, connect via Tailscale to the NAS
 4. Execute: `wakeonlan AA:BB:CC:DD:EE:FF`
 
 ```bash
 # Example from remote terminal via Tailscale
-ssh admin@100.x.x.x "wakeonlan AA:BB:CC:DD:EE:FF"
+ssh admin@192.168.3.10 "wakeonlan AA:BB:CC:DD:EE:FF"
 ```
 
 #### 8.2.8 WOL Troubleshooting
@@ -1190,13 +1140,7 @@ ethtool enp2s0 | grep Wake-on
 - [ ] WebUI accessible: `http://192.168.3.21:32400/web`
 - [ ] Libraries synced
 - [ ] Local playback working
-- [ ] Remote access via Tailscale working
-
-### Tailscale Checklist
-
-- [ ] `tailscale status` shows connected
-- [ ] Subnet routes approved (if configured)
-- [ ] Remote access to Plex working
+- [ ] Remote access via Tailscale working (Tailscale runs on NAS — see `docker/compose.yml`)
 
 ---
 
@@ -1207,7 +1151,6 @@ ethtool enp2s0 | grep Wake-on
 | Container won't start | Insufficient resources | Increase RAM/CPU |
 | NFS mount fails | Permissions or network | Verify NFS export on NAS |
 | Plex doesn't see media | Wrong mount point | Verify /media in container |
-| Tailscale won't connect | Firewall | Verify UDM-SE rules |
 | Slow transcoding | No GPU | Enable hardware acceleration |
 | Backup fails | Insufficient space | Verify retention policy |
 
@@ -1227,9 +1170,6 @@ pct console 100
 
 # Restart container
 pct restart 100
-
-# Tailscale status
-tailscale status
 
 # Update Plex (in container)
 apt update && apt upgrade plexmediaserver -y

@@ -88,8 +88,8 @@ Internet
 | Device | IP | Notes |
 |--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.3.1 | — |
-| NAS QNAP | 192.168.3.10 | DHCP reservation · Media stack, Pi-hole |
-| Mini PC Proxmox | 192.168.3.20 | DHCP reservation · Plex, Tailscale |
+| NAS QNAP | 192.168.3.10 | DHCP reservation · Media stack, Pi-hole, Tailscale |
+| Mini PC Proxmox | 192.168.3.20 | DHCP reservation · Plex |
 | Printer | 192.168.3.30 | DHCP reservation · Printing from PC and Media devices |
 | Desktop PC | 192.168.3.40 | DHCP reservation · Main workstation |
 
@@ -657,6 +657,6 @@ To eliminate Double NAT:
 
 - **Legacy Network**: The 192.168.1.0/24 subnet remains for Iliad Box and Vimar devices. Not managed by UDM-SE.
 - **Double NAT**: See dedicated section above.
-- **Tailscale**: Installed on Mini PC Proxmox, provides mesh VPN access without port forwarding.
+- **Tailscale**: Runs as Docker container on NAS (always-on), provides mesh VPN access without port forwarding.
 - **Home Assistant**: Accessible from Media VLAN (phones/tablets) and IoT VLAN (smart devices).
 - **Config backup**: Export regularly from UDM-SE: Settings → System → Backup.
