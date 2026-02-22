@@ -313,6 +313,7 @@ For each server device:
 |--------|----------|-------------|
 | NAS QNAP | 192.168.3.10 | *(find in device admin panel)* |
 | Mini PC Proxmox | 192.168.3.20 | *(find on hardware label or BIOS)* |
+| Plex LXC (CT 100) | 192.168.3.21 | *(virtual MAC from Proxmox: PCT → Network → hwaddr)* |
 | Printer | 192.168.3.30 | *(find on network config page or label)* |
 | Desktop PC | 192.168.3.40 | *(find in OS network settings)* |
 
