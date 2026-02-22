@@ -225,7 +225,26 @@ In **UDM-SE** (Network application): Settings → Profiles → Switch Ports → 
 
 ### 3.4 Apply Profiles to Ports
 
-For each port, click → Port Profile → select appropriate profile
+In **UDM-SE** (Network application): Settings → Devices → USW-Pro-Max-16-PoE → Ports
+
+**RJ45 Ports:**
+
+1. [ ] Click Port 1 → Port Profile → **Management** (AP)
+2. [ ] Click Port 2 → Port Profile → **Media** (Living Room)
+3. [ ] Click Port 3 → Port Profile → **Media** (Bedroom)
+4. [ ] Click Port 4 → Port Profile → **Media** (Studio)
+5. [ ] Click Port 5 → Port Profile → **Servers** (Mini PC — integrated NIC)
+6. [ ] Click Port 6 → Port Profile → **Servers** (Mini PC — USB adapter)
+7. [ ] Click Port 9 → Port Profile → **Servers** (Printer)
+
+**SFP+ Ports:**
+
+> SFP+ ports are listed separately from RJ45 ports in the UniFi UI — scroll down or look for the "SFP+" section on the port panel.
+
+8. [ ] Click SFP+ 1 → Port Profile → **All** (UDM-SE trunk uplink)
+9. [ ] Click SFP+ 2 → Port Profile → **Servers** (QNAP NAS 10GbE)
+
+After applying, verify each port shows the correct profile name in the port overview.
 
 ### 3.5 Global Switch Settings
 
