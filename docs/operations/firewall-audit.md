@@ -9,12 +9,12 @@
 
 | Severity | Count |
 |----------|-------|
-| HIGH | 2 |
+| HIGH | 0 (2 fixed) |
 | MEDIUM | 7 |
 | LOW | 7 |
 | INFO | 7 |
 
-Overall the firewall follows sound principles ("deny all, allow specific") with proper rule ordering. However, there are gaps where the authentication layer (Authelia) is undermined by firewall rules that force direct-port access, and an overly broad API bypass that affects critical services.
+Overall the firewall follows sound principles ("deny all, allow specific") with proper rule ordering. Two HIGH findings (H1, H2) have been resolved — the Authelia API bypass is now scoped to *arr domains, and Media VLAN can reach Traefik on port 443 for authenticated access. Remaining MEDIUM findings relate to direct-port exposure and DNS filtering gaps.
 
 ---
 
@@ -60,7 +60,9 @@ This directly undermines the `two_factor` policy set on Portainer. Authelia rule
     - "^/healthcheck$"
 ```
 
-### H2 — No firewall rule for Traefik (port 443) from Media VLAN — forces auth bypass
+> **RESOLVED:** API bypass scoped to specific *arr domains in `docker/config/authelia/configuration.yml`. Portainer, Duplicati, Uptime Kuma, and Pi-hole `/api/` paths now require full authentication per their domain-specific policies.
+
+### H2 — ~~No firewall rule for~~ Traefik (port 443) from Media VLAN ~~— forces auth bypass~~
 
 **Location:** `docs/network/firewall-config.md` — LAN In Rules
 
@@ -68,7 +70,7 @@ This directly undermines the `two_factor` policy set on Portainer. Authelia rule
 
 Rule 4 allows Media → NAS only on the `Media-Services` port group (specific service ports like 8989, 7878, etc.), which does **not** include 443.
 
-**Verified by rule trace:** Media (192.168.4.x) → NAS (192.168.3.10):443 — Rules 1-10 don't match → Rule 11 (Block All Inter-VLAN) → **DROP**.
+**Verified by rule trace (before fix):** Media (192.168.4.x) → NAS (192.168.3.10):443 — Rules 1-10 don't match → Rule 11 (Block All Inter-VLAN) → **DROP**. After fix: Rule 7 (Allow Media to Traefik) → **ACCEPT**.
 
 **Consequence — two-part problem:**
 1. Media VLAN clients cannot use `https://sonarr.home.local` (Traefik) — blocked by firewall.
@@ -76,7 +78,7 @@ Rule 4 allows Media → NAS only on the `Media-Services` port group (specific se
 
 The firewall forces users to bypass the authentication layer.
 
-**Recommendation:** Add a firewall rule (before Rule 11) allowing Media VLAN to NAS on TCP port 443 only. Port 80 does not need a rule — Traefik redirects HTTP→HTTPS, so clients that can reach port 443 will be served correctly, and clients that cannot reach port 80 simply use `https://` directly. Then consider removing individual service ports from the `Media-Services` group so all Media access is funneled through Traefik+Authelia:
+**Recommendation:** Add a firewall rule (before catch-all block) allowing Media VLAN to NAS on TCP port 443 only. Port 80 does not need a rule — Traefik redirects HTTP→HTTPS, so clients that can reach port 443 will be served correctly, and clients that cannot reach port 80 simply use `https://` directly. Then consider removing individual service ports from the `Media-Services` group so all Media access is funneled through Traefik+Authelia:
 
 | Field | Value |
 |-------|-------|
@@ -87,7 +89,7 @@ The firewall forces users to bypass the authentication layer.
 | Destination | NAS (192.168.3.10) |
 | Port | 443 |
 
-If this rule is added, **fix H1 first** — otherwise the Authelia API bypass immediately becomes exploitable from Media VLAN.
+> **RESOLVED:** Rule 7 (Allow Media to Traefik, TCP 443) added to `docs/network/firewall-config.md`. H1 was fixed first (API bypass scoped). Direct-port access via Rule 4 (Media-Services) is retained as a fallback during initial setup; planned for removal once Traefik+Authelia is validated, which will fully resolve the auth bypass path described in consequence #2.
 
 ---
 
@@ -107,11 +109,11 @@ Portainer with direct Docker socket access (`/var/run/docker.sock`) has full con
 
 **Recommendation:** Remove port 9443 (Portainer) from the `Media-Services` port group. Portainer should only be accessible from the Servers VLAN (intra-VLAN, no firewall rule needed) via the Desktop PC. If remote management is needed, use Tailscale.
 
-### M2 — Rule 10 is overly permissive (Servers → Management)
+### M2 — Rule 11 is overly permissive (Servers → Management)
 
-**Location:** `docs/network/firewall-config.md` — Rule 10
+**Location:** `docs/network/firewall-config.md` — Rule 11
 
-**Issue:** Rule 10 allows **all protocols** from the entire VLAN-Servers subnet (192.168.3.0/24) to the entire VLAN-Management subnet (192.168.2.0/24). The stated purpose is "desktop PC to access switch and AP management interfaces," but the rule grants access from every device on VLAN 3 (NAS, Proxmox, Printer, Desktop PC) to every device on VLAN 2 (UDM-SE, Switch, AP).
+**Issue:** Rule 11 allows **all protocols** from the entire VLAN-Servers subnet (192.168.3.0/24) to the entire VLAN-Management subnet (192.168.2.0/24). The stated purpose is "desktop PC to access switch and AP management interfaces," but the rule grants access from every device on VLAN 3 (NAS, Proxmox, Printer, Desktop PC) to every device on VLAN 2 (UDM-SE, Switch, AP).
 
 A compromised NAS or Proxmox host could pivot to the Management VLAN and access the UDM-SE controller (192.168.2.1), switch (192.168.2.10), and access point (192.168.2.20) management interfaces.
 
@@ -166,16 +168,16 @@ This undermines Pi-hole's ad-blocking and any DNS-based security filtering.
 
 **Location:** `docs/network/firewall-config.md` — Rules 2 and 9
 
-**Issue:** Rule 2 (`Allow Any → NAS:53`) fires **before** Rule 9 (`Block Guest → RFC1918`). This means Guest devices can reach Pi-hole.
+**Issue:** Rule 2 (`Allow Any → NAS:53`) fires **before** Rule 10 (`Block Guest → RFC1918`). This means Guest devices can reach Pi-hole.
 
-**Verified by rule trace:** Guest (192.168.5.x) → NAS (192.168.3.10):53 — Rule 2 matches → **ACCEPT**. Rule 9 never evaluates.
+**Verified by rule trace:** Guest (192.168.5.x) → NAS (192.168.3.10):53 — Rule 2 matches → **ACCEPT**. Rule 10 never evaluates.
 
 While DHCP only configures Cloudflare DNS for Guest VLAN, a technically savvy guest can manually set their DNS to `192.168.3.10` and:
 - Resolve `*.home.local` names (sonarr.home.local, portainer.home.local, etc.)
 - Discover internal service topology and hostnames
 - Identify the NAS IP address and running services
 
-This is an information leak that aids reconnaissance, though the guest still cannot reach those services (blocked by Rule 9 on other ports).
+This is an information leak that aids reconnaissance, though the guest still cannot reach those services (blocked by Rule 10 on other ports).
 
 **Recommendation:** Add a rule before Rule 2 that blocks Guest VLAN → NAS:53 specifically, or restructure Rule 2 to exclude Guest VLAN as a source:
 
@@ -326,8 +328,9 @@ The following security measures are well-implemented:
 
 - **Rule ordering**: Established/Related first, catch-all deny last — correct and robust
 - **VLAN segmentation**: Clean separation of Management, Servers, Media, Guest, IoT
-- **Guest isolation**: RFC1918 block (Rule 9) prevents access to internal services (note: DNS exception exists per M5)
-- **IoT isolation**: RFC1918 block (Rule 8) with targeted HA exception (Rule 7) — well-scoped
+- **Traefik+Authelia access path**: Rule 7 enables Media VLAN to access services through Traefik with SSO authentication
+- **Guest isolation**: RFC1918 block (Rule 10) prevents access to internal services (note: DNS exception exists per M5)
+- **IoT isolation**: RFC1918 block (Rule 9) with targeted HA exception (Rule 8) — well-scoped
 - **Docker socket proxy**: Deny-by-default with explicit API permissions (14 endpoints explicitly denied)
 - **Socket proxy network**: `internal: true` prevents external access to the socket proxy
 - **IDS/IPS**: Enabled in prevention mode (not just detection) on IoT and Guest VLANs
