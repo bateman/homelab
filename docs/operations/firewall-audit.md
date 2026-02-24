@@ -1,6 +1,6 @@
 # Firewall & Security Configuration Audit
 
-> Audit date: 2026-02-07
+> Audit date: 2026-02-24
 > Scope: All firewall rules, IP/Port groups, DNS, mDNS, IDS/IPS, Authelia, Traefik TLS, Docker socket security
 
 ---
@@ -11,8 +11,8 @@
 |----------|-------|
 | HIGH | 2 |
 | MEDIUM | 7 |
-| LOW | 6 |
-| INFO | 4 |
+| LOW | 7 |
+| INFO | 7 |
 
 Overall the firewall follows sound principles ("deny all, allow specific") with proper rule ordering. However, there are gaps where the authentication layer (Authelia) is undermined by firewall rules that force direct-port access, and an overly broad API bypass that affects critical services.
 
@@ -274,6 +274,16 @@ All other services routed through Traefik have `middlewares=authelia@docker` (ex
 
 The existing socket-proxy was designed specifically to prevent this pattern. Consider routing Uptime Kuma's Docker monitoring through the socket-proxy instead.
 
+### L7 — Watchtower port 8383 not in Media-Services port group
+
+**Location:** `docs/network/firewall-config.md` — Port Groups; `Makefile` — `show-urls` target
+
+**Issue:** Watchtower exposes a metrics endpoint on port 8383 (`docker/compose.yml`). The `Makefile` `show-urls` target advertises `http://NAS_IP:8383` alongside other services, and the `health` target checks it. However, port 8383 is not in the `Media-Services` port group and has no firewall rule allowing access from Media VLAN.
+
+This is likely correct (Watchtower is admin-only), but the `show-urls` output presents it alongside user-facing services, giving users a URL they cannot reach from Media VLAN devices.
+
+**Recommendation:** Either add 8383 to `Media-Services` (if metrics should be accessible from Media VLAN), or document in the Makefile output that Watchtower is only accessible from Servers VLAN. The latter is the safer option.
+
 ---
 
 ## INFO
@@ -293,6 +303,20 @@ Home Assistant uses `network_mode: host` for device discovery (Zigbee, Bluetooth
 ### I4 — Docker socket-proxy runs as privileged
 
 The `socket-proxy` container (`docker/compose.yml` line 67) runs with `privileged: true`, which is required for the Tecnativa docker-socket-proxy to function. However, this gives the container nearly equivalent permissions to root on the host. The entire security model (isolating Traefik and Watchtower from the raw Docker socket) depends on the integrity of this single container image. A supply-chain compromise of `tecnativa/docker-socket-proxy:latest` would bypass all socket restrictions.
+
+### I5 — MiniPC and Servers-All IP groups defined but unused
+
+The `MiniPC` (`192.168.3.20`) and `Servers-All` (`192.168.3.10, 192.168.3.20, 192.168.3.30`) IP groups are defined in the UDM-SE network lists but never referenced by any firewall rule. Rule 3 targets `Plex LXC (192.168.3.21)` inline rather than through the `MiniPC` group, and no other rule references either group. Similar to I1 (mDNS port group), these are dead configuration entries. Not harmful, but could cause confusion during maintenance or give a false sense of coverage.
+
+### I6 — Plex GDM broadcast discovery does not work cross-VLAN
+
+Plex GDM (G'Day Mate) discovery uses UDP broadcast packets (destination `255.255.255.255` or subnet broadcast) on ports 32410-32414. While Rule 3 allows directed UDP from Media VLAN to Plex LXC on these ports, GDM broadcasts originate on the Media VLAN subnet and never cross the VLAN boundary — broadcast traffic is Layer 2 and is confined to the originating VLAN.
+
+In practice this is not a problem: Plex clients discover servers via Plex account login (cloud-mediated discovery), not local GDM. The 32410-32414 ports in Rule 3 remain useful for Plex Companion (remote control) features, which use directed unicast UDP. No action needed, but worth documenting for troubleshooting if a user expects automatic local discovery.
+
+### I7 — Firewall rules are IPv4-only
+
+All firewall rules use IPv4 subnets (192.168.x.0/24, RFC1918). If any service or device enables IPv6, inter-VLAN traffic over IPv6 would not be covered by these rules. Currently mitigated by Gluetun explicitly disabling IPv6 (`net.ipv6.conf.all.disable_ipv6=1`) and UDM-SE not having IPv6 configured on internal VLANs. If IPv6 is ever enabled on the network, equivalent `ip6tables` rules must be created.
 
 ---
 
