@@ -174,13 +174,16 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 |------------|-------|
 | DNS | 53 |
 | Plex | 32400, 32410-32414 |
-| Media-Services | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8081, 8191, 8200, 3001, 9443 |
+| Media-Services | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8191 |
+| NAS-Management | 8081, 9443, 8200, 3001 |
 | HomeAssistant | 8123 |
 | Printing | 631, 9100 |
 | mDNS | 5353 |
 
 > [!NOTE]
-> Media-Services includes: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), Pi-hole (8081), FlareSolverr (8191), Duplicati (8200), Uptime Kuma (3001), Portainer (9443).
+> **Media-Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), FlareSolverr (8191).
+>
+> **NAS-Management** — infrastructure/admin services, NOT exposed to Media VLAN: Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). Accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3).
 
 ---
 
