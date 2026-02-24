@@ -305,6 +305,7 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 
 | Service | Port | IP | Description |
 |---------|------|-----|-------------|
+| Proxmox WebUI | 8006 | 192.168.3.20 | Proxmox VE management interface |
 | Plex | 32400 | 192.168.3.21 | Media server (LXC container) |
 
 ---
