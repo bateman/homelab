@@ -220,7 +220,7 @@ make health
 
 **Via web interface:**
 
-1. After QTS reinstallation, access `https://<ip>:5000`
+1. After QTS reinstallation, access `https://<ip>:5001`
 2. Control Panel → System → Backup/Restore
 3. Restore System Settings
 4. Upload backup `.bin` file

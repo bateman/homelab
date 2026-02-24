@@ -152,7 +152,7 @@ systemctl restart pveproxy
 
 Before configuring NFS on Proxmox, enable NFS export on the NAS:
 
-1. Access QTS: `https://192.168.3.10:5000`
+1. Access QTS: `https://192.168.3.10:5001`
 2. Control Panel → Network & File Services → NFS Service
 3. [ ] Enable NFS v3 and/or NFS v4 Service
 4. Control Panel → Shared Folders

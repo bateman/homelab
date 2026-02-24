@@ -145,7 +145,7 @@ FlareSolverr is especially concerning — it accepts arbitrary URL fetch request
 - `Media-User`: 8989 (Sonarr), 7878 (Radarr), 8686 (Lidarr), 6767 (Bazarr) — for Media VLAN
 - `Media-Admin`: remaining ports — accessible only within Servers VLAN (no firewall rule needed)
 
-Or better: fix H2 (allow port 443) and route all Media traffic through Traefik+Authelia, removing direct-port access entirely.
+Or better: now that H2 is resolved (Rule 7 allows port 443), route all Media traffic through Traefik+Authelia and remove direct-port access entirely.
 
 ### M4 — No DNS egress filtering (Pi-hole bypass possible)
 
@@ -237,7 +237,7 @@ The UniFi Controller provides full network management: VLAN configuration, firew
 
 QNAP QTS supports "Force Secure Connection (HTTPS)" in Control Panel → System → General Settings → System Administration, which redirects port 5000 to HTTPS on port 5001. If this is enabled, port 5000 only serves a redirect and credentials are never sent in cleartext. However, this depends on QTS configuration — the firewall should not assume it.
 
-**Note:** The backup runbook (`docs/operations/runbook-backup-restore.md` line 112) references `https://192.168.3.10:5000` and labels it "QTS HTTPS port" — this is incorrect. QTS HTTPS is port 5001, not 5000. This is likely a typo that should be corrected to `https://192.168.3.10:5001`.
+**Note:** Multiple files previously referenced `https://192.168.3.10:5000` labeling it as QTS HTTPS — this was incorrect. QTS HTTPS is port 5001, not 5000. All instances have been corrected to `https://192.168.3.10:5001` in the backup runbook, proxmox-setup, and energy-saving-strategies docs.
 
 **Recommendation:** Remove port 5000 from the `QTS-Management` port group, keeping only port 5001 (HTTPS). Users should access QTS via `https://192.168.3.10:5001`. If QTS "Force Secure Connection" is enabled, port 5000 is not needed in the firewall rule at all (the redirect happens server-side, but the initial HTTP request still transmits in cleartext before the redirect).
 
