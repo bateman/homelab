@@ -176,14 +176,17 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | Plex | 32400, 32410-32414 |
 | Media-Services | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8191 |
 | NAS-Management | 5000, 5001, 8081, 9443, 8200, 3001 |
+| Traefik | 443 |
 | HomeAssistant | 8123 |
 | Printing | 631, 9100 |
 | mDNS | 5353 |
 
 > [!NOTE]
-> **Media-Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), FlareSolverr (8191).
+> **Traefik** — reverse proxy HTTPS port (Rule 7). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO.
 >
-> **NAS-Management** — infrastructure/admin services, NOT exposed to Media VLAN: QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). Accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3).
+> **Media-Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 7) for Authelia-protected access.
+>
+> **NAS-Management** — infrastructure/admin direct ports, NOT exposed to Media VLAN: QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). Accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3). Pi-hole, Portainer, Duplicati, and Uptime Kuma are also reachable from Media VLAN through Traefik (Rule 7), protected by Authelia.
 
 ---
 
@@ -266,7 +269,20 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows Media devices (phones, tablets) to access the Home Assistant interface.
 
-### Rule 7 — Allow IoT to Home Assistant
+### Rule 7 — Allow Media to Traefik
+
+| Field | Value |
+|-------|-------|
+| Name | Allow Media to Traefik |
+| Action | Accept |
+| Protocol | TCP |
+| Source | VLAN-Media |
+| Destination | NAS (192.168.3.10) |
+| Port | Traefik (443) |
+
+> Allows Media VLAN devices (phones, tablets, laptops on WiFi) to access all services through Traefik reverse proxy with Authelia SSO authentication. This is the primary access path for managing services from wireless devices.
+
+### Rule 8 — Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -279,7 +295,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
-### Rule 8 — Block IoT to All Private
+### Rule 9 — Block IoT to All Private
 
 | Field | Value |
 |-------|-------|
@@ -290,9 +306,9 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | RFC1918 |
 
 > [!TIP]
-> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (rule 7).
+> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (rule 8).
 
-### Rule 9 — Block Guest to All Private
+### Rule 10 — Block Guest to All Private
 
 | Field | Value |
 |-------|-------|
@@ -304,7 +320,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Complete Guest network isolation. Internet access only.
 
-### Rule 10 — Allow Management from Servers
+### Rule 11 — Allow Management from Servers
 
 | Field | Value |
 |-------|-------|
@@ -316,7 +332,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows desktop PC (VLAN 3) to access switch and AP management interfaces.
 
-### Rule 11 — Block All Inter-VLAN (Catch-All)
+### Rule 12 — Block All Inter-VLAN (Catch-All)
 
 | Field | Value |
 |-------|-------|

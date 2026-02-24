@@ -151,8 +151,18 @@ access_control:
     # - domain: uptime.home.local
     #   policy: bypass
 
-    # API endpoints that need to bypass auth (for *arr inter-service communication)
-    - domain: "*.home.local"
+    # API endpoints that bypass auth for *arr inter-service communication.
+    # Scoped to specific *arr domains only — a wildcard *.home.local bypass
+    # would expose /api/ on Portainer, Pi-hole, Duplicati, etc., undermining
+    # their two_factor/one_factor policies (first-match-wins).
+    - domain:
+        - sonarr.home.local
+        - radarr.home.local
+        - lidarr.home.local
+        - prowlarr.home.local
+        - bazarr.home.local
+        - huntarr.home.local
+        - cleanuparr.home.local
       policy: bypass
       resources:
         - "^/api/.*$"

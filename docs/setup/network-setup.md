@@ -399,7 +399,7 @@ In **UDM-SE** (Network application): Settings → Profiles → Network Lists →
 
 > [!IMPORTANT]
 > This section contains only essential rules to get started.
-> For complete configuration (11 rules), see [`firewall-config.md`](../network/firewall-config.md).
+> For complete configuration (12 rules), see [`firewall-config.md`](../network/firewall-config.md).
 >
 > Rules below are a **minimal subset** to make media stack work.
 > Add missing rules from firewall-config.md for complete security.
@@ -432,7 +432,20 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 | Destination | Network List: NAS Server |
 | Port | Network List: Media Services Ports |
 
-### Rule 3: Allow Media to Plex
+### Rule 3: Allow Media to Traefik (HTTPS)
+
+| Field | Value |
+|-------|-------|
+| Type | LAN In |
+| Description | Media VLAN to Traefik HTTPS |
+| Action | Allow |
+| Source | Network: Media |
+| Destination | Network List: NAS Server |
+| Port | 443 |
+
+> Enables phones, tablets, and laptops on WiFi to access services through Traefik reverse proxy with Authelia SSO authentication.
+
+### Rule 4: Allow Media to Plex
 
 | Field | Value |
 |-------|-------|
@@ -443,7 +456,7 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 | Destination | Network List: Plex Server |
 | Port | 32400 |
 
-### Rule 4: Allow IoT to Home Assistant
+### Rule 5: Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -454,7 +467,7 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 | Destination | Network List: NAS Server |
 | Port | 8123 |
 
-### Rule 5: Allow Media to Printer
+### Rule 6: Allow Media to Printer
 
 | Field | Value |
 |-------|-------|
@@ -465,7 +478,7 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Firewa
 | Destination | Network List: Printer |
 | Port | Network List: Printing |
 
-### Rule 6: Block All Inter-VLAN (LAST)
+### Rule 7: Block All Inter-VLAN (LAST)
 
 | Field | Value |
 |-------|-------|
