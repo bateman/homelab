@@ -626,6 +626,7 @@ make backup
 | Pi-hole doesn't resolve | Port 53 in use | Verify other DNS services on NAS |
 | WebUI not responding | Container crashed | `docker compose logs <service>` |
 | Incorrect file permissions | PUID/PGID mismatch | Verify `id dockeruser` and update .env |
+| Lost access after reset button | Network/password reset | See [NAS Reset Recovery runbook](../operations/runbook-nas-reset-access.md) |
 
 ---
 

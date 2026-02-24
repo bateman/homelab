@@ -144,6 +144,7 @@ When facing trade-offs, **ask the user**:
 | Authelia SSO | `docs/setup/authelia-setup.md` |
 | Notifications | `docs/setup/notifications-setup.md` |
 | Backup procedures | `docs/operations/runbook-backup-restore.md` |
+| NAS reset recovery | `docs/operations/runbook-nas-reset-access.md` |
 | Energy saving | `docs/operations/energy-saving-strategies.md` |
 
 ## Quick Commands
