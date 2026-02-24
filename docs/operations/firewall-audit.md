@@ -216,22 +216,15 @@ regulation:
 
 ## LOW Severity
 
-### L1 — Plex IP likely mismatched in firewall rules
+### L1 — Plex LXC IP not in any reusable IP group
 
-**Location:** `docs/network/firewall-config.md` Rule 3; `docs/network/rack-homelab-config.md` service table
+**Location:** `docs/network/firewall-config.md` Rule 3, IP Address Network Lists
 
-**Issue:** Firewall Rule 3 allows Media VLAN to reach Plex at MiniPC IP group (`192.168.3.20`). However, the rack config documents Plex running in an LXC container at `192.168.3.21`:
+**Issue:** Firewall Rule 3 correctly targets `Plex LXC (192.168.3.21)`, matching the rack config. However, `.21` is referenced inline in the rule rather than through a reusable IP group like the other server entries (NAS, MiniPC, Printer each have dedicated groups). The `MiniPC` group contains `.20` (the Proxmox host), not `.21` (the Plex LXC).
 
-| Source | IP |
-|--------|----|
-| Firewall MiniPC group | 192.168.3.20 |
-| rack-homelab-config.md Plex entry | 192.168.3.21 |
+Additionally, the `Servers-All` group (`192.168.3.10, 192.168.3.20, 192.168.3.30`) does not include the Plex LXC at `.21`, so any future rule referencing `Servers-All` would miss Plex.
 
-If the LXC container has its own network interface at `.21`, Proxmox host at `.20` does not forward traffic to it. Rule 3 would allow traffic to `.20:32400` where nothing is listening, while Plex at `.21:32400` has no matching allow rule and is **blocked by Rule 11**.
-
-**Potential impact:** Plex may be unreachable from Media VLAN, which is a functional failure of the primary media streaming use case.
-
-**Recommendation:** Verify the actual Plex network configuration. If Plex binds to `.21`, create a `Plex-LXC` IP group and update Rule 3 to target it.
+**Recommendation:** Create a `Plex-LXC` IP group (`192.168.3.21`) in UDM-SE network lists for consistency, and add `.21` to `Servers-All` if it should cover all server-class devices.
 
 ### L2 — Home Assistant Traefik route has no Authelia middleware
 
