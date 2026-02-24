@@ -1,6 +1,6 @@
 # Firewall & Security Configuration Audit
 
-> Audit date: 2026-02-07
+> Audit date: 2026-02-24
 > Scope: All firewall rules, IP/Port groups, DNS, mDNS, IDS/IPS, Authelia, Traefik TLS, Docker socket security
 
 ---
@@ -11,8 +11,8 @@
 |----------|-------|
 | HIGH | 2 |
 | MEDIUM | 7 |
-| LOW | 6 |
-| INFO | 4 |
+| LOW | 7 |
+| INFO | 7 |
 
 Overall the firewall follows sound principles ("deny all, allow specific") with proper rule ordering. However, there are gaps where the authentication layer (Authelia) is undermined by firewall rules that force direct-port access, and an overly broad API bypass that affects critical services.
 
@@ -66,17 +66,17 @@ This directly undermines the `two_factor` policy set on Portainer. Authelia rule
 
 **Issue:** Traefik listens on ports 80/443 on the NAS (192.168.3.10) and provides Authelia SSO authentication for all services. However, there is no firewall rule allowing Media VLAN (192.168.4.0/24) to reach NAS port 443.
 
-Rule 5 allows Media → NAS only on the `Arr-Stack` port group (specific service ports like 8989, 7878, etc.), which does **not** include 443.
+Rule 4 allows Media → NAS only on the `Media-Services` port group (specific service ports like 8989, 7878, etc.), which does **not** include 443.
 
-**Verified by rule trace:** Media (192.168.4.x) → NAS (192.168.3.10):443 — Rules 1-12 don't match → Rule 13 (Block All Inter-VLAN) → **DROP**.
+**Verified by rule trace:** Media (192.168.4.x) → NAS (192.168.3.10):443 — Rules 1-10 don't match → Rule 11 (Block All Inter-VLAN) → **DROP**.
 
 **Consequence — two-part problem:**
 1. Media VLAN clients cannot use `https://sonarr.home.local` (Traefik) — blocked by firewall.
-2. Media VLAN clients *can* reach `192.168.3.10:8989` directly (via Rule 5 Arr-Stack ports) — this **bypasses Traefik and therefore bypasses Authelia authentication entirely**, since Docker publishes service ports directly on the host.
+2. Media VLAN clients *can* reach `192.168.3.10:8989` directly (via Rule 4 Media-Services ports) — this **bypasses Traefik and therefore bypasses Authelia authentication entirely**, since Docker publishes service ports directly on the host.
 
 The firewall forces users to bypass the authentication layer.
 
-**Recommendation:** Add a firewall rule (before Rule 13) allowing Media VLAN to NAS on TCP port 443, then consider removing individual service ports from the `Arr-Stack` group so all Media access is funneled through Traefik+Authelia:
+**Recommendation:** Add a firewall rule (before Rule 11) allowing Media VLAN to NAS on TCP port 443, then consider removing individual service ports from the `Media-Services` group so all Media access is funneled through Traefik+Authelia:
 
 | Field | Value |
 |-------|-------|
@@ -93,38 +93,39 @@ If this rule is added, **fix H1 first** — otherwise the Authelia API bypass im
 
 ## MEDIUM Severity
 
-### M1 — Rule 6 grants Media VLAN direct access to Portainer
+### M1 — Rule 4 grants Media VLAN direct access to Portainer (via Media-Services port group)
 
-**Location:** `docs/network/firewall-config.md` — Rule 6
+**Location:** `docs/network/firewall-config.md` — Rule 4 (`Media-Services` port group)
 
-**Issue:** Rule 6 explicitly allows Media VLAN (192.168.4.0/24) → NAS on port 9443 (Portainer). This means consumer devices — phones, tablets, Smart TVs — have direct network access to the Docker management interface.
+**Issue:** The `Media-Services` port group includes port 9443 (Portainer). Rule 4 allows Media VLAN (192.168.4.0/24) → NAS on all Media-Services ports, which means consumer devices — phones, tablets, Smart TVs — have direct network access to the Docker management interface.
 
-**Verified by rule trace:** Media (192.168.4.x) → NAS (192.168.3.10):9443 — Rule 6 → **ACCEPT**.
+**Verified by rule trace:** Media (192.168.4.x) → NAS (192.168.3.10):9443 — Rule 4 → **ACCEPT**.
 
 Portainer with direct Docker socket access (`/var/run/docker.sock`) has full control over all containers. A compromised Portainer instance means full Docker and effective host compromise. Portainer has its own authentication, but exposing it to the Media VLAN:
 - Increases attack surface (brute-force from compromised TV/phone)
 - Bypasses the defense-in-depth Authelia layer (direct port, not through Traefik)
 
-**Recommendation:** Remove Rule 6. Portainer should only be accessible from the Servers VLAN (intra-VLAN, no firewall rule needed) via the Desktop PC. If remote management is needed, use Tailscale.
+**Recommendation:** Remove port 9443 (Portainer) from the `Media-Services` port group. Portainer should only be accessible from the Servers VLAN (intra-VLAN, no firewall rule needed) via the Desktop PC. If remote management is needed, use Tailscale.
 
-### M2 — Rule 12 is overly permissive (Servers → Management)
+### M2 — Rule 10 is overly permissive (Servers → Management)
 
-**Location:** `docs/network/firewall-config.md` — Rule 12
+**Location:** `docs/network/firewall-config.md` — Rule 10
 
-**Issue:** Rule 12 allows **all protocols** from the entire VLAN-Servers subnet (192.168.3.0/24) to the entire VLAN-Management subnet (192.168.2.0/24). The stated purpose is "desktop PC to access switch and AP management interfaces," but the rule grants access from every device on VLAN 3 (NAS, Proxmox, Printer, Desktop PC) to every device on VLAN 2 (UDM-SE, Switch, AP).
+**Issue:** Rule 10 allows **all protocols** from the entire VLAN-Servers subnet (192.168.3.0/24) to the entire VLAN-Management subnet (192.168.2.0/24). The stated purpose is "desktop PC to access switch and AP management interfaces," but the rule grants access from every device on VLAN 3 (NAS, Proxmox, Printer, Desktop PC) to every device on VLAN 2 (UDM-SE, Switch, AP).
 
 A compromised NAS or Proxmox host could pivot to the Management VLAN and access the UDM-SE controller (192.168.2.1), switch (192.168.2.10), and access point (192.168.2.20) management interfaces.
 
 **Recommendation:** Restrict source to Desktop PC (`192.168.3.40`) and limit to TCP port 443 (HTTPS for UniFi management UIs). Create a `DesktopPC` IP group.
 
-### M3 — Arr-Stack port group exposes admin services to Media VLAN
+### M3 — Media-Services port group exposes admin services to Media VLAN
 
-**Location:** `docs/network/firewall-config.md` — Port Groups, Rule 5
+**Location:** `docs/network/firewall-config.md` — Port Groups, Rule 4
 
-**Issue:** The `Arr-Stack` port group bundles 13 service ports. Rule 5 allows all Media VLAN devices to access all of them. This exposes admin-only and internal services to consumer devices:
+**Issue:** The `Media-Services` port group bundles 14 service ports. Rule 4 allows all Media VLAN devices to access all of them. This exposes admin-only and internal services to consumer devices:
 
 | Service | Port | Media VLAN needs it? |
 |---------|------|---------------------|
+| Portainer | 9443 | **No** — Docker management, full host control (see M1) |
 | FlareSolverr | 8191 | **No** — internal Prowlarr helper, has no authentication |
 | Duplicati | 8200 | **No** — backup administration is sensitive |
 | Pi-hole admin | 8081 | **No** — DNS admin interface |
@@ -142,8 +143,8 @@ A compromised NAS or Proxmox host could pivot to the Management VLAN and access 
 FlareSolverr is especially concerning — it accepts arbitrary URL fetch requests and has no authentication mechanism at all.
 
 **Recommendation:** Split into two port groups:
-- `Arr-Media`: 8989 (Sonarr), 7878 (Radarr), 8686 (Lidarr), 6767 (Bazarr) — for Media VLAN
-- `Arr-Admin`: remaining ports — accessible only within Servers VLAN (no firewall rule needed)
+- `Media-User`: 8989 (Sonarr), 7878 (Radarr), 8686 (Lidarr), 6767 (Bazarr) — for Media VLAN
+- `Media-Admin`: remaining ports — accessible only within Servers VLAN (no firewall rule needed)
 
 Or better: fix H2 (allow port 443) and route all Media traffic through Traefik+Authelia, removing direct-port access entirely.
 
@@ -163,18 +164,18 @@ This undermines Pi-hole's ad-blocking and any DNS-based security filtering.
 
 ### M5 — Guest VLAN can reach Pi-hole DNS (information leak)
 
-**Location:** `docs/network/firewall-config.md` — Rules 2 and 11
+**Location:** `docs/network/firewall-config.md` — Rules 2 and 9
 
-**Issue:** Rule 2 (`Allow Any → NAS:53`) fires **before** Rule 11 (`Block Guest → RFC1918`). This means Guest devices can reach Pi-hole.
+**Issue:** Rule 2 (`Allow Any → NAS:53`) fires **before** Rule 9 (`Block Guest → RFC1918`). This means Guest devices can reach Pi-hole.
 
-**Verified by rule trace:** Guest (192.168.5.x) → NAS (192.168.3.10):53 — Rule 2 matches → **ACCEPT**. Rule 11 never evaluates.
+**Verified by rule trace:** Guest (192.168.5.x) → NAS (192.168.3.10):53 — Rule 2 matches → **ACCEPT**. Rule 9 never evaluates.
 
 While DHCP only configures Cloudflare DNS for Guest VLAN, a technically savvy guest can manually set their DNS to `192.168.3.10` and:
 - Resolve `*.home.local` names (sonarr.home.local, portainer.home.local, etc.)
 - Discover internal service topology and hostnames
 - Identify the NAS IP address and running services
 
-This is an information leak that aids reconnaissance, though the guest still cannot reach those services (blocked by Rule 11 on other ports).
+This is an information leak that aids reconnaissance, though the guest still cannot reach those services (blocked by Rule 9 on other ports).
 
 **Recommendation:** Add a rule before Rule 2 that blocks Guest VLAN → NAS:53 specifically, or restructure Rule 2 to exclude Guest VLAN as a source:
 
@@ -215,22 +216,15 @@ regulation:
 
 ## LOW Severity
 
-### L1 — Plex IP likely mismatched in firewall rules
+### L1 — Plex LXC IP not in any reusable IP group
 
-**Location:** `docs/network/firewall-config.md` Rules 3-4; `docs/network/rack-homelab-config.md` service table
+**Location:** `docs/network/firewall-config.md` Rule 3, IP Address Network Lists
 
-**Issue:** Firewall Rules 3-4 allow Media VLAN to reach Plex at MiniPC IP group (`192.168.3.20`). However, the rack config documents Plex running in an LXC container at `192.168.3.21`:
+**Issue:** Firewall Rule 3 correctly targets `Plex LXC (192.168.3.21)`, matching the rack config. However, `.21` is referenced inline in the rule rather than through a reusable IP group like the other server entries (NAS, MiniPC, Printer each have dedicated groups). The `MiniPC` group contains `.20` (the Proxmox host), not `.21` (the Plex LXC).
 
-| Source | IP |
-|--------|----|
-| Firewall MiniPC group | 192.168.3.20 |
-| rack-homelab-config.md Plex entry | 192.168.3.21 |
+Additionally, the `Servers-All` group (`192.168.3.10, 192.168.3.20, 192.168.3.30`) does not include the Plex LXC at `.21`, so any future rule referencing `Servers-All` would miss Plex.
 
-If the LXC container has its own network interface at `.21`, Proxmox host at `.20` does not forward traffic to it. Rules 3-4 would allow traffic to `.20:32400` where nothing is listening, while Plex at `.21:32400` has no matching allow rule and is **blocked by Rule 13**.
-
-**Potential impact:** Plex may be unreachable from Media VLAN, which is a functional failure of the primary media streaming use case.
-
-**Recommendation:** Verify the actual Plex network configuration. If Plex binds to `.21`, create a `Plex-LXC` IP group and update Rules 3-4 to target it.
+**Recommendation:** Create a `Plex-LXC` IP group (`192.168.3.21`) in UDM-SE network lists for consistency, and add `.21` to `Servers-All` if it should cover all server-class devices.
 
 ### L2 — Home Assistant Traefik route has no Authelia middleware
 
@@ -280,6 +274,16 @@ All other services routed through Traefik have `middlewares=authelia@docker` (ex
 
 The existing socket-proxy was designed specifically to prevent this pattern. Consider routing Uptime Kuma's Docker monitoring through the socket-proxy instead.
 
+### L7 — Watchtower port 8383 not in Media-Services port group
+
+**Location:** `docs/network/firewall-config.md` — Port Groups; `Makefile` — `show-urls` target
+
+**Issue:** Watchtower exposes a metrics endpoint on port 8383 (`docker/compose.yml`). The `Makefile` `show-urls` target advertises `http://NAS_IP:8383` alongside other services, and the `health` target checks it. However, port 8383 is not in the `Media-Services` port group and has no firewall rule allowing access from Media VLAN.
+
+This is likely correct (Watchtower is admin-only), but the `show-urls` output presents it alongside user-facing services, giving users a URL they cannot reach from Media VLAN devices.
+
+**Recommendation:** Either add 8383 to `Media-Services` (if metrics should be accessible from Media VLAN), or document in the Makefile output that Watchtower is only accessible from Servers VLAN. The latter is the safer option.
+
 ---
 
 ## INFO
@@ -300,6 +304,20 @@ Home Assistant uses `network_mode: host` for device discovery (Zigbee, Bluetooth
 
 The `socket-proxy` container (`docker/compose.yml` line 67) runs with `privileged: true`, which is required for the Tecnativa docker-socket-proxy to function. However, this gives the container nearly equivalent permissions to root on the host. The entire security model (isolating Traefik and Watchtower from the raw Docker socket) depends on the integrity of this single container image. A supply-chain compromise of `tecnativa/docker-socket-proxy:latest` would bypass all socket restrictions.
 
+### I5 — MiniPC and Servers-All IP groups defined but unused
+
+The `MiniPC` (`192.168.3.20`) and `Servers-All` (`192.168.3.10, 192.168.3.20, 192.168.3.30`) IP groups are defined in the UDM-SE network lists but never referenced by any firewall rule. Rule 3 targets `Plex LXC (192.168.3.21)` inline rather than through the `MiniPC` group, and no other rule references either group. Similar to I1 (mDNS port group), these are dead configuration entries. Not harmful, but could cause confusion during maintenance or give a false sense of coverage.
+
+### I6 — Plex GDM broadcast discovery does not work cross-VLAN
+
+Plex GDM (G'Day Mate) discovery uses UDP broadcast packets (destination `255.255.255.255` or subnet broadcast) on ports 32410-32414. While Rule 3 allows directed UDP from Media VLAN to Plex LXC on these ports, GDM broadcasts originate on the Media VLAN subnet and never cross the VLAN boundary — broadcast traffic is Layer 2 and is confined to the originating VLAN.
+
+In practice this is not a problem: Plex clients discover servers via Plex account login (cloud-mediated discovery), not local GDM. The 32410-32414 ports in Rule 3 remain useful for Plex Companion (remote control) features, which use directed unicast UDP. No action needed, but worth documenting for troubleshooting if a user expects automatic local discovery.
+
+### I7 — Firewall rules are IPv4-only
+
+All firewall rules use IPv4 subnets (192.168.x.0/24, RFC1918). If any service or device enables IPv6, inter-VLAN traffic over IPv6 would not be covered by these rules. Currently mitigated by Gluetun explicitly disabling IPv6 (`net.ipv6.conf.all.disable_ipv6=1`) and UDM-SE not having IPv6 configured on internal VLANs. If IPv6 is ever enabled on the network, equivalent `ip6tables` rules must be created.
+
 ---
 
 ## Positive Findings
@@ -308,8 +326,8 @@ The following security measures are well-implemented:
 
 - **Rule ordering**: Established/Related first, catch-all deny last — correct and robust
 - **VLAN segmentation**: Clean separation of Management, Servers, Media, Guest, IoT
-- **Guest isolation**: RFC1918 block (Rule 11) prevents access to internal services (note: DNS exception exists per M5)
-- **IoT isolation**: RFC1918 block (Rule 10) with targeted HA exception (Rule 9) — well-scoped
+- **Guest isolation**: RFC1918 block (Rule 9) prevents access to internal services (note: DNS exception exists per M5)
+- **IoT isolation**: RFC1918 block (Rule 8) with targeted HA exception (Rule 7) — well-scoped
 - **Docker socket proxy**: Deny-by-default with explicit API permissions (14 endpoints explicitly denied)
 - **Socket proxy network**: `internal: true` prevents external access to the socket proxy
 - **IDS/IPS**: Enabled in prevention mode (not just detection) on IoT and Guest VLANs

@@ -173,16 +173,14 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | Group Name | Ports |
 |------------|-------|
 | DNS | 53 |
-| Plex | 32400 |
-| Plex-Discovery | 32410-32414 |
-| Arr-Stack | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8081, 8191, 8200, 3001 |
+| Plex | 32400, 32410-32414 |
+| Media-Services | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8081, 8191, 8200, 3001, 9443 |
 | HomeAssistant | 8123 |
-| Portainer | 9443 |
 | Printing | 631, 9100 |
 | mDNS | 5353 |
 
 > [!NOTE]
-> Arr-Stack includes: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), Pi-hole (8081), FlareSolverr (8191), Duplicati (8200), Uptime Kuma (3001).
+> Media-Services includes: Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), Pi-hole (8081), FlareSolverr (8191), Duplicati (8200), Uptime Kuma (3001), Portainer (9443).
 
 ---
 
@@ -206,7 +204,7 @@ Rules are processed in order, from first to last. Order matters.
 > [!IMPORTANT]
 > Allows return traffic for already established connections. Essential for proper operation.
 
-### Rule 2 — Allow All -> Pi-hole DNS
+### Rule 2 — Allow All to Pi-hole DNS
 
 | Field | Value |
 |-------|-------|
@@ -219,51 +217,29 @@ Rules are processed in order, from first to last. Order matters.
 
 > Centralized DNS accessible from all VLANs.
 
-### Rule 3 — Allow Media -> Plex
+### Rule 3 — Allow Media to Plex
 
 | Field | Value |
 |-------|-------|
 | Name | Allow Media to Plex |
 | Action | Accept |
-| Protocol | TCP |
+| Protocol | TCP/UDP |
 | Source | VLAN-Media |
 | Destination | Plex LXC (192.168.3.21) |
-| Port | Plex (32400) |
+| Port | Plex (32400, 32410-32414) |
 
-### Rule 4 — Allow Media -> Plex Discovery
+### Rule 4 — Allow Media to Media Services
 
 | Field | Value |
 |-------|-------|
-| Name | Allow Media to Plex Discovery |
-| Action | Accept |
-| Protocol | UDP |
-| Source | VLAN-Media |
-| Destination | Plex LXC (192.168.3.21) |
-| Port | Plex-Discovery (32410-32414) |
-
-### Rule 5 — Allow Media -> Arr Stack
-
-| Field | Value |
-|-------|-------|
-| Name | Allow Media to Arr Stack |
+| Name | Allow Media to Media Services |
 | Action | Accept |
 | Protocol | TCP |
 | Source | VLAN-Media |
 | Destination | NAS (192.168.3.10) |
-| Port | Arr-Stack |
+| Port | Media-Services |
 
-### Rule 6 — Allow Media -> Portainer
-
-| Field | Value |
-|-------|-------|
-| Name | Allow Media to Portainer |
-| Action | Accept |
-| Protocol | TCP |
-| Source | VLAN-Media |
-| Destination | NAS (192.168.3.10) |
-| Port | Portainer (9443) |
-
-### Rule 7 — Allow Media -> Printer
+### Rule 5 — Allow Media to Printer
 
 | Field | Value |
 |-------|-------|
@@ -274,7 +250,7 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | Printer (192.168.3.30) |
 | Port | Printing (631, 9100) |
 
-### Rule 8 — Allow Media -> Home Assistant
+### Rule 6 — Allow Media to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -287,7 +263,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows Media devices (phones, tablets) to access the Home Assistant interface.
 
-### Rule 9 — Allow IoT -> Home Assistant
+### Rule 7 — Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -300,7 +276,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
-### Rule 10 — Block IoT -> All Private
+### Rule 8 — Block IoT to All Private
 
 | Field | Value |
 |-------|-------|
@@ -311,9 +287,9 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | RFC1918 |
 
 > [!TIP]
-> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (rule 9).
+> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (rule 7).
 
-### Rule 11 — Block Guest -> All Private
+### Rule 9 — Block Guest to All Private
 
 | Field | Value |
 |-------|-------|
@@ -325,7 +301,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Complete Guest network isolation. Internet access only.
 
-### Rule 12 — Allow Management from Servers
+### Rule 10 — Allow Management from Servers
 
 | Field | Value |
 |-------|-------|
@@ -337,7 +313,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows desktop PC (VLAN 3) to access switch and AP management interfaces.
 
-### Rule 13 — Block All Inter-VLAN (Catch-All)
+### Rule 11 — Block All Inter-VLAN (Catch-All)
 
 | Field | Value |
 |-------|-------|
