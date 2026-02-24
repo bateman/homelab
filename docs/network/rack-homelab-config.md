@@ -398,7 +398,7 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (segmented VLANs)
 | Device | IP | Notes |
 |--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.4.1 | — |
-| Smart TV, phones | DHCP (.100-.200) | Plex clients, *arr management, infrastructure management (QTS, Proxmox, UniFi) |
+| Smart TV, phones | DHCP (.100-.200) | Plex clients, *arr management, infrastructure management (QTS, Proxmox); UniFi via gateway IP |
 
 #### VLAN 5 — Guest (192.168.5.0/24)
 

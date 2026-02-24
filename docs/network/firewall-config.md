@@ -100,7 +100,7 @@ Internet
 | Gateway (UDM-SE) | 192.168.4.1 | — |
 | Smart TV bedroom | DHCP reservation | Wired |
 | Smart TV living room | DHCP reservation | WiFi |
-| Phones/Tablets | DHCP | Plex clients, *arr management, infrastructure management (QTS, Proxmox, UniFi) |
+| Phones/Tablets | DHCP | Plex clients, *arr management, infrastructure management (QTS, Proxmox); UniFi via gateway IP (`192.168.4.1`) |
 
 ### VLAN 5 — Guest (192.168.5.0/24)
 
@@ -158,7 +158,6 @@ Before creating rules, define these lists in **UDM-SE** (Network application): S
 | NAS | IP Address | 192.168.3.10 |
 | MiniPC | IP Address | 192.168.3.20 |
 | Printer | IP Address | 192.168.3.30 |
-| UDM-SE | IP Address | 192.168.2.1 |
 | Servers-All | IP Address | 192.168.3.10, 192.168.3.20, 192.168.3.30 |
 | VLAN-Management | Subnet | 192.168.2.0/24 |
 | VLAN-Servers | Subnet | 192.168.3.0/24 |
@@ -191,7 +190,7 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 >
 > **NAS-Management** — infrastructure/admin direct ports: QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). Accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3). QTS ports (5000, 5001) are also exposed to Media VLAN via Rule 8 (QTS-Management) for wireless device management. Pi-hole, Portainer, Duplicati, and Uptime Kuma are reachable from Media VLAN through Traefik (Rule 7), protected by Authelia.
 >
-> **QTS-Management** — NAS OS management ports exposed to Media VLAN (Rule 8): QTS HTTP (5000), QTS HTTPS (5001). Allows wireless devices (phones, laptops) to manage the NAS directly. QTS has its own authentication.
+> **QTS-Management** — NAS OS management ports exposed to Media VLAN (Rule 8): QTS HTTP (5000), QTS HTTPS (5001). Allows wireless devices (phones, laptops) to manage the NAS directly. QTS has its own authentication. Note: QNAP QTS factory defaults are 8080 (HTTP) and 443 (HTTPS) — ports were changed to 5000/5001 to avoid conflicts with qBittorrent (8080) and Traefik (443). See [`nas-setup.md`](../setup/nas-setup.md#change-qts-system-ports).
 >
 > **Proxmox-Management** — Proxmox VE web interface (Rule 9): port 8006. Allows wireless devices to manage VMs and LXC containers. Proxmox has its own authentication.
 
@@ -315,20 +314,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows Media VLAN devices (phones, laptops on WiFi) to access the Proxmox VE web interface for VM and LXC management. Proxmox has its own authentication.
 
-### Rule 10 — Allow Media to UniFi Controller
-
-| Field | Value |
-|-------|-------|
-| Name | Allow Media to UniFi Controller |
-| Action | Accept |
-| Protocol | TCP |
-| Source | VLAN-Media |
-| Destination | UDM-SE (192.168.2.1) |
-| Port | 443 |
-
-> Allows Media VLAN devices (phones, laptops on WiFi) to access the UniFi Controller on the UDM-SE for network, WiFi, and firewall management. The UniFi Controller has its own authentication. This is the only rule that crosses into the Management VLAN from Media.
-
-### Rule 11 — Allow IoT to Home Assistant
+### Rule 10 — Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -341,7 +327,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
-### Rule 12 — Block IoT to All Private
+### Rule 11 — Block IoT to All Private
 
 | Field | Value |
 |-------|-------|
@@ -352,9 +338,9 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | RFC1918 |
 
 > [!TIP]
-> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 11).
+> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 10).
 
-### Rule 13 — Block Guest to All Private
+### Rule 12 — Block Guest to All Private
 
 | Field | Value |
 |-------|-------|
@@ -366,7 +352,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Complete Guest network isolation. Internet access only.
 
-### Rule 14 — Allow Management from Servers
+### Rule 13 — Allow Management from Servers
 
 | Field | Value |
 |-------|-------|
@@ -378,7 +364,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows desktop PC (VLAN 3) to access switch and AP management interfaces.
 
-### Rule 15 — Block All Inter-VLAN (Catch-All)
+### Rule 14 — Block All Inter-VLAN (Catch-All)
 
 | Field | Value |
 |-------|-------|

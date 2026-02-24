@@ -399,7 +399,7 @@ In **UDM-SE** (Network application): Settings → Profiles → Network Lists →
 
 > [!IMPORTANT]
 > This section contains only essential rules to get started.
-> For complete configuration (15 rules), see [`firewall-config.md`](../network/firewall-config.md).
+> For complete configuration (14 rules), see [`firewall-config.md`](../network/firewall-config.md).
 >
 > Rules below are a **minimal subset** to make media stack work.
 > Add missing rules from firewall-config.md for complete security.
