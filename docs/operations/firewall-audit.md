@@ -64,7 +64,7 @@ This directly undermines the `two_factor` policy set on Portainer. Authelia rule
 
 **Location:** `docs/network/firewall-config.md` — LAN In Rules
 
-**Issue:** Traefik listens on ports 80/443 on the NAS (192.168.3.10) and provides Authelia SSO authentication for all services. However, there is no firewall rule allowing Media VLAN (192.168.4.0/24) to reach NAS port 443.
+**Issue:** Traefik listens on ports 80/443 on the NAS (192.168.3.10) and provides Authelia SSO authentication for all services. Port 80 only serves as an HTTP→HTTPS redirect (`--entrypoints.web.http.redirections.entryPoint.to=websecure`) — no content is served over plain HTTP. However, there is no firewall rule allowing Media VLAN (192.168.4.0/24) to reach NAS port 443.
 
 Rule 4 allows Media → NAS only on the `Media-Services` port group (specific service ports like 8989, 7878, etc.), which does **not** include 443.
 
@@ -76,7 +76,7 @@ Rule 4 allows Media → NAS only on the `Media-Services` port group (specific se
 
 The firewall forces users to bypass the authentication layer.
 
-**Recommendation:** Add a firewall rule (before Rule 11) allowing Media VLAN to NAS on TCP port 443, then consider removing individual service ports from the `Media-Services` group so all Media access is funneled through Traefik+Authelia:
+**Recommendation:** Add a firewall rule (before Rule 11) allowing Media VLAN to NAS on TCP port 443 only. Port 80 does not need a rule — Traefik redirects HTTP→HTTPS, so clients that can reach port 443 will be served correctly, and clients that cannot reach port 80 simply use `https://` directly. Then consider removing individual service ports from the `Media-Services` group so all Media access is funneled through Traefik+Authelia:
 
 | Field | Value |
 |-------|-------|
@@ -336,6 +336,7 @@ The following security measures are well-implemented:
 - **Authelia 2FA**: Required for Portainer and Traefik dashboard (the two most sensitive admin tools)
 - **WebAuthn/Passkey**: Modern passwordless authentication supported
 - **Argon2id**: Strong password hashing (65536 KiB memory, 3 iterations, 4 parallelism)
+- **HTTP→HTTPS redirect**: Traefik redirects all port 80 requests to port 443 — no content is served over plain HTTP
 - **TLS cipher suites**: Modern, secure selection (ECDHE + AEAD only; no CBC, no RSA key exchange)
 - **Self-signed cert**: 4096-bit RSA key, SHA-256, SAN with wildcard — appropriate for internal use
 - **Tailscale**: Remote access via NAT traversal without port forwarding — eliminates WAN exposure
