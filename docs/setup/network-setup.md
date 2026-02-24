@@ -403,6 +403,7 @@ In **UDM-SE** (Network application): Settings → Profiles → Network Lists →
 >
 > Rules below are a **minimal subset** to make media stack work.
 > Add missing rules from firewall-config.md for complete security.
+> **Notable omission:** DNS rule (Allow All to Pi-hole) is not included here. Add it from firewall-config.md Rule 2 if cross-VLAN DNS resolution is needed.
 
 ### 6.1 Rule Order (CRITICAL)
 

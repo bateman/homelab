@@ -100,7 +100,7 @@ Internet
 | Gateway (UDM-SE) | 192.168.4.1 | — |
 | Smart TV bedroom | DHCP reservation | Wired |
 | Smart TV living room | DHCP reservation | WiFi |
-| Phones/Tablets | DHCP | Plex clients, *arr management |
+| Phones/Tablets | DHCP | Plex clients, *arr management, infrastructure management (QTS, Proxmox, UniFi) |
 
 ### VLAN 5 — Guest (192.168.5.0/24)
 

@@ -41,7 +41,7 @@ Overall the firewall follows sound principles ("deny all, allow specific") with 
 
 This directly undermines the `two_factor` policy set on Portainer. Authelia rules are evaluated first-match-wins, so the `*.home.local` bypass fires before the domain-specific `two_factor` rule for `portainer.home.local`.
 
-**Current exploitability:** Currently limited to intra-VLAN access from the Servers VLAN (e.g., Desktop PC at 192.168.3.40 → Traefik at NAS:443) and Tailscale remote access, because Media VLAN cannot reach port 443 (see H2). However, this becomes **immediately exploitable from Media VLAN** if H2 is fixed by adding a port 443 rule. It is a latent vulnerability that undermines an explicit security intent.
+**Current exploitability:** ~~Currently limited to intra-VLAN access from the Servers VLAN~~ After the H2 fix (Rule 7), Media VLAN can reach Traefik on port 443, so this API bypass was **immediately exploitable from consumer devices** (phones, tablets, Smart TVs). This is why H1 was fixed first — the API bypass was scoped to specific *arr domains before H2 (port 443 access) was added.
 
 **Recommendation:** Restrict the bypass to specific *arr service domains:
 ```yaml
@@ -96,19 +96,17 @@ The firewall forces users to bypass the authentication layer.
 
 ## MEDIUM Severity
 
-### M1 — Rule 4 grants Media VLAN direct access to Portainer (via Media-Services port group)
+### M1 — Portainer direct-port accessible from Servers VLAN without Authelia
 
-**Location:** `docs/network/firewall-config.md` — Rule 4 (`Media-Services` port group)
+**Location:** `docs/network/firewall-config.md` — Port Groups (`NAS-Management`)
 
-**Issue:** The `Media-Services` port group includes port 9443 (Portainer). Rule 4 allows Media VLAN (192.168.4.0/24) → NAS on all Media-Services ports, which means consumer devices — phones, tablets, Smart TVs — have direct network access to the Docker management interface.
+**Issue:** Port 9443 (Portainer) is in the `NAS-Management` port group. No firewall rule exposes NAS-Management to Media VLAN — it is only accessible intra-VLAN from Servers VLAN (e.g., Desktop PC at 192.168.3.40). However, direct-port access to `https://192.168.3.10:9443` bypasses Traefik and therefore bypasses Authelia authentication, relying solely on Portainer's built-in auth.
 
-**Verified by rule trace:** Media (192.168.4.x) → NAS (192.168.3.10):9443 — Rule 4 → **ACCEPT**.
+Portainer with direct Docker socket access (`/var/run/docker.sock`) has full control over all containers. A compromised Portainer instance means full Docker and effective host compromise. Portainer is also accessible through Traefik at `portainer.home.local` with `two_factor` Authelia policy, but the direct port provides an unprotected alternative path from any device on VLAN 3.
 
-Portainer with direct Docker socket access (`/var/run/docker.sock`) has full control over all containers. A compromised Portainer instance means full Docker and effective host compromise. Portainer has its own authentication, but exposing it to the Media VLAN:
-- Increases attack surface (brute-force from compromised TV/phone)
-- Bypasses the defense-in-depth Authelia layer (direct port, not through Traefik)
+**Note:** Media VLAN does **not** have access to port 9443 — it is not in the `Media-Services` port group and no rule allows it. Only Servers VLAN devices can reach it directly.
 
-**Recommendation:** Remove port 9443 (Portainer) from the `Media-Services` port group. Portainer should only be accessible from the Servers VLAN (intra-VLAN, no firewall rule needed) via the Desktop PC. If remote management is needed, use Tailscale.
+**Recommendation:** Access Portainer exclusively through Traefik (`portainer.home.local`) with Authelia 2FA. If the direct port must remain accessible for emergency Docker management, restrict it to the Desktop PC by adding host-level firewall rules (iptables) on the NAS.
 
 ### M2 — Rule 14 is overly permissive (Servers → Management)
 
@@ -124,18 +122,14 @@ A compromised NAS or Proxmox host could pivot to the Management VLAN and access 
 
 **Location:** `docs/network/firewall-config.md` — Port Groups, Rule 4
 
-**Issue:** The `Media-Services` port group bundles 14 service ports. Rule 4 allows all Media VLAN devices to access all of them. This exposes admin-only and internal services to consumer devices:
+**Issue:** The `Media-Services` port group bundles 10 service ports. Rule 4 allows all Media VLAN devices to access all of them. This exposes admin-only and internal services to consumer devices:
 
 | Service | Port | Media VLAN needs it? |
 |---------|------|---------------------|
-| Portainer | 9443 | **No** — Docker management, full host control (see M1) |
 | FlareSolverr | 8191 | **No** — internal Prowlarr helper, has no authentication |
-| Duplicati | 8200 | **No** — backup administration is sensitive |
-| Pi-hole admin | 8081 | **No** — DNS admin interface |
 | qBittorrent | 8080 | Questionable — download client |
 | NZBGet | 6789 | Questionable — download client |
 | Prowlarr | 9696 | Questionable — indexer management |
-| Uptime Kuma | 3001 | Questionable — monitoring dashboard |
 | Huntarr | 9705 | Questionable — monitoring tool |
 | Cleanuparr | 11011 | Questionable — cleanup automation |
 | Sonarr | 8989 | Yes |
@@ -144,6 +138,8 @@ A compromised NAS or Proxmox host could pivot to the Management VLAN and access 
 | Bazarr | 6767 | Yes |
 
 FlareSolverr is especially concerning — it accepts arbitrary URL fetch requests and has no authentication mechanism at all.
+
+**Note:** Portainer (9443), Duplicati (8200), Pi-hole admin (8081), and Uptime Kuma (3001) are in the separate `NAS-Management` port group and are NOT exposed to Media VLAN via Rule 4. They are accessible from Media VLAN only through Traefik+Authelia (Rule 7).
 
 **Recommendation:** Split into two port groups:
 - `Media-User`: 8989 (Sonarr), 7878 (Radarr), 8686 (Lidarr), 6767 (Bazarr) — for Media VLAN
@@ -197,7 +193,7 @@ Place this **before** Rule 2.
 
 **Location:** `docker/config/authelia/configuration.yml`
 
-**Issue:** The Authelia configuration has no `regulation` block. Without it, there is no account lockout after failed login attempts. An attacker on any VLAN with access to Traefik (currently only Servers VLAN, but Media if H2 is fixed) can attempt unlimited password guesses.
+**Issue:** The Authelia configuration has no `regulation` block. Without it, there is no account lockout after failed login attempts. An attacker on any VLAN with access to Traefik (Servers VLAN intra-VLAN, and Media VLAN via Rule 7) can attempt unlimited password guesses.
 
 **Recommendation:** Add:
 ```yaml
@@ -277,7 +273,7 @@ routers:
 
 All other services routed through Traefik have `middlewares=authelia@docker` (except Authelia itself at `auth.home.local`, which cannot self-protect — that is expected). HA is the only *protectable* service that relies solely on its own authentication. While likely intentional (HA webhooks and API integrations need direct access), this is inconsistent with the defense-in-depth approach applied to all other protected services.
 
-**Note:** If H2 is fixed (adding port 443 for Media VLAN), `ha.home.local` becomes accessible from Media VLAN through Traefik without Authelia protection.
+**Note:** Since H2 is resolved (Rule 7 allows Media VLAN → port 443), `ha.home.local` is now accessible from Media VLAN through Traefik without Authelia protection. HA's built-in authentication is the only barrier.
 
 ### L3 — `Servers-All` IP group is inconsistent
 
