@@ -100,7 +100,7 @@ Internet
 | Gateway (UDM-SE) | 192.168.4.1 | — |
 | Smart TV bedroom | DHCP reservation | Wired |
 | Smart TV living room | DHCP reservation | WiFi |
-| Phones/Tablets | DHCP | Plex clients, *arr management |
+| Phones/Tablets | DHCP | Plex clients, *arr management, infrastructure management (QTS, Proxmox); UniFi via gateway IP (`192.168.4.1`) |
 
 ### VLAN 5 — Guest (192.168.5.0/24)
 
@@ -179,6 +179,8 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | Traefik | 443 |
 | HomeAssistant | 8123 |
 | Printing | 631, 9100 |
+| QTS-Management | 5000, 5001 |
+| Proxmox-Management | 8006 |
 | mDNS | 5353 |
 
 > [!NOTE]
@@ -186,7 +188,11 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 >
 > **Media-Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 7) for Authelia-protected access.
 >
-> **NAS-Management** — infrastructure/admin direct ports, NOT exposed to Media VLAN: QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). Accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3). Pi-hole, Portainer, Duplicati, and Uptime Kuma are also reachable from Media VLAN through Traefik (Rule 7), protected by Authelia.
+> **NAS-Management** — infrastructure/admin direct ports: QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). Accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3). QTS ports (5000, 5001) are also exposed to Media VLAN via Rule 8 (QTS-Management) for wireless device management. Pi-hole, Portainer, Duplicati, and Uptime Kuma are reachable from Media VLAN through Traefik (Rule 7), protected by Authelia.
+>
+> **QTS-Management** — NAS OS management ports exposed to Media VLAN (Rule 8): QTS HTTP (5000), QTS HTTPS (5001). Allows wireless devices (phones, laptops) to manage the NAS directly. QTS has its own authentication. Note: QNAP QTS factory defaults are 8080 (HTTP) and 443 (HTTPS) — ports were changed to 5000/5001 to avoid conflicts with qBittorrent (8080) and Traefik (443). See [`nas-setup.md`](../setup/nas-setup.md#change-qts-system-ports).
+>
+> **Proxmox-Management** — Proxmox VE web interface (Rule 9): port 8006. Allows wireless devices to manage VMs and LXC containers. Proxmox has its own authentication.
 
 ---
 
@@ -282,7 +288,33 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows Media VLAN devices (phones, tablets, laptops on WiFi) to access all services through Traefik reverse proxy with Authelia SSO authentication. This is the primary access path for managing services from wireless devices.
 
-### Rule 8 — Allow IoT to Home Assistant
+### Rule 8 — Allow Media to QTS Management
+
+| Field | Value |
+|-------|-------|
+| Name | Allow Media to QTS Management |
+| Action | Accept |
+| Protocol | TCP |
+| Source | VLAN-Media |
+| Destination | NAS (192.168.3.10) |
+| Port | QTS-Management (5000, 5001) |
+
+> Allows Media VLAN devices (phones, laptops on WiFi) to access the QNAP NAS management interface (QTS) directly. QTS has its own authentication.
+
+### Rule 9 — Allow Media to Proxmox
+
+| Field | Value |
+|-------|-------|
+| Name | Allow Media to Proxmox |
+| Action | Accept |
+| Protocol | TCP |
+| Source | VLAN-Media |
+| Destination | MiniPC (192.168.3.20) |
+| Port | Proxmox-Management (8006) |
+
+> Allows Media VLAN devices (phones, laptops on WiFi) to access the Proxmox VE web interface for VM and LXC management. Proxmox has its own authentication.
+
+### Rule 10 — Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -295,7 +327,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
-### Rule 9 — Block IoT to All Private
+### Rule 11 — Block IoT to All Private
 
 | Field | Value |
 |-------|-------|
@@ -306,9 +338,9 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | RFC1918 |
 
 > [!TIP]
-> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (rule 8).
+> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 10).
 
-### Rule 10 — Block Guest to All Private
+### Rule 12 — Block Guest to All Private
 
 | Field | Value |
 |-------|-------|
@@ -320,7 +352,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Complete Guest network isolation. Internet access only.
 
-### Rule 11 — Allow Management from Servers
+### Rule 13 — Allow Management from Servers
 
 | Field | Value |
 |-------|-------|
@@ -332,7 +364,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows desktop PC (VLAN 3) to access switch and AP management interfaces.
 
-### Rule 12 — Block All Inter-VLAN (Catch-All)
+### Rule 14 — Block All Inter-VLAN (Catch-All)
 
 | Field | Value |
 |-------|-------|

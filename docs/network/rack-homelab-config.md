@@ -305,6 +305,7 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 
 | Service | Port | IP | Description |
 |---------|------|-----|-------------|
+| Proxmox WebUI | 8006 | 192.168.3.20 | Proxmox VE management interface |
 | Plex | 32400 | 192.168.3.21 | Media server (LXC container) |
 
 ---
@@ -397,7 +398,7 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (segmented VLANs)
 | Device | IP | Notes |
 |--------|-----|-------|
 | Gateway (UDM-SE) | 192.168.4.1 | — |
-| Smart TV, phones | DHCP (.100-.200) | Plex clients, *arr management |
+| Smart TV, phones | DHCP (.100-.200) | Plex clients, *arr management, infrastructure management (QTS, Proxmox); UniFi via gateway IP |
 
 #### VLAN 5 — Guest (192.168.5.0/24)
 

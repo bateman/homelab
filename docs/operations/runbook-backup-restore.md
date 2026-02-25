@@ -109,7 +109,7 @@ ls -la /share/backup/qts-config/
 
 **Manual backup via web interface (alternative):**
 
-1. Access `https://192.168.3.10:5000` (QTS HTTPS port)
+1. Access `https://192.168.3.10:5001` (QTS HTTPS port)
 2. Control Panel → System → Backup/Restore
 3. Backup System Settings → Create Backup
 4. Save the generated `.bin` file
@@ -220,7 +220,7 @@ make health
 
 **Via web interface:**
 
-1. After QTS reinstallation, access `https://<ip>:5000`
+1. After QTS reinstallation, access `https://<ip>:5001`
 2. Control Panel → System → Backup/Restore
 3. Restore System Settings
 4. Upload backup `.bin` file

@@ -2,6 +2,7 @@
 
 > Audit date: 2026-02-24
 > Scope: All firewall rules, IP/Port groups, DNS, mDNS, IDS/IPS, Authelia, Traefik TLS, Docker socket security
+> Updated: 2026-02-24 — added M8, M9, L8 for wireless management rules; Rule 10 removed (redundant), M8 resolved
 
 ---
 
@@ -10,11 +11,11 @@
 | Severity | Count |
 |----------|-------|
 | HIGH | 0 (2 fixed) |
-| MEDIUM | 7 |
-| LOW | 7 |
+| MEDIUM | 8 (1 fixed) |
+| LOW | 8 |
 | INFO | 7 |
 
-Overall the firewall follows sound principles ("deny all, allow specific") with proper rule ordering. Two HIGH findings (H1, H2) have been resolved — the Authelia API bypass is now scoped to *arr domains, and Media VLAN can reach Traefik on port 443 for authenticated access. Remaining MEDIUM findings relate to direct-port exposure and DNS filtering gaps.
+Overall the firewall follows sound principles ("deny all, allow specific") with proper rule ordering. Two HIGH findings (H1, H2) have been resolved — the Authelia API bypass is now scoped to *arr domains, and Media VLAN can reach Traefik on port 443 for authenticated access. Remaining MEDIUM findings relate to direct-port exposure, DNS filtering gaps, and wireless management rules (Rules 8-9) that expose infrastructure admin interfaces to the Media VLAN. Rule 10 (Media → UniFi Controller) was removed as redundant — the UDM-SE controller is accessible at the VLAN gateway IP without a firewall rule.
 
 ---
 
@@ -40,7 +41,7 @@ Overall the firewall follows sound principles ("deny all, allow specific") with 
 
 This directly undermines the `two_factor` policy set on Portainer. Authelia rules are evaluated first-match-wins, so the `*.home.local` bypass fires before the domain-specific `two_factor` rule for `portainer.home.local`.
 
-**Current exploitability:** Currently limited to intra-VLAN access from the Servers VLAN (e.g., Desktop PC at 192.168.3.40 → Traefik at NAS:443) and Tailscale remote access, because Media VLAN cannot reach port 443 (see H2). However, this becomes **immediately exploitable from Media VLAN** if H2 is fixed by adding a port 443 rule. It is a latent vulnerability that undermines an explicit security intent.
+**Current exploitability:** ~~Currently limited to intra-VLAN access from the Servers VLAN~~ After the H2 fix (Rule 7), Media VLAN can reach Traefik on port 443, so this API bypass was **immediately exploitable from consumer devices** (phones, tablets, Smart TVs). This is why H1 was fixed first — the API bypass was scoped to specific *arr domains before H2 (port 443 access) was added.
 
 **Recommendation:** Restrict the bypass to specific *arr service domains:
 ```yaml
@@ -70,7 +71,7 @@ This directly undermines the `two_factor` policy set on Portainer. Authelia rule
 
 Rule 4 allows Media → NAS only on the `Media-Services` port group (specific service ports like 8989, 7878, etc.), which does **not** include 443.
 
-**Verified by rule trace (before fix):** Media (192.168.4.x) → NAS (192.168.3.10):443 — Rules 1-10 don't match → Rule 11 (Block All Inter-VLAN) → **DROP**. After fix: Rule 7 (Allow Media to Traefik) → **ACCEPT**.
+**Verified by rule trace (before fix):** Media (192.168.4.x) → NAS (192.168.3.10):443 — no allow rule matched → catch-all Block All Inter-VLAN → **DROP**. After fix: Rule 7 (Allow Media to Traefik) → **ACCEPT**.
 
 **Consequence — two-part problem:**
 1. Media VLAN clients cannot use `https://sonarr.home.local` (Traefik) — blocked by firewall.
@@ -95,25 +96,23 @@ The firewall forces users to bypass the authentication layer.
 
 ## MEDIUM Severity
 
-### M1 — Rule 4 grants Media VLAN direct access to Portainer (via Media-Services port group)
+### M1 — Portainer direct-port accessible from Servers VLAN without Authelia
 
-**Location:** `docs/network/firewall-config.md` — Rule 4 (`Media-Services` port group)
+**Location:** `docs/network/firewall-config.md` — Port Groups (`NAS-Management`)
 
-**Issue:** The `Media-Services` port group includes port 9443 (Portainer). Rule 4 allows Media VLAN (192.168.4.0/24) → NAS on all Media-Services ports, which means consumer devices — phones, tablets, Smart TVs — have direct network access to the Docker management interface.
+**Issue:** Port 9443 (Portainer) is in the `NAS-Management` port group. No firewall rule exposes NAS-Management to Media VLAN — it is only accessible intra-VLAN from Servers VLAN (e.g., Desktop PC at 192.168.3.40). However, direct-port access to `https://192.168.3.10:9443` bypasses Traefik and therefore bypasses Authelia authentication, relying solely on Portainer's built-in auth.
 
-**Verified by rule trace:** Media (192.168.4.x) → NAS (192.168.3.10):9443 — Rule 4 → **ACCEPT**.
+Portainer with direct Docker socket access (`/var/run/docker.sock`) has full control over all containers. A compromised Portainer instance means full Docker and effective host compromise. Portainer is also accessible through Traefik at `portainer.home.local` with `two_factor` Authelia policy, but the direct port provides an unprotected alternative path from any device on VLAN 3.
 
-Portainer with direct Docker socket access (`/var/run/docker.sock`) has full control over all containers. A compromised Portainer instance means full Docker and effective host compromise. Portainer has its own authentication, but exposing it to the Media VLAN:
-- Increases attack surface (brute-force from compromised TV/phone)
-- Bypasses the defense-in-depth Authelia layer (direct port, not through Traefik)
+**Note:** Media VLAN does **not** have access to port 9443 — it is not in the `Media-Services` port group and no rule allows it. Only Servers VLAN devices can reach it directly.
 
-**Recommendation:** Remove port 9443 (Portainer) from the `Media-Services` port group. Portainer should only be accessible from the Servers VLAN (intra-VLAN, no firewall rule needed) via the Desktop PC. If remote management is needed, use Tailscale.
+**Recommendation:** Access Portainer exclusively through Traefik (`portainer.home.local`) with Authelia 2FA. If the direct port must remain accessible for emergency Docker management, restrict it to the Desktop PC by adding host-level firewall rules (iptables) on the NAS.
 
-### M2 — Rule 11 is overly permissive (Servers → Management)
+### M2 — Rule 13 is overly permissive (Servers → Management)
 
-**Location:** `docs/network/firewall-config.md` — Rule 11
+**Location:** `docs/network/firewall-config.md` — Rule 13
 
-**Issue:** Rule 11 allows **all protocols** from the entire VLAN-Servers subnet (192.168.3.0/24) to the entire VLAN-Management subnet (192.168.2.0/24). The stated purpose is "desktop PC to access switch and AP management interfaces," but the rule grants access from every device on VLAN 3 (NAS, Proxmox, Printer, Desktop PC) to every device on VLAN 2 (UDM-SE, Switch, AP).
+**Issue:** Rule 13 allows **all protocols** from the entire VLAN-Servers subnet (192.168.3.0/24) to the entire VLAN-Management subnet (192.168.2.0/24). The stated purpose is "desktop PC to access switch and AP management interfaces," but the rule grants access from every device on VLAN 3 (NAS, Proxmox, Printer, Desktop PC) to every device on VLAN 2 (UDM-SE, Switch, AP).
 
 A compromised NAS or Proxmox host could pivot to the Management VLAN and access the UDM-SE controller (192.168.2.1), switch (192.168.2.10), and access point (192.168.2.20) management interfaces.
 
@@ -123,18 +122,14 @@ A compromised NAS or Proxmox host could pivot to the Management VLAN and access 
 
 **Location:** `docs/network/firewall-config.md` — Port Groups, Rule 4
 
-**Issue:** The `Media-Services` port group bundles 14 service ports. Rule 4 allows all Media VLAN devices to access all of them. This exposes admin-only and internal services to consumer devices:
+**Issue:** The `Media-Services` port group bundles 10 service ports. Rule 4 allows all Media VLAN devices to access all of them. This exposes admin-only and internal services to consumer devices:
 
 | Service | Port | Media VLAN needs it? |
 |---------|------|---------------------|
-| Portainer | 9443 | **No** — Docker management, full host control (see M1) |
 | FlareSolverr | 8191 | **No** — internal Prowlarr helper, has no authentication |
-| Duplicati | 8200 | **No** — backup administration is sensitive |
-| Pi-hole admin | 8081 | **No** — DNS admin interface |
 | qBittorrent | 8080 | Questionable — download client |
 | NZBGet | 6789 | Questionable — download client |
 | Prowlarr | 9696 | Questionable — indexer management |
-| Uptime Kuma | 3001 | Questionable — monitoring dashboard |
 | Huntarr | 9705 | Questionable — monitoring tool |
 | Cleanuparr | 11011 | Questionable — cleanup automation |
 | Sonarr | 8989 | Yes |
@@ -144,11 +139,13 @@ A compromised NAS or Proxmox host could pivot to the Management VLAN and access 
 
 FlareSolverr is especially concerning — it accepts arbitrary URL fetch requests and has no authentication mechanism at all.
 
+**Note:** Portainer (9443), Duplicati (8200), Pi-hole admin (8081), and Uptime Kuma (3001) are in the separate `NAS-Management` port group and are NOT exposed to Media VLAN via Rule 4. They are accessible from Media VLAN only through Traefik+Authelia (Rule 7).
+
 **Recommendation:** Split into two port groups:
 - `Media-User`: 8989 (Sonarr), 7878 (Radarr), 8686 (Lidarr), 6767 (Bazarr) — for Media VLAN
 - `Media-Admin`: remaining ports — accessible only within Servers VLAN (no firewall rule needed)
 
-Or better: fix H2 (allow port 443) and route all Media traffic through Traefik+Authelia, removing direct-port access entirely.
+Or better: now that H2 is resolved (Rule 7 allows port 443), route all Media traffic through Traefik+Authelia and remove direct-port access entirely.
 
 ### M4 — No DNS egress filtering (Pi-hole bypass possible)
 
@@ -166,18 +163,18 @@ This undermines Pi-hole's ad-blocking and any DNS-based security filtering.
 
 ### M5 — Guest VLAN can reach Pi-hole DNS (information leak)
 
-**Location:** `docs/network/firewall-config.md` — Rules 2 and 9
+**Location:** `docs/network/firewall-config.md` — Rules 2 and 12
 
-**Issue:** Rule 2 (`Allow Any → NAS:53`) fires **before** Rule 10 (`Block Guest → RFC1918`). This means Guest devices can reach Pi-hole.
+**Issue:** Rule 2 (`Allow Any → NAS:53`) fires **before** Rule 12 (`Block Guest → RFC1918`). This means Guest devices can reach Pi-hole.
 
-**Verified by rule trace:** Guest (192.168.5.x) → NAS (192.168.3.10):53 — Rule 2 matches → **ACCEPT**. Rule 10 never evaluates.
+**Verified by rule trace:** Guest (192.168.5.x) → NAS (192.168.3.10):53 — Rule 2 matches → **ACCEPT**. Rule 12 never evaluates.
 
 While DHCP only configures Cloudflare DNS for Guest VLAN, a technically savvy guest can manually set their DNS to `192.168.3.10` and:
 - Resolve `*.home.local` names (sonarr.home.local, portainer.home.local, etc.)
 - Discover internal service topology and hostnames
 - Identify the NAS IP address and running services
 
-This is an information leak that aids reconnaissance, though the guest still cannot reach those services (blocked by Rule 10 on other ports).
+This is an information leak that aids reconnaissance, though the guest still cannot reach those services (blocked by Rule 12 on other ports).
 
 **Recommendation:** Add a rule before Rule 2 that blocks Guest VLAN → NAS:53 specifically, or restructure Rule 2 to exclude Guest VLAN as a source:
 
@@ -196,7 +193,7 @@ Place this **before** Rule 2.
 
 **Location:** `docker/config/authelia/configuration.yml`
 
-**Issue:** The Authelia configuration has no `regulation` block. Without it, there is no account lockout after failed login attempts. An attacker on any VLAN with access to Traefik (currently only Servers VLAN, but Media if H2 is fixed) can attempt unlimited password guesses.
+**Issue:** The Authelia configuration has no `regulation` block. Without it, there is no account lockout after failed login attempts. An attacker on any VLAN with access to Traefik (Servers VLAN intra-VLAN, and Media VLAN via Rule 7) can attempt unlimited password guesses.
 
 **Recommendation:** Add:
 ```yaml
@@ -213,6 +210,28 @@ regulation:
 **Issue:** The file ships with user `admin` and the argon2id hash of password `changeme`. While comments warn to change it, the hash is committed to the repository. If deployed as-is (or if the user forgets to change it), anyone on the network who can reach Authelia can authenticate as admin.
 
 **Recommendation:** Replace the password hash with a placeholder that cannot be used to authenticate (e.g., `CHANGE_ME`), or move this file to a `.example` pattern like the `.env.secrets.example` approach.
+
+### M8 — ~~Rule 10 pierces Management VLAN boundary from consumer network~~
+
+**Location:** `docs/network/firewall-config.md` — ~~Rule 10~~ (removed)
+
+**Issue:** Rule 10 allowed the entire VLAN-Media subnet (192.168.4.0/24) to reach the UDM-SE (192.168.2.1) on port 443. This was the only rule that allowed a consumer VLAN to cross into the Management VLAN.
+
+> **RESOLVED:** Rule 10 removed. The UniFi Controller on the UDM-SE is already accessible at the VLAN gateway IP (e.g., `https://192.168.4.1` from Media VLAN) without requiring a cross-VLAN firewall rule — the gateway IP is local to each VLAN. The explicit rule to 192.168.2.1 was redundant and unnecessarily pierced the Management VLAN boundary. The `UDM-SE` IP group was also removed from network lists.
+
+### M9 — Rule 8 includes QTS HTTP port 5000 (cleartext credentials)
+
+**Location:** `docs/network/firewall-config.md` — Rule 8, Port Groups (`QTS-Management`)
+
+**Issue:** The `QTS-Management` port group includes port 5000 (QTS HTTP) alongside port 5001 (QTS HTTPS). Port 5000 serves the QTS admin interface over unencrypted HTTP. When a user logs into QTS via `http://192.168.3.10:5000` from their phone on WiFi, credentials are transmitted in cleartext and can be intercepted by any device on VLAN 4 (ARP spoofing, rogue AP, compromised device running a sniffer).
+
+**Verified by rule trace:** Media (192.168.4.x) → NAS (192.168.3.10):5000 — Rule 8 → **ACCEPT**.
+
+QNAP QTS supports "Force Secure Connection (HTTPS)" in Control Panel → System → General Settings → System Administration, which redirects port 5000 to HTTPS on port 5001. If this is enabled, port 5000 only serves a redirect and credentials are never sent in cleartext. However, this depends on QTS configuration — the firewall should not assume it.
+
+**Note:** QNAP QTS factory defaults are 8080 (HTTP) and 443 (HTTPS) — ports were changed to 5000/5001 in this setup to avoid conflicts with qBittorrent (8080) and Traefik (443). A port change step has been added to `nas-setup.md`. Multiple files previously referenced `https://192.168.3.10:5000` labeling it as QTS HTTPS — this was incorrect. QTS HTTPS is port 5001, not 5000. All instances have been corrected to `https://192.168.3.10:5001` in the backup runbook, proxmox-setup, and energy-saving-strategies docs.
+
+**Recommendation:** Remove port 5000 from the `QTS-Management` port group, keeping only port 5001 (HTTPS). Users should access QTS via `https://192.168.3.10:5001`. If QTS "Force Secure Connection" is enabled, port 5000 is not needed in the firewall rule at all (the redirect happens server-side, but the initial HTTP request still transmits in cleartext before the redirect).
 
 ---
 
@@ -246,7 +265,7 @@ routers:
 
 All other services routed through Traefik have `middlewares=authelia@docker` (except Authelia itself at `auth.home.local`, which cannot self-protect — that is expected). HA is the only *protectable* service that relies solely on its own authentication. While likely intentional (HA webhooks and API integrations need direct access), this is inconsistent with the defense-in-depth approach applied to all other protected services.
 
-**Note:** If H2 is fixed (adding port 443 for Media VLAN), `ha.home.local` becomes accessible from Media VLAN through Traefik without Authelia protection.
+**Note:** Since H2 is resolved (Rule 7 allows Media VLAN → port 443), `ha.home.local` is now accessible from Media VLAN through Traefik without Authelia protection. HA's built-in authentication is the only barrier.
 
 ### L3 — `Servers-All` IP group is inconsistent
 
@@ -286,6 +305,16 @@ This is likely correct (Watchtower is admin-only), but the `show-urls` output pr
 
 **Recommendation:** Either add 8383 to `Media-Services` (if metrics should be accessible from Media VLAN), or document in the Makefile output that Watchtower is only accessible from Servers VLAN. The latter is the safer option.
 
+### L8 — QTS-Management port group duplicates a subset of NAS-Management
+
+**Location:** `docs/network/firewall-config.md` — Port Groups
+
+**Issue:** The `QTS-Management` port group (5000, 5001) is a proper subset of `NAS-Management` (5000, 5001, 8081, 9443, 8200, 3001). Both are defined in the port network lists. This creates redundancy — ports 5000 and 5001 appear in two groups. If `NAS-Management` is ever used in a future rule targeting Media VLAN, it would implicitly grant access to all admin ports (Pi-hole, Portainer, Duplicati, Uptime Kuma) beyond the intended QTS-only scope.
+
+Not harmful in the current configuration (no rule references `NAS-Management` for Media VLAN), but could cause confusion during maintenance or future rule changes.
+
+**Recommendation:** Document the intentional overlap in the port group notes, or rename `NAS-Management` to `NAS-Admin-Internal` to make clear it is not intended for cross-VLAN rules.
+
 ---
 
 ## INFO
@@ -306,9 +335,11 @@ Home Assistant uses `network_mode: host` for device discovery (Zigbee, Bluetooth
 
 The `socket-proxy` container (`docker/compose.yml` line 67) runs with `privileged: true`, which is required for the Tecnativa docker-socket-proxy to function. However, this gives the container nearly equivalent permissions to root on the host. The entire security model (isolating Traefik and Watchtower from the raw Docker socket) depends on the integrity of this single container image. A supply-chain compromise of `tecnativa/docker-socket-proxy:latest` would bypass all socket restrictions.
 
-### I5 — MiniPC and Servers-All IP groups defined but unused
+### I5 — ~~MiniPC and~~ Servers-All IP group~~s~~ defined but unused
 
-The `MiniPC` (`192.168.3.20`) and `Servers-All` (`192.168.3.10, 192.168.3.20, 192.168.3.30`) IP groups are defined in the UDM-SE network lists but never referenced by any firewall rule. Rule 3 targets `Plex LXC (192.168.3.21)` inline rather than through the `MiniPC` group, and no other rule references either group. Similar to I1 (mDNS port group), these are dead configuration entries. Not harmful, but could cause confusion during maintenance or give a false sense of coverage.
+The `Servers-All` (`192.168.3.10, 192.168.3.20, 192.168.3.30`) IP group is defined in the UDM-SE network lists but never referenced by any firewall rule. Similar to I1 (mDNS port group), this is a dead configuration entry. Not harmful, but could cause confusion during maintenance or give a false sense of coverage.
+
+> **Partially resolved:** The `MiniPC` group is now referenced by Rule 9 (Allow Media to Proxmox). `Servers-All` remains unused.
 
 ### I6 — Plex GDM broadcast discovery does not work cross-VLAN
 
@@ -329,8 +360,9 @@ The following security measures are well-implemented:
 - **Rule ordering**: Established/Related first, catch-all deny last — correct and robust
 - **VLAN segmentation**: Clean separation of Management, Servers, Media, Guest, IoT
 - **Traefik+Authelia access path**: Rule 7 enables Media VLAN to access services through Traefik with SSO authentication
-- **Guest isolation**: RFC1918 block (Rule 10) prevents access to internal services (note: DNS exception exists per M5)
-- **IoT isolation**: RFC1918 block (Rule 9) with targeted HA exception (Rule 8) — well-scoped
+- **Wireless management scoping**: Rules 8-9 are narrowly scoped — TCP-only, specific destination IPs (not subnets), specific ports. Proxmox (8006) and QTS (5000/5001) each have their own authentication. UniFi Controller is accessed via the VLAN gateway IP without crossing into the Management VLAN
+- **Guest isolation**: RFC1918 block (Rule 12) prevents access to internal services (note: DNS exception exists per M5)
+- **IoT isolation**: RFC1918 block (Rule 11) with targeted HA exception (Rule 10) — well-scoped
 - **Docker socket proxy**: Deny-by-default with explicit API permissions (14 endpoints explicitly denied)
 - **Socket proxy network**: `internal: true` prevents external access to the socket proxy
 - **IDS/IPS**: Enabled in prevention mode (not just detection) on IoT and Guest VLANs

@@ -65,7 +65,7 @@ Spinning down HDDs when idle significantly reduces power and extends drive life.
 
 **Configuration via QTS:**
 
-1. Access QTS: `https://192.168.3.10:5000`
+1. Access QTS: `https://192.168.3.10:5001`
 2. Control Panel → Hardware → General
 3. HDD Standby → Enable
 4. Set idle time: **30 minutes** (recommended)

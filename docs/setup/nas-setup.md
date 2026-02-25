@@ -190,6 +190,23 @@ id dockeruser
 > [!IMPORTANT]
 > Note these values! They will be needed to configure the `.env` file after cloning the repository.
 
+### Change QTS System Ports
+
+> [!IMPORTANT]
+> QTS factory defaults (HTTP: 8080, HTTPS: 443) conflict with Docker services deployed later — qBittorrent uses port 8080, and Traefik uses port 443. Change QTS system ports before deploying the Docker stack.
+
+**Path:** Control Panel → System → General Settings → System Administration
+
+- [ ] System Port: `5000` (was 8080)
+- [ ] Enable Secure Connection (HTTPS): **On**
+- [ ] HTTPS Port: `5001`
+- [ ] Force Secure Connection (HTTPS): **Recommended** (redirects HTTP 5000 → HTTPS 5001)
+- [ ] Apply (QTS will reload on new ports)
+- [ ] Verify access: `https://192.168.3.10:5001`
+
+> [!TIP]
+> With "Force Secure Connection" enabled, accessing `http://192.168.3.10:5000` automatically redirects to `https://192.168.3.10:5001`. This prevents cleartext credential transmission.
+
 ---
 
 ## Container Station Installation

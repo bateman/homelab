@@ -138,7 +138,16 @@ Follow the complete checklist. Key points:
    - `/share/container` - Docker files
    - `/share/backup` - Backups
 
-### 3.3 Container Station
+### 3.3 Change QTS System Ports
+
+> QTS factory ports (8080/443) conflict with Docker services. Change before deploying containers.
+
+1. [ ] Control Panel → System → General Settings → System Administration
+2. [ ] Set System Port: `5000`, HTTPS Port: `5001`
+3. [ ] Enable Force Secure Connection (HTTPS)
+4. [ ] Verify: `https://192.168.3.10:5001`
+
+### 3.4 Container Station
 
 1. [ ] Install Container Station 3 from App Center
 2. [ ] Complete initial wizard
@@ -150,7 +159,7 @@ Follow the complete checklist. Key points:
 
 ### Phase 3 Verification
 
-- [ ] QTS accessible: `http://192.168.3.10:8080` (or `https://192.168.3.10:8443`)
+- [ ] QTS accessible: `https://192.168.3.10:5001`
 - [ ] SSH working
 - [ ] Docker installed
 - [ ] Shared folders created
