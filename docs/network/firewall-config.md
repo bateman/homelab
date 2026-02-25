@@ -156,14 +156,14 @@ Before creating rules, define these lists in **UDM-SE** (Network application): S
 | Group Name | Type | Content |
 |------------|------|---------|
 | NAS | IP Address | 192.168.3.10 |
-| MiniPC | IP Address | 192.168.3.20 |
+| Mini PC | IP Address | 192.168.3.20 |
 | Printer | IP Address | 192.168.3.30 |
-| Servers-All | IP Address | 192.168.3.10, 192.168.3.20, 192.168.3.30 |
-| VLAN-Management | Subnet | 192.168.2.0/24 |
-| VLAN-Servers | Subnet | 192.168.3.0/24 |
-| VLAN-Media | Subnet | 192.168.4.0/24 |
-| VLAN-Guest | Subnet | 192.168.5.0/24 |
-| VLAN-IoT | Subnet | 192.168.6.0/24 |
+| Servers All | IP Address | 192.168.3.10, 192.168.3.20, 192.168.3.30 |
+| VLAN Management | Subnet | 192.168.2.0/24 |
+| VLAN Servers | Subnet | 192.168.3.0/24 |
+| VLAN Media | Subnet | 192.168.4.0/24 |
+| VLAN Guest | Subnet | 192.168.5.0/24 |
+| VLAN IoT | Subnet | 192.168.6.0/24 |
 | RFC1918 | Subnet | 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12 |
 
 ### Port Network Lists
@@ -174,22 +174,22 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 |------------|-------|
 | DNS | 53 |
 | Plex | 32400, 32410-32414 |
-| Media-Services | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8191 |
-| NAS-Management | 5000, 5001, 8081, 9443, 8200, 3001 |
+| Media Services | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8191 |
+| NAS Management | 5000, 5001, 8081, 9443, 8200, 3001 |
 | Traefik | 443 |
-| HomeAssistant | 8123 |
+| Home Assistant | 8123 |
 | Printing | 631, 9100 |
-| Proxmox-Management | 8006 |
+| Proxmox Management | 8006 |
 | mDNS | 5353 |
 
 > [!NOTE]
 > **Traefik** — reverse proxy HTTPS port (Rule 7). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO.
 >
-> **Media-Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 7) for Authelia-protected access.
+> **Media Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 7) for Authelia-protected access.
 >
-> **NAS-Management** — infrastructure/admin direct ports exposed to Media VLAN (Rule 8): QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). All services have their own authentication. Also accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3). These services are additionally reachable from Media VLAN through Traefik (Rule 7) with Authelia SSO. Note: QNAP QTS factory defaults are 8080 (HTTP) and 443 (HTTPS) — ports were changed to 5000/5001 to avoid conflicts with qBittorrent (8080) and Traefik (443). See [`nas-setup.md`](../setup/nas-setup.md#change-qts-system-ports).
+> **NAS Management** — infrastructure/admin direct ports exposed to Media VLAN (Rule 8): QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). All services have their own authentication. Also accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3). These services are additionally reachable from Media VLAN through Traefik (Rule 7) with Authelia SSO. Note: QNAP QTS factory defaults are 8080 (HTTP) and 443 (HTTPS) — ports were changed to 5000/5001 to avoid conflicts with qBittorrent (8080) and Traefik (443). See [`nas-setup.md`](../setup/nas-setup.md#change-qts-system-ports).
 >
-> **Proxmox-Management** — Proxmox VE web interface (Rule 9): port 8006. Allows wireless devices to manage VMs and LXC containers. Proxmox has its own authentication.
+> **Proxmox Management** — Proxmox VE web interface (Rule 9): port 8006. Allows wireless devices to manage VMs and LXC containers. Proxmox has its own authentication.
 
 ---
 
@@ -233,7 +233,7 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Allow Media to Plex |
 | Action | Accept |
 | Protocol | TCP/UDP |
-| Source | VLAN-Media |
+| Source | VLAN Media |
 | Destination | Plex LXC (192.168.3.21) |
 | Port | Plex (32400, 32410-32414) |
 
@@ -244,9 +244,9 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Allow Media to Media Services |
 | Action | Accept |
 | Protocol | TCP |
-| Source | VLAN-Media |
+| Source | VLAN Media |
 | Destination | NAS (192.168.3.10) |
-| Port | Media-Services |
+| Port | Media Services |
 
 ### Rule 5 — Allow Media to Printer
 
@@ -255,7 +255,7 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Allow Media to Printer |
 | Action | Accept |
 | Protocol | TCP |
-| Source | VLAN-Media |
+| Source | VLAN Media |
 | Destination | Printer (192.168.3.30) |
 | Port | Printing (631, 9100) |
 
@@ -266,9 +266,9 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Allow Media to Home Assistant |
 | Action | Accept |
 | Protocol | TCP |
-| Source | VLAN-Media |
+| Source | VLAN Media |
 | Destination | NAS (192.168.3.10) |
-| Port | HomeAssistant (8123) |
+| Port | Home Assistant (8123) |
 
 > Allows Media devices (phones, tablets) to access the Home Assistant interface.
 
@@ -279,7 +279,7 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Allow Media to Traefik |
 | Action | Accept |
 | Protocol | TCP |
-| Source | VLAN-Media |
+| Source | VLAN Media |
 | Destination | NAS (192.168.3.10) |
 | Port | Traefik (443) |
 
@@ -292,9 +292,9 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Allow Media to NAS Management |
 | Action | Accept |
 | Protocol | TCP |
-| Source | VLAN-Media |
+| Source | VLAN Media |
 | Destination | NAS (192.168.3.10) |
-| Port | NAS-Management (5000, 5001, 8081, 9443, 8200, 3001) |
+| Port | NAS Management (5000, 5001, 8081, 9443, 8200, 3001) |
 
 > Allows Media VLAN devices (phones, laptops on WiFi) to access NAS management services directly: QTS (5000/5001), Pi-hole (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). All services have their own authentication. This provides direct-port access as an alternative to Traefik (Rule 7).
 
@@ -305,9 +305,9 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Allow Media to Proxmox |
 | Action | Accept |
 | Protocol | TCP |
-| Source | VLAN-Media |
-| Destination | MiniPC (192.168.3.20) |
-| Port | Proxmox-Management (8006) |
+| Source | VLAN Media |
+| Destination | Mini PC (192.168.3.20) |
+| Port | Proxmox Management (8006) |
 
 > Allows Media VLAN devices (phones, laptops on WiFi) to access the Proxmox VE web interface for VM and LXC management. Proxmox has its own authentication.
 
@@ -318,9 +318,9 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Allow IoT to Home Assistant |
 | Action | Accept |
 | Protocol | TCP |
-| Source | VLAN-IoT |
+| Source | VLAN IoT |
 | Destination | NAS (192.168.3.10) |
-| Port | HomeAssistant (8123) |
+| Port | Home Assistant (8123) |
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
@@ -331,7 +331,7 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Block IoT to Private Networks |
 | Action | Drop |
 | Protocol | All |
-| Source | VLAN-IoT |
+| Source | VLAN IoT |
 | Destination | RFC1918 |
 
 > [!TIP]
@@ -344,7 +344,7 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Block Guest to Private Networks |
 | Action | Drop |
 | Protocol | All |
-| Source | VLAN-Guest |
+| Source | VLAN Guest |
 | Destination | RFC1918 |
 
 > Complete Guest network isolation. Internet access only.
@@ -356,8 +356,8 @@ Rules are processed in order, from first to last. Order matters.
 | Name | Allow Servers to Management |
 | Action | Accept |
 | Protocol | All |
-| Source | VLAN-Servers |
-| Destination | VLAN-Management |
+| Source | VLAN Servers |
+| Destination | VLAN Management |
 
 > Allows desktop PC (VLAN 3) to access switch and AP management interfaces.
 
@@ -435,7 +435,7 @@ In **UDM-SE** (Network application): Settings → Traffic Management → Traffic
 | Action | Rate Limit |
 | Download | 50 Mbps |
 | Upload | 10 Mbps |
-| Source | VLAN-Guest |
+| Source | VLAN Guest |
 
 ---
 
