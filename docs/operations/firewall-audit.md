@@ -331,7 +331,7 @@ The `socket-proxy` container (`docker/compose.yml` line 67) runs with `privilege
 
 ### I5 — ~~Mini PC and~~ Servers All IP group~~s~~ defined but unused
 
-The `Servers All` (`192.168.3.10, 192.168.3.20, 192.168.3.30`) IP group is defined in the UDM-SE network lists but never referenced by any firewall rule. Similar to I1 (mDNS port group), this is a dead configuration entry. Not harmful, but could cause confusion during maintenance or give a false sense of coverage.
+The `Servers All` (`192.168.3.10, 192.168.3.20, 192.168.3.21, 192.168.3.30`) IP group is defined in the UDM-SE network lists but never referenced by any firewall rule. Similar to I1 (mDNS port group), this is a dead configuration entry. Not harmful, but could cause confusion during maintenance or give a false sense of coverage.
 
 > **Partially resolved:** The `Mini PC` group is now referenced by Rule 9 (Allow Media to Proxmox). `Servers All` remains unused.
 
