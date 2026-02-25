@@ -156,10 +156,10 @@ Before creating rules, define these lists in **UDM-SE** (Network application): S
 | Group Name | Type | Content |
 |------------|------|---------|
 | NAS | IP Address | 192.168.3.10 |
+| Plex Server | IP Address | 192.168.3.21 |
 | Mini PC | IP Address | 192.168.3.20 |
 | Printer | IP Address | 192.168.3.30 |
-| Servers All | IP Address | 192.168.3.10, 192.168.3.20, 192.168.3.30 |
-| VLAN Management | Subnet | 192.168.2.0/24 |
+| Servers All | IP Address | 192.168.3.10, 192.168.3.20, 192.168.3.21, 192.168.3.30 |
 | VLAN Servers | Subnet | 192.168.3.0/24 |
 | VLAN Media | Subnet | 192.168.4.0/24 |
 | VLAN Guest | Subnet | 192.168.5.0/24 |
@@ -234,7 +234,7 @@ Rules are processed in order, from first to last. Order matters.
 | Action | Accept |
 | Protocol | TCP/UDP |
 | Source | VLAN Media |
-| Destination | Plex LXC (192.168.3.21) |
+| Destination | Plex Server (192.168.3.21) |
 | Port | Plex (32400, 32410-32414) |
 
 ### Rule 4 — Allow Media to Media Services
@@ -357,9 +357,9 @@ Rules are processed in order, from first to last. Order matters.
 | Action | Accept |
 | Protocol | All |
 | Source | VLAN Servers |
-| Destination | VLAN Management |
+| Destination | Management (native network) |
 
-> Allows desktop PC (VLAN 3) to access switch and AP management interfaces.
+> Allows desktop PC (VLAN 3) to access switch and AP management interfaces. Uses the native UniFi "Management" network as destination (not a custom network list).
 
 ### Rule 14 — Block All Inter-VLAN (Catch-All)
 
@@ -424,7 +424,7 @@ In **UDM-SE** (Network application): Settings → Traffic Management → Traffic
 | Name | Prioritize Plex |
 | Action | Set DSCP |
 | DSCP Value | 46 (EF - Expedited Forwarding) |
-| Source | Plex LXC (192.168.3.21) |
+| Source | Plex Server (192.168.3.21) |
 | Port | 32400 |
 
 ### Guest Bandwidth Limiting

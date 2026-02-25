@@ -235,15 +235,11 @@ QNAP QTS supports "Force Secure Connection (HTTPS)" in Control Panel → System 
 
 ## LOW Severity
 
-### L1 — Plex LXC IP not in any reusable IP group
+### L1 — ~~Plex LXC IP not in any reusable IP group~~ RESOLVED
 
 **Location:** `docs/network/firewall-config.md` Rule 3, IP Address Network Lists
 
-**Issue:** Firewall Rule 3 correctly targets `Plex LXC (192.168.3.21)`, matching the rack config. However, `.21` is referenced inline in the rule rather than through a reusable IP group like the other server entries (NAS, Mini PC, Printer each have dedicated groups). The `Mini PC` group contains `.20` (the Proxmox host), not `.21` (the Plex LXC).
-
-Additionally, the `Servers All` group (`192.168.3.10, 192.168.3.20, 192.168.3.30`) does not include the Plex LXC at `.21`, so any future rule referencing `Servers All` would miss Plex.
-
-**Recommendation:** Create a `Plex-LXC` IP group (`192.168.3.21`) in UDM-SE network lists for consistency, and add `.21` to `Servers All` if it should cover all server-class devices.
+**Resolution:** Created `Plex Server` IP group (`192.168.3.21`) in UDM-SE network lists. Rule 3 now references `Plex Server (192.168.3.21)`. Added `.21` to `Servers All` group. Documentation updated to match.
 
 ### L2 — Home Assistant Traefik route has no Authelia middleware
 
@@ -265,11 +261,13 @@ All other services routed through Traefik have `middlewares=authelia@docker` (ex
 
 **Note:** Since H2 is resolved (Rule 7 allows Media VLAN → port 443), `ha.home.local` is now accessible from Media VLAN through Traefik without Authelia protection. HA's built-in authentication is the only barrier.
 
-### L3 — `Servers All` IP group is inconsistent
+### L3 — ~~`Servers All` IP group is inconsistent~~ PARTIALLY RESOLVED
 
 **Location:** `docs/network/firewall-config.md` — IP Groups
 
-**Issue:** `Servers All` contains NAS (`.10`), Mini PC (`.20`), and Printer (`.30`) but excludes Desktop PC (`.40`). The name "Servers All" is misleading. Additionally, if the Plex LXC at `.21` is a separate network entity, it is also missing. This group is not used in any current rule but could cause issues if referenced in the future.
+**Resolution:** `Servers All` now includes Plex LXC at `.21` (`192.168.3.10, 192.168.3.20, 192.168.3.21, 192.168.3.30`). Documentation updated to match UDM.
+
+**Remaining:** Desktop PC (`.40`) is still excluded. The name "Servers All" refers to infrastructure servers, not all VLAN 3 devices. This group is not used in any current rule.
 
 ### L4 — TLS minimum version could be TLS 1.3
 
