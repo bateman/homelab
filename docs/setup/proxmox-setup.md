@@ -150,24 +150,26 @@ systemctl restart pveproxy
 
 #### Prerequisite: Enable NFS Export on QNAP
 
-Before configuring NFS on Proxmox, enable NFS export on the NAS:
+Before configuring NFS on Proxmox, enable NFS export on the NAS.
+
+> [!NOTE]
+> The NFS **service** (v4.1) should already be enabled from [NAS setup](nas-setup.md#enable-nfs-service). This section configures the **per-folder export permissions**.
 
 1. Access QTS: `https://192.168.3.10:5001`
-2. Control Panel → Network & File Services → NFS Service
-3. [ ] Enable NFS v3 and/or NFS v4 Service
-4. Control Panel → Shared Folders
-5. For each folder to export (data, backup):
+2. Control Panel → Shared Folders
+3. For each folder to export (data, backup):
    - Select folder → Edit → NFS Permissions → Add
    - Host/IP: `192.168.3.20` (Proxmox)
    - Permission: `read/write`
    - Squash: `no_root_squash` (for backup)
    - Apply
 
-Verify available exports:
+Verify NFS connectivity from Proxmox:
 ```bash
-# From NAS
-showmount -e 192.168.3.10
-# Should show /share/data/media and /share/backup
+# Test mount (NFS v4.1 only — showmount doesn't work without v3)
+mount -t nfs4 -o vers=4.1 192.168.3.10:/share/data/media /mnt/test
+ls /mnt/test
+umount /mnt/test
 ```
 
 #### Add NFS Storage in Proxmox
@@ -180,6 +182,7 @@ Datacenter → Storage → Add → NFS
 | Server | 192.168.3.10 |
 | Export | /share/data/media |
 | Content | Disk image, Container |
+| NFS Version | 4.1 |
 
 Also add storage for backup:
 
@@ -189,6 +192,7 @@ Also add storage for backup:
 | Server | 192.168.3.10 |
 | Export | /share/backup |
 | Content | VZDump backup file |
+| NFS Version | 4.1 |
 
 > [!TIP]
 > If NFS mount fails, verify that the QNAP firewall allows connections from 192.168.3.20 and that NFS services are active.
@@ -586,6 +590,7 @@ Datacenter → Storage → Add → NFS
 - Server: 192.168.3.10
 - Export: /share/backup
 - Content: VZDump backup file
+- NFS Version: 4.1
 
 > [!NOTE]
 > Proxmox backups will be saved in an automatic subfolder (`dump/`).

@@ -190,6 +190,21 @@ id dockeruser
 > [!IMPORTANT]
 > Note these values! They will be needed to configure the `.env` file after cloning the repository.
 
+### Enable NFS Service
+
+> [!IMPORTANT]
+> NFS is required for Proxmox to mount media and backup shares from the NAS. Enable it now — the per-folder export permissions are configured later during [Proxmox setup](proxmox-setup.md#34-configure-nfs-storage-from-nas).
+
+**Path:** Control Panel → Network & File Services → Win/Mac/NFS/WebDAV → NFS Service
+
+- [ ] Enable Network File System (NFS) service: **On**
+- [ ] NFS version: **v4.1 only** (uncheck v2/v3 if present)
+- [ ] Advanced Options: **leave defaults** (fixed ports and manage-gids not needed with v4.1)
+- [ ] Apply
+
+> [!TIP]
+> **Why v4.1 only?** NFS v4.1 uses a single port (TCP 2049), supports stateful sessions with better error recovery, and offers session trunking which can benefit the 10G SFP+ link. NFS v3 requires multiple ports (2049 + 111 portmapper + dynamic mountd) and is only needed for legacy clients. Proxmox VE fully supports v4.1.
+
 ### Change QTS System Ports
 
 > [!IMPORTANT]
