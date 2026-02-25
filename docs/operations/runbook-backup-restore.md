@@ -139,7 +139,7 @@ ls -la /share/backup/qts-config/
 
 # On Proxmox:
 mkdir -p /mnt/nas-backup
-echo "192.168.3.10:/backup /mnt/nas-backup nfs defaults 0 0" >> /etc/fstab
+echo "192.168.3.10:/backup /mnt/nas-backup nfs4 vers=4.1 0 0" >> /etc/fstab
 mount -a
 ```
 
