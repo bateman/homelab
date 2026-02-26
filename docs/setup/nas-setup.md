@@ -129,21 +129,6 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
   - Alert threshold: **80%**
 - [ ] Complete creation (time varies based on capacity)
 
-### SSD Cache (if M.2 present)
-- [ ] Storage & Snapshots → Cache Acceleration
-- [ ] Create
-- [ ] Select M.2 SSD
-- [ ] RAID type: Single (only option with one SSD)
-- [ ] Cache mode: **Read-Write** (recommended for Container Station)
-- [ ] Configure screen:
-  - Over-provisioning: **10%** (default) — reserves space for SSD wear leveling and garbage collection
-  - Cache Mode: **Random I/O** — Docker containers and *arr SQLite databases generate random I/O; sequential media reads are fast enough on RAID 10 HDDs
-  - Bypass Block Size: **1MB** (default) — operations larger than 1MB skip the cache and go directly to HDDs
-- [ ] Associate with main Storage Pool
-
-> [!NOTE]
-> A single-SSD write cache has a small risk: if the SSD fails before flushing writes to the HDDs, that data is lost. This is acceptable for a media server — files are re-downloadable and configs are backed up via Duplicati. For zero risk, use Read-Only mode instead (no write acceleration).
-
 ### Volume
 
 > [!NOTE]
@@ -154,6 +139,29 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 - [ ] Allocate all available space (or desired quota)
 - [ ] Name: `DataVol1`
 - [ ] Filesystem: **ext4** (recommended for compatibility and low overhead)
+- [ ] Advanced settings:
+  - Alert threshold: **80%**
+  - Bytes per inode: **16K** — better balance for mixed workloads (small Docker configs/SQLite alongside large media files)
+  - Create a shared folder on the volume: **Uncheck** — shared folders are created manually in the next step
+
+### SSD Cache (if M.2 present)
+
+> [!IMPORTANT]
+> Create the SSD cache **after** the volume exists — QTS requires a volume to associate the cache with.
+
+- [ ] Storage & Snapshots → Cache Acceleration
+- [ ] Create
+- [ ] Select M.2 SSD
+- [ ] RAID type: Single (only option with one SSD)
+- [ ] Cache mode: **Read-Write** (recommended for Container Station)
+- [ ] Configure screen:
+  - Over-provisioning: **10%** (default) — reserves space for SSD wear leveling and garbage collection
+  - Cache Mode: **Random I/O** — Docker containers and *arr SQLite databases generate random I/O; sequential media reads are fast enough on RAID 10 HDDs
+  - Bypass Block Size: **1MB** (default) — operations larger than 1MB skip the cache and go directly to HDDs
+- [ ] Associate with Storage Pool 1 / DataVol1
+
+> [!NOTE]
+> A single-SSD write cache has a small risk: if the SSD fails before flushing writes to the HDDs, that data is lost. This is acceptable for a media server — files are re-downloadable and configs are backed up via Duplicati. For zero risk, use Read-Only mode instead (no write acceleration).
 
 ### Shared Folders
 Create the following shared folders on DataVol1:
