@@ -49,9 +49,10 @@ Before starting, make sure you have:
 ### Cabling
 
 - [ ] Connect UDM-SE WAN port → Iliad Box LAN
-- [ ] Connect UDM-SE port 1 → Switch port 1 (VLAN trunk)
-- [ ] Connect Switch SFP+ port → NAS SFP+ port (10GbE)
-- [ ] Connect Switch port 6 → Mini PC (USB adapter)
+- [ ] Connect UDM-SE LAN SFP+ → Switch SFP+ port 1 (10GbE trunk)
+- [ ] Connect Switch SFP+ port 2 → NAS SFP+ port 1 (10GbE)
+- [ ] Connect Switch port 5 → Mini PC integrated NIC (1GbE, WOL only)
+- [ ] Connect Switch port 6 → Mini PC USB adapter (2.5GbE, management)
 - [ ] Connect all devices directly to UPS C13 outlets (no power strip)
 
 ### Verification
@@ -73,7 +74,7 @@ Before starting, make sure you have:
 ### 2.1 UDM-SE Initial Setup
 
 1. [ ] Connect PC directly to UDM-SE LAN port
-2. [ ] Access `https://192.168.1.1` (default IP)
+2. [ ] Access `https://192.168.0.1` (UDM-SE factory default LAN IP)
 3. [ ] Complete UniFi wizard
 4. [ ] Create UniFi account or use existing
 
@@ -92,10 +93,13 @@ Create the following networks in **Settings → Networks**:
 ### 2.3 Switch Configuration
 
 1. [ ] Adopt switch in UniFi Controller
-2. [ ] Configure switch ports:
-   - Port 1: Trunk (all VLANs)
-   - SFP+ Port: VLAN 3 (Servers)
-   - Port 2: VLAN 3 (Servers)
+2. [ ] Configure switch port profiles (see [`network-setup.md` Phase 3](docs/setup/network-setup.md#phase-3-switch-configuration) for full details):
+   - Port 1: Management (VLAN 2) — AP
+   - Ports 2-4: Media (VLAN 4) — Living Room, Bedroom, Studio
+   - Ports 5-6: Servers (VLAN 3) — Mini PC
+   - Port 9: Servers (VLAN 3) — Printer
+   - SFP+ 1: Trunk (all VLANs) — UDM-SE uplink
+   - SFP+ 2: Servers (VLAN 3) — NAS
 
 ### 2.4 Firewall Rules
 
@@ -132,7 +136,7 @@ Follow the complete checklist. Key points:
 ### 3.2 Storage Configuration
 
 1. [ ] Create Storage Pool (RAID)
-2. [ ] Create Static Volume
+2. [ ] Create Thick Volume (NOT Static — see [`nas-setup.md`](docs/setup/nas-setup.md#volume) for why)
 3. [ ] Create Shared Folders:
    - `/share/data` - Media and download data
    - `/share/container` - Docker files
@@ -168,22 +172,21 @@ Follow the complete checklist. Key points:
 
 ## Phase 4: Docker Stack Deploy
 
-### 4.1 File Preparation
+### 4.1 Clone Repository
+
+See [`nas-setup.md` — Media Stack Folder Structure](docs/setup/nas-setup.md#media-stack-folder-structure) for full details (including git installation via MyQNAP repo).
 
 ```bash
 # SSH into NAS
 ssh admin@192.168.3.10
 
-# Create directory
-mkdir -p /share/container/mediastack
-cd /share/container/mediastack
+# Option A: Git clone (recommended)
+cd /share/container
+git clone https://github.com/<your-username>/homelab.git mediastack
+cd mediastack
 
-# Copy files from repository (via SCP or SFTP):
-# - docker/compose.yml
-# - docker/compose.media.yml
-# - Makefile
-# - scripts/setup-folders.sh
-# - docker/.env.example
+# Option B: Manual copy (if git not available)
+# scp -r docker/ scripts/ Makefile admin@192.168.3.10:/share/container/mediastack/
 ```
 
 ### 4.2 Folder Structure Setup
@@ -196,7 +199,7 @@ make setup
 nano docker/.env
 ```
 
-**Required configuration in `.env`:**
+**Required configuration in `docker/.env`:**
 
 ```bash
 # First verify PUID/PGID of dockeruser created in Phase 3
@@ -207,7 +210,15 @@ ssh admin@192.168.3.10 "id dockeruser"
 PUID=1001          # ← uid value from id command
 PGID=100           # ← gid value from id command
 TZ=Europe/Rome
+```
+
+**Required credentials in `docker/.env.secrets`:**
+
+```bash
+# Pi-hole WebUI password (generate with: openssl rand -base64 24)
 PIHOLE_PASSWORD=<secure-password>
+
+# VPN credentials (if using vpn profile) — see docs/setup/vpn-setup.md
 ```
 
 > [!IMPORTANT]
@@ -226,28 +237,24 @@ sudo chown -R 1001:100 ./config
 
 ### 4.2.2 Free DNS Port (Port 53)
 
-QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. See [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53) for full details.
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle — it requires an `autorun.sh` script. See [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53) for full step-by-step details.
 
-```bash
-# Check if port 53 is occupied
-netstat -tulnp | grep :53
+Quick summary:
 
-# If occupied, disable dnsmasq DNS listener via autorun.sh:
-mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
-vi /tmp/config/autorun.sh
+1. **Enable autorun**: Control Panel → Hardware → General → check "Run user defined startup processes (autorun.sh)"
+2. **Mount boot partition**: `mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config`
+3. **Create/edit** `/tmp/config/autorun.sh` with these lines:
+   ```bash
+   cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+   sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+   /usr/bin/killall dnsmasq
+   ```
+4. **Make executable and unmount**: `chmod +x /tmp/config/autorun.sh && umount /tmp/config`
+5. **Apply now** (run the cp/sed/killall commands directly)
+6. **Verify**: `netstat -tulnp | grep ':53 '`
 
-# Add these lines to autorun.sh:
-cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
-/usr/bin/killall dnsmasq
-
-# Make executable, unmount, and apply now
-chmod +x /tmp/config/autorun.sh
-umount /tmp/config
-cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
-/usr/bin/killall dnsmasq
-```
+> [!WARNING]
+> QNAP's Malware Remover may delete `autorun.sh` during scans. If Pi-hole stops resolving after a scan, re-create it (see [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53)).
 
 ### 4.3 Container Startup
 
@@ -517,7 +524,7 @@ make backup      # Additional manual backup
 | Permission denied | `sudo chown -R $PUID:$PGID ./config` (use values from .env) |
 | Hardlink fails | Verify same filesystem |
 | Service unreachable | Verify firewall rules |
-| Pi-hole doesn't resolve | Verify port 53 is free (`netstat -tulnp \| grep :53`), disable dnsmasq if needed (see §4.2.2) |
+| Pi-hole doesn't resolve | Verify port 53 is free (`netstat -tulnp \| grep ':53 '`), disable dnsmasq if needed (see §4.2.2) |
 | qBittorrent login fails | Retrieve password: `docker logs qbittorrent 2>&1 \| grep password` |
 | Wrong PUID/PGID | Verify with `id dockeruser` and update docker/.env |
 

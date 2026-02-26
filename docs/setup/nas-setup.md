@@ -365,37 +365,62 @@ sudo chmod -R 775 /share/container/mediastack/config
 
 ### Free DNS Port (Port 53)
 
-QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled.
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle for this — it requires an `autorun.sh` script on the boot partition.
+
+**Step 1** — Enable autorun support (required since QTS 4.3.3):
+
+> **Control Panel → Hardware → General → "Run user defined startup processes (autorun.sh)"** — check the box and click Apply.
+
+**Step 2** — Verify port 53 is in use:
 
 ```bash
-# Check if port 53 is occupied
-netstat -tulnp | grep :53
+netstat -tulnp | grep ':53 '
+```
 
-# If occupied (it will be), disable dnsmasq DNS listener via autorun.sh:
-# 1. Mount boot partition and edit autorun.sh
+**Step 3** — Mount the boot partition:
+
+```bash
 mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
-vi /tmp/config/autorun.sh
+```
 
-# 2. Add these lines to autorun.sh:
+**Step 4** — Create or edit `/tmp/config/autorun.sh` and add the following lines:
+
+```bash
+# Disable dnsmasq DNS listener so Pi-hole can bind port 53
 cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
 sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 /usr/bin/killall dnsmasq
+```
 
-# 3. Make executable and unmount
+> [!IMPORTANT]
+> If `autorun.sh` already exists, append the lines above to it. If creating a new file, add `#!/bin/sh` as the first line.
+
+**Step 5** — Make executable and unmount:
+
+```bash
 chmod +x /tmp/config/autorun.sh
 umount /tmp/config
+```
 
-# 4. Apply now (without reboot)
+**Step 6** — Apply now without rebooting (run the same commands directly):
+
+```bash
 cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
 sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 /usr/bin/killall dnsmasq
+```
 
-# 5. Verify port 53 is free
-netstat -tulnp | grep :53
+**Step 7** — Verify port 53 is free:
+
+```bash
+netstat -tulnp | grep ':53 '
 ```
 
 > [!NOTE]
-> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script ensures this persists across reboots.
+> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script runs on every boot so the change persists across reboots.
+
+> [!WARNING]
+> QNAP's **Malware Remover** may delete `autorun.sh` during scans (it targets this file regardless of content, because malware historically abused it). If Pi-hole stops resolving after a Malware Remover scan, re-create `autorun.sh` by repeating Steps 3–6.
 
 ### First Startup
 ```bash
@@ -688,7 +713,7 @@ make backup
 | Container won't start | Folder permissions | `chown -R $PUID:$PGID ./config` (use values from .env) |
 | Hardlink doesn't work | Paths on different filesystems | Verify mount points |
 | qBittorrent "stalled" | Port not reachable | Verify port forwarding 50413 |
-| Pi-hole doesn't resolve | Port 53 in use | Verify other DNS services on NAS |
+| Pi-hole doesn't resolve | Port 53 in use by dnsmasq | Disable dnsmasq via autorun.sh (see [Free DNS Port](#free-dns-port-port-53)) |
 | WebUI not responding | Container crashed | `docker compose logs <service>` |
 | Incorrect file permissions | PUID/PGID mismatch | Verify `id dockeruser` and update .env |
 
