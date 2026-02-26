@@ -140,8 +140,10 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 - [ ] Name: `DataVol1`
 - [ ] Advanced settings:
   - Alert threshold: **80%**
-  - Bytes per inode: **16K** — better balance for mixed workloads (small Docker configs/SQLite alongside large media files)
   - Create a shared folder on the volume: **Uncheck** — shared folders are created manually in the next step
+
+> [!TIP]
+> QTS defaults to **16K bytes per inode** which is ideal for mixed workloads (small Docker configs/SQLite alongside large media files). If you ever need to change it, use Storage & Snapshots → Volume → Actions → Format.
 
 ### SSD Cache (if M.2 present)
 
