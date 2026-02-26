@@ -176,9 +176,9 @@ Create the following shared folders on DataVol1:
 **Path:** Control Panel → Shared Folders → Create
 
 For each folder:
-- [ ] Create folder
-- [ ] Permissions: admin RW, everyone RO (or per policy)
-- [ ] Enable Recycle Bin (optional)
+- [ ] Step 1 — Folder name, select volume **DataVol1**
+- [ ] Step 2 — Configure access permissions: admin **RW**, everyone else **RO** (or per policy)
+- [ ] Step 3 — Properties: **defaults are fine** (Guest Access: Deny, Oplocks on, Recycle Bin on)
 
 ---
 
