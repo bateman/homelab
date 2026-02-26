@@ -121,7 +121,12 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 - [ ] RAID type: **RAID 10** (recommended for media server)
   - Alternative for 2 disks: RAID 1 (mirror)
   - Alternative if capacity priority: RAID 5
-- [ ] Alert threshold: 80%
+- [ ] Features screen:
+  - Qtier (Auto Tiering): **Disable** — incompatible with Static Volumes; SSD caching is configured separately below
+  - SED (Self-Encrypting Drive): **Disable** — adds overhead and complicates data recovery with no benefit for a homelab media server
+- [ ] Configure screen:
+  - Pool Guaranteed Snapshot Space: **Uncheck** — Static Volumes (recommended below) don't support snapshots, so this space would be wasted
+  - Alert threshold: **80%**
 - [ ] Complete creation (time varies based on capacity)
 
 ### SSD Cache (if M.2 present)
