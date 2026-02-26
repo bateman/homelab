@@ -286,7 +286,6 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 | qBittorrent | 8080 | Torrent client |
 | NZBGet | 6789 | Usenet client |
 | Recyclarr | — | Trash Guides profile sync |
-| Huntarr | 9705 | *arr monitoring |
 | Cleanuparr | 11011 | Automatic cleanup |
 | FlareSolverr | 8191 | Cloudflare bypass |
 | Pi-hole | 8081 | DNS ad-blocking |

@@ -151,7 +151,6 @@ Traefik labels are already added to all services in compose files:
 | Bazarr | https://bazarr.home.local | :6767 |
 | qBittorrent | https://qbit.home.local | :8080 |
 | NZBGet | https://nzbget.home.local | :6789 |
-| Huntarr | https://huntarr.home.local | :9705 |
 | Cleanuparr | https://cleanuparr.home.local | :11011 |
 | Pi-hole | https://pihole.home.local | :8081 |
 | Portainer | https://portainer.home.local | :9443 (HTTPS) |
@@ -349,7 +348,6 @@ make restart
 | Bazarr | https://bazarr.home.local | :6767 |
 | qBittorrent | https://qbit.home.local | :8080 |
 | NZBGet | https://nzbget.home.local | :6789 |
-| Huntarr | https://huntarr.home.local | :9705 |
 | Cleanuparr | https://cleanuparr.home.local | :11011 |
 | Pi-hole | https://pihole.home.local | :8081 |
 | Home Assistant | https://ha.home.local | :8123 |

@@ -381,7 +381,6 @@ make logs | grep -i error
 - [ ] Portainer: `https://192.168.3.10:9443` responds
 - [ ] Uptime Kuma: `http://192.168.3.10:3001` responds
 - [ ] Duplicati: `http://192.168.3.10:8200` responds
-- [ ] Huntarr: `http://192.168.3.10:9705` responds
 - [ ] Cleanuparr: `http://192.168.3.10:11011` responds
 - [ ] FlareSolverr: `http://192.168.3.10:8191/health` responds
 - [ ] Watchtower: `http://192.168.3.10:8383/v1/metrics` responds

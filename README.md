@@ -35,7 +35,6 @@ Infrastructure-as-code configuration for a homelab based on QNAP NAS and Proxmox
 - **[qBittorrent](https://www.qbittorrent.org/)** (8080) - Torrent (via Gluetun)
 - **[NZBGet](https://nzbget.com/)** (6789) - Usenet (via Gluetun)
 - **[Recyclarr](https://recyclarr.dev/)** - Trash Guides profile sync
-- **[Huntarr](https://github.com/plexguide/Huntarr.io)** (9705) - *arr Monitoring
 - **[Cleanuparr](https://github.com/Cleanuparr/Cleanuparr)** (11011) - Automatic cleanup
 - **[FlareSolverr](https://github.com/FlareSolverr/FlareSolverr)** (8191) - Cloudflare bypass
 - **[Pi-hole](https://pi-hole.net/)** (8081) - DNS/Ad-blocking

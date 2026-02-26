@@ -174,7 +174,7 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 |------------|-------|
 | DNS | 53 |
 | Plex | 32400, 32410-32414 |
-| Media Services | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 9705, 11011, 8191 |
+| Media Services | 8989, 7878, 8686, 9696, 6767, 8080, 6789, 11011, 8191 |
 | NAS Management | 5000, 5001, 8081, 9443, 8200, 3001 |
 | Traefik | 443 |
 | Home Assistant | 8123 |
@@ -185,7 +185,7 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 > [!NOTE]
 > **Traefik** — reverse proxy HTTPS port (Rule 7). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO.
 >
-> **Media Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Huntarr (9705), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 7) for Authelia-protected access.
+> **Media Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 7) for Authelia-protected access.
 >
 > **NAS Management** — infrastructure/admin direct ports exposed to Media VLAN (Rule 8): QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). All services have their own authentication. Also accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3). These services are additionally reachable from Media VLAN through Traefik (Rule 7) with Authelia SSO. Note: QNAP QTS factory defaults are 8080 (HTTP) and 443 (HTTPS) — ports were changed to 5000/5001 to avoid conflicts with qBittorrent (8080) and Traefik (443). See [`nas-setup.md`](../setup/nas-setup.md#change-qts-system-ports).
 >

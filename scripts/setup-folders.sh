@@ -169,7 +169,6 @@ make_dir "${CONFIG_ROOT}/nzbget"
 make_dir "${CONFIG_ROOT}/gluetun"
 
 # Monitoring/automation
-make_dir "${CONFIG_ROOT}/huntarr"
 make_dir "${CONFIG_ROOT}/cleanuparr"
 
 # Infrastructure services

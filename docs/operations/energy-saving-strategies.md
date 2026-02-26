@@ -166,7 +166,7 @@ Non-critical Docker containers can be stopped overnight to reduce CPU/memory usa
 | qBittorrent/NZBGet | No | Yes | Download clients |
 | Sonarr/Radarr/Lidarr | No | Yes | No overnight downloads |
 | Prowlarr | No | Yes | Indexer management |
-| Huntarr/Cleanuparr | No | Yes | Monitoring/cleanup |
+| Cleanuparr | No | Yes | Cleanup automation |
 | Bazarr | No | Yes | Subtitle fetching |
 | FlareSolverr | No | Yes | Only needed with *arr |
 | Recyclarr | No | Yes | Profile sync |
@@ -192,7 +192,6 @@ SERVICES=(
     "lidarr"
     "prowlarr"
     "bazarr"
-    "huntarr"
     "cleanuparr"
     "flaresolverr"
     "recyclarr"

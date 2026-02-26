@@ -495,39 +495,6 @@ services:
   # MONITORING / AUTOMATION
   # ===========================================================================
 
-  huntarr:
-    image: huntarr/huntarr:latest
-    container_name: huntarr
-    environment:
-      <<: *common-env
-    volumes:
-      - ./config/huntarr:/config
-    ports:
-      - "9705:9705"
-    networks:
-      - media_net
-      - proxy
-    restart: unless-stopped
-    logging: *common-logging
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9705"]
-      <<: *common-healthcheck
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 128M
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      # Traefik
-      - "traefik.enable=true"
-      - "traefik.http.routers.huntarr.rule=Host(`huntarr.home.local`)"
-      - "traefik.http.routers.huntarr.entrypoints=websecure"
-      - "traefik.http.routers.huntarr.tls=true"
-      - "traefik.http.routers.huntarr.middlewares=authelia@docker"
-      - "traefik.http.services.huntarr.loadbalancer.server.port=9705"
-
   cleanuparr:
     image: ghcr.io/cleanuparr/cleanuparr:latest
     container_name: cleanuparr

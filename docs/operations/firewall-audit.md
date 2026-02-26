@@ -51,7 +51,6 @@ This directly undermines the `two_factor` policy set on Portainer. Authelia rule
     - lidarr.home.local
     - prowlarr.home.local
     - bazarr.home.local
-    - huntarr.home.local
     - cleanuparr.home.local
   policy: bypass
   resources:
@@ -128,7 +127,6 @@ A compromised NAS or Proxmox host could pivot to the Management VLAN and access 
 | qBittorrent | 8080 | Questionable — download client |
 | NZBGet | 6789 | Questionable — download client |
 | Prowlarr | 9696 | Questionable — indexer management |
-| Huntarr | 9705 | Questionable — monitoring tool |
 | Cleanuparr | 11011 | Questionable — cleanup automation |
 | Sonarr | 8989 | Yes |
 | Radarr | 7878 | Yes |
