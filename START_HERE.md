@@ -224,15 +224,29 @@ sudo chown -R 1001:100 /share/data
 sudo chown -R 1001:100 ./config
 ```
 
-### 4.2.2 DNS Port Verification
+### 4.2.2 Free DNS Port (Port 53)
 
-Before starting the stack, verify port 53 is not already in use:
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. See [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53) for full details.
 
 ```bash
+# Check if port 53 is occupied
 netstat -tulnp | grep :53
 
-# If occupied, disable QTS local DNS:
-# Control Panel → Network & Virtual Switch → DNS Server → Disable
+# If occupied, disable dnsmasq DNS listener via autorun.sh:
+mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
+vi /tmp/config/autorun.sh
+
+# Add these lines to autorun.sh:
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+/usr/bin/killall dnsmasq
+
+# Make executable, unmount, and apply now
+chmod +x /tmp/config/autorun.sh
+umount /tmp/config
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+/usr/bin/killall dnsmasq
 ```
 
 ### 4.3 Container Startup
@@ -503,7 +517,7 @@ make backup      # Additional manual backup
 | Permission denied | `sudo chown -R $PUID:$PGID ./config` (use values from .env) |
 | Hardlink fails | Verify same filesystem |
 | Service unreachable | Verify firewall rules |
-| Pi-hole doesn't resolve | Verify port 53 is free (`netstat -tulnp \| grep :53`) |
+| Pi-hole doesn't resolve | Verify port 53 is free (`netstat -tulnp \| grep :53`), disable dnsmasq if needed (see §4.2.2) |
 | qBittorrent login fails | Retrieve password: `docker logs qbittorrent 2>&1 \| grep password` |
 | Wrong PUID/PGID | Verify with `id dockeruser` and update docker/.env |
 

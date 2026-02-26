@@ -363,17 +363,39 @@ sudo chmod -R 775 /share/data
 sudo chmod -R 775 /share/container/mediastack/config
 ```
 
-### Verify DNS Port
+### Free DNS Port (Port 53)
 
-Before starting, verify port 53 is not already in use by QTS:
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled.
 
 ```bash
 # Check if port 53 is occupied
 netstat -tulnp | grep :53
 
-# If occupied, disable QTS local DNS:
-# Control Panel → Network & Virtual Switch → DNS Server → Disable
+# If occupied (it will be), disable dnsmasq DNS listener via autorun.sh:
+# 1. Mount boot partition and edit autorun.sh
+mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
+vi /tmp/config/autorun.sh
+
+# 2. Add these lines to autorun.sh:
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+/usr/bin/killall dnsmasq
+
+# 3. Make executable and unmount
+chmod +x /tmp/config/autorun.sh
+umount /tmp/config
+
+# 4. Apply now (without reboot)
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+/usr/bin/killall dnsmasq
+
+# 5. Verify port 53 is free
+netstat -tulnp | grep :53
 ```
+
+> [!NOTE]
+> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script ensures this persists across reboots.
 
 ### First Startup
 ```bash
