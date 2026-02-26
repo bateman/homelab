@@ -138,7 +138,6 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 - [ ] Volume type: **Thick Volume** (preallocated space, best performance on a storage pool)
 - [ ] Allocate all available space (or desired quota)
 - [ ] Name: `DataVol1`
-- [ ] Filesystem: **ext4** (recommended for compatibility and low overhead)
 - [ ] Advanced settings:
   - Alert threshold: **80%**
   - Bytes per inode: **16K** — better balance for mixed workloads (small Docker configs/SQLite alongside large media files)
