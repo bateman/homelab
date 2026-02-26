@@ -706,7 +706,7 @@ make backup
 | Container won't start | Folder permissions | `chown -R $PUID:$PGID ./config` (use values from .env) |
 | Hardlink doesn't work | Paths on different filesystems | Verify mount points |
 | qBittorrent "stalled" | Port not reachable | Verify port forwarding 50413 |
-| Pi-hole doesn't resolve | Port 53 in use | Verify other DNS services on NAS |
+| Pi-hole doesn't resolve | Port 53 in use by dnsmasq | Disable dnsmasq via autorun.sh (see [Free DNS Port](#free-dns-port-port-53)) |
 | WebUI not responding | Container crashed | `docker compose logs <service>` |
 | Incorrect file permissions | PUID/PGID mismatch | Verify `id dockeruser` and update .env |
 

@@ -243,7 +243,7 @@ mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
 chmod +x /tmp/config/autorun.sh
 umount /tmp/config
 
-# 4. Apply now (run the sed/mv/killall commands directly)
+# 4. Apply now (run the cp/sed/killall commands directly)
 # 5. Verify: netstat -tulnp | grep :53
 ```
 
