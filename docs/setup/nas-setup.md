@@ -135,6 +135,10 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 - [ ] Select M.2 SSD
 - [ ] RAID type: Single (only option with one SSD)
 - [ ] Cache mode: **Read-Write** (recommended for Container Station)
+- [ ] Configure screen:
+  - Over-provisioning: **10%** (default) — reserves space for SSD wear leveling and garbage collection
+  - Cache Mode: **Random I/O** — Docker containers and *arr SQLite databases generate random I/O; sequential media reads are fast enough on RAID 10 HDDs
+  - Bypass Block Size: **1MB** (default) — operations larger than 1MB skip the cache and go directly to HDDs
 - [ ] Associate with main Storage Pool
 
 > [!NOTE]
