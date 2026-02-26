@@ -18,7 +18,7 @@ The strategy follows the **3-2-1 rule**: three copies of data, on two different 
 | *arr databases | SQLite in ./config | Daily | Included in Docker configs | 30 days |
 
 > [!NOTE]
-> The `./config` folder contains configurations for all Docker services: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr, qBittorrent, NZBGet, Pi-hole, Home Assistant, Portainer, Duplicati, Uptime Kuma, Recyclarr, Traefik, Huntarr, Cleanuparr.
+> The `./config` folder contains configurations for all Docker services: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr, qBittorrent, NZBGet, Pi-hole, Home Assistant, Portainer, Duplicati, Uptime Kuma, Recyclarr, Traefik, Cleanuparr.
 
 ---
 

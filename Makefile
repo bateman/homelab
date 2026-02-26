@@ -296,7 +296,6 @@ health: check-docker check-curl
 	fi
 	$(call check_service,http://localhost:8080,qBittorrent)
 	$(call check_service,http://localhost:6789,NZBGet)
-	$(call check_service,http://localhost:9705,Huntarr)
 	$(call check_service,http://localhost:11011/health,Cleanuparr)
 	$(call check_service,http://localhost:8191/health,FlareSolverr)
 	$(call check_service,http://localhost:8081/admin,Pi-hole)
@@ -361,7 +360,6 @@ show-urls:
 	@echo ""
 	@echo "$(GREEN)Monitoring$(NC)"
 	@echo "  Uptime Kuma:  http://$(HOST_IP):3001"
-	@echo "  Huntarr:      http://$(HOST_IP):9705"
 	@echo "  Cleanuparr:   http://$(HOST_IP):11011"
 	@echo "  Watchtower:   http://$(HOST_IP):8383/v1/metrics"
 	@echo ""
