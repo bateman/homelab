@@ -35,7 +35,7 @@ networks:
 # =============================================================================
 
 x-common-env: &common-env
-  PUID: ${PUID:-1000}
+  PUID: ${PUID:-1001}
   PGID: ${PGID:-100}
   TZ: ${TZ:-Europe/Rome}
   UMASK: 002
@@ -463,7 +463,7 @@ services:
   recyclarr:
     image: ghcr.io/recyclarr/recyclarr:latest
     container_name: recyclarr
-    user: ${PUID:-1000}:${PGID:-100}
+    user: ${PUID:-1001}:${PGID:-100}
     environment:
       TZ: ${TZ:-Europe/Rome}
       RECYCLARR_CREATE_CONFIG: "true"

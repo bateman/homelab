@@ -202,7 +202,7 @@ cd /share/container/homelab
 tar -xzf /share/backup/docker-config-YYYYMMDD.tar.gz -C .
 
 # 5. Verify permissions
-sudo chown -R 1000:100 ./config
+sudo chown -R 1001:100 ./config
 sudo chmod -R 775 ./config
 
 # 6. Copy .env

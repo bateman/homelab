@@ -16,7 +16,7 @@ CONFIG_ROOT="${SCRIPT_DIR}/../config"
 DRY_RUN=false
 
 # Default PUID/PGID (can be overridden by .env)
-PUID=1000
+PUID=1001
 PGID=100
 
 # Load from .env if present

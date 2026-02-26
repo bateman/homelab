@@ -187,7 +187,7 @@ For each folder:
 ### Docker User
 - [ ] Control Panel → Users → Create
 - [ ] Username: `dockeruser` (or chosen name)
-- [ ] UID: verify it's 1000 (or note for PUID)
+- [ ] UID: verify it's 1001 (or note for PUID)
 - [ ] Password: generate secure password
 - [ ] Shared folder permissions:
   - data: RW
@@ -207,7 +207,7 @@ ssh admin@192.168.3.10
 
 # Verify user ID
 id dockeruser
-# Expected output: uid=1000(dockeruser) gid=100(everyone) ...
+# Expected output: uid=1001(dockeruser) gid=100(everyone) ...
 #                      ^^^^          ^^^
 #                      PUID          PGID
 ```
@@ -260,8 +260,10 @@ id dockeruser
 # Via SSH on NAS
 ssh admin@192.168.3.10
 
-# Install git if not present (App Center -> Git)
-# Or via Entware: opkg install git
+# Install git via MyQNAP repo (https://www.myqnap.org/install-the-repo/):
+# 1. App Center → Settings (gear icon) → App Repository → Add
+#    Name: MyQNAP  URL: https://www.myqnap.org/repo.xml
+# 2. App Center → MyQNAP (left sidebar) → Install QGit
 
 cd /share/container
 git clone https://github.com/<your-username>/homelab.git mediastack
@@ -308,8 +310,8 @@ nano docker/.env.secrets
 ```bash
 # PUID and PGID must match the dockeruser created earlier
 # Get values with: id dockeruser
-# Example output: uid=1000(dockeruser) gid=100(everyone)
-PUID=1000    # ← replace with dockeruser uid
+# Example output: uid=1001(dockeruser) gid=100(everyone)
+PUID=1001    # ← replace with dockeruser uid
 PGID=100     # ← replace with dockeruser gid
 
 # Timezone
@@ -346,32 +348,54 @@ ls -la ./config/
 
 # Verify ownership (must match PUID:PGID configured)
 ls -ln /share/data
-# Example output for PUID=1000 PGID=100:
-# drwxrwxr-x 1000 100 ... media
-# drwxrwxr-x 1000 100 ... torrents
-# drwxrwxr-x 1000 100 ... usenet
+# Example output for PUID=1001 PGID=100:
+# drwxrwxr-x 1001 100 ... media
+# drwxrwxr-x 1001 100 ... torrents
+# drwxrwxr-x 1001 100 ... usenet
 ```
 
 If permissions are incorrect:
 ```bash
-# Replace 1000:100 with your PUID:PGID from .env
-sudo chown -R 1000:100 /share/data
-sudo chown -R 1000:100 /share/container/mediastack/config
+# Replace 1001:100 with your PUID:PGID from .env
+sudo chown -R 1001:100 /share/data
+sudo chown -R 1001:100 /share/container/mediastack/config
 sudo chmod -R 775 /share/data
 sudo chmod -R 775 /share/container/mediastack/config
 ```
 
-### Verify DNS Port
+### Free DNS Port (Port 53)
 
-Before starting, verify port 53 is not already in use by QTS:
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled.
 
 ```bash
 # Check if port 53 is occupied
-ss -tulnp | grep :53
+netstat -tulnp | grep :53
 
-# If occupied, disable QTS local DNS:
-# Control Panel → Network & Virtual Switch → DNS Server → Disable
+# If occupied (it will be), disable dnsmasq DNS listener via autorun.sh:
+# 1. Mount boot partition and edit autorun.sh
+mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
+vi /tmp/config/autorun.sh
+
+# 2. Add these lines to autorun.sh:
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+/usr/bin/killall dnsmasq
+
+# 3. Make executable and unmount
+chmod +x /tmp/config/autorun.sh
+umount /tmp/config
+
+# 4. Apply now (without reboot)
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+/usr/bin/killall dnsmasq
+
+# 5. Verify port 53 is free
+netstat -tulnp | grep :53
 ```
+
+> [!NOTE]
+> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script ensures this persists across reboots.
 
 ### First Startup
 ```bash

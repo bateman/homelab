@@ -33,7 +33,7 @@ networks:
 # =============================================================================
 
 x-common-env: &common-env
-  PUID: ${PUID:-1000}
+  PUID: ${PUID:-1001}
   PGID: ${PGID:-100}
   TZ: ${TZ:-Europe/Rome}
   UMASK: 002
