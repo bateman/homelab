@@ -235,8 +235,8 @@ Quick summary:
 mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
 
 # 2. Create/edit /tmp/config/autorun.sh with these lines:
-#    sed 's/^port=53$/port=0/' /etc/dnsmasq.conf > /etc/dnsmasq.conf.tmp
-#    mv /etc/dnsmasq.conf.tmp /etc/dnsmasq.conf
+#    cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+#    sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 #    /usr/bin/killall dnsmasq
 
 # 3. Make executable and unmount

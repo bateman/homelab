@@ -382,15 +382,14 @@ mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
 **Step 3** — Create or edit `/tmp/config/autorun.sh` and add the following lines:
 
 ```bash
-#!/bin/sh
 # Disable dnsmasq DNS listener so Pi-hole can bind port 53
-sed 's/^port=53$/port=0/' /etc/dnsmasq.conf > /etc/dnsmasq.conf.tmp
-mv /etc/dnsmasq.conf.tmp /etc/dnsmasq.conf
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 /usr/bin/killall dnsmasq
 ```
 
 > [!IMPORTANT]
-> If `autorun.sh` already exists, append only the `sed`, `mv`, and `killall` lines — do not overwrite the file.
+> If `autorun.sh` already exists, append the lines above to it. If creating a new file, add `#!/bin/sh` as the first line.
 
 **Step 4** — Make executable and unmount:
 
@@ -399,11 +398,11 @@ chmod +x /tmp/config/autorun.sh
 umount /tmp/config
 ```
 
-**Step 5** — Apply now without rebooting (run the same three commands directly):
+**Step 5** — Apply now without rebooting (run the same commands directly):
 
 ```bash
-sed 's/^port=53$/port=0/' /etc/dnsmasq.conf > /etc/dnsmasq.conf.tmp
-mv /etc/dnsmasq.conf.tmp /etc/dnsmasq.conf
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 /usr/bin/killall dnsmasq
 ```
 
