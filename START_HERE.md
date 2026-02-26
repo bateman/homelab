@@ -229,7 +229,7 @@ sudo chown -R 1001:100 ./config
 Before starting the stack, verify port 53 is not already in use:
 
 ```bash
-ss -tulnp | grep :53
+netstat -tulnp | grep :53
 
 # If occupied, disable QTS local DNS:
 # Control Panel → Network & Virtual Switch → DNS Server → Disable
@@ -503,7 +503,7 @@ make backup      # Additional manual backup
 | Permission denied | `sudo chown -R $PUID:$PGID ./config` (use values from .env) |
 | Hardlink fails | Verify same filesystem |
 | Service unreachable | Verify firewall rules |
-| Pi-hole doesn't resolve | Verify port 53 is free (`ss -tulnp \| grep :53`) |
+| Pi-hole doesn't resolve | Verify port 53 is free (`netstat -tulnp \| grep :53`) |
 | qBittorrent login fails | Retrieve password: `docker logs qbittorrent 2>&1 \| grep password` |
 | Wrong PUID/PGID | Verify with `id dockeruser` and update docker/.env |
 

@@ -369,7 +369,7 @@ Before starting, verify port 53 is not already in use by QTS:
 
 ```bash
 # Check if port 53 is occupied
-ss -tulnp | grep :53
+netstat -tulnp | grep :53
 
 # If occupied, disable QTS local DNS:
 # Control Panel → Network & Virtual Switch → DNS Server → Disable
