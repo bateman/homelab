@@ -133,8 +133,12 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 - [ ] Storage & Snapshots → Cache Acceleration
 - [ ] Create
 - [ ] Select M.2 SSD
-- [ ] Cache mode: Read-Write (recommended for Container Station)
+- [ ] RAID type: Single (only option with one SSD)
+- [ ] Cache mode: **Read-Write** (recommended for Container Station)
 - [ ] Associate with main Storage Pool
+
+> [!NOTE]
+> A single-SSD write cache has a small risk: if the SSD fails before flushing writes to the HDDs, that data is lost. This is acceptable for a media server — files are re-downloadable and configs are backed up via Duplicati. For zero risk, use Read-Only mode instead (no write acceleration).
 
 ### Static Volume
 - [ ] Storage & Snapshots → Create → New Volume
