@@ -226,27 +226,25 @@ sudo chown -R 1001:100 ./config
 
 ### 4.2.2 Free DNS Port (Port 53)
 
-QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. See [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53) for full details.
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle — it requires an `autorun.sh` script. See [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53) for full step-by-step details.
+
+Quick summary:
 
 ```bash
-# Check if port 53 is occupied
-netstat -tulnp | grep :53
-
-# If occupied, disable dnsmasq DNS listener via autorun.sh:
+# 1. Mount boot partition
 mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
-vi /tmp/config/autorun.sh
 
-# Add these lines to autorun.sh:
-cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
-/usr/bin/killall dnsmasq
+# 2. Create/edit /tmp/config/autorun.sh with these lines:
+#    sed 's/^port=53$/port=0/' /etc/dnsmasq.conf > /etc/dnsmasq.conf.tmp
+#    mv /etc/dnsmasq.conf.tmp /etc/dnsmasq.conf
+#    /usr/bin/killall dnsmasq
 
-# Make executable, unmount, and apply now
+# 3. Make executable and unmount
 chmod +x /tmp/config/autorun.sh
 umount /tmp/config
-cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
-/usr/bin/killall dnsmasq
+
+# 4. Apply now (run the sed/mv/killall commands directly)
+# 5. Verify: netstat -tulnp | grep :53
 ```
 
 ### 4.3 Container Startup

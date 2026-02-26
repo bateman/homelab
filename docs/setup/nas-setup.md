@@ -365,37 +365,56 @@ sudo chmod -R 775 /share/container/mediastack/config
 
 ### Free DNS Port (Port 53)
 
-QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled.
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle for this — it requires an `autorun.sh` script on the boot partition.
+
+**Step 1** — Verify port 53 is in use:
 
 ```bash
-# Check if port 53 is occupied
 netstat -tulnp | grep :53
+```
 
-# If occupied (it will be), disable dnsmasq DNS listener via autorun.sh:
-# 1. Mount boot partition and edit autorun.sh
+**Step 2** — Mount the boot partition:
+
+```bash
 mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
-vi /tmp/config/autorun.sh
+```
 
-# 2. Add these lines to autorun.sh:
-cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+**Step 3** — Create or edit `/tmp/config/autorun.sh` and add the following lines:
+
+```bash
+#!/bin/sh
+# Disable dnsmasq DNS listener so Pi-hole can bind port 53
+sed 's/^port=53$/port=0/' /etc/dnsmasq.conf > /etc/dnsmasq.conf.tmp
+mv /etc/dnsmasq.conf.tmp /etc/dnsmasq.conf
 /usr/bin/killall dnsmasq
+```
 
-# 3. Make executable and unmount
+> [!IMPORTANT]
+> If `autorun.sh` already exists, append only the `sed`, `mv`, and `killall` lines — do not overwrite the file.
+
+**Step 4** — Make executable and unmount:
+
+```bash
 chmod +x /tmp/config/autorun.sh
 umount /tmp/config
+```
 
-# 4. Apply now (without reboot)
-cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+**Step 5** — Apply now without rebooting (run the same three commands directly):
+
+```bash
+sed 's/^port=53$/port=0/' /etc/dnsmasq.conf > /etc/dnsmasq.conf.tmp
+mv /etc/dnsmasq.conf.tmp /etc/dnsmasq.conf
 /usr/bin/killall dnsmasq
+```
 
-# 5. Verify port 53 is free
+**Step 6** — Verify port 53 is free:
+
+```bash
 netstat -tulnp | grep :53
 ```
 
 > [!NOTE]
-> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script ensures this persists across reboots.
+> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script runs on every boot so the change persists across reboots.
 
 ### First Startup
 ```bash
