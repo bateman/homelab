@@ -110,7 +110,7 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 |-----------|--------|--------|
 | **Filesystem** | ext4 | QTS compatibility, low RAM/CPU overhead |
 | **RAID** | RAID 10 | I/O performance for Docker, safe rebuild |
-| **Volume** | Static | Best hardlink performance |
+| **Volume** | Thick | Preallocated space on Storage Pool; near-identical performance to Static |
 
 ---
 
@@ -122,10 +122,10 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
   - Alternative for 2 disks: RAID 1 (mirror)
   - Alternative if capacity priority: RAID 5
 - [ ] Features screen:
-  - Qtier (Auto Tiering): **Disable** — incompatible with Static Volumes; SSD caching is configured separately below
+  - Qtier (Auto Tiering): **Disable** — not needed; SSD caching is configured separately below
   - SED (Self-Encrypting Drive): **Disable** — adds overhead and complicates data recovery with no benefit for a homelab media server
 - [ ] Configure screen:
-  - Pool Guaranteed Snapshot Space: **Uncheck** — Static Volumes (recommended below) don't support snapshots, so this space would be wasted
+  - Pool Guaranteed Snapshot Space: **Uncheck** — not needed for a media server; backups are handled by Duplicati
   - Alert threshold: **80%**
 - [ ] Complete creation (time varies based on capacity)
 
@@ -144,10 +144,13 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 > [!NOTE]
 > A single-SSD write cache has a small risk: if the SSD fails before flushing writes to the HDDs, that data is lost. This is acceptable for a media server — files are re-downloadable and configs are backed up via Duplicati. For zero risk, use Read-Only mode instead (no write acceleration).
 
-### Static Volume
-- [ ] Storage & Snapshots → Create → New Volume
-- [ ] Volume type: **Static Volume** (recommended for hardlink performance)
-  - Alternative: Thick Volume if you prefer native snapshots
+### Volume
+
+> [!NOTE]
+> **Why Thick instead of Static?** Static Volumes are created directly on raw disks (RAID groups), bypassing the storage pool layer. Since our disks are already in Storage Pool 1 (required for SSD cache association), Static Volumes are not available. Thick Volumes preallocate the full space on the storage pool, so I/O performance is nearly identical to Static.
+
+- [ ] Storage & Snapshots → Storage Pool 1 → Create → New Volume
+- [ ] Volume type: **Thick Volume** (preallocated space, best performance on a storage pool)
 - [ ] Allocate all available space (or desired quota)
 - [ ] Name: `DataVol1`
 - [ ] Filesystem: **ext4** (recommended for compatibility and low overhead)
