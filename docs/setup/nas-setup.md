@@ -260,8 +260,10 @@ id dockeruser
 # Via SSH on NAS
 ssh admin@192.168.3.10
 
-# Install git if not present (App Center -> Git)
-# Or via Entware: opkg install git
+# Install git via MyQNAP repo (https://www.myqnap.org/install-the-repo/):
+# 1. App Center → Settings (gear icon) → App Repository → Add
+#    Name: MyQNAP  URL: https://www.myqnap.org/repo.xml
+# 2. App Center → MyQNAP (left sidebar) → Install QGit
 
 cd /share/container
 git clone https://github.com/<your-username>/homelab.git mediastack
