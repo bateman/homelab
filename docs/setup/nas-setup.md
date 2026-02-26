@@ -367,19 +367,23 @@ sudo chmod -R 775 /share/container/mediastack/config
 
 QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle for this — it requires an `autorun.sh` script on the boot partition.
 
-**Step 1** — Verify port 53 is in use:
+**Step 1** — Enable autorun support (required since QTS 4.3.3):
+
+> **Control Panel → Hardware → General → "Run user defined startup processes (autorun.sh)"** — check the box and click Apply.
+
+**Step 2** — Verify port 53 is in use:
 
 ```bash
-netstat -tulnp | grep :53
+netstat -tulnp | grep ':53 '
 ```
 
-**Step 2** — Mount the boot partition:
+**Step 3** — Mount the boot partition:
 
 ```bash
 mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
 ```
 
-**Step 3** — Create or edit `/tmp/config/autorun.sh` and add the following lines:
+**Step 4** — Create or edit `/tmp/config/autorun.sh` and add the following lines:
 
 ```bash
 # Disable dnsmasq DNS listener so Pi-hole can bind port 53
@@ -391,14 +395,14 @@ sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 > [!IMPORTANT]
 > If `autorun.sh` already exists, append the lines above to it. If creating a new file, add `#!/bin/sh` as the first line.
 
-**Step 4** — Make executable and unmount:
+**Step 5** — Make executable and unmount:
 
 ```bash
 chmod +x /tmp/config/autorun.sh
 umount /tmp/config
 ```
 
-**Step 5** — Apply now without rebooting (run the same commands directly):
+**Step 6** — Apply now without rebooting (run the same commands directly):
 
 ```bash
 cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
@@ -406,14 +410,17 @@ sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 /usr/bin/killall dnsmasq
 ```
 
-**Step 6** — Verify port 53 is free:
+**Step 7** — Verify port 53 is free:
 
 ```bash
-netstat -tulnp | grep :53
+netstat -tulnp | grep ':53 '
 ```
 
 > [!NOTE]
 > Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script runs on every boot so the change persists across reboots.
+
+> [!WARNING]
+> QNAP's **Malware Remover** may delete `autorun.sh` during scans (it targets this file regardless of content, because malware historically abused it). If Pi-hole stops resolving after a Malware Remover scan, re-create `autorun.sh` by repeating Steps 3–6.
 
 ### First Startup
 ```bash
