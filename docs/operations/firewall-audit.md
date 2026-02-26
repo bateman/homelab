@@ -119,7 +119,7 @@ A compromised NAS or Proxmox host could pivot to the Management VLAN and access 
 
 **Location:** `docs/network/firewall-config.md` — Port Groups, Rule 4
 
-**Issue:** The `Media Services` port group bundles 10 service ports. Rule 4 allows all Media VLAN devices to access all of them. This exposes admin-only and internal services to consumer devices:
+**Issue:** The `Media Services` port group bundles 9 service ports. Rule 4 allows all Media VLAN devices to access all of them. This exposes admin-only and internal services to consumer devices:
 
 | Service | Port | Media VLAN needs it? |
 |---------|------|---------------------|
