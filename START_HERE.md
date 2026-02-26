@@ -201,10 +201,10 @@ nano docker/.env
 ```bash
 # First verify PUID/PGID of dockeruser created in Phase 3
 ssh admin@192.168.3.10 "id dockeruser"
-# Output: uid=1000(dockeruser) gid=100(everyone)
+# Output: uid=1001(dockeruser) gid=100(everyone)
 
 # Set in docker/.env:
-PUID=1000          # ← uid value from id command
+PUID=1001          # ← uid value from id command
 PGID=100           # ← gid value from id command
 TZ=Europe/Rome
 PIHOLE_PASSWORD=<secure-password>
@@ -220,8 +220,8 @@ PIHOLE_PASSWORD=<secure-password>
 ls -ln /share/data
 
 # If needed, fix permissions:
-sudo chown -R 1000:100 /share/data
-sudo chown -R 1000:100 ./config
+sudo chown -R 1001:100 /share/data
+sudo chown -R 1001:100 ./config
 ```
 
 ### 4.2.2 DNS Port Verification

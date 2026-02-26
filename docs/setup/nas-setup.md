@@ -187,7 +187,7 @@ For each folder:
 ### Docker User
 - [ ] Control Panel → Users → Create
 - [ ] Username: `dockeruser` (or chosen name)
-- [ ] UID: verify it's 1000 (or note for PUID)
+- [ ] UID: verify it's 1001 (or note for PUID)
 - [ ] Password: generate secure password
 - [ ] Shared folder permissions:
   - data: RW
@@ -207,7 +207,7 @@ ssh admin@192.168.3.10
 
 # Verify user ID
 id dockeruser
-# Expected output: uid=1000(dockeruser) gid=100(everyone) ...
+# Expected output: uid=1001(dockeruser) gid=100(everyone) ...
 #                      ^^^^          ^^^
 #                      PUID          PGID
 ```
@@ -308,8 +308,8 @@ nano docker/.env.secrets
 ```bash
 # PUID and PGID must match the dockeruser created earlier
 # Get values with: id dockeruser
-# Example output: uid=1000(dockeruser) gid=100(everyone)
-PUID=1000    # ← replace with dockeruser uid
+# Example output: uid=1001(dockeruser) gid=100(everyone)
+PUID=1001    # ← replace with dockeruser uid
 PGID=100     # ← replace with dockeruser gid
 
 # Timezone
@@ -346,17 +346,17 @@ ls -la ./config/
 
 # Verify ownership (must match PUID:PGID configured)
 ls -ln /share/data
-# Example output for PUID=1000 PGID=100:
-# drwxrwxr-x 1000 100 ... media
-# drwxrwxr-x 1000 100 ... torrents
-# drwxrwxr-x 1000 100 ... usenet
+# Example output for PUID=1001 PGID=100:
+# drwxrwxr-x 1001 100 ... media
+# drwxrwxr-x 1001 100 ... torrents
+# drwxrwxr-x 1001 100 ... usenet
 ```
 
 If permissions are incorrect:
 ```bash
-# Replace 1000:100 with your PUID:PGID from .env
-sudo chown -R 1000:100 /share/data
-sudo chown -R 1000:100 /share/container/mediastack/config
+# Replace 1001:100 with your PUID:PGID from .env
+sudo chown -R 1001:100 /share/data
+sudo chown -R 1001:100 /share/container/mediastack/config
 sudo chmod -R 775 /share/data
 sudo chmod -R 775 /share/container/mediastack/config
 ```
