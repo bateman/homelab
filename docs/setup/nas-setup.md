@@ -124,7 +124,9 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 - [ ] Features screen:
   - Qtier (Auto Tiering): **Disable** — incompatible with Static Volumes; SSD caching is configured separately below
   - SED (Self-Encrypting Drive): **Disable** — adds overhead and complicates data recovery with no benefit for a homelab media server
-- [ ] Alert threshold: 80%
+- [ ] Configure screen:
+  - Pool Guaranteed Snapshot Space: **Uncheck** — Static Volumes (recommended below) don't support snapshots, so this space would be wasted
+  - Alert threshold: **80%**
 - [ ] Complete creation (time varies based on capacity)
 
 ### SSD Cache (if M.2 present)
