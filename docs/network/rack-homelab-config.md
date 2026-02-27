@@ -158,6 +158,7 @@
 | Spec | Value |
 |------|-------|
 | CPU | Marvell Octeon TX2 CN9131 quad-core 2.2GHz |
+| RAM | 16GB DDR4 |
 | Bays | 4x 3.5" HDD (configurable RAID) |
 | SFP+ | 2x 10GbE |
 | SFP+ Port 1 | Uplink to Switch (VLAN trunk) |

@@ -65,12 +65,12 @@
 
 **Recommendation: ext4**
 - QTS has native and stable support
-- TS-435XeU has limited RAM (typically 4-8GB)
+- TS-435XeU has 16GB RAM, sufficient for ext4 (ZFS would also be viable — see note below)
 - For media server, advanced ZFS features are not critical
 - Hardlinking works perfectly
 
 > [!NOTE]
-> ZFS would make sense with 16GB+ RAM and maximum priority on data integrity, or on Proxmox/TrueNAS.
+> With 16GB RAM installed, ZFS is viable if data integrity is a priority. However, ext4 remains the safer choice on QTS due to better native support. ZFS is best suited for Proxmox/TrueNAS.
 
 ### RAID Choice: RAID 5 vs RAID 10
 
