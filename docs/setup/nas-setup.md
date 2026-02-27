@@ -169,6 +169,9 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
   - Frequency: **Monthly** (or every 30 days)
   - Schedule during maintenance window (e.g., 1st of month, 04:00)
 
+**Auto Reclaim (SSD TRIM):**
+- [ ] Auto Reclaim: **Enable** — sends TRIM commands to SSDs to reclaim unused blocks, maintaining write performance over time
+
 > [!TIP]
 > RAID scrubbing and e2fsck are different layers of protection: scrubbing checks RAID consistency (disk-level), while e2fsck checks filesystem integrity (ext4-level). Both should be enabled.
 
