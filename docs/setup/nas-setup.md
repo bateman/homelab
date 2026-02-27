@@ -152,6 +152,26 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 > [!NOTE]
 > A single-SSD write cache has a small risk: if the SSD fails before flushing writes to the HDDs, that data is lost. This is acceptable for a media server — files are re-downloadable and configs are backed up via Duplicati. For zero risk, use Read-Only mode instead (no write acceleration).
 
+### Global Storage Settings
+
+**Path:** Control Panel → Storage & Snapshots → Storage/Snapshots → Global Settings (gear icon)
+
+**RAID Resync Priority:**
+- [ ] Set to **Medium** — balances rebuild speed with service availability
+
+**RAID Scrubbing Schedule:**
+- [ ] Enable scheduled scrubbing: **Monthly** — detects silent data corruption (bit rot) on RAID arrays
+- [ ] Schedule during low-usage window (e.g., 1st of month, 03:00)
+
+**File System Check (e2fsck):**
+- [ ] Auto file system check: **Enable** — runs e2fsck on the next reboot after unclean shutdown
+- [ ] Scheduled file system check: **Enable** — periodic integrity check
+  - Frequency: **Monthly** (or every 30 days)
+  - Schedule during maintenance window (e.g., 1st of month, 04:00)
+
+> [!TIP]
+> RAID scrubbing and e2fsck are different layers of protection: scrubbing checks RAID consistency (disk-level), while e2fsck checks filesystem integrity (ext4-level). Both should be enabled.
+
 ### Shared Folders
 Create the following shared folders on DataVol1:
 
