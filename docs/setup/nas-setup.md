@@ -49,28 +49,16 @@
 
 ## Storage Configuration
 
-### Filesystem Choice: ext4 vs ZFS
+### Filesystem: ext4
 
-| Aspect | ext4 | ZFS |
-|--------|------|-----|
-| **Minimum RAM** | ~256MB | **8-16GB dedicated** (1GB/TB for ARC) |
-| **CPU overhead** | Low | Medium-high (checksumming, compression) |
-| **Complexity** | Simple, mature | Complex, steep learning curve |
-| **Data integrity** | Basic (journaling) | Excellent (end-to-end checksumming) |
-| **Snapshots** | No (requires LVM) | Yes, native and efficient |
-| **Self-healing** | No | Yes (with mirror/raidz) |
-| **Compression** | No | Yes (LZ4, ZSTD) - 10-30% gain |
-| **Hardlinking** | ✓ Excellent | ✓ Excellent |
-| **QNAP QTS support** | Native, stable | Limited |
+QTS uses **ext4** — this is not a user-configurable option during storage pool or volume creation. ext4 is well suited for this setup:
 
-**Recommendation: ext4**
-- QTS has native and stable support
-- TS-435XeU has 16GB RAM, sufficient for ext4 (ZFS would also be viable — see note below)
-- For media server, advanced ZFS features are not critical
-- Hardlinking works perfectly
+- Native QTS filesystem with stable, mature support
+- Low RAM/CPU overhead
+- Hardlinking works perfectly (critical for the media stack)
 
 > [!NOTE]
-> With 16GB RAM installed, ZFS is viable if data integrity is a priority. However, ext4 remains the safer choice on QTS due to better native support. ZFS is best suited for Proxmox/TrueNAS.
+> ZFS is only available on platforms like TrueNAS or Proxmox. With 16GB RAM installed, ZFS would be viable on those platforms if data integrity were a priority.
 
 ### RAID Choice: RAID 5 vs RAID 10
 
@@ -108,7 +96,7 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 
 | Component | Choice | Reason |
 |-----------|--------|--------|
-| **Filesystem** | ext4 | QTS compatibility, low RAM/CPU overhead |
+| **Filesystem** | ext4 | QTS default — not user-configurable |
 | **RAID** | RAID 10 | I/O performance for Docker, safe rebuild |
 | **Volume** | Thick | Preallocated space on Storage Pool; near-identical performance to Static |
 
