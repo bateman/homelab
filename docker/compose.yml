@@ -118,9 +118,9 @@ services:
       - .env.secrets
     environment:
       TZ: ${TZ:-Europe/Rome}
-      WEBPASSWORD: ${PIHOLE_PASSWORD:-changeme}
-      FTLCONF_LOCAL_IPV4: ${NAS_IP:-192.168.3.10}
-      PIHOLE_DNS_: 1.1.1.1;1.0.0.1
+      FTLCONF_webserver_api_password: ${PIHOLE_PASSWORD:-changeme}
+      FTLCONF_dns_upstreams: 1.1.1.1;1.0.0.1
+      FTLCONF_misc_etc_dnsmasq_d: 'true'
     volumes:
       - ./config/pihole/etc-pihole:/etc/pihole
       - ./config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
