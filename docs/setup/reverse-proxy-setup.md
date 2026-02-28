@@ -358,7 +358,7 @@ make restart
 > HTTP (port 80) is automatically redirected to HTTPS (port 443).
 
 > [!IMPORTANT]
-> All services are protected by Authelia SSO. You must authenticate once at https://auth.home.local to access any service.
+> All services accessed **via Traefik** (i.e., `https://<service>.home.local`) are protected by Authelia SSO — you authenticate once and access everything. Direct IP:port access (e.g., `http://192.168.3.10:8989`) bypasses Traefik and Authelia entirely.
 > See [Authelia Setup](authelia-setup.md) for configuration details.
 
 ---

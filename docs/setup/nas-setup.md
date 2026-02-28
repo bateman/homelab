@@ -534,6 +534,10 @@ make logs | grep -i error
 
 ## *arr Services Configuration
 
+> [!NOTE]
+> **Why set per-app credentials if Authelia handles authentication?**
+> Authelia only protects access **through Traefik** (e.g., `https://sonarr.home.local`). Direct IP:port access (e.g., `http://192.168.3.10:8989`) bypasses Traefik entirely and is **not protected by Authelia**. Per-app credentials are defense-in-depth for direct access and are also required for API keys used in inter-service communication (e.g., Prowlarr syncing with Sonarr). See [Authelia Setup — What's NOT Protected](authelia-setup.md#whats-not-protected) for details.
+
 ### Prowlarr (first)
 - [ ] Access `http://192.168.3.10:9696`
 - [ ] Settings → General → Authentication: Forms
