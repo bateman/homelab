@@ -292,16 +292,20 @@ cd mediastack
 > **Fix: Install git via [Entware](https://github.com/Entware/Entware/wiki/Install-on-QNAP-NAS):**
 > 1. Download QPKG: https://bin.entware.net/other/Entware_1.03a_std.qpkg
 > 2. App Center → Install Manually (top-right icon) → select the downloaded `.qpkg`
-> 3. Load Entware into your current session (or open a **new** SSH session):
+> 3. Load Entware into your current session and make it permanent for future SSH sessions:
 >    ```bash
+>    # Load now
 >    source /opt/etc/profile
+>    # Make it automatic for all future SSH sessions
+>    grep -q '/opt/etc/profile' ~/.profile 2>/dev/null || \
+>      echo '[ -f /opt/etc/profile ] && . /opt/etc/profile' >> ~/.profile
 >    ```
-> 4. Install git (requires `sudo` for write access to `/opt`):
+>    If `opkg` is still not found, verify Entware installed correctly: `ls /opt/bin/opkg`. If the file exists, add it to PATH manually: `export PATH="/opt/bin:/opt/sbin:$PATH"`.
+> 4. Install git (`sudo` required for write access to `/opt`):
 >    ```bash
 >    sudo opkg update
 >    sudo opkg install git git-http
 >    ```
->    If `opkg: command not found` persists, verify Entware installed correctly: `ls /opt/bin/opkg`. If the file exists, add it to PATH manually: `export PATH="/opt/bin:/opt/sbin:$PATH"`.
 > 5. Retry the `git clone` command above.
 >
 > *Note: Remove QGit first if installed (App Center → MyQNAP → QGit → Remove) to avoid conflicts between the two git installations.*
