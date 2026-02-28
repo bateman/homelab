@@ -301,10 +301,10 @@ cd mediastack
 >      echo '[ -f /opt/etc/profile ] && . /opt/etc/profile' >> ~/.profile
 >    ```
 >    If `opkg` is still not found, verify Entware installed correctly: `ls /opt/bin/opkg`. If the file exists, add it to PATH manually: `export PATH="/opt/bin:/opt/sbin:$PATH"`.
-> 4. Install git (`sudo` required for write access to `/opt`):
+> 4. Install git and make (`sudo` required for write access to `/opt`):
 >    ```bash
 >    sudo opkg update
->    sudo opkg install git git-http
+>    sudo opkg install git git-http make
 >    ```
 > 5. Retry the `git clone` command above.
 >
@@ -352,6 +352,9 @@ cd mediastack
 ### Initial Setup and .env Configuration
 
 The `make setup` command creates the folder structure and environment files (`.env` and `.env.secrets`). **It must be run before first startup.**
+
+> [!NOTE]
+> QTS does not include `make`. Install it via Entware: `sudo opkg install make`. If Entware is not yet installed, see the [Entware setup instructions](#option-a-git-clone-recommended) in the clone section above.
 
 ```bash
 cd /share/container/mediastack
@@ -776,7 +779,8 @@ make backup
 
 | Problem | Probable Cause | Solution |
 |---------|----------------|----------|
-| `git clone` fails with `libgnutls.so.30` error | QGit missing HTTPS library | Install git via Entware (`opkg install git git-http`) or use tarball download (see [Option A workaround](#option-a-git-clone-recommended)) |
+| `git clone` fails with `libgnutls.so.30` error | QGit missing HTTPS library | Install git via Entware (`sudo opkg install git git-http`) or use tarball download (see [Option A workaround](#option-a-git-clone-recommended)) |
+| `make: command not found` | QTS doesn't include make | Install via Entware: `sudo opkg install make` |
 | Container won't start | Folder permissions | `chown -R $PUID:$PGID ./config` (use values from .env) |
 | Hardlink doesn't work | Paths on different filesystems | Verify mount points |
 | qBittorrent "stalled" | Port not reachable | Verify port forwarding 50413 |
