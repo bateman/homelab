@@ -237,22 +237,27 @@ sudo chown -R 1001:100 ./config
 
 ### 4.2.2 Free DNS Port (Port 53)
 
-QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle — it requires an `autorun.sh` script. See [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53) for full step-by-step details.
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle — it requires an `autorun.sh` script persisted in QNAP's flash config. See [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53) for full step-by-step details.
 
 Quick summary:
 
 1. **Enable autorun**: Control Panel → Hardware → General → check "Run user defined startup processes (autorun.sh)"
-2. **Mount boot partition**: `mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config`
-3. **Verify mount succeeded**: `mount | grep /tmp/config` — must show output (if empty, mount failed — see full guide for troubleshooting)
-4. **Create** `/tmp/config/autorun.sh` — commands must use full paths and run in a backgrounded subshell with a 60-second delay (autorun.sh executes before QTS finishes starting services, so dnsmasq gets restarted after a direct kill):
+2. **Create** `/tmp/nasconfig_tmp/autorun.sh` — use `sudo tee` (shell redirection does not inherit sudo):
    ```bash
-   (/bin/sleep 60 && /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig && \
-     /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf && \
-     /usr/bin/killall dnsmasq) &
+   sudo tee /tmp/nasconfig_tmp/autorun.sh << 'EOF'
+   #!/bin/sh
+   /bin/echo "autorun.sh fired at $(/bin/date)" >> /tmp/autorun.log
+   /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+   /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+   /usr/bin/killall dnsmasq
+   /bin/echo "dnsmasq killed at $(/bin/date)" >> /tmp/autorun.log
+   EOF
    ```
-5. **Verify and unmount**: `chmod +x /tmp/config/autorun.sh && cat /tmp/config/autorun.sh && umount /tmp/config`
-6. **Apply now** (run with sudo): `sudo cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig && sudo sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf && sudo /usr/bin/killall dnsmasq`
-7. **Verify**: `sudo netstat -tulnp | grep ':53 '`
+3. **Make executable**: `sudo chmod +x /tmp/nasconfig_tmp/autorun.sh`
+4. **Persist to flash**: `sudo /etc/init.d/init_disk.sh umount_flash_config`
+5. **Apply now**: `sudo /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig && sudo /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf && sudo /usr/bin/killall dnsmasq`
+6. **Verify**: `sudo netstat -tulnp | grep ':53 '` — no output means port 53 is free
+7. **After reboot, check log**: `cat /tmp/autorun.log`
 
 > [!WARNING]
 > QNAP's Malware Remover may delete `autorun.sh` during scans. If Pi-hole stops resolving after a scan, re-create it (see [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53)).

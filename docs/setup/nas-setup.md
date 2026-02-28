@@ -376,7 +376,7 @@ sudo chmod -R 775 /share/container/mediastack/config
 
 ### Free DNS Port (Port 53)
 
-QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle for this — it requires an `autorun.sh` script on the boot partition.
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle for this — it requires an `autorun.sh` script persisted in QNAP's flash config.
 
 **Step 1** — Enable autorun support (required since QTS 4.3.3):
 
@@ -385,77 +385,50 @@ QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port,
 **Step 2** — Verify port 53 is in use:
 
 ```bash
-netstat -tulnp | grep ':53 '
+sudo netstat -tulnp | grep ':53 '
 ```
 
-**Step 3** — Mount the boot partition and verify:
+**Step 3** — Create the autorun script:
+
+The flash config is accessible at `/tmp/nasconfig_tmp/` while mounted. Use `sudo tee` because shell redirection (`>`) does not inherit `sudo` privileges:
 
 ```bash
-# Create mount point if needed
-mkdir -p /tmp/config
-
-# Mount the boot partition (partition 6 of the DOM)
-mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
-
-# IMPORTANT: Verify the mount succeeded
-mount | grep /tmp/config
-```
-
-You should see a line like `/dev/sdx6 on /tmp/config type ext2 ...`. If there is **no output**, the mount failed — see the troubleshooting note below before continuing.
-
-> [!TIP]
-> **Mount failed?** The partition number may differ by NAS model. Check which partitions exist on your boot device:
-> ```bash
-> # Show the boot device path
-> /sbin/hal_app --get_boot_pd port_id=0
->
-> # List its partitions (replace /dev/sdx with your actual device)
-> ls -la $(/sbin/hal_app --get_boot_pd port_id=0)*
-> ```
-> Try mounting the largest `ext2`/`ext4` partition (commonly partition 6, but could be different). You can also check with `fdisk -l $(/sbin/hal_app --get_boot_pd port_id=0)`.
-
-**Step 4** — Create or edit `/tmp/config/autorun.sh`:
-
-```bash
-cat > /tmp/config/autorun.sh << 'EOF'
+sudo tee /tmp/nasconfig_tmp/autorun.sh << 'EOF'
 #!/bin/sh
-
-# Disable dnsmasq DNS listener so Pi-hole can bind port 53
-# Runs in the background with a delay because autorun.sh executes early
-# during boot — before QTS finishes starting services. Without the delay,
-# QTS restarts dnsmasq after this script kills it, undoing the fix.
-# Full paths are required because PATH is not set when autorun.sh runs.
-(
-  /bin/sleep 60
-  /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-  /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
-  /usr/bin/killall dnsmasq
-) &
+/bin/echo "autorun.sh fired at $(/bin/date)" >> /tmp/autorun.log
+/bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+/bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+/usr/bin/killall dnsmasq
+/bin/echo "dnsmasq killed at $(/bin/date)" >> /tmp/autorun.log
 EOF
 ```
 
 > [!IMPORTANT]
-> If `autorun.sh` already exists and has other content you want to keep, append only the backgrounded subshell block above to it.
+> - Full paths are required because `PATH` is not set when `autorun.sh` runs.
+> - If `autorun.sh` already exists with other content you want to keep, append only the four lines between the `echo` statements above.
 
-**Step 5** — Make executable, verify content, and unmount:
+**Step 4** — Make executable and verify:
 
 ```bash
-chmod +x /tmp/config/autorun.sh
-
-# Verify the file was written correctly
-cat /tmp/config/autorun.sh
-
-# Unmount the boot partition
-umount /tmp/config
+sudo chmod +x /tmp/nasconfig_tmp/autorun.sh
+cat /tmp/nasconfig_tmp/autorun.sh
 ```
 
-Verify the `cat` output shows the full script including the `#!/bin/sh` shebang. If the file appears empty, the mount in Step 3 did not work correctly — go back and troubleshoot the mount.
+Verify the `cat` output shows the full script including the `#!/bin/sh` shebang.
+
+**Step 5** — Persist to flash and unmount:
+
+```bash
+sudo /etc/init.d/init_disk.sh umount_flash_config
+```
+
+This writes the flash config back to persistent storage. Without this step, changes are lost on reboot.
 
 **Step 6** — Apply now without rebooting (run the same commands directly):
 
 ```bash
-sudo cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sudo sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+sudo /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sudo /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 sudo /usr/bin/killall dnsmasq
 ```
 
@@ -465,11 +438,17 @@ sudo /usr/bin/killall dnsmasq
 sudo netstat -tulnp | grep ':53 '
 ```
 
+No output means port 53 is free. You can also confirm the script ran correctly after a reboot by checking the log:
+
+```bash
+cat /tmp/autorun.log
+```
+
 > [!NOTE]
-> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script runs on every boot so the change persists across reboots. The 60-second delay ensures QTS has fully started its services before the fix is applied — during this window dnsmasq still holds port 53, so start Pi-hole/Docker containers after the NAS has fully booted.
+> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script runs on every boot so the change persists across reboots.
 
 > [!WARNING]
-> QNAP's **Malware Remover** may delete `autorun.sh` during scans (it targets this file regardless of content, because malware historically abused it). If Pi-hole stops resolving after a Malware Remover scan, re-create `autorun.sh` by repeating Steps 3–6.
+> QNAP's **Malware Remover** may delete `autorun.sh` during scans (it targets this file regardless of content, because malware historically abused it). If Pi-hole stops resolving after a Malware Remover scan, re-create `autorun.sh` by repeating Steps 3–5.
 
 ### First Startup
 ```bash
