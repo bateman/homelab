@@ -120,7 +120,6 @@ services:
       TZ: ${TZ:-Europe/Rome}
       FTLCONF_webserver_api_password: ${PIHOLE_PASSWORD:-changeme}
       FTLCONF_dns_upstreams: 1.1.1.1;1.0.0.1
-      FTLCONF_misc_etc_dnsmasq_d: 'true'
     volumes:
       - ./config/pihole/etc-pihole:/etc/pihole
       - ./config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
