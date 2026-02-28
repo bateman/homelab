@@ -14,14 +14,14 @@ COMPOSE_FILES := -f docker/compose.yml -f docker/compose.media.yml
 COMPOSE_CMD := docker compose $(COMPOSE_FILES)
 HOST_IP := 192.168.3.10
 
-# Colors for output (if terminal supports it)
+# Colors for output (use with printf, not echo)
 RED := \033[0;31m
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
 CYAN := \033[0;36m
 PURPLE := \033[0;35m
 BOLD := \033[1m
-NC := \033[0m # No Color
+NC := \033[0m
 
 # =============================================================================
 # Validation
@@ -29,19 +29,19 @@ NC := \033[0m # No Color
 
 check-docker:
 	@command -v docker >/dev/null 2>&1 || { \
-		echo "$(RED)Error: docker not found. Install Docker before continuing.$(NC)"; \
+		printf "$(RED)Error: docker not found. Install Docker before continuing.$(NC)\n"; \
 		exit 1; \
 	}
 
 check-compose: check-docker
 	@docker compose version >/dev/null 2>&1 || { \
-		echo "$(RED)Error: docker compose not available. Docker Compose v2 required.$(NC)"; \
+		printf "$(RED)Error: docker compose not available. Docker Compose v2 required.$(NC)\n"; \
 		exit 1; \
 	}
 
 check-curl:
 	@command -v curl >/dev/null 2>&1 || { \
-		echo "$(RED)Error: curl not found. Install curl before continuing.$(NC)"; \
+		printf "$(RED)Error: curl not found. Install curl before continuing.$(NC)\n"; \
 		exit 1; \
 	}
 
@@ -50,13 +50,13 @@ validate: check-compose
 	@if grep -q 'COMPOSE_PROFILES=.*vpn' docker/.env 2>/dev/null && \
 		! grep -q 'COMPOSE_PROFILES=.*novpn' docker/.env 2>/dev/null; then \
 		if ! grep -q '^VPN_SERVICE_PROVIDER=' docker/.env.secrets 2>/dev/null; then \
-			echo "$(RED)Error: VPN_SERVICE_PROVIDER not set in docker/.env.secrets (required for vpn profile)$(NC)"; \
+			printf "$(RED)Error: VPN_SERVICE_PROVIDER not set in docker/.env.secrets (required for vpn profile)$(NC)\n"; \
 			exit 1; \
 		fi; \
 	fi
 	@$(COMPOSE_CMD) config --quiet && \
-		echo "$(GREEN)Configuration valid$(NC)" || { \
-		echo "$(RED)Error in compose configuration$(NC)"; \
+		printf "$(GREEN)Configuration valid$(NC)\n" || { \
+		printf "$(RED)Error in compose configuration$(NC)\n"; \
 		exit 1; \
 	}
 
@@ -65,41 +65,41 @@ validate: check-compose
 # =============================================================================
 
 help:
-	@echo ""
-	@echo "  $(GREEN)$(BOLD)MEDIA STACK$(NC) - Available commands"
-	@echo ""
-	@echo "  $(PURPLE)Setup & Validation$(NC)"
-	@echo "    $(CYAN)make setup$(NC)         - Create folder structure (run once)"
-	@echo "    $(CYAN)make setup-dry-run$(NC) - Preview folder structure (no changes)"
-	@echo "    $(CYAN)make validate$(NC)      - Verify compose configuration"
-	@echo ""
-	@echo "  $(PURPLE)Container Management$(NC)"
-	@echo "    $(CYAN)make up$(NC)          - Start all containers"
-	@echo "    $(CYAN)make down$(NC)        - Stop all containers"
-	@echo "    $(CYAN)make restart$(NC)     - Full restart"
-	@echo "    $(CYAN)make pull$(NC)        - Update Docker images"
-	@echo "    $(CYAN)make update$(NC)      - Pull images and restart (pull + restart)"
-	@echo ""
-	@echo "  $(PURPLE)Monitoring$(NC)"
-	@echo "    $(CYAN)make logs$(NC)        - Show logs (follow)"
-	@echo "    $(CYAN)make status$(NC)      - Container status and resources"
-	@echo "    $(CYAN)make health$(NC)      - Health check all services"
-	@echo "    $(CYAN)make show-urls$(NC)   - Show WebUI URLs"
-	@echo ""
-	@echo "  $(PURPLE)Backup$(NC)"
-	@echo "    $(CYAN)make backup$(NC)        - Trigger Duplicati backup on demand"
-	@echo "    $(CYAN)make backup-qts$(NC)    - Backup QNAP QTS system configuration"
-	@echo "    $(CYAN)make verify-backup$(NC) - Verify backup integrity (extraction + SQLite)"
-	@echo "                         Duplicati WebUI: http://$(HOST_IP):8200"
-	@echo ""
-	@echo "  $(PURPLE)Utilities$(NC)"
-	@echo "    $(CYAN)make clean$(NC)            - Remove orphan Docker resources"
-	@echo "    $(CYAN)make recyclarr-sync$(NC)   - Manual Trash Guides profile sync"
-	@echo "    $(CYAN)make recyclarr-config$(NC) - Generate Recyclarr config template"
-	@echo ""
-	@echo "  $(PURPLE)Per service$(NC)"
-	@echo "    $(CYAN)make logs-SERVICE$(NC)  - Single service logs (e.g., make logs-sonarr)"
-	@echo "    $(CYAN)make shell-SERVICE$(NC) - Shell into container (e.g., make shell-radarr)"
+	@printf "\n"
+	@printf "  $(GREEN)$(BOLD)MEDIA STACK$(NC) - Available commands\n"
+	@printf "\n"
+	@printf "  $(PURPLE)Setup & Validation$(NC)\n"
+	@printf "    $(CYAN)make setup$(NC)         - Create folder structure (run once)\n"
+	@printf "    $(CYAN)make setup-dry-run$(NC) - Preview folder structure (no changes)\n"
+	@printf "    $(CYAN)make validate$(NC)      - Verify compose configuration\n"
+	@printf "\n"
+	@printf "  $(PURPLE)Container Management$(NC)\n"
+	@printf "    $(CYAN)make up$(NC)          - Start all containers\n"
+	@printf "    $(CYAN)make down$(NC)        - Stop all containers\n"
+	@printf "    $(CYAN)make restart$(NC)     - Full restart\n"
+	@printf "    $(CYAN)make pull$(NC)        - Update Docker images\n"
+	@printf "    $(CYAN)make update$(NC)      - Pull images and restart (pull + restart)\n"
+	@printf "\n"
+	@printf "  $(PURPLE)Monitoring$(NC)\n"
+	@printf "    $(CYAN)make logs$(NC)        - Show logs (follow)\n"
+	@printf "    $(CYAN)make status$(NC)      - Container status and resources\n"
+	@printf "    $(CYAN)make health$(NC)      - Health check all services\n"
+	@printf "    $(CYAN)make show-urls$(NC)   - Show WebUI URLs\n"
+	@printf "\n"
+	@printf "  $(PURPLE)Backup$(NC)\n"
+	@printf "    $(CYAN)make backup$(NC)        - Trigger Duplicati backup on demand\n"
+	@printf "    $(CYAN)make backup-qts$(NC)    - Backup QNAP QTS system configuration\n"
+	@printf "    $(CYAN)make verify-backup$(NC) - Verify backup integrity (extraction + SQLite)\n"
+	@printf "                         Duplicati WebUI: http://$(HOST_IP):8200\n"
+	@printf "\n"
+	@printf "  $(PURPLE)Utilities$(NC)\n"
+	@printf "    $(CYAN)make clean$(NC)            - Remove orphan Docker resources\n"
+	@printf "    $(CYAN)make recyclarr-sync$(NC)   - Manual Trash Guides profile sync\n"
+	@printf "    $(CYAN)make recyclarr-config$(NC) - Generate Recyclarr config template\n"
+	@printf "\n"
+	@printf "  $(PURPLE)Per service$(NC)\n"
+	@printf "    $(CYAN)make logs-SERVICE$(NC)  - Single service logs (e.g., make logs-sonarr)\n"
+	@printf "    $(CYAN)make shell-SERVICE$(NC) - Shell into container (e.g., make shell-radarr)\n"
 
 # =============================================================================
 # Setup
@@ -109,19 +109,19 @@ setup: check-compose
 	@if [ ! -f docker/.env ]; then \
 		echo ">>> Creating .env from template..."; \
 		cp docker/.env.example docker/.env; \
-		echo "$(YELLOW)>>> Review docker/.env (PUID/PGID must match file owner of /share/data)$(NC)"; \
+		printf "$(YELLOW)>>> Review docker/.env (PUID/PGID must match file owner of /share/data)$(NC)\n"; \
 	fi
 	@if [ ! -f docker/.env.secrets ]; then \
 		echo ">>> Creating .env.secrets from template..."; \
 		cp docker/.env.secrets.example docker/.env.secrets; \
-		echo "$(YELLOW)WARNING: Edit docker/.env.secrets with your passwords$(NC)"; \
+		printf "$(YELLOW)WARNING: Edit docker/.env.secrets with your passwords$(NC)\n"; \
 	fi
 	@echo ">>> Creating folder structure..."
 	@if [ ! -x scripts/setup-folders.sh ]; then \
 		chmod +x scripts/setup-folders.sh; \
 	fi
 	@./scripts/setup-folders.sh
-	@echo "$(GREEN)>>> Setup complete$(NC)"
+	@printf "$(GREEN)>>> Setup complete$(NC)\n"
 
 setup-dry-run:
 	@echo ">>> Previewing folder structure (dry-run)..."
@@ -137,25 +137,25 @@ setup-dry-run:
 up: validate
 	@echo ">>> Starting stack..."
 	@$(COMPOSE_CMD) up -d && \
-		echo "$(GREEN)>>> Stack started$(NC)" && \
+		printf "$(GREEN)>>> Stack started$(NC)\n" && \
 		$(MAKE) --no-print-directory status || \
-		{ echo "$(RED)>>> Error starting stack$(NC)"; exit 1; }
+		{ printf "$(RED)>>> Error starting stack$(NC)\n"; exit 1; }
 
 down: check-compose
 	@echo ">>> Stopping stack..."
 	@$(COMPOSE_CMD) down
-	@echo "$(GREEN)>>> Stack stopped$(NC)"
+	@printf "$(GREEN)>>> Stack stopped$(NC)\n"
 
 restart: down up
 
 pull: check-compose
 	@echo ">>> Pulling updated images..."
 	@$(COMPOSE_CMD) pull && \
-		echo "$(GREEN)>>> Pull complete. Run 'make restart' to apply$(NC)" || \
-		{ echo "$(RED)>>> Error pulling images$(NC)"; exit 1; }
+		printf "$(GREEN)>>> Pull complete. Run 'make restart' to apply$(NC)\n" || \
+		{ printf "$(RED)>>> Error pulling images$(NC)\n"; exit 1; }
 
 update: pull restart
-	@echo "$(GREEN)>>> Update complete$(NC)"
+	@printf "$(GREEN)>>> Update complete$(NC)\n"
 
 # =============================================================================
 # Monitoring
@@ -177,7 +177,7 @@ status: check-compose
 	if [ -n "$$CONTAINERS" ]; then \
 		docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}" $$CONTAINERS; \
 	else \
-		echo "$(YELLOW)No containers running$(NC)"; \
+		printf "$(YELLOW)No containers running$(NC)\n"; \
 	fi
 	@echo ""
 	@echo "=== Disk Usage ==="
@@ -194,7 +194,7 @@ status: check-compose
 shell-%: check-compose
 	@$(COMPOSE_CMD) exec $* /bin/bash 2>/dev/null || \
 		$(COMPOSE_CMD) exec $* /bin/sh 2>/dev/null || { \
-		echo "$(RED)Error: cannot open shell in $*$(NC)"; \
+		printf "$(RED)Error: cannot open shell in $*$(NC)\n"; \
 		exit 1; \
 	}
 
@@ -204,14 +204,14 @@ backup: check-docker check-curl
 		BACKUP_ID=$$(curl -s http://localhost:8200/api/v1/backups 2>/dev/null | grep -o '"ID":"[^"]*"' | head -1 | cut -d'"' -f4); \
 		if [ -n "$$BACKUP_ID" ]; then \
 			curl -s -X POST "http://localhost:8200/api/v1/backup/$$BACKUP_ID/run" >/dev/null && \
-			echo "$(GREEN)>>> Backup started (ID: $$BACKUP_ID)$(NC)" && \
+			printf "$(GREEN)>>> Backup started (ID: $$BACKUP_ID)$(NC)\n" && \
 			echo "Monitor progress at http://$(HOST_IP):8200"; \
 		else \
-			echo "$(YELLOW)No backup job configured yet$(NC)"; \
+			printf "$(YELLOW)No backup job configured yet$(NC)\n"; \
 			echo "Configure backup via http://$(HOST_IP):8200"; \
 		fi; \
 	else \
-		echo "$(RED)Error: duplicati container not running$(NC)"; \
+		printf "$(RED)Error: duplicati container not running$(NC)\n"; \
 		echo "Run 'make up' first"; \
 		exit 1; \
 	fi
@@ -232,11 +232,11 @@ backup-qts:
 
 clean: check-docker
 	@echo ">>> Cleaning orphan Docker resources..."
-	@echo "$(YELLOW)WARNING: This will remove unused containers, images and volumes$(NC)"
+	@printf "$(YELLOW)WARNING: This will remove unused containers, images and volumes$(NC)\n"
 	@read -p "Continue? [y/N] " confirm; \
 	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
 		docker system prune -f && docker volume prune -f; \
-		echo "$(GREEN)>>> Cleanup complete$(NC)"; \
+		printf "$(GREEN)>>> Cleanup complete$(NC)\n"; \
 	else \
 		echo ">>> Operation cancelled"; \
 	fi
@@ -249,9 +249,9 @@ recyclarr-sync: check-compose
 	@echo ">>> Syncing Trash Guides quality profiles..."
 	@if docker ps --format '{{.Names}}' | grep -q '^recyclarr$$'; then \
 		docker exec recyclarr recyclarr sync && \
-		echo "$(GREEN)>>> Sync complete$(NC)"; \
+		printf "$(GREEN)>>> Sync complete$(NC)\n"; \
 	else \
-		echo "$(RED)Error: recyclarr container not running$(NC)"; \
+		printf "$(RED)Error: recyclarr container not running$(NC)\n"; \
 		echo "Run 'make up' before syncing"; \
 		exit 1; \
 	fi
@@ -260,9 +260,9 @@ recyclarr-config: check-compose
 	@echo ">>> Generating Recyclarr configuration template..."
 	@if docker ps --format '{{.Names}}' | grep -q '^recyclarr$$'; then \
 		docker exec recyclarr recyclarr config create && \
-		echo "$(GREEN)>>> Template created in ./config/recyclarr/$(NC)"; \
+		printf "$(GREEN)>>> Template created in ./config/recyclarr/$(NC)\n"; \
 	else \
-		echo "$(RED)Error: recyclarr container not running$(NC)"; \
+		printf "$(RED)Error: recyclarr container not running$(NC)\n"; \
 		exit 1; \
 	fi
 
@@ -273,11 +273,11 @@ recyclarr-config: check-compose
 define check_service
 	@STATUS=$$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 $(1) 2>/dev/null); \
 	if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "401" ]; then \
-		echo "$(2): $(GREEN)OK ($$STATUS)$(NC)"; \
+		printf "$(2): $(GREEN)OK ($$STATUS)$(NC)\n"; \
 	elif [ -n "$$STATUS" ] && [ "$$STATUS" != "000" ]; then \
-		echo "$(2): $(YELLOW)$$STATUS$(NC)"; \
+		printf "$(2): $(YELLOW)$$STATUS$(NC)\n"; \
 	else \
-		echo "$(2): $(RED)DOWN$(NC)"; \
+		printf "$(2): $(RED)DOWN$(NC)\n"; \
 	fi
 endef
 
@@ -293,14 +293,14 @@ health: check-docker check-curl
 	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^gluetun$$'; then \
 		HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' gluetun 2>/dev/null); \
 		if [ "$$HEALTH" = "healthy" ]; then \
-			echo "Gluetun: $(GREEN)OK (VPN connected)$(NC)"; \
+			printf "Gluetun: $(GREEN)OK (VPN connected)$(NC)\n"; \
 		elif [ "$$HEALTH" = "starting" ]; then \
-			echo "Gluetun: $(YELLOW)STARTING$(NC)"; \
+			printf "Gluetun: $(YELLOW)STARTING$(NC)\n"; \
 		else \
-			echo "Gluetun: $(RED)UNHEALTHY$(NC)"; \
+			printf "Gluetun: $(RED)UNHEALTHY$(NC)\n"; \
 		fi; \
 	else \
-		echo "Gluetun: $(YELLOW)NOT RUNNING (novpn profile?)$(NC)"; \
+		printf "Gluetun: $(YELLOW)NOT RUNNING (novpn profile?)$(NC)\n"; \
 	fi
 	$(call check_service,http://localhost:8080,qBittorrent)
 	$(call check_service,http://localhost:6789,NZBGet)
@@ -316,34 +316,34 @@ health: check-docker check-curl
 	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^tailscale$$'; then \
 		HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' tailscale 2>/dev/null); \
 		if [ "$$HEALTH" = "healthy" ]; then \
-			echo "Tailscale: $(GREEN)OK (connected)$(NC)"; \
+			printf "Tailscale: $(GREEN)OK (connected)$(NC)\n"; \
 		elif [ "$$HEALTH" = "starting" ]; then \
-			echo "Tailscale: $(YELLOW)STARTING$(NC)"; \
+			printf "Tailscale: $(YELLOW)STARTING$(NC)\n"; \
 		else \
-			echo "Tailscale: $(RED)UNHEALTHY$(NC)"; \
+			printf "Tailscale: $(RED)UNHEALTHY$(NC)\n"; \
 		fi; \
 	else \
-		echo "Tailscale: $(YELLOW)NOT RUNNING$(NC)"; \
+		printf "Tailscale: $(YELLOW)NOT RUNNING$(NC)\n"; \
 	fi
 	@# Authelia health check
 	@HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' authelia 2>/dev/null); \
 	if [ "$$HEALTH" = "healthy" ]; then \
-		echo "Authelia: $(GREEN)OK (healthy)$(NC)"; \
+		printf "Authelia: $(GREEN)OK (healthy)$(NC)\n"; \
 	elif [ "$$HEALTH" = "starting" ]; then \
-		echo "Authelia: $(YELLOW)STARTING$(NC)"; \
+		printf "Authelia: $(YELLOW)STARTING$(NC)\n"; \
 	elif [ -z "$$HEALTH" ]; then \
-		echo "Authelia: $(YELLOW)NOT RUNNING$(NC)"; \
+		printf "Authelia: $(YELLOW)NOT RUNNING$(NC)\n"; \
 	else \
-		echo "Authelia: $(RED)UNHEALTHY$(NC)"; \
+		printf "Authelia: $(RED)UNHEALTHY$(NC)\n"; \
 	fi
 	@# Portainer uses HTTPS
 	@STATUS=$$(curl -sk -o /dev/null -w '%{http_code}' --max-time 5 https://localhost:9443 2>/dev/null); \
 	if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "303" ]; then \
-		echo "Portainer: $(GREEN)OK ($$STATUS)$(NC)"; \
+		printf "Portainer: $(GREEN)OK ($$STATUS)$(NC)\n"; \
 	elif [ -n "$$STATUS" ] && [ "$$STATUS" != "000" ]; then \
-		echo "Portainer: $(YELLOW)$$STATUS$(NC)"; \
+		printf "Portainer: $(YELLOW)$$STATUS$(NC)\n"; \
 	else \
-		echo "Portainer: $(RED)DOWN$(NC)"; \
+		printf "Portainer: $(RED)DOWN$(NC)\n"; \
 	fi
 	@echo ""
 
@@ -354,37 +354,37 @@ health: check-docker check-curl
 show-urls:
 	@echo "=== Web UI URLs ==="
 	@echo ""
-	@echo "$(GREEN)Media Stack$(NC)"
+	@printf "$(GREEN)Media Stack$(NC)\n"
 	@echo "  Sonarr:       http://$(HOST_IP):8989"
 	@echo "  Radarr:       http://$(HOST_IP):7878"
 	@echo "  Lidarr:       http://$(HOST_IP):8686"
 	@echo "  Prowlarr:     http://$(HOST_IP):9696"
 	@echo "  Bazarr:       http://$(HOST_IP):6767"
 	@echo ""
-	@echo "$(GREEN)Download$(NC)"
+	@printf "$(GREEN)Download$(NC)\n"
 	@echo "  qBittorrent:  http://$(HOST_IP):8080"
 	@echo "  NZBGet:       http://$(HOST_IP):6789"
 	@echo "  FlareSolverr: http://$(HOST_IP):8191"
 	@echo ""
-	@echo "$(GREEN)Monitoring$(NC)"
+	@printf "$(GREEN)Monitoring$(NC)\n"
 	@echo "  Uptime Kuma:  http://$(HOST_IP):3001"
 	@echo "  Cleanuparr:   http://$(HOST_IP):11011"
 	@echo "  Watchtower:   http://$(HOST_IP):8383/v1/metrics"
 	@echo ""
-	@echo "$(GREEN)Infrastructure$(NC)"
+	@printf "$(GREEN)Infrastructure$(NC)\n"
 	@echo "  Pi-hole:      http://$(HOST_IP):8081/admin"
 	# @echo "  Home Assist:  http://$(HOST_IP):8123"  # Disabled - see compose.homeassistant.yml
 	@echo "  Portainer:    https://$(HOST_IP):9443"
 	@echo "  Duplicati:    http://$(HOST_IP):8200"
 	@echo "  Traefik:      https://traefik.home.local (requires DNS)"
 	@echo ""
-	@echo "$(GREEN)Remote Access$(NC)"
+	@printf "$(GREEN)Remote Access$(NC)\n"
 	@echo "  Tailscale:    https://login.tailscale.com/admin/machines"
 	@echo ""
-	@echo "$(GREEN)Authentication (SSO)$(NC)"
+	@printf "$(GREEN)Authentication (SSO)$(NC)\n"
 	@echo "  Authelia:     https://auth.home.local (requires DNS)"
 	@echo ""
-	@echo "$(YELLOW)Note: All services require Authelia SSO when accessed via *.home.local$(NC)"
+	@printf "$(YELLOW)Note: All services require Authelia SSO when accessed via *.home.local$(NC)\n"
 	@echo ""
 
 # Alias for show-urls
