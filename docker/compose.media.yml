@@ -25,10 +25,8 @@
 networks:
   media_net:
     name: homelab_media_net
-    external: true
   proxy:
     name: homelab_proxy
-    external: true
 
 # =============================================================================
 # REUSABLE ANCHORS
