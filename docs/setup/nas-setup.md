@@ -281,7 +281,57 @@ git clone https://github.com/<your-username>/homelab.git mediastack
 cd mediastack
 ```
 
-#### Option B: Manual Copy (if git not available)
+> [!WARNING]
+> **QGit `libgnutls.so.30` error:** If `git clone` fails with:
+> ```
+> git-remote-https: error while loading shared libraries: libgnutls.so.30:
+> cannot open shared object file: No such file or directory
+> ```
+> QGit's HTTPS transport has a missing library dependency. Either install git via Entware instead (recommended — gives full git functionality), or use **Option B** (download tarball) as a quick workaround.
+>
+> **Fix: Install git via [Entware](https://github.com/Entware/Entware/wiki/Install-on-QNAP-NAS):**
+> 1. Download QPKG: https://bin.entware.net/other/Entware_1.03a_std.qpkg
+> 2. App Center → Install Manually (top-right icon) → select the downloaded `.qpkg`
+> 3. Load Entware into your current session and make it permanent for future SSH sessions:
+>    ```bash
+>    # Load now
+>    source /opt/etc/profile
+>    # Make it automatic for all future SSH sessions
+>    grep -q '/opt/etc/profile' ~/.profile 2>/dev/null || \
+>      echo '[ -f /opt/etc/profile ] && . /opt/etc/profile' >> ~/.profile
+>    ```
+>    If `opkg` is still not found, verify Entware installed correctly: `ls /opt/bin/opkg`. If the file exists, add it to PATH manually: `export PATH="/opt/bin:/opt/sbin:$PATH"`.
+> 4. Install git and make (`sudo` required for write access to `/opt`):
+>    ```bash
+>    sudo opkg update
+>    sudo opkg install git git-http make
+>    ```
+> 5. Retry the `git clone` command above.
+>
+> *Note: Remove QGit first if installed (App Center → MyQNAP → QGit → Remove) to avoid conflicts between the two git installations.*
+
+#### Option B: Download Tarball (if git clone fails)
+
+```bash
+# Via SSH on NAS
+ssh admin@192.168.3.10
+
+cd /share/container
+
+# Download repository as tarball from GitHub
+wget -qO homelab.tar.gz https://github.com/<your-username>/homelab/archive/refs/heads/main.tar.gz
+
+# Extract and rename to mediastack
+tar -xzf homelab.tar.gz
+mv homelab-main mediastack
+rm homelab.tar.gz
+cd mediastack
+```
+
+> [!NOTE]
+> This downloads a snapshot of the `main` branch. You won't have git history or be able to `git pull` for updates. To update later, repeat the download or use Option C from a machine with working git.
+
+#### Option C: Manual Copy (if git not available)
 
 ```bash
 # Via SSH on NAS
@@ -303,13 +353,16 @@ cd mediastack
 
 The `make setup` command creates the folder structure and environment files (`.env` and `.env.secrets`). **It must be run before first startup.**
 
+> [!NOTE]
+> QTS does not include `make`. Install it via Entware: `sudo opkg install make`. If Entware is not yet installed, see the [Entware setup instructions](#option-a-git-clone-recommended) in the clone section above.
+
 ```bash
 cd /share/container/mediastack
 
-# Run setup (creates data, config folders and .env from template)
+# Run setup (creates .env, .env.secrets, then folder structure)
 make setup
 
-# Edit .env with correct values
+# Edit .env with correct values (PUID/PGID — see below)
 nano docker/.env
 
 # Edit .env.secrets with passwords and credentials
@@ -319,15 +372,18 @@ nano docker/.env.secrets
 **Mandatory** configuration in `docker/.env`:
 
 ```bash
-# PUID and PGID must match the dockeruser created earlier
-# Get values with: id dockeruser
-# Example output: uid=1001(dockeruser) gid=100(everyone)
-PUID=1001    # ← replace with dockeruser uid
-PGID=100     # ← replace with dockeruser gid
+# PUID and PGID must match the actual owner of /share/data
+# Check with: ls -ln /share/data (look at UID/GID columns)
+# Or: id $(whoami)
+PUID=1001    # ← replace with the UID that owns /share/data
+PGID=100     # ← replace with the GID that owns /share/data
 
 # Timezone
 TZ=Europe/Rome
 ```
+
+> [!WARNING]
+> **QNAP shared folder permissions:** QTS ignores `chown`/`chmod` on shared folders (`/share/data`, `/share/backup`). Permissions must be set via **QTS Control Panel → Shared Folders → Edit Permissions** — grant RW to the user matching PUID. Then set `PUID`/`PGID` in `docker/.env` to match that user's UID/GID (check with `id <username>`).
 
 **Mandatory** credentials in `docker/.env.secrets`:
 
@@ -357,7 +413,7 @@ ls -la /share/data/
 ls -la ./config/
 # Should contain subfolders for each service
 
-# Verify ownership (must match PUID:PGID configured)
+# Verify ownership matches PUID:PGID in docker/.env
 ls -ln /share/data
 # Example output for PUID=1001 PGID=100:
 # drwxrwxr-x 1001 100 ... media
@@ -365,14 +421,8 @@ ls -ln /share/data
 # drwxrwxr-x 1001 100 ... usenet
 ```
 
-If permissions are incorrect:
-```bash
-# Replace 1001:100 with your PUID:PGID from .env
-sudo chown -R 1001:100 /share/data
-sudo chown -R 1001:100 /share/container/mediastack/config
-sudo chmod -R 775 /share/data
-sudo chmod -R 775 /share/container/mediastack/config
-```
+> [!IMPORTANT]
+> Shared folder permissions (`/share/data`, `/share/backup`) must be set via **QTS Control Panel → Shared Folders → Edit Permissions** — standard `chown`/`chmod` commands are ignored by QTS on shared folders. Ensure the user matching PUID in `.env` has RW access to the `data`, `backup`, and `container` shared folders.
 
 ### Free DNS Port (Port 53)
 
@@ -726,12 +776,15 @@ make backup
 
 | Problem | Probable Cause | Solution |
 |---------|----------------|----------|
-| Container won't start | Folder permissions | `chown -R $PUID:$PGID ./config` (use values from .env) |
+| `git clone` fails with `libgnutls.so.30` error | QGit missing HTTPS library | Install git via Entware (`sudo opkg install git git-http`) or use tarball download (see [Option A workaround](#option-a-git-clone-recommended)) |
+| `make: command not found` | QTS doesn't include make | Install via Entware: `sudo opkg install make` |
+| `chown`/`chmod` ignored on `/share/data` | QTS manages shared folder permissions | Set permissions via QTS Control Panel → Shared Folders → Edit Permissions |
+| Container won't start | Folder permissions | Verify PUID user has RW on shared folders via QTS Control Panel |
 | Hardlink doesn't work | Paths on different filesystems | Verify mount points |
 | qBittorrent "stalled" | Port not reachable | Verify port forwarding 50413 |
 | Pi-hole doesn't resolve | Port 53 in use by dnsmasq | Disable dnsmasq via autorun.sh (see [Free DNS Port](#free-dns-port-port-53)); check `/tmp/autorun.log` for status |
 | WebUI not responding | Container crashed | `docker compose logs <service>` |
-| Incorrect file permissions | PUID/PGID mismatch | Verify `id dockeruser` and update .env |
+| Incorrect file permissions | PUID/PGID mismatch | Check actual owner with `ls -ln /share/data` and update `PUID`/`PGID` in `.env` |
 
 ---
 

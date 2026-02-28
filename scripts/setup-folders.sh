@@ -101,12 +101,6 @@ check_prerequisites() {
         return 0
     fi
 
-    # Check if running as root (required for chown)
-    if [[ $EUID -ne 0 ]]; then
-        log_warn "Script not running as root. chown may fail."
-        log_warn "Run with: sudo ./setup-folders.sh"
-    fi
-
     # Check if DATA_ROOT exists or can be created
     if [[ ! -d "$DATA_ROOT" ]]; then
         log_warn "Directory $DATA_ROOT does not exist. Attempting to create..."
@@ -186,25 +180,11 @@ make_dir "${CONFIG_ROOT}/tailscale"
 SECRETS_ROOT="${SCRIPT_DIR}/../docker/secrets"
 make_dir "${SECRETS_ROOT}/authelia"
 
-# Permissions
-log_info "Setting permissions (PUID=$PUID, PGID=$PGID)..."
-
-if [[ "$DRY_RUN" == true ]]; then
-    log_info "[DRY-RUN] Would set ownership ${PUID}:${PGID} on ${DATA_ROOT}, ${BACKUP_ROOT}, ${CONFIG_ROOT}"
-    log_info "[DRY-RUN] Would set permissions 775 on ${DATA_ROOT}, ${BACKUP_ROOT}, ${CONFIG_ROOT}"
-elif [[ $EUID -eq 0 ]]; then
-    chown -R "${PUID}:${PGID}" "${DATA_ROOT}"
-    chown -R "${PUID}:${PGID}" "${BACKUP_ROOT}"
-    chown -R "${PUID}:${PGID}" "${CONFIG_ROOT}"
-    chmod -R 775 "${DATA_ROOT}"
-    chmod -R 775 "${BACKUP_ROOT}"
-    chmod -R 775 "${CONFIG_ROOT}"
-    log_info "Permissions set correctly"
-else
-    log_warn "Skipping chown (not root). Run manually:"
-    log_warn "  sudo chown -R ${PUID}:${PGID} ${DATA_ROOT} ${BACKUP_ROOT} ${CONFIG_ROOT}"
-    log_warn "  sudo chmod -R 775 ${DATA_ROOT} ${BACKUP_ROOT} ${CONFIG_ROOT}"
-fi
+# Permissions reminder
+# QNAP shared folders (/share/data, /share/backup) ignore CLI chown/chmod.
+# Permissions must be set via QTS Control Panel → Shared Folders → Edit Permissions.
+log_info "Verify shared folder permissions via QTS Control Panel (PUID=$PUID, PGID=$PGID)"
+log_info "Ensure dockeruser (uid $PUID) has RW access to: data, backup, container"
 
 echo ""
 if [[ "$DRY_RUN" == true ]]; then
