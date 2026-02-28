@@ -185,7 +185,13 @@ cd /share/container
 git clone https://github.com/<your-username>/homelab.git mediastack
 cd mediastack
 
-# Option B: Manual copy (if git not available)
+# Option B: Download tarball (if git clone fails with libgnutls error)
+cd /share/container
+wget -qO homelab.tar.gz https://github.com/<your-username>/homelab/archive/refs/heads/main.tar.gz
+tar -xzf homelab.tar.gz && mv homelab-main mediastack && rm homelab.tar.gz
+cd mediastack
+
+# Option C: Manual copy (if git not available)
 # scp -r docker/ scripts/ Makefile admin@192.168.3.10:/share/container/mediastack/
 ```
 

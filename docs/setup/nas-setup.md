@@ -281,7 +281,36 @@ git clone https://github.com/<your-username>/homelab.git mediastack
 cd mediastack
 ```
 
-#### Option B: Manual Copy (if git not available)
+> [!WARNING]
+> **QGit `libgnutls.so.30` error:** If `git clone` fails with:
+> ```
+> git-remote-https: error while loading shared libraries: libgnutls.so.30:
+> cannot open shared object file: No such file or directory
+> ```
+> QGit's HTTPS transport has a missing library dependency. Use **Option B** (download tarball) or **Option C** (SCP) below instead.
+
+#### Option B: Download Tarball (if git clone fails)
+
+```bash
+# Via SSH on NAS
+ssh admin@192.168.3.10
+
+cd /share/container
+
+# Download repository as tarball from GitHub
+wget -qO homelab.tar.gz https://github.com/<your-username>/homelab/archive/refs/heads/main.tar.gz
+
+# Extract and rename to mediastack
+tar -xzf homelab.tar.gz
+mv homelab-main mediastack
+rm homelab.tar.gz
+cd mediastack
+```
+
+> [!NOTE]
+> This downloads a snapshot of the `main` branch. You won't have git history or be able to `git pull` for updates. To update later, repeat the download or use Option C from a machine with working git.
+
+#### Option C: Manual Copy (if git not available)
 
 ```bash
 # Via SSH on NAS
@@ -726,6 +755,7 @@ make backup
 
 | Problem | Probable Cause | Solution |
 |---------|----------------|----------|
+| `git clone` fails with `libgnutls.so.30` error | QGit missing HTTPS library | Use tarball download instead (see [Option B](#option-b-download-tarball-if-git-clone-fails)) |
 | Container won't start | Folder permissions | `chown -R $PUID:$PGID ./config` (use values from .env) |
 | Hardlink doesn't work | Paths on different filesystems | Verify mount points |
 | qBittorrent "stalled" | Port not reachable | Verify port forwarding 50413 |
