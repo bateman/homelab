@@ -123,6 +123,9 @@ services:
     volumes:
       - ./config/pihole/etc-pihole:/etc/pihole
       - ./config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
     ports:
       - "53:53/tcp"
       - "53:53/udp"
