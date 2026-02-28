@@ -383,7 +383,7 @@ TZ=Europe/Rome
 ```
 
 > [!WARNING]
-> **QNAP shared folder permissions:** QTS may ignore standard `chown`/`chmod` commands on shared folders (`/share/data`, `/share/backup`). If `make setup` reports that permissions didn't take effect, set `PUID`/`PGID` in `docker/.env` to match the **actual file owner** (check with `ls -ln /share/data`) rather than trying to change ownership. Alternatively, change ownership via QTS Control Panel → Shared Folders → Edit Permissions.
+> **QNAP shared folder permissions:** QTS ignores `chown`/`chmod` on shared folders (`/share/data`, `/share/backup`). Permissions must be set via **QTS Control Panel → Shared Folders → Edit Permissions** — grant RW to the user matching PUID. Then set `PUID`/`PGID` in `docker/.env` to match that user's UID/GID (check with `id <username>`).
 
 **Mandatory** credentials in `docker/.env.secrets`:
 
@@ -413,7 +413,7 @@ ls -la /share/data/
 ls -la ./config/
 # Should contain subfolders for each service
 
-# Verify ownership (must match PUID:PGID configured)
+# Verify ownership matches PUID:PGID in docker/.env
 ls -ln /share/data
 # Example output for PUID=1001 PGID=100:
 # drwxrwxr-x 1001 100 ... media
@@ -421,14 +421,8 @@ ls -ln /share/data
 # drwxrwxr-x 1001 100 ... usenet
 ```
 
-If permissions are incorrect:
-```bash
-# Replace 1001:100 with your PUID:PGID from .env
-sudo chown -R 1001:100 /share/data
-sudo chown -R 1001:100 /share/container/mediastack/config
-sudo chmod -R 775 /share/data
-sudo chmod -R 775 /share/container/mediastack/config
-```
+> [!IMPORTANT]
+> Shared folder permissions (`/share/data`, `/share/backup`) must be set via **QTS Control Panel → Shared Folders → Edit Permissions** — standard `chown`/`chmod` commands are ignored by QTS on shared folders. Ensure the user matching PUID in `.env` has RW access to the `data`, `backup`, and `container` shared folders.
 
 ### Free DNS Port (Port 53)
 
@@ -784,8 +778,8 @@ make backup
 |---------|----------------|----------|
 | `git clone` fails with `libgnutls.so.30` error | QGit missing HTTPS library | Install git via Entware (`sudo opkg install git git-http`) or use tarball download (see [Option A workaround](#option-a-git-clone-recommended)) |
 | `make: command not found` | QTS doesn't include make | Install via Entware: `sudo opkg install make` |
-| `chown`/`chmod` ignored on `/share/data` | QTS manages shared folder permissions | Set `PUID`/`PGID` in `.env` to match actual owner (`ls -ln /share/data`), or use QTS Control Panel → Shared Folders |
-| Container won't start | Folder permissions | `chown -R $PUID:$PGID ./config` (use values from .env) |
+| `chown`/`chmod` ignored on `/share/data` | QTS manages shared folder permissions | Set permissions via QTS Control Panel → Shared Folders → Edit Permissions |
+| Container won't start | Folder permissions | Verify PUID user has RW on shared folders via QTS Control Panel |
 | Hardlink doesn't work | Paths on different filesystems | Verify mount points |
 | qBittorrent "stalled" | Port not reachable | Verify port forwarding 50413 |
 | Pi-hole doesn't resolve | Port 53 in use by dnsmasq | Disable dnsmasq via autorun.sh (see [Free DNS Port](#free-dns-port-port-53)); check `/tmp/autorun.log` for status |
