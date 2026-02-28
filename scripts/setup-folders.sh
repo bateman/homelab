@@ -205,13 +205,23 @@ else
     fi
 
     if [[ $EUID -eq 0 ]] || [[ -n "${SUDO}" ]]; then
-        $SUDO chown -R "${PUID}:${PGID}" "${DATA_ROOT}"
-        $SUDO chown -R "${PUID}:${PGID}" "${BACKUP_ROOT}"
-        $SUDO chown -R "${PUID}:${PGID}" "${CONFIG_ROOT}"
-        $SUDO chmod -R 775 "${DATA_ROOT}"
-        $SUDO chmod -R 775 "${BACKUP_ROOT}"
-        $SUDO chmod -R 775 "${CONFIG_ROOT}"
-        log_info "Permissions set correctly"
+        $SUDO chown -R "${PUID}:${PGID}" "${DATA_ROOT}" 2>/dev/null
+        $SUDO chown -R "${PUID}:${PGID}" "${BACKUP_ROOT}" 2>/dev/null
+        $SUDO chown -R "${PUID}:${PGID}" "${CONFIG_ROOT}" 2>/dev/null
+        $SUDO chmod -R 775 "${DATA_ROOT}" 2>/dev/null
+        $SUDO chmod -R 775 "${BACKUP_ROOT}" 2>/dev/null
+        $SUDO chmod -R 775 "${CONFIG_ROOT}" 2>/dev/null
+
+        # Verify permissions actually took effect (QNAP shared folders may ignore chown/chmod)
+        ACTUAL_UID=$(stat -c '%u' "${DATA_ROOT}" 2>/dev/null || stat -f '%u' "${DATA_ROOT}" 2>/dev/null)
+        if [[ "$ACTUAL_UID" != "$PUID" ]]; then
+            log_warn "chown did not take effect on ${DATA_ROOT} (expected UID ${PUID}, got ${ACTUAL_UID})"
+            log_warn "QNAP shared folders may ignore standard chown/chmod commands."
+            log_warn "Set PUID=${ACTUAL_UID} in docker/.env to match the actual file owner,"
+            log_warn "or change folder ownership via QTS Control Panel → Shared Folders → Permissions."
+        else
+            log_info "Permissions set correctly"
+        fi
     fi
 fi
 

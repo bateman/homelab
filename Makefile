@@ -99,20 +99,21 @@ help:
 # =============================================================================
 
 setup: check-compose
-	@echo ">>> Creating folder structure..."
-	@if [ ! -x scripts/setup-folders.sh ]; then \
-		chmod +x scripts/setup-folders.sh; \
-	fi
-	@./scripts/setup-folders.sh
 	@if [ ! -f docker/.env ]; then \
 		echo ">>> Creating .env from template..."; \
 		cp docker/.env.example docker/.env; \
+		echo "$(YELLOW)>>> Review docker/.env (PUID/PGID must match file owner of /share/data)$(NC)"; \
 	fi
 	@if [ ! -f docker/.env.secrets ]; then \
 		echo ">>> Creating .env.secrets from template..."; \
 		cp docker/.env.secrets.example docker/.env.secrets; \
 		echo "$(YELLOW)WARNING: Edit docker/.env.secrets with your passwords$(NC)"; \
 	fi
+	@echo ">>> Creating folder structure..."
+	@if [ ! -x scripts/setup-folders.sh ]; then \
+		chmod +x scripts/setup-folders.sh; \
+	fi
+	@./scripts/setup-folders.sh
 	@echo "$(GREEN)>>> Setup complete$(NC)"
 
 setup-dry-run:
