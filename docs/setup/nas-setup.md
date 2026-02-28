@@ -684,11 +684,14 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 
   ```bash
   # Import all lists from docker/config/pihole/adlists.txt into gravity DB
+  # Each URL has an inline comment (e.g., "https://... # Description")
   docker exec pihole bash -c '
-    while IFS= read -r url; do
-      [[ "$url" =~ ^#|^$ ]] && continue
+    while IFS= read -r line; do
+      [[ "$line" =~ ^#|^$ ]] && continue
+      url="${line%% #*}"
+      comment="${line##*# }"
       sqlite3 /etc/pihole/gravity.db \
-        "INSERT OR IGNORE INTO adlist (address, enabled, comment) VALUES (\"$url\", 1, \"bulk import\");"
+        "INSERT OR IGNORE INTO adlist (address, enabled, comment) VALUES (\"$url\", 1, \"$comment\");"
     done < /etc/pihole/adlists.txt && pihole -g
   '
   ```
