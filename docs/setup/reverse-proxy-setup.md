@@ -392,6 +392,26 @@ docker network inspect proxy
 docker inspect sonarr | grep -A 20 Labels
 ```
 
+### qBittorrent "Not Found" via Traefik
+
+qBittorrent v4.6+ enables CSRF and host header validation by default. When accessed through Traefik, the `Host` header (`qbit.home.local`) doesn't match what qBittorrent expects, returning a blank "Not Found" page.
+
+```bash
+# Stop container so config changes aren't overwritten
+docker stop qbittorrent
+
+# Add to qBittorrent.conf under [Preferences]:
+#   WebUI\ServerDomains=qbit.home.local
+# This whitelists the Traefik hostname while keeping CSRF protection enabled.
+
+# Restart
+docker start qbittorrent
+```
+
+> [!TIP]
+> Since Authelia already protects the route, you can alternatively disable both checks:
+> `WebUI\CSRFProtection=false` and `WebUI\HostHeaderValidation=false`
+
 ### 502 Bad Gateway
 
 ```bash
