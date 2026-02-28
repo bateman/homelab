@@ -431,7 +431,7 @@ netstat -tulnp | grep ':53 '
 > Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script runs on every boot so the change persists across reboots.
 
 > [!WARNING]
-> QNAP's **Malware Remover** may delete `autorun.sh` during scans (it targets this file regardless of content, because malware historically abused it). If Pi-hole stops resolving after a Malware Remover scan, re-create `autorun.sh` by repeating Steps 3–6.
+> QNAP's **Malware Remover** may delete `autorun.sh` during scans (it targets this file regardless of content, because malware historically abused it). If Pi-hole stops resolving after a Malware Remover scan, re-create `autorun.sh` by repeating Steps 3–6. If you also use the [custom fan control script](#step-5--persistent-fix-custom-fan-control-script), remember to re-add that entry too.
 
 ### First Startup
 ```bash
@@ -874,6 +874,10 @@ For a solution that survives reboots and automatically adjusts fan speed based o
 > [!IMPORTANT]
 > This NAS already uses `autorun.sh` to [disable dnsmasq for Pi-hole](#free-dns-port-port-53). The fan control daemon must be **appended** to the existing `autorun.sh` — do not overwrite it.
 
+**Prerequisite:** Autorun must be enabled in QTS. If you already completed the [Free DNS Port](#free-dns-port-port-53) setup, this is already done. If not:
+
+- [ ] Control Panel → Hardware → General → check **"Run user defined startup processes (autorun.sh)"** → Apply
+
 **Step 5a — Create the fan control script:**
 
 ```bash
@@ -970,6 +974,9 @@ Unmount:
 ```bash
 umount /tmp/config
 ```
+
+> [!WARNING]
+> QNAP's **Malware Remover** may delete `autorun.sh` during scans (see the [same warning in the dnsmasq section](#free-dns-port-port-53)). If fans return to max speed after a Malware Remover scan, re-create `autorun.sh` with **both** the dnsmasq fix and the fan control line.
 
 **Step 5c — Activate now without rebooting:**
 
