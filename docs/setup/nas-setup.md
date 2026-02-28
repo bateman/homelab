@@ -421,14 +421,21 @@ cat > /tmp/config/autorun.sh << 'EOF'
 #!/bin/sh
 
 # Disable dnsmasq DNS listener so Pi-hole can bind port 53
-cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
-/usr/bin/killall dnsmasq
+# Runs in the background with a delay because autorun.sh executes early
+# during boot — before QTS finishes starting services. Without the delay,
+# QTS restarts dnsmasq after this script kills it, undoing the fix.
+# Full paths are required because PATH is not set when autorun.sh runs.
+(
+  /bin/sleep 60
+  /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+  /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+  /usr/bin/killall dnsmasq
+) &
 EOF
 ```
 
 > [!IMPORTANT]
-> If `autorun.sh` already exists and has other content you want to keep, append only the three `cp`/`sed`/`killall` lines instead of overwriting the file.
+> If `autorun.sh` already exists and has other content you want to keep, append only the backgrounded subshell block above to it.
 
 **Step 5** — Make executable, verify content, and unmount:
 
@@ -447,19 +454,19 @@ Verify the `cat` output shows the full script including the `#!/bin/sh` shebang.
 **Step 6** — Apply now without rebooting (run the same commands directly):
 
 ```bash
-cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
-/usr/bin/killall dnsmasq
+sudo cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sudo sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+sudo /usr/bin/killall dnsmasq
 ```
 
 **Step 7** — Verify port 53 is free:
 
 ```bash
-netstat -tulnp | grep ':53 '
+sudo netstat -tulnp | grep ':53 '
 ```
 
 > [!NOTE]
-> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script runs on every boot so the change persists across reboots.
+> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script runs on every boot so the change persists across reboots. The 60-second delay ensures QTS has fully started its services before the fix is applied — during this window dnsmasq still holds port 53, so start Pi-hole/Docker containers after the NAS has fully booted.
 
 > [!WARNING]
 > QNAP's **Malware Remover** may delete `autorun.sh` during scans (it targets this file regardless of content, because malware historically abused it). If Pi-hole stops resolving after a Malware Remover scan, re-create `autorun.sh` by repeating Steps 3–6.

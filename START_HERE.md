@@ -244,15 +244,15 @@ Quick summary:
 1. **Enable autorun**: Control Panel → Hardware → General → check "Run user defined startup processes (autorun.sh)"
 2. **Mount boot partition**: `mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config`
 3. **Verify mount succeeded**: `mount | grep /tmp/config` — must show output (if empty, mount failed — see full guide for troubleshooting)
-4. **Create** `/tmp/config/autorun.sh` with `#!/bin/sh` shebang and these lines:
+4. **Create** `/tmp/config/autorun.sh` — commands must use full paths and run in a backgrounded subshell with a 60-second delay (autorun.sh executes before QTS finishes starting services, so dnsmasq gets restarted after a direct kill):
    ```bash
-   cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-   sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
-   /usr/bin/killall dnsmasq
+   (/bin/sleep 60 && /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig && \
+     /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf && \
+     /usr/bin/killall dnsmasq) &
    ```
 5. **Verify and unmount**: `chmod +x /tmp/config/autorun.sh && cat /tmp/config/autorun.sh && umount /tmp/config`
-6. **Apply now** (run the cp/sed/killall commands directly)
-7. **Verify**: `netstat -tulnp | grep ':53 '`
+6. **Apply now** (run with sudo): `sudo cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig && sudo sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf && sudo /usr/bin/killall dnsmasq`
+7. **Verify**: `sudo netstat -tulnp | grep ':53 '`
 
 > [!WARNING]
 > QNAP's Malware Remover may delete `autorun.sh` during scans. If Pi-hole stops resolving after a scan, re-create it (see [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53)).
