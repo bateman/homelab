@@ -56,10 +56,10 @@ User Request                      Protected Service
 
 ## Phase 1: Generate Secrets
 
-Authelia requires cryptographic secrets for JWT, sessions, and storage encryption.
+Authelia requires cryptographic secrets for JWT, sessions, and storage encryption. `make setup` generates these automatically, but you can also run the script manually:
 
 ```bash
-# Generate all required secrets
+# Generate all required secrets (already done by make setup)
 ./scripts/generate-authelia-secrets.sh
 
 # Verify secrets were created
