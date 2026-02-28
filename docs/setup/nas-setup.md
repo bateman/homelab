@@ -702,6 +702,10 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
   - `https://perflyst.github.io/PiHoleBlocklist/SmartTV.txt` (Smart TV telemetry)
   - `https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt` (Android tracking)
 
+  **Native platform tracking:**
+  - `https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.apple.txt` (Apple telemetry, analytics, ad tracking)
+  - `https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.winoffice.txt` (Windows & Office telemetry, diagnostics)
+
   **DNS bypass prevention (stops devices circumventing Pi-hole):**
   - `https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/doh-vpn-proxy-bypass.txt` (Hagezi DoH/VPN/Proxy bypass)
 
