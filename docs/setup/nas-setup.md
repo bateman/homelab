@@ -421,9 +421,9 @@ sudo /etc/init.d/init_disk.sh umount_flash_config
 
 ```bash
 sudo /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sudo /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+sudo /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig | sudo tee /etc/dnsmasq.conf > /dev/null
 sudo /usr/bin/killall dnsmasq
-sudo /bin/echo -e "nameserver 192.168.3.10\nnameserver 1.1.1.1" > /etc/resolv.conf
+echo -e "nameserver 192.168.3.10\nnameserver 1.1.1.1" | sudo tee /etc/resolv.conf > /dev/null
 ```
 
 **Step 5** — Verify port 53 is free:
