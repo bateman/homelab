@@ -58,6 +58,7 @@ x-qbittorrent-base: &qbittorrent-base
     WEBUI_PORT: 8080
   volumes:
     - ./config/qbittorrent:/config
+    - ./config/qbittorrent/custom-cont-init.d:/custom-cont-init.d
     - /share/data:/data
   restart: unless-stopped
   logging: *common-logging
