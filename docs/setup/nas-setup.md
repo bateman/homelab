@@ -287,7 +287,19 @@ cd mediastack
 > git-remote-https: error while loading shared libraries: libgnutls.so.30:
 > cannot open shared object file: No such file or directory
 > ```
-> QGit's HTTPS transport has a missing library dependency. Use **Option B** (download tarball) or **Option C** (SCP) below instead.
+> QGit's HTTPS transport has a missing library dependency. Either install git via Entware instead (recommended — gives full git functionality), or use **Option B** (download tarball) as a quick workaround.
+>
+> **Fix: Install git via [Entware](https://github.com/Entware/Entware/wiki/Install-on-QNAP-NAS):**
+> 1. Download QPKG: https://bin.entware.net/other/Entware_1.03a_std.qpkg
+> 2. App Center → Install Manually (top-right icon) → select the downloaded `.qpkg`
+> 3. Open a **new** SSH session (so Entware's PATH is loaded), then:
+>    ```bash
+>    opkg update
+>    opkg install git git-http
+>    ```
+> 4. Retry the `git clone` command above.
+>
+> *Note: Remove QGit first if installed (App Center → MyQNAP → QGit → Remove) to avoid conflicts between the two git installations.*
 
 #### Option B: Download Tarball (if git clone fails)
 
@@ -755,7 +767,7 @@ make backup
 
 | Problem | Probable Cause | Solution |
 |---------|----------------|----------|
-| `git clone` fails with `libgnutls.so.30` error | QGit missing HTTPS library | Use tarball download instead (see [Option B](#option-b-download-tarball-if-git-clone-fails)) |
+| `git clone` fails with `libgnutls.so.30` error | QGit missing HTTPS library | Install git via Entware (`opkg install git git-http`) or use tarball download (see [Option A workaround](#option-a-git-clone-recommended)) |
 | Container won't start | Folder permissions | `chown -R $PUID:$PGID ./config` (use values from .env) |
 | Hardlink doesn't work | Paths on different filesystems | Verify mount points |
 | qBittorrent "stalled" | Port not reachable | Verify port forwarding 50413 |
