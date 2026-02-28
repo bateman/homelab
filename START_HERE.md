@@ -242,14 +242,19 @@ QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port,
 Quick summary:
 
 1. **Enable autorun**: Control Panel → Hardware → General → check "Run user defined startup processes (autorun.sh)"
-2. **Mount boot partition**: `mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config`
-3. **Create/edit** `/tmp/config/autorun.sh` with these lines:
+2. **Mount flash config**: `sudo /etc/init.d/init_disk.sh mount_flash_config`
+3. **Write** `/tmp/nasconfig_tmp/autorun.sh`:
    ```bash
-   cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-   sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+   sudo tee /tmp/nasconfig_tmp/autorun.sh << 'EOF'
+   #!/bin/sh
+   /bin/echo "autorun.sh fired at $(/bin/date)" >> /tmp/autorun.log
+   /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+   /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
    /usr/bin/killall dnsmasq
+   /bin/echo "dnsmasq killed at $(/bin/date)" >> /tmp/autorun.log
+   EOF
    ```
-4. **Make executable and unmount**: `chmod +x /tmp/config/autorun.sh && umount /tmp/config`
+4. **Make executable and unmount**: `sudo chmod +x /tmp/nasconfig_tmp/autorun.sh && sudo /etc/init.d/init_disk.sh umount_flash_config`
 5. **Apply now** (run the cp/sed/killall commands directly)
 6. **Verify**: `netstat -tulnp | grep ':53 '`
 
