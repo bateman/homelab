@@ -388,8 +388,8 @@ TZ=Europe/Rome
 **Mandatory** credentials in `docker/.env.secrets`:
 
 ```bash
-# Password for Pi-hole web interface (generate with: openssl rand -base64 24)
-PIHOLE_PASSWORD=<secure-password>
+# Pi-hole WebUI password (generate with: openssl rand -base64 24)
+FTLCONF_webserver_api_password=<secure-password>
 
 # VPN credentials (if using vpn profile) — see docs/setup/vpn-setup.md
 # VPN_SERVICE_PROVIDER=nordvpn
@@ -672,7 +672,7 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 ## Pi-hole Configuration
 
 - [ ] Access `http://192.168.3.10:8081/admin`
-- [ ] Login with password from `.env.secrets` (PIHOLE_PASSWORD)
+- [ ] Login with password from `.env.secrets` (`FTLCONF_webserver_api_password`)
 - [ ] Settings → DNS:
   - Upstream DNS: verify 1.1.1.1, 1.0.0.1
   - Interface: respond on all interfaces

@@ -222,7 +222,7 @@ TZ=Europe/Rome
 
 ```bash
 # Pi-hole WebUI password (generate with: openssl rand -base64 24)
-PIHOLE_PASSWORD=<secure-password>
+FTLCONF_webserver_api_password=<secure-password>
 
 # VPN credentials (if using vpn profile) — see docs/setup/vpn-setup.md
 ```
