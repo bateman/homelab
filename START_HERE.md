@@ -251,7 +251,9 @@ Quick summary:
    /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
    /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
    /usr/bin/killall dnsmasq
-   /bin/echo "dnsmasq killed at $(/bin/date)" >> /tmp/autorun.log
+   # Point NAS DNS at Pi-hole (once running) with external fallback
+   /bin/echo -e "nameserver 192.168.3.10\nnameserver 1.1.1.1" > /etc/resolv.conf
+   /bin/echo "dnsmasq killed, resolv.conf updated at $(/bin/date)" >> /tmp/autorun.log
    EOF
    ```
 4. **Make executable and unmount**: `sudo chmod +x /tmp/nasconfig_tmp/autorun.sh && sudo /etc/init.d/init_disk.sh umount_flash_config`

@@ -401,7 +401,9 @@ sudo tee /tmp/nasconfig_tmp/autorun.sh << 'EOF'
 /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
 /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 /usr/bin/killall dnsmasq
-/bin/echo "dnsmasq killed at $(/bin/date)" >> /tmp/autorun.log
+# Point NAS DNS at Pi-hole (once running) with external fallback
+/bin/echo -e "nameserver 192.168.3.10\nnameserver 1.1.1.1" > /etc/resolv.conf
+/bin/echo "dnsmasq killed, resolv.conf updated at $(/bin/date)" >> /tmp/autorun.log
 EOF
 
 # Make executable and verify contents
@@ -421,6 +423,7 @@ sudo /etc/init.d/init_disk.sh umount_flash_config
 sudo /bin/cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
 sudo /bin/sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 sudo /usr/bin/killall dnsmasq
+sudo /bin/echo -e "nameserver 192.168.3.10\nnameserver 1.1.1.1" > /etc/resolv.conf
 ```
 
 **Step 5** — Verify port 53 is free:
@@ -430,7 +433,7 @@ netstat -tulnp | grep ':53 '
 ```
 
 > [!NOTE]
-> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. The `autorun.sh` script runs on every boot so the change persists across reboots. Log entries are written to `/tmp/autorun.log` for troubleshooting.
+> Setting `port=0` disables dnsmasq's DNS listener while keeping the process available for other internal QTS functions. Because dnsmasq also served as the NAS's local resolver, the script rewrites `/etc/resolv.conf` to use Pi-hole (`192.168.3.10`) with Cloudflare (`1.1.1.1`) as fallback — this ensures the NAS can still resolve names at boot before Pi-hole's container is up. The `autorun.sh` script runs on every boot so the change persists across reboots. Log entries are written to `/tmp/autorun.log` for troubleshooting.
 
 > [!WARNING]
 > QNAP's **Malware Remover** may delete `autorun.sh` during scans (it targets this file regardless of content, because malware historically abused it). If Pi-hole stops resolving after a Malware Remover scan, re-create `autorun.sh` by repeating Step 3.
