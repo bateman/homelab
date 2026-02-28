@@ -680,11 +680,30 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 - [ ] Settings → DNS:
   - Upstream DNS: verify 1.1.1.1, 1.0.0.1
   - Interface: respond on all interfaces
-- [ ] Adlists → Add additional lists (optional):
-  - `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts`
-  - `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/multi.txt` (Hagezi Multi - recommended)
-  - `https://small.oisd.nl/domainswild` (OISD - unified blocklist)
-  - `https://v.firebog.net/hosts/lists.php?type=tick` (Firebog Ticked - community curated)
+- [ ] Adlists → Add recommended blocklists:
+
+  **Core lists (recommended baseline):**
+  - `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts` (StevenBlack - ads + malware unified hosts)
+  - `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/multi.txt` (Hagezi Multi - comprehensive ads/tracking/malware)
+  - `https://small.oisd.nl/domainswild` (OISD - unified blocklist, low false positives)
+  - `https://v.firebog.net/hosts/lists.php?type=tick` (Firebog Ticked - community curated safe lists)
+
+  **Ads & tracking (complementary):**
+  - `https://v.firebog.net/hosts/Easylist.txt` (EasyList - same list used by uBlock Origin)
+  - `https://v.firebog.net/hosts/Easyprivacy.txt` (EasyPrivacy - tracker blocking)
+  - `https://v.firebog.net/hosts/AdguardDNS.txt` (AdGuard DNS filter)
+
+  **Malware & phishing:**
+  - `https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/tif.txt` (Hagezi TIF - threat intelligence feeds)
+  - `https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt` (Dandelion Sprout's Anti-Malware)
+  - `https://phishing.army/download/phishing_army_blocklist.txt` (Phishing Army)
+
+  **Smart TV & IoT tracking:**
+  - `https://perflyst.github.io/PiHoleBlocklist/SmartTV.txt` (Smart TV telemetry)
+  - `https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt` (Android tracking)
+
+  **DNS bypass prevention (stops devices circumventing Pi-hole):**
+  - `https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/doh-vpn-proxy-bypass.txt` (Hagezi DoH/VPN/Proxy bypass)
 
 ### Configure UDM-SE to use Pi-hole
 - [ ] UDM-SE → Settings → Networks → (each VLAN)
