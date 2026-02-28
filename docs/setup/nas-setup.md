@@ -49,28 +49,16 @@
 
 ## Storage Configuration
 
-### Filesystem Choice: ext4 vs ZFS
+### Filesystem: ext4
 
-| Aspect | ext4 | ZFS |
-|--------|------|-----|
-| **Minimum RAM** | ~256MB | **8-16GB dedicated** (1GB/TB for ARC) |
-| **CPU overhead** | Low | Medium-high (checksumming, compression) |
-| **Complexity** | Simple, mature | Complex, steep learning curve |
-| **Data integrity** | Basic (journaling) | Excellent (end-to-end checksumming) |
-| **Snapshots** | No (requires LVM) | Yes, native and efficient |
-| **Self-healing** | No | Yes (with mirror/raidz) |
-| **Compression** | No | Yes (LZ4, ZSTD) - 10-30% gain |
-| **Hardlinking** | ✓ Excellent | ✓ Excellent |
-| **QNAP QTS support** | Native, stable | Limited |
+QTS uses **ext4** — this is not a user-configurable option during storage pool or volume creation. ext4 is well suited for this setup:
 
-**Recommendation: ext4**
-- QTS has native and stable support
-- TS-435XeU has limited RAM (typically 4-8GB)
-- For media server, advanced ZFS features are not critical
-- Hardlinking works perfectly
+- Native QTS filesystem with stable, mature support
+- Low RAM/CPU overhead
+- Hardlinking works perfectly (critical for the media stack)
 
 > [!NOTE]
-> ZFS would make sense with 16GB+ RAM and maximum priority on data integrity, or on Proxmox/TrueNAS.
+> ZFS is only available on platforms like TrueNAS or Proxmox. With 16GB RAM installed, ZFS would be viable on those platforms if data integrity were a priority.
 
 ### RAID Choice: RAID 5 vs RAID 10
 
@@ -108,7 +96,7 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 
 | Component | Choice | Reason |
 |-----------|--------|--------|
-| **Filesystem** | ext4 | QTS compatibility, low RAM/CPU overhead |
+| **Filesystem** | ext4 | QTS default — not user-configurable |
 | **RAID** | RAID 10 | I/O performance for Docker, safe rebuild |
 | **Volume** | Thick | Preallocated space on Storage Pool; near-identical performance to Static |
 
@@ -163,6 +151,29 @@ Random Write 4K:    ~100 IOPS       ~400 IOPS  ← critical difference for Docke
 
 > [!NOTE]
 > A single-SSD write cache has a small risk: if the SSD fails before flushing writes to the HDDs, that data is lost. This is acceptable for a media server — files are re-downloadable and configs are backed up via Duplicati. For zero risk, use Read-Only mode instead (no write acceleration).
+
+### Global Storage Settings
+
+**Path:** Control Panel → Storage & Snapshots → Storage/Snapshots → Global Settings (gear icon)
+
+**RAID Resync Priority:**
+- [ ] Set to **Medium** — balances rebuild speed with service availability
+
+**RAID Scrubbing Schedule:**
+- [ ] Enable scheduled scrubbing: **Monthly** — detects silent data corruption (bit rot) on RAID arrays
+- [ ] Schedule during low-usage window (e.g., 1st of month, 03:00)
+
+**File System Check (e2fsck):**
+- [ ] Auto file system check: **Enable** — runs e2fsck on the next reboot after unclean shutdown
+- [ ] Scheduled file system check: **Enable** — periodic integrity check
+  - Frequency: **Monthly** (or every 30 days)
+  - Schedule during maintenance window (e.g., 1st of month, 04:00)
+
+**Auto Reclaim (SSD TRIM):**
+- [ ] Auto Reclaim: **Enable** — sends TRIM commands to SSDs to reclaim unused blocks, maintaining write performance over time
+
+> [!TIP]
+> RAID scrubbing and e2fsck are different layers of protection: scrubbing checks RAID consistency (disk-level), while e2fsck checks filesystem integrity (ext4-level). Both should be enabled.
 
 ### Shared Folders
 Create the following shared folders on DataVol1:
