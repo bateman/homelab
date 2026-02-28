@@ -237,7 +237,7 @@ sudo chown -R 1001:100 ./config
 
 ### 4.2.2 Free DNS Port (Port 53)
 
-QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle — it requires an `autorun.sh` script. See [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53) for full step-by-step details.
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle — it requires an `autorun.sh` script (see [QNAP FAQ: Running Your Own Application at Startup](https://www.qnap.com/en/how-to/faq/article/running-your-own-application-at-startup)). See [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53) for full step-by-step details.
 
 Quick summary:
 

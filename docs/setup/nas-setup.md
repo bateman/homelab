@@ -376,7 +376,7 @@ sudo chmod -R 775 /share/container/mediastack/config
 
 ### Free DNS Port (Port 53)
 
-QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle for this — it requires an `autorun.sh` script on the flash config partition.
+QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port, so `dnsmasq` must be disabled. There is no GUI toggle for this — it requires an `autorun.sh` script on the flash config partition. See [QNAP FAQ: Running Your Own Application at Startup](https://www.qnap.com/en/how-to/faq/article/running-your-own-application-at-startup) for official documentation on `autorun.sh`.
 
 **Step 1** — Enable autorun support (required since QTS 4.3.3):
 
