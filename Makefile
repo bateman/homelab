@@ -47,6 +47,13 @@ check-curl:
 
 validate: check-compose
 	@echo ">>> Validating configuration..."
+	@if grep -q 'COMPOSE_PROFILES=.*vpn' docker/.env 2>/dev/null && \
+		! grep -q 'COMPOSE_PROFILES=.*novpn' docker/.env 2>/dev/null; then \
+		if ! grep -q '^VPN_SERVICE_PROVIDER=' docker/.env.secrets 2>/dev/null; then \
+			echo "$(RED)Error: VPN_SERVICE_PROVIDER not set in docker/.env.secrets (required for vpn profile)$(NC)"; \
+			exit 1; \
+		fi; \
+	fi
 	@$(COMPOSE_CMD) config --quiet && \
 		echo "$(GREEN)Configuration valid$(NC)" || { \
 		echo "$(RED)Error in compose configuration$(NC)"; \
