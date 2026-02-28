@@ -284,15 +284,17 @@ docker restart authelia
 
 ### What's Protected
 
-- All WebUI access requires authentication
+- All WebUI access **via Traefik** (e.g., `https://sonarr.home.local`) requires authentication
 - Passkeys provide phishing-resistant 2FA
 - Sessions are encrypted and time-limited
 
 ### What's NOT Protected
 
-- Direct port access (e.g., http://192.168.3.10:8989)
-- API endpoints (for inter-service communication)
-- Home Assistant (has its own robust auth)
+Authelia is a Traefik middleware — it only sees requests that go through Traefik. Anything that bypasses Traefik bypasses Authelia:
+
+- **Direct port access** (e.g., `http://192.168.3.10:8989`) — requests go straight to the container, never touching Traefik or Authelia. This is why each *arr app still needs its own username/password as a fallback.
+- **API endpoints** (`/api/*`, `/ping`, `/health`) — intentionally bypassed so *arr services can communicate with each other.
+- **Home Assistant** — has its own robust auth; Authelia middleware is not applied to its Traefik route.
 
 ### Recommendations
 
