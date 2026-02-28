@@ -101,10 +101,9 @@ check_prerequisites() {
         return 0
     fi
 
-    # Check if running as root (required for chown)
-    if [[ $EUID -ne 0 ]]; then
-        log_warn "Script not running as root. chown may fail."
-        log_warn "Run with: sudo ./setup-folders.sh"
+    # Check if sudo is available (needed for chown/chmod when not root)
+    if [[ $EUID -ne 0 ]] && ! command -v sudo &> /dev/null; then
+        log_warn "Not running as root and sudo not available. chown/chmod will be skipped."
     fi
 
     # Check if DATA_ROOT exists or can be created
@@ -192,18 +191,28 @@ log_info "Setting permissions (PUID=$PUID, PGID=$PGID)..."
 if [[ "$DRY_RUN" == true ]]; then
     log_info "[DRY-RUN] Would set ownership ${PUID}:${PGID} on ${DATA_ROOT}, ${BACKUP_ROOT}, ${CONFIG_ROOT}"
     log_info "[DRY-RUN] Would set permissions 775 on ${DATA_ROOT}, ${BACKUP_ROOT}, ${CONFIG_ROOT}"
-elif [[ $EUID -eq 0 ]]; then
-    chown -R "${PUID}:${PGID}" "${DATA_ROOT}"
-    chown -R "${PUID}:${PGID}" "${BACKUP_ROOT}"
-    chown -R "${PUID}:${PGID}" "${CONFIG_ROOT}"
-    chmod -R 775 "${DATA_ROOT}"
-    chmod -R 775 "${BACKUP_ROOT}"
-    chmod -R 775 "${CONFIG_ROOT}"
-    log_info "Permissions set correctly"
 else
-    log_warn "Skipping chown (not root). Run manually:"
-    log_warn "  sudo chown -R ${PUID}:${PGID} ${DATA_ROOT} ${BACKUP_ROOT} ${CONFIG_ROOT}"
-    log_warn "  sudo chmod -R 775 ${DATA_ROOT} ${BACKUP_ROOT} ${CONFIG_ROOT}"
+    # Use sudo when not running as root
+    SUDO=""
+    if [[ $EUID -ne 0 ]]; then
+        if command -v sudo &> /dev/null; then
+            SUDO="sudo"
+        else
+            log_warn "Skipping chown/chmod (not root and sudo not available). Run manually:"
+            log_warn "  chown -R ${PUID}:${PGID} ${DATA_ROOT} ${BACKUP_ROOT} ${CONFIG_ROOT}"
+            log_warn "  chmod -R 775 ${DATA_ROOT} ${BACKUP_ROOT} ${CONFIG_ROOT}"
+        fi
+    fi
+
+    if [[ $EUID -eq 0 ]] || [[ -n "${SUDO}" ]]; then
+        $SUDO chown -R "${PUID}:${PGID}" "${DATA_ROOT}"
+        $SUDO chown -R "${PUID}:${PGID}" "${BACKUP_ROOT}"
+        $SUDO chown -R "${PUID}:${PGID}" "${CONFIG_ROOT}"
+        $SUDO chmod -R 775 "${DATA_ROOT}"
+        $SUDO chmod -R 775 "${BACKUP_ROOT}"
+        $SUDO chmod -R 775 "${CONFIG_ROOT}"
+        log_info "Permissions set correctly"
+    fi
 fi
 
 echo ""
