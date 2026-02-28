@@ -727,6 +727,301 @@ make backup
 | Pi-hole doesn't resolve | Port 53 in use by dnsmasq | Disable dnsmasq via autorun.sh (see [Free DNS Port](#free-dns-port-port-53)) |
 | WebUI not responding | Container crashed | `docker compose logs <service>` |
 | Incorrect file permissions | PUID/PGID mismatch | Verify `id dockeruser` and update .env |
+| Fans at max speed despite cool HDDs | M.2 SSD ≥70°C triggers hardcoded override | See [Fan Noise Fix](#fan-noise-fix-m2-ssd-thermal-override) below |
+
+---
+
+## Fan Noise Fix (M.2 SSD Thermal Override)
+
+The TS-435XeU has three 40mm fans (QNAP part FAN-4CM-R01) rated up to ~9,000 RPM. If fans run at maximum speed despite HDD temps of 38–40°C, the cause is almost certainly the **hardcoded M.2 SSD thermal override**: QTS forces 100% fan speed when any M.2 drive reaches 70°C. This threshold is not configurable through the QTS GUI. NVMe drives in a cramped 1U chassis routinely hit 70°C under sustained I/O.
+
+A second, less likely cause is a Smart Fan bug where Quiet/Normal/Performance modes produce no actual RPM change — this has been confirmed across multiple QNAP models and QTS versions.
+
+### Step 1 — Diagnose: Check M.2 SSD Temperature
+
+Before changing anything, confirm the M.2 drive is actually hitting the 70°C threshold.
+
+**Via QTS GUI:**
+
+- [ ] Storage & Snapshots → Disks/VJBOD → select the M.2 disk → Disk Health → check temperature
+
+**Via SSH:**
+
+```bash
+ssh admin@192.168.3.10
+
+# Check system and CPU temps (what Smart Fan uses internally)
+getsysinfo systmp
+getsysinfo cputmp
+
+# Check HDD temps (one per disk, 1-indexed)
+getsysinfo hdtmp 1
+getsysinfo hdtmp 2
+
+# Check M.2 SSD temp via smartctl (if available)
+smartctl -a /dev/nvme0 | grep -i temperature
+# Or on some QTS versions:
+smartctl -a /dev/nvme0n1 | grep -i temperature
+```
+
+> [!TIP]
+> If `smartctl` is not found, install it from the MyQNAP repo (App Center → MyQNAP → QSmart Tools) or check the temperature from the QTS GUI as described above.
+
+**If M.2 temp is at or above 70°C** → the override is active. Proceed to Step 2 (hardware fix) first, then optionally Steps 3–5 for additional software tuning.
+
+**If M.2 temp is below 70°C** → the cause is likely a Smart Fan firmware bug. Skip to Step 3.
+
+### Step 2 — Hardware Fix: M.2 Heatsink (Recommended First Action)
+
+Addressing the root cause (M.2 overheating) is more effective than fighting the firmware. An aftermarket M.2 heatsink can reduce NVMe temps by 10–15°C, potentially keeping the drive below the 70°C threshold permanently.
+
+- [ ] Power down the NAS
+- [ ] Install an M.2 2280 heatsink with thermal pad on the NVMe drive
+  - Look for low-profile heatsinks (under 10mm height) to fit the TS-435XeU's internal clearance
+  - Ensure the heatsink does not contact other components or obstruct airflow
+- [ ] Power on and monitor temps for 24–48 hours under normal workload
+
+> [!IMPORTANT]
+> Verify internal clearance before purchasing a heatsink. The TS-435XeU's 1U form factor has limited vertical space above the M.2 slot. Measure before buying.
+
+If the heatsink alone drops the M.2 below 70°C, the fan override disengages and no further action is needed. If temps still hover near 70°C, combine with the software workarounds below.
+
+### Step 3 — Software Fix: Adjust Smart Fan Thresholds via SSH
+
+The least invasive software fix. This raises the temperature thresholds in QTS's Smart Fan configuration file so fans stay at lower speeds longer. This does **not** override the hardcoded 70°C M.2 cutoff — it only affects the normal Smart Fan curve based on the system temperature sensor.
+
+```bash
+ssh admin@192.168.3.10
+
+# View current thresholds
+getcfg Misc "system stop temp" -f /etc/config/uLinux.conf
+getcfg Misc "system low temp" -f /etc/config/uLinux.conf
+getcfg Misc "system high temp" -f /etc/config/uLinux.conf
+
+# Raise thresholds (adjust values for your environment)
+setcfg Misc "system stop temp" 34 -f /etc/config/uLinux.conf
+setcfg Misc "system low temp" 44 -f /etc/config/uLinux.conf
+setcfg Misc "system high temp" 60 -f /etc/config/uLinux.conf
+
+# Verify the changes took effect
+getcfg Misc "system low temp" -f /etc/config/uLinux.conf
+```
+
+After editing, force `hal_daemon` to reload by toggling Smart Fan mode in the QTS GUI:
+
+- [ ] Control Panel → Hardware → Smart Fan
+- [ ] Switch to Manual mode → Apply
+- [ ] Switch back to your preferred mode (Quiet) → Apply
+
+> [!WARNING]
+> These changes survive reboots but **may be overwritten by firmware updates**. After any QTS firmware update, re-check the values and reapply if needed.
+
+### Step 4 — Software Fix: Manual Fan Speed via `hal_app`
+
+If Smart Fan threshold tweaks aren't enough (or if the Smart Fan mode-switching bug applies to your firmware), bypass Smart Fan entirely using `hal_app` to set fan speeds directly.
+
+**Prerequisite:** Set Smart Fan to **Manual** mode in QTS first, otherwise `hal_daemon` overrides your settings within minutes.
+
+- [ ] Control Panel → Hardware → Smart Fan → Manual → Apply
+
+**Step 4a — Discover hardware layout:**
+
+```bash
+# Show fan count and hardware info
+hal_app --se_sys_getinfo enc_sys_id=root
+# Expected: max_fan_num = 3
+
+# Check MCU firmware version
+hal_app --get_mcu_version mode=0
+```
+
+**Step 4b — Read current fan speeds:**
+
+```bash
+# Fan RPMs (obj_index 0, 1, 2 for three fans)
+hal_app --se_sys_get_fan enc_sys_id=root,obj_index=0
+hal_app --se_sys_get_fan enc_sys_id=root,obj_index=1
+hal_app --se_sys_get_fan enc_sys_id=root,obj_index=2
+```
+
+**Step 4c — Set fan speed:**
+
+```bash
+# Mode 0–7: 0 = lowest (~3,500 RPM), 7 = maximum (~9,000 RPM)
+# Start with mode 1 and increase if temps rise above safe levels
+hal_app --se_sys_set_fan_mode enc_sys_id=root,obj_index=0,mode=1
+hal_app --se_sys_set_fan_mode enc_sys_id=root,obj_index=1,mode=1
+hal_app --se_sys_set_fan_mode enc_sys_id=root,obj_index=2,mode=1
+```
+
+> [!IMPORTANT]
+> Even in Manual mode, the **firmware-level 70°C M.2 override may still engage** and force fans to max. If this happens, the M.2 heatsink (Step 2) is the only way to prevent it. The `hal_app` commands only work reliably when M.2 temps are below the override threshold.
+
+**Step 4d — Monitor after changing fan speed:**
+
+```bash
+# Check temps periodically after reducing fan speed
+getsysinfo systmp    # System temp (keep below 60°C)
+getsysinfo cputmp    # CPU temp
+getsysinfo hdtmp 1   # HDD 1 (keep below 45°C for longevity)
+getsysinfo hdtmp 2   # HDD 2
+```
+
+### Step 5 — Persistent Fix: Custom Fan Control Script
+
+For a solution that survives reboots and automatically adjusts fan speed based on temperature, deploy a custom script that replaces Smart Fan logic entirely.
+
+> [!IMPORTANT]
+> This NAS already uses `autorun.sh` to [disable dnsmasq for Pi-hole](#free-dns-port-port-53). The fan control daemon must be **appended** to the existing `autorun.sh` — do not overwrite it.
+
+**Step 5a — Create the fan control script:**
+
+```bash
+cat > /share/CACHEDEV1_DATA/scripts/fan_control.sh << 'SCRIPT'
+#!/bin/bash
+# Custom fan control for QNAP TS-435XeU
+# Bypasses QTS Smart Fan to provide temperature-based fan curve.
+# Monitors CPU temp and adjusts all three 40mm fans accordingly.
+#
+# Prerequisites:
+#   - Smart Fan set to Manual mode in QTS GUI
+#   - autorun.sh configured to start this script on boot
+#
+# Fan modes: 0 = ~3,500 RPM (quiet), 7 = ~9,000 RPM (max)
+
+POLL_INTERVAL=60
+FAN_COUNT=3
+
+# Temperature thresholds (°C) and corresponding fan modes (0–7)
+# At CPU temp X or above, use fan mode Y
+declare -a TEMP_THRESHOLDS=(40 45 50 55 60 65 70 75)
+declare -a FAN_MODES=(       0  1  2  3  4  5  6  7)
+
+set_all_fans() {
+    local mode=$1
+    for ((i = 0; i < FAN_COUNT; i++)); do
+        hal_app --se_sys_set_fan_mode enc_sys_id=root,obj_index=$i,mode=$mode
+    done
+}
+
+while true; do
+    CPU_TEMP=$(getsysinfo cputmp | grep -o '[0-9]*' | head -1)
+
+    # Default to lowest mode, then walk up the threshold table
+    TARGET_MODE=0
+    for ((j = 0; j < ${#TEMP_THRESHOLDS[@]}; j++)); do
+        if (( CPU_TEMP >= TEMP_THRESHOLDS[j] )); then
+            TARGET_MODE=${FAN_MODES[$j]}
+        fi
+    done
+
+    set_all_fans "$TARGET_MODE"
+    sleep "$POLL_INTERVAL"
+done
+SCRIPT
+
+chmod +x /share/CACHEDEV1_DATA/scripts/fan_control.sh
+```
+
+> [!NOTE]
+> This script monitors **CPU temperature**, not M.2 temperature, because `getsysinfo` does not expose M.2 temps directly. If the M.2 70°C firmware override is your primary issue, you **must** also install an M.2 heatsink (Step 2) — this script cannot prevent the firmware-level override from engaging.
+
+**Step 5b — Add to existing `autorun.sh`:**
+
+```bash
+# Mount the boot partition
+mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
+
+# Verify existing autorun.sh content (should contain dnsmasq fix)
+cat /tmp/config/autorun.sh
+```
+
+Append the fan control daemon start command:
+
+```bash
+cat >> /tmp/config/autorun.sh << 'EOF'
+
+# Start custom fan control daemon (bypasses Smart Fan)
+/sbin/daemon_mgr fanCtrl start "/share/CACHEDEV1_DATA/scripts/fan_control.sh &" &
+EOF
+```
+
+Verify the file now contains both the dnsmasq fix and the fan control line:
+
+```bash
+cat /tmp/config/autorun.sh
+```
+
+Expected contents (order may vary):
+
+```bash
+#!/bin/sh
+# Disable dnsmasq DNS listener so Pi-hole can bind port 53
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
+/usr/bin/killall dnsmasq
+
+# Start custom fan control daemon (bypasses Smart Fan)
+/sbin/daemon_mgr fanCtrl start "/share/CACHEDEV1_DATA/scripts/fan_control.sh &" &
+```
+
+Unmount:
+
+```bash
+umount /tmp/config
+```
+
+**Step 5c — Activate now without rebooting:**
+
+```bash
+# Set Smart Fan to Manual first (via QTS GUI), then:
+/sbin/daemon_mgr fanCtrl start "/share/CACHEDEV1_DATA/scripts/fan_control.sh &" &
+```
+
+**Step 5d — Verify it's running:**
+
+```bash
+ps aux | grep fan_control
+# Should show the script running
+
+# Check current fan RPMs
+hal_app --se_sys_get_fan enc_sys_id=root,obj_index=0
+hal_app --se_sys_get_fan enc_sys_id=root,obj_index=1
+hal_app --se_sys_get_fan enc_sys_id=root,obj_index=2
+```
+
+### Step 6 — Hardware Alternative: Noctua Fan Swap
+
+If software fixes are insufficient or you want a permanent noise floor reduction, the stock fans can be replaced with quieter units.
+
+| Spec | Stock (FAN-4CM-R01) | Noctua NF-A4x20 PWM |
+|------|---------------------|----------------------|
+| Size | 40×40×20mm | 40×40×20mm |
+| Max RPM | ~9,000 | ~5,000 (4,400 with LNA) |
+| Connector | 4-pin PWM, 12V | 4-pin PWM, 12V |
+| Noise at max | High | Significantly lower |
+| Max airflow | 100% (baseline) | ~56% of stock |
+
+- [ ] Purchase 3x **Noctua NF-A4x20 PWM** (the 12V version — **not** the 5V variant)
+- [ ] Power down the NAS and swap all three fans
+- [ ] Power on and monitor HDD temps for 48+ hours
+
+> [!WARNING]
+> The ~44% reduction in maximum airflow is significant in a 1U chassis. At your current HDD temps (38–40°C) there is thermal headroom, but monitor closely during summer months or sustained heavy I/O. If HDD temps approach 50°C, consider reverting or improving case airflow.
+
+### Summary: Recommended Order of Actions
+
+| Priority | Action | Addresses |
+|----------|--------|-----------|
+| 1 | [Check M.2 temp](#step-1--diagnose-check-m2-ssd-temperature) | Confirms root cause |
+| 2 | [Install M.2 heatsink](#step-2--hardware-fix-m2-heatsink-recommended-first-action) | Root cause (M.2 ≥70°C override) |
+| 3 | [Raise Smart Fan thresholds](#step-3--software-fix-adjust-smart-fan-thresholds-via-ssh) | Normal fan curve too aggressive |
+| 4 | [Manual `hal_app` control](#step-4--software-fix-manual-fan-speed-via-hal_app) | Smart Fan mode bug / fine-tuning |
+| 5 | [Custom fan script](#step-5--persistent-fix-custom-fan-control-script) | Long-term automated control |
+| 6 | [Noctua fan swap](#step-6--hardware-alternative-noctua-fan-swap) | Permanent noise floor reduction |
+
+> [!TIP]
+> Most users find that an M.2 heatsink (Step 2) alone solves the problem. If the M.2 stays below 70°C, the firmware override never triggers and Smart Fan behaves normally. The software and fan-swap options are fallbacks for cases where the heatsink isn't enough or the Smart Fan firmware bug applies.
 
 ---
 
