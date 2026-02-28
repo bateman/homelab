@@ -69,7 +69,7 @@ help:
 	@printf "  $(GREEN)$(BOLD)MEDIA STACK$(NC) - Available commands\n"
 	@printf "\n"
 	@printf "  $(PURPLE)Setup & Validation$(NC)\n"
-	@printf "    $(CYAN)make setup$(NC)         - Create folder structure (run once)\n"
+	@printf "    $(CYAN)make setup$(NC)         - Create folders, secrets, and certs (run once)\n"
 	@printf "    $(CYAN)make setup-dry-run$(NC) - Preview folder structure (no changes)\n"
 	@printf "    $(CYAN)make validate$(NC)      - Verify compose configuration\n"
 	@printf "\n"
@@ -121,6 +121,24 @@ setup: check-compose
 		chmod +x scripts/setup-folders.sh; \
 	fi
 	@./scripts/setup-folders.sh
+	@echo ">>> Generating Authelia secrets..."
+	@if [ ! -f docker/secrets/authelia/JWT_SECRET ]; then \
+		if [ ! -x scripts/generate-authelia-secrets.sh ]; then \
+			chmod +x scripts/generate-authelia-secrets.sh; \
+		fi; \
+		./scripts/generate-authelia-secrets.sh; \
+	else \
+		printf "$(GREEN)>>> Authelia secrets already exist (skipping)$(NC)\n"; \
+	fi
+	@echo ">>> Generating TLS certificates..."
+	@if [ ! -f docker/config/traefik/certs/home.local.crt ]; then \
+		if [ ! -x scripts/generate-certs.sh ]; then \
+			chmod +x scripts/generate-certs.sh; \
+		fi; \
+		./scripts/generate-certs.sh; \
+	else \
+		printf "$(GREEN)>>> TLS certificates already exist (skipping)$(NC)\n"; \
+	fi
 	@printf "$(GREEN)>>> Setup complete$(NC)\n"
 
 setup-dry-run:

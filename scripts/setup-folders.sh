@@ -180,6 +180,26 @@ make_dir "${CONFIG_ROOT}/tailscale"
 SECRETS_ROOT="${SCRIPT_DIR}/../docker/secrets"
 make_dir "${SECRETS_ROOT}/authelia"
 
+# Set ownership on config directories (containers run as PUID:PGID)
+if [[ "$DRY_RUN" == true ]]; then
+    log_info "[DRY-RUN] Would set ownership of config dirs to ${PUID}:${PGID}"
+else
+    log_info "Setting ownership of config directories to ${PUID}:${PGID}..."
+    if chown -R "${PUID}:${PGID}" "${CONFIG_ROOT}" 2>/dev/null; then
+        log_info "Config directory ownership set"
+    else
+        log_warn "Could not set ownership on ${CONFIG_ROOT}. Containers may have permission issues."
+        log_warn "Fix manually: chown -R ${PUID}:${PGID} ${CONFIG_ROOT}"
+    fi
+    if [[ -d "${SECRETS_ROOT}" ]]; then
+        if chown -R "${PUID}:${PGID}" "${SECRETS_ROOT}" 2>/dev/null; then
+            log_info "Secrets directory ownership set"
+        else
+            log_warn "Could not set ownership on ${SECRETS_ROOT}."
+        fi
+    fi
+fi
+
 # Permissions reminder
 # QNAP shared folders (/share/data, /share/backup) ignore CLI chown/chmod.
 # Permissions must be set via QTS Control Panel → Shared Folders → Edit Permissions.

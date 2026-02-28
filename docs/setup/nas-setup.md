@@ -351,7 +351,7 @@ cd mediastack
 
 ### Initial Setup and .env Configuration
 
-The `make setup` command creates the folder structure and environment files (`.env` and `.env.secrets`). **It must be run before first startup.**
+The `make setup` command creates the folder structure, environment files (`.env` and `.env.secrets`), Authelia secrets, and TLS certificates. **It must be run before first startup.**
 
 > [!NOTE]
 > QTS does not include `make`. Install it via Entware: `sudo opkg install make`. If Entware is not yet installed, see the [Entware setup instructions](#option-a-git-clone-recommended) in the clone section above.

@@ -166,7 +166,7 @@ Configuration is already present in `docker/config/traefik/homeassistant.yml`.
 
 ### 2.4 HTTPS Certificate Generation
 
-Before starting the stack, generate self-signed certificates:
+Before starting the stack, generate self-signed certificates. `make setup` runs this automatically, but you can also run it manually:
 
 ```bash
 # Generate wildcard certificate for *.home.local
@@ -184,11 +184,8 @@ Certificate is valid for 10 years and covers:
 ### 2.5 Startup and Verification
 
 ```bash
-# Create folder structure (includes traefik)
+# Create folder structure, secrets, and certificates
 make setup
-
-# Generate HTTPS certificates
-./scripts/generate-certs.sh
 
 # Start stack
 make up
