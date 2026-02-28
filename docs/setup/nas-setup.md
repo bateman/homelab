@@ -680,7 +680,20 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 - [ ] Settings → DNS:
   - Upstream DNS: verify 1.1.1.1, 1.0.0.1
   - Interface: respond on all interfaces
-- [ ] Adlists → Add recommended blocklists:
+- [ ] Adlists → Bulk import all recommended blocklists:
+
+  ```bash
+  # Import all lists from docker/config/pihole/adlists.txt into gravity DB
+  docker exec pihole bash -c '
+    while IFS= read -r url; do
+      [[ "$url" =~ ^#|^$ ]] && continue
+      sqlite3 /etc/pihole/gravity.db \
+        "INSERT OR IGNORE INTO adlist (address, enabled, comment) VALUES (\"$url\", 1, \"bulk import\");"
+    done < /etc/pihole/adlists.txt && pihole -g
+  '
+  ```
+
+  The adlists file (`docker/config/pihole/adlists.txt`) contains:
 
   **Core lists (recommended baseline):**
   - `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts` (StevenBlack - ads + malware unified hosts)

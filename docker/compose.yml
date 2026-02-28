@@ -123,6 +123,7 @@ services:
     volumes:
       - ./config/pihole/etc-pihole:/etc/pihole
       - ./config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+      - ./config/pihole/adlists.txt:/etc/pihole/adlists.txt:ro
     dns:
       - 1.1.1.1
       - 1.0.0.1

@@ -1,0 +1,29 @@
+# Pi-hole Adlists - Bulk Import
+# Usage: docker exec pihole bash -c 'while IFS= read -r url; do [[ "$url" =~ ^#|^$ ]] && continue; sqlite3 /etc/pihole/gravity.db "INSERT OR IGNORE INTO adlist (address, enabled, comment) VALUES (\"$url\", 1, \"bulk import\");"; done < /etc/pihole/adlists.txt && pihole -g'
+
+# Core lists (recommended baseline)
+https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/multi.txt
+https://small.oisd.nl/domainswild
+https://v.firebog.net/hosts/lists.php?type=tick
+
+# Ads & tracking
+https://v.firebog.net/hosts/Easylist.txt
+https://v.firebog.net/hosts/Easyprivacy.txt
+https://v.firebog.net/hosts/AdguardDNS.txt
+
+# Malware & phishing
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/tif.txt
+https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt
+https://phishing.army/download/phishing_army_blocklist.txt
+
+# Smart TV & IoT tracking
+https://perflyst.github.io/PiHoleBlocklist/SmartTV.txt
+https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt
+
+# Native platform tracking
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.apple.txt
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.winoffice.txt
+
+# DNS bypass prevention
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/doh-vpn-proxy-bypass.txt
