@@ -32,6 +32,11 @@ docker/config/traefik/certs/
 docker/config/authelia/db.sqlite3
 docker/config/authelia/notification.txt
 
+# Exception: keep Pi-hole adlists file (blocklist URLs for bulk import)
+!docker/config/pihole/
+docker/config/pihole/etc-pihole/
+docker/config/pihole/etc-dnsmasq.d/
+
 # -----------------------------------------------------------------------------
 # System Files
 # -----------------------------------------------------------------------------

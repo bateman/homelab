@@ -680,11 +680,50 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 - [ ] Settings → DNS:
   - Upstream DNS: verify 1.1.1.1, 1.0.0.1
   - Interface: respond on all interfaces
-- [ ] Adlists → Add additional lists (optional):
-  - `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts`
-  - `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/multi.txt` (Hagezi Multi - recommended)
-  - `https://small.oisd.nl/domainswild` (OISD - unified blocklist)
-  - `https://v.firebog.net/hosts/lists.php?type=tick` (Firebog Ticked - community curated)
+- [ ] Adlists → Bulk import all recommended blocklists:
+
+  ```bash
+  # Import all lists from docker/config/pihole/adlists.txt into gravity DB
+  # Each URL has an inline comment (e.g., "https://... # Description")
+  docker exec pihole bash -c '
+    while IFS= read -r line; do
+      [[ "$line" =~ ^#|^$ ]] && continue
+      url="${line%% #*}"
+      comment="${line##*# }"
+      sqlite3 /etc/pihole/gravity.db \
+        "INSERT OR IGNORE INTO adlist (address, enabled, comment) VALUES (\"$url\", 1, \"$comment\");"
+    done < /etc/pihole/adlists.txt && pihole -g
+  '
+  ```
+
+  The adlists file (`docker/config/pihole/adlists.txt`) contains:
+
+  **Core lists (recommended baseline):**
+  - `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts` (StevenBlack - ads + malware unified hosts)
+  - `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/multi.txt` (Hagezi Multi - comprehensive ads/tracking/malware)
+  - `https://small.oisd.nl/domainswild` (OISD - unified blocklist, low false positives)
+  - `https://v.firebog.net/hosts/lists.php?type=tick` (Firebog Ticked - community curated safe lists)
+
+  **Ads & tracking (complementary):**
+  - `https://v.firebog.net/hosts/Easylist.txt` (EasyList - same list used by uBlock Origin)
+  - `https://v.firebog.net/hosts/Easyprivacy.txt` (EasyPrivacy - tracker blocking)
+  - `https://v.firebog.net/hosts/AdguardDNS.txt` (AdGuard DNS filter)
+
+  **Malware & phishing:**
+  - `https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/tif.txt` (Hagezi TIF - threat intelligence feeds)
+  - `https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt` (Dandelion Sprout's Anti-Malware)
+  - `https://phishing.army/download/phishing_army_blocklist.txt` (Phishing Army)
+
+  **Smart TV & IoT tracking:**
+  - `https://perflyst.github.io/PiHoleBlocklist/SmartTV.txt` (Smart TV telemetry)
+  - `https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt` (Android tracking)
+
+  **Native platform tracking:**
+  - `https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.apple.txt` (Apple telemetry, analytics, ad tracking)
+  - `https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.winoffice.txt` (Windows & Office telemetry, diagnostics)
+
+  **DNS bypass prevention (stops devices circumventing Pi-hole):**
+  - `https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/doh-vpn-proxy-bypass.txt` (Hagezi DoH/VPN/Proxy bypass)
 
 ### Configure UDM-SE to use Pi-hole
 - [ ] UDM-SE → Settings → Networks → (each VLAN)

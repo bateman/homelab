@@ -1,0 +1,29 @@
+# Pi-hole Adlists - Bulk Import
+# Format: comment lines (starting with #) set the category for subsequent URLs
+
+# Core lists (recommended baseline)
+https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts # StevenBlack - ads + malware unified hosts
+https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/multi.txt # Hagezi Multi - ads/tracking/malware
+https://small.oisd.nl/domainswild # OISD - unified blocklist
+https://v.firebog.net/hosts/lists.php?type=tick # Firebog Ticked - community curated
+
+# Ads & tracking
+https://v.firebog.net/hosts/Easylist.txt # EasyList - used by uBlock Origin
+https://v.firebog.net/hosts/Easyprivacy.txt # EasyPrivacy - tracker blocking
+https://v.firebog.net/hosts/AdguardDNS.txt # AdGuard DNS filter
+
+# Malware & phishing
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/tif.txt # Hagezi TIF - threat intelligence feeds
+https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt # Dandelion Sprout Anti-Malware
+https://phishing.army/download/phishing_army_blocklist.txt # Phishing Army
+
+# Smart TV & IoT tracking
+https://perflyst.github.io/PiHoleBlocklist/SmartTV.txt # Smart TV telemetry
+https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt # Android tracking
+
+# Native platform tracking
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.apple.txt # Apple telemetry
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.winoffice.txt # Windows/Office telemetry
+
+# DNS bypass prevention
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/doh-vpn-proxy-bypass.txt # Hagezi DoH/VPN/Proxy bypass
