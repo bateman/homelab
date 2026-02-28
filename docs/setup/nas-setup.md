@@ -296,10 +296,10 @@ cd mediastack
 >    ```bash
 >    source /opt/etc/profile
 >    ```
-> 4. Install git:
+> 4. Install git (requires `sudo` for write access to `/opt`):
 >    ```bash
->    opkg update
->    opkg install git git-http
+>    sudo opkg update
+>    sudo opkg install git git-http
 >    ```
 >    If `opkg: command not found` persists, verify Entware installed correctly: `ls /opt/bin/opkg`. If the file exists, add it to PATH manually: `export PATH="/opt/bin:/opt/sbin:$PATH"`.
 > 5. Retry the `git clone` command above.
