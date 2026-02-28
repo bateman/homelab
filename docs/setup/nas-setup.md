@@ -388,30 +388,61 @@ QTS ships with a built-in `dnsmasq` that binds port 53. Pi-hole needs this port,
 netstat -tulnp | grep ':53 '
 ```
 
-**Step 3** — Mount the boot partition:
+**Step 3** — Mount the boot partition and verify:
 
 ```bash
+# Create mount point if needed
+mkdir -p /tmp/config
+
+# Mount the boot partition (partition 6 of the DOM)
 mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
+
+# IMPORTANT: Verify the mount succeeded
+mount | grep /tmp/config
 ```
 
-**Step 4** — Create or edit `/tmp/config/autorun.sh` and add the following lines:
+You should see a line like `/dev/sdx6 on /tmp/config type ext2 ...`. If there is **no output**, the mount failed — see the troubleshooting note below before continuing.
+
+> [!TIP]
+> **Mount failed?** The partition number may differ by NAS model. Check which partitions exist on your boot device:
+> ```bash
+> # Show the boot device path
+> /sbin/hal_app --get_boot_pd port_id=0
+>
+> # List its partitions (replace /dev/sdx with your actual device)
+> ls -la $(/sbin/hal_app --get_boot_pd port_id=0)*
+> ```
+> Try mounting the largest `ext2`/`ext4` partition (commonly partition 6, but could be different). You can also check with `fdisk -l $(/sbin/hal_app --get_boot_pd port_id=0)`.
+
+**Step 4** — Create or edit `/tmp/config/autorun.sh`:
 
 ```bash
+cat > /tmp/config/autorun.sh << 'EOF'
+#!/bin/sh
+
 # Disable dnsmasq DNS listener so Pi-hole can bind port 53
 cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
 sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
 /usr/bin/killall dnsmasq
+EOF
 ```
 
 > [!IMPORTANT]
-> If `autorun.sh` already exists, append the lines above to it. If creating a new file, add `#!/bin/sh` as the first line.
+> If `autorun.sh` already exists and has other content you want to keep, append only the three `cp`/`sed`/`killall` lines instead of overwriting the file.
 
-**Step 5** — Make executable and unmount:
+**Step 5** — Make executable, verify content, and unmount:
 
 ```bash
 chmod +x /tmp/config/autorun.sh
+
+# Verify the file was written correctly
+cat /tmp/config/autorun.sh
+
+# Unmount the boot partition
 umount /tmp/config
 ```
+
+Verify the `cat` output shows the full script including the `#!/bin/sh` shebang. If the file appears empty, the mount in Step 3 did not work correctly — go back and troubleshoot the mount.
 
 **Step 6** — Apply now without rebooting (run the same commands directly):
 

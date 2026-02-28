@@ -243,15 +243,16 @@ Quick summary:
 
 1. **Enable autorun**: Control Panel → Hardware → General → check "Run user defined startup processes (autorun.sh)"
 2. **Mount boot partition**: `mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config`
-3. **Create/edit** `/tmp/config/autorun.sh` with these lines:
+3. **Verify mount succeeded**: `mount | grep /tmp/config` — must show output (if empty, mount failed — see full guide for troubleshooting)
+4. **Create** `/tmp/config/autorun.sh` with `#!/bin/sh` shebang and these lines:
    ```bash
    cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
    sed 's/port=53/port=0/g' < /etc/dnsmasq.conf.orig > /etc/dnsmasq.conf
    /usr/bin/killall dnsmasq
    ```
-4. **Make executable and unmount**: `chmod +x /tmp/config/autorun.sh && umount /tmp/config`
-5. **Apply now** (run the cp/sed/killall commands directly)
-6. **Verify**: `netstat -tulnp | grep ':53 '`
+5. **Verify and unmount**: `chmod +x /tmp/config/autorun.sh && cat /tmp/config/autorun.sh && umount /tmp/config`
+6. **Apply now** (run the cp/sed/killall commands directly)
+7. **Verify**: `netstat -tulnp | grep ':53 '`
 
 > [!WARNING]
 > QNAP's Malware Remover may delete `autorun.sh` during scans. If Pi-hole stops resolving after a scan, re-create it (see [`nas-setup.md`](docs/setup/nas-setup.md#free-dns-port-port-53)).
