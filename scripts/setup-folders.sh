@@ -159,6 +159,7 @@ make_dir "${CONFIG_ROOT}/recyclarr"
 
 # Download clients
 make_dir "${CONFIG_ROOT}/qbittorrent"
+make_dir "${CONFIG_ROOT}/qbittorrent/custom-cont-init.d"
 make_dir "${CONFIG_ROOT}/nzbget"
 
 # VPN (protects download clients)

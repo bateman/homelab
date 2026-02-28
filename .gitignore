@@ -28,6 +28,11 @@ docker/config/traefik/certs/
 
 # Exception: keep Authelia configuration templates
 !docker/config/authelia/
+
+# Exception: keep qBittorrent custom init scripts (fix CSRF/host header)
+!docker/config/qbittorrent/
+docker/config/qbittorrent/*
+!docker/config/qbittorrent/custom-cont-init.d/
 # But ignore SQLite database and runtime files
 docker/config/authelia/db.sqlite3
 docker/config/authelia/notification.txt

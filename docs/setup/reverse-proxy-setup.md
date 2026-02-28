@@ -392,25 +392,41 @@ docker network inspect proxy
 docker inspect sonarr | grep -A 20 Labels
 ```
 
-### qBittorrent "Not Found" via Traefik
+### qBittorrent "Not Found" or redirect loop
 
-qBittorrent v4.6+ enables CSRF and host header validation by default. When accessed through Traefik, the `Host` header (`qbit.home.local`) doesn't match what qBittorrent expects, returning a blank "Not Found" page.
+qBittorrent v4.6+ enables CSRF protection and host header validation by default. This causes:
+- **"Not Found"** when accessing via Traefik (`qbit.home.local`) or direct IP (`192.168.3.10:8080`)
+- **Redirect loop** (`redirect.html?count=...`) from CSRF token validation failing
+
+**Automated fix (recommended):** A custom init script at `docker/config/qbittorrent/custom-cont-init.d/99-fix-webui-access.sh` patches the config on every container start. This is already included in the repo — just restart qBittorrent:
 
 ```bash
-# Stop container so config changes aren't overwritten
+docker restart qbittorrent
+# Verify the fix was applied:
+docker logs qbittorrent 2>&1 | grep "99-fix-webui-access"
+```
+
+The script disables CSRF protection and host header validation. This is safe because Authelia already protects the Traefik route, and direct IP access is restricted to the server VLAN.
+
+**Manual fix (if needed):** Edit `docker/config/qbittorrent/qBittorrent/qBittorrent.conf` — the container must be stopped first so changes aren't overwritten on shutdown:
+
+```bash
 docker stop qbittorrent
 
-# Add to qBittorrent.conf under [Preferences]:
-#   WebUI\ServerDomains=qbit.home.local
-# This whitelists the Traefik hostname while keeping CSRF protection enabled.
+# Add/update these lines under [Preferences]:
+#   WebUI\CSRFProtection=false
+#   WebUI\HostHeaderValidation=false
+#   WebUI\LocalHostAuth=false
+#   WebUI\Address=*
 
-# Restart
 docker start qbittorrent
 ```
 
-> [!TIP]
-> Since Authelia already protects the route, you can alternatively disable both checks:
-> `WebUI\CSRFProtection=false` and `WebUI\HostHeaderValidation=false`
+> [!WARNING]
+> Common pitfalls with manual edits:
+> - Settings must be under the `[Preferences]` section (not `[BitTorrent]` or elsewhere)
+> - The backslash in `WebUI\CSRFProtection` must be a literal `\`, not escaped as `\\`
+> - The container must be fully stopped before editing (not just paused)
 
 ### 502 Bad Gateway
 
