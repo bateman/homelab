@@ -203,21 +203,21 @@ else
 fi
 echo ""
 
-# Show created structure
+# Show created structure (suppress permission errors from container-owned dirs)
 if [[ "$DRY_RUN" != true ]]; then
     echo "--- Data Structure (${DATA_ROOT}) ---"
     if command -v tree &> /dev/null; then
-        tree -L 3 "${DATA_ROOT}"
+        tree -L 3 "${DATA_ROOT}" 2>/dev/null
     else
-        find "${DATA_ROOT}" -type d | head -20
+        find "${DATA_ROOT}" -type d 2>/dev/null | head -20
     fi
 
     echo ""
     echo "--- Config Structure (${CONFIG_ROOT}) ---"
     if command -v tree &> /dev/null; then
-        tree -L 2 "${CONFIG_ROOT}"
+        tree -L 2 "${CONFIG_ROOT}" 2>/dev/null
     else
-        find "${CONFIG_ROOT}" -type d | head -20
+        find "${CONFIG_ROOT}" -type d 2>/dev/null | head -20
     fi
 fi
 
