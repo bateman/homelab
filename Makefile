@@ -289,7 +289,7 @@ recyclarr-config: check-compose
 # =============================================================================
 
 define check_service
-	@STATUS=$$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 $(1) 2>/dev/null); \
+	@STATUS=$$(curl -sLk -o /dev/null -w '%{http_code}' --max-time 5 $(1) 2>/dev/null); \
 	if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "401" ]; then \
 		printf "$(2): $(GREEN)OK ($$STATUS)$(NC)\n"; \
 	elif [ -n "$$STATUS" ] && [ "$$STATUS" != "000" ]; then \
@@ -324,12 +324,12 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:6789,NZBGet)
 	$(call check_service,http://localhost:11011/health,Cleanuparr)
 	$(call check_service,http://localhost:8191/health,FlareSolverr)
-	$(call check_service,http://localhost:8081/admin,Pi-hole)
+	$(call check_service,http://localhost:8081/admin/,Pi-hole)
 	# $(call check_service,http://localhost:8123/api/,HomeAssistant)  # Disabled - see compose.homeassistant.yml
 	$(call check_service,http://localhost:8200,Duplicati)
 	$(call check_service,http://localhost:3001,UptimeKuma)
 	$(call check_service,http://localhost:8383/v1/metrics,Watchtower)
-	$(call check_service,http://localhost:80,Traefik)
+	$(call check_service,http://localhost:80/ping,Traefik)
 	@# Tailscale health check
 	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^tailscale$$'; then \
 		HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' tailscale 2>/dev/null); \
