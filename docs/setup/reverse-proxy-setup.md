@@ -374,7 +374,7 @@ ERR Unable to append certificate ... "tls: failed to find any PEM data in certif
 ERR error="middleware \"authelia@docker\" does not exist"
 ```
 
-**Cause**: `make setup` was not run before starting the stack. Traefik needs the self-signed TLS certificates, and Authelia needs its cryptographic secrets generated.
+**Cause**: Certificates and/or Authelia secrets were not generated. This typically happens when `make setup` was not run before starting the stack, or when it failed partway through (e.g., due to folder permission issues).
 
 **Fix**:
 
