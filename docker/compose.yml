@@ -413,8 +413,9 @@ services:
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entrypoints.websecure.address=:443
-      # Logs
+      # Health check (ping on web entrypoint; traefik entrypoint not active without api.insecure)
       - --ping=true
+      - --ping.entryPoint=web
       - --log.level=INFO
       - --accesslog=true
     ports:
@@ -432,7 +433,7 @@ services:
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck"]
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
       <<: *common-healthcheck
     deploy:
       resources:
