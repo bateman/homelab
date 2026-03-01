@@ -128,7 +128,7 @@ setup: check-compose
 	@if [ ! -x scripts/setup-folders.sh ]; then \
 		chmod +x scripts/setup-folders.sh; \
 	fi
-	@./scripts/setup-folders.sh
+	@./scripts/setup-folders.sh || printf "$(YELLOW)>>> Folder setup had errors (continuing with remaining setup)$(NC)\n"
 	@echo ">>> Generating Authelia secrets..."
 	@if [ ! -f docker/secrets/authelia/JWT_SECRET ]; then \
 		if [ ! -x scripts/generate-authelia-secrets.sh ]; then \

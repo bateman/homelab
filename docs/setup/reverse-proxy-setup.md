@@ -365,6 +365,34 @@ make restart
 
 ## Troubleshooting
 
+### First run: certificate errors and "middleware does not exist"
+
+If Traefik logs show these errors on first startup:
+
+```
+ERR Unable to append certificate ... "tls: failed to find any PEM data in certificate input"
+ERR error="middleware \"authelia@docker\" does not exist"
+```
+
+**Cause**: Certificates and/or Authelia secrets were not generated. This typically happens when `make setup` was not run before starting the stack, or when it failed partway through (e.g., due to folder permission issues).
+
+**Fix**:
+
+```bash
+# 1. Run the full setup (generates certs, secrets, folder structure, env files)
+make setup
+
+# 2. Edit configuration files with your values
+#    - docker/.env        → verify PUID, PGID, TZ
+#    - docker/.env.secrets → fill in passwords and API keys
+
+# 3. Restart the stack
+make down && make up
+
+# 4. Verify Traefik starts cleanly
+docker logs traefik --tail 20
+```
+
 ### DNS not resolving
 
 ```bash
