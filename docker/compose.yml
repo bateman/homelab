@@ -181,7 +181,7 @@ services:
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "https://localhost:9443/api/system/status", "--no-check-certificate"]
+      test: ["CMD", "wget", "-qO", "/dev/null", "--no-check-certificate", "https://localhost:9443/api/system/status"]
       <<: *common-healthcheck
     deploy:
       resources:
@@ -225,7 +225,7 @@ services:
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/v1/metrics"]
+      test: ["CMD-SHELL", "wget -qO /dev/null --header \"Authorization: Bearer $$WATCHTOWER_HTTP_API_TOKEN\" http://localhost:8080/v1/metrics"]
       <<: *common-healthcheck
     deploy:
       resources:
@@ -260,7 +260,7 @@ services:
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8200"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8200"]
       <<: *common-healthcheck
     deploy:
       resources:
@@ -409,6 +409,7 @@ services:
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entrypoints.websecure.address=:443
       # Logs
+      - --ping=true
       - --log.level=INFO
       - --accesslog=true
     ports:
