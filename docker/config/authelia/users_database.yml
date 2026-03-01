@@ -29,7 +29,7 @@ users:
     displayname: "Administrator"
     # Password: changeme
     # CHANGE THIS! Generate with: docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'YOUR_PASSWORD'
-    password: "$argon2id$v=19$m=65536,t=3,p=4$BpLnfgDsc2WD8F2q$o/vzA4myCqZZ36bUGsDY//8mKUYNZZaR0t4MFFSs+iM"
+    password: "$argon2id$v=19$m=65536,t=3,p=4$qP2EkfPUZ/LP4tOlwow6lg$5NPxkzyiUhlvUEW+IO7ZJECnfH+j+AKBiz1qg2365sI"
     email: admin@home.local
     groups:
       - admins

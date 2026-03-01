@@ -71,7 +71,15 @@ ls -la docker/secrets/authelia/
 
 ## Phase 2: Create Your User
 
-Edit the users database to add your account:
+### Default Login (Initial Setup Only)
+
+> [!IMPORTANT]
+> **Username:** `admin`
+> **Password:** `changeme`
+>
+> Use these to log in for the first time, then replace with your own account below.
+
+### Create Your Own Account
 
 ```bash
 # Generate password hash
@@ -96,8 +104,7 @@ users:
 ```
 
 > [!WARNING]
-> The default user `admin` with password `changeme` is for initial setup only.
-> Delete or disable it after creating your own account.
+> Delete or disable the default `admin` account after creating your own.
 
 ---
 
