@@ -114,7 +114,15 @@ setup: check-compose
 	@if [ ! -f docker/.env.secrets ]; then \
 		echo ">>> Creating .env.secrets from template..."; \
 		cp docker/.env.secrets.example docker/.env.secrets; \
-		printf "$(YELLOW)WARNING: Edit docker/.env.secrets with your passwords$(NC)\n"; \
+		echo ">>> Generating secure passwords..."; \
+		PIHOLE_PASS=$$(openssl rand -base64 24); \
+		DUPLICATI_PASS=$$(openssl rand -base64 24); \
+		ENCRYPTION_KEY=$$(openssl rand -base64 32); \
+		sed -i "s|^FTLCONF_webserver_api_password=CHANGE_ME_IMMEDIATELY|FTLCONF_webserver_api_password=$$PIHOLE_PASS|" docker/.env.secrets; \
+		sed -i "s|^DUPLICATI__WEBSERVICE_PASSWORD=CHANGE_ME_IMMEDIATELY|DUPLICATI__WEBSERVICE_PASSWORD=$$DUPLICATI_PASS|" docker/.env.secrets; \
+		sed -i "s|^SETTINGS_ENCRYPTION_KEY=CHANGE_ME_IMMEDIATELY|SETTINGS_ENCRYPTION_KEY=$$ENCRYPTION_KEY|" docker/.env.secrets; \
+		printf "$(GREEN)>>> Passwords auto-generated for: Pi-hole, Duplicati (web UI + encryption key)$(NC)\n"; \
+		printf "$(YELLOW)WARNING: Review docker/.env.secrets — configure VPN credentials if needed$(NC)\n"; \
 	fi
 	@echo ">>> Creating folder structure..."
 	@if [ ! -x scripts/setup-folders.sh ]; then \
