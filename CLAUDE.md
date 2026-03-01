@@ -139,6 +139,7 @@ When facing trade-offs, **ask the user**:
 | Proxmox setup | `docs/setup/proxmox-setup.md` |
 | NAS setup | `docs/setup/nas-setup.md` |
 | Network setup | `docs/setup/network-setup.md` |
+| Pi-hole DNS setup | `docs/setup/pihole-setup.md` |
 | VPN setup (Gluetun) | `docs/setup/vpn-setup.md` |
 | Reverse proxy (Traefik) | `docs/setup/reverse-proxy-setup.md` |
 | Authelia SSO | `docs/setup/authelia-setup.md` |
