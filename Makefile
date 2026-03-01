@@ -318,7 +318,12 @@ health: check-docker check-curl
 			printf "Gluetun: $(RED)UNHEALTHY$(NC)\n"; \
 		fi; \
 	else \
-		printf "Gluetun: $(YELLOW)NOT RUNNING (novpn profile?)$(NC)\n"; \
+		PROFILE=$$(grep -s '^COMPOSE_PROFILES=' docker/.env | cut -d= -f2); \
+		if [ "$$PROFILE" = "novpn" ]; then \
+			printf "Gluetun: $(YELLOW)DISABLED (novpn profile)$(NC)\n"; \
+		else \
+			printf "Gluetun: $(RED)NOT RUNNING (vpn profile active — should be running)$(NC)\n"; \
+		fi; \
 	fi
 	$(call check_service,http://localhost:8080,qBittorrent)
 	$(call check_service,http://localhost:6789,NZBGet)
