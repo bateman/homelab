@@ -30,8 +30,15 @@ The Duplicati container manages automatic backups with deduplication and encrypt
 
 **Initial configuration:**
 
-1. Access `http://192.168.3.10:8200`
-2. Add backup → Configure:
+1. Set the web UI password in `docker/.env.secrets`:
+   ```bash
+   # Duplicati v2.2+ generates a random password on first start.
+   # Set your own via environment variable:
+   DUPLICATI__WEBSERVICE_PASSWORD=<your-password>
+   ```
+   Then restart: `docker restart duplicati`
+2. Access `http://192.168.3.10:8200` and log in with the password above
+3. Add backup → Configure:
    - **Name**: `docker-configs-local`
    - **Destination**: Folder path → `/backups`
    - **Source**: `/source/config`
