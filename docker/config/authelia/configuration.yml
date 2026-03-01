@@ -47,7 +47,8 @@ webauthn:
   # 'indirect' is recommended for privacy (doesn't send device info)
   attestation_conveyance_preference: indirect
   # 'preferred' uses biometric when available, falls back to PIN
-  user_verification: preferred
+  selection_criteria:
+    user_verification: preferred
   # Timeout for registration/authentication prompts (2 minutes)
   timeout: 120s
 
