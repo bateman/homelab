@@ -45,7 +45,7 @@ The Pi-hole container reads its web password from `.env.secrets`.
 | **Preconditions** | Repository cloned to NAS, `.env.secrets` file created from `.env.secrets.example` |
 | **When** | While preparing environment files, before first `make up` |
 
-**Guide:** [NAS Setup — Environment & Secrets](nas-setup.md#environment--secrets)
+**Guide:** [NAS Setup — Initial Setup and .env Configuration](nas-setup.md#initial-setup-and-env-configuration)
 
 Set `FTLCONF_webserver_api_password` in `docker/.env.secrets`.
 
