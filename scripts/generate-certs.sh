@@ -47,6 +47,13 @@ fi
 if [[ "$DRY_RUN" == false ]]; then
     mkdir -p "$CERT_DIR"
     echo -e "${GREEN}[OK]${NC} Directory $CERT_DIR created/verified"
+    # Verify the directory is writable (setup-folders.sh may have chowned it)
+    if ! touch "$CERT_DIR/.write_test" 2>/dev/null; then
+        echo -e "${RED}[ERROR]${NC} Cannot write to $CERT_DIR"
+        echo "       Fix with: sudo chown -R \$(whoami) $CERT_DIR"
+        exit 1
+    fi
+    rm -f "$CERT_DIR/.write_test"
 else
     echo -e "${YELLOW}[DRY-RUN]${NC} Would create directory $CERT_DIR"
 fi
