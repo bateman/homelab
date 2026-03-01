@@ -390,25 +390,30 @@ If Traefik logs show:
 ERR error="middleware \"authelia@docker\" does not exist"
 ```
 
-**Cause**: Traefik started before Authelia was ready. This was a startup race condition, now resolved — `compose.yml` uses `depends_on` with `condition: service_healthy` so Traefik waits for Authelia to pass its healthcheck before starting.
+**Cause**: Traefik started before Authelia was ready. `compose.yml` uses `depends_on` with `condition: service_healthy` so Traefik waits for Authelia to pass its healthcheck before starting.
 
-**Fix**: Restart the stack to apply the updated dependency ordering:
+**Fix**: Restart the stack:
 
 ```bash
 make down && make up
 ```
 
-If Traefik fails to start entirely (not the same error — Docker Compose will report a dependency timeout), Authelia itself is unhealthy:
+If Traefik fails to start entirely with "dependency failed to start: container authelia is unhealthy", then Authelia's healthcheck is failing:
 
 ```bash
 # Check Authelia health status
 docker inspect --format='{{.State.Health.Status}}' authelia
+
+# Test the healthcheck manually
+docker exec authelia /app/healthcheck.sh
 
 # If unhealthy, check its logs for the root cause
 docker logs authelia --tail 30
 
 # Common causes: missing secrets (run make setup), bad configuration
 ```
+
+> **Note**: Authelia's healthcheck uses `/app/healthcheck.sh` (a wget-based script bundled in the image). The `authelia` CLI does not have a `healthcheck` subcommand — do not use `["CMD", "authelia", "healthcheck"]` in compose.
 
 ### DNS not resolving
 
