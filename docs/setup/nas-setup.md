@@ -205,6 +205,31 @@ For each folder:
   - container: RW
   - backup: RO
 
+### Enable Home Folders
+
+QTS manages `/share/homes` — manually created home directories are **wiped on every reboot**. You must enable the Home Folders feature so QTS creates and preserves `/share/homes/<username>` for each user.
+
+**Path:** Control Panel → Privilege → Users → Home Folder (tab at the top)
+
+- [ ] Check **"Enable home folder for all users"**
+- [ ] Volume: select **DataVol1**
+- [ ] Apply
+
+After enabling, verify the directory exists:
+
+```bash
+ssh fabio@192.168.3.10
+ls -la /share/homes/fabio
+```
+
+> [!TIP]
+> Place any shell customizations (e.g., Entware PATH) in `/share/homes/<username>/.profile` — it will now persist across reboots:
+> ```bash
+> cat >> /share/homes/fabio/.profile << 'EOF'
+> [ -f /opt/etc/profile ] && . /opt/etc/profile
+> EOF
+> ```
+
 ### Enable SSH
 - [ ] Control Panel → Network Services → Telnet/SSH
 - [ ] Enable SSH service: **On**
@@ -821,6 +846,8 @@ make backup
 |---------|----------------|----------|
 | `git clone` fails with `libgnutls.so.30` error | QGit missing HTTPS library | Install git via Entware (`sudo opkg install git git-http`) or use tarball download (see [Option A workaround](#option-a-git-clone-recommended)) |
 | `make: command not found` | QTS doesn't include make | Install via Entware: `sudo opkg install make` |
+| SSH login says `Could not chdir to home directory /share/homes/<user>` | Home Folders not enabled in QTS | Control Panel → Privilege → Users → Home Folder → Enable home folder for all users (see [Enable Home Folders](#enable-home-folders)) |
+| Home directory disappears after reboot | Same as above — manually created `/share/homes` dirs are wiped by QTS | Enable the Home Folders feature; do not create the directory manually |
 | `chown`/`chmod` ignored on `/share/data` | QTS manages shared folder permissions | Set permissions via QTS Control Panel → Shared Folders → Edit Permissions |
 | Container won't start | Folder permissions | Verify PUID user has RW on shared folders via QTS Control Panel |
 | Hardlink doesn't work | Paths on different filesystems | Verify mount points |
