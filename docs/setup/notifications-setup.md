@@ -157,6 +157,58 @@ For each monitor you want to track:
 
 ---
 
+## Step 4: Create Monitors
+
+Below are the recommended monitor types for each service in the homelab. Use container hostnames (e.g., `http://sonarr:8989`) when possible — Uptime Kuma is on the same Docker network, so this is more reliable than host IPs.
+
+### Infrastructure (compose.yml)
+
+| Service | Monitor Type | URL / Target | Notes |
+|---------|-------------|--------------|-------|
+| Traefik | HTTP(s) | `https://traefik.home.local` | Validates reverse proxy + TLS end-to-end |
+| Authelia | HTTP(s) | `http://authelia:9091/api/health` | Dedicated health endpoint |
+| Pi-hole | DNS | Query `pi.hole` @ `192.168.3.10` | Tests DNS resolution, not just the web UI |
+| Portainer | HTTP(s) | `https://192.168.3.10:9443/api/system/status` | Enable "Ignore TLS/SSL errors" (self-signed cert) |
+| Duplicati | HTTP(s) | `http://duplicati:8200` | Simple web UI check |
+| Tailscale | Ping | Your Tailscale IP (`100.x.x.x`) | Verifies mesh tunnel is reachable |
+| Socket Proxy | Docker Container | Container: `socket-proxy` | Internal only, no exposed HTTP endpoint |
+| Watchtower | Docker Container | Container: `watchtower` | Metrics endpoint requires auth token; Docker monitor is simpler |
+| Home Assistant | HTTP(s) | `http://192.168.3.10:8123/api/` | Must use host IP — HA runs in `network_mode: host` |
+
+> [!NOTE]
+> Do not create a monitor for Uptime Kuma itself — it cannot reliably monitor its own availability.
+
+### Media Stack (compose.media.yml)
+
+| Service | Monitor Type | URL / Target | Notes |
+|---------|-------------|--------------|-------|
+| Sonarr | HTTP(s) | `http://sonarr:8989/ping` | `/ping` returns 200 without auth |
+| Radarr | HTTP(s) | `http://radarr:7878/ping` | Same as above |
+| Lidarr | HTTP(s) | `http://lidarr:8686/ping` | Same as above |
+| Prowlarr | HTTP(s) | `http://prowlarr:9696/ping` | Same as above |
+| Bazarr | HTTP(s) | `http://bazarr:6767/ping` | Same as above |
+| qBittorrent | HTTP(s) | `http://gluetun:8080` | Route through Gluetun (VPN profile); use `http://qbittorrent:8080` for novpn |
+| NZBGet | HTTP(s) | `http://gluetun:6789` | Same — goes through Gluetun's network |
+| Gluetun | Docker Container | Container: `gluetun` | Built-in health check validates the VPN tunnel |
+| FlareSolverr | HTTP(s) | `http://flaresolverr:8191/health` | Dedicated `/health` endpoint |
+| Recyclarr | Docker Container | Container: `recyclarr` | Runs on a schedule, no web UI |
+| Cleanuparr | HTTP(s) | `http://cleanuparr:11011/health` | Dedicated `/health` endpoint |
+
+### Proxmox Host (192.168.3.20)
+
+| Service | Monitor Type | URL / Target | Notes |
+|---------|-------------|--------------|-------|
+| Proxmox | HTTP(s) | `https://192.168.3.20:8006` | Enable "Ignore TLS/SSL errors" (self-signed cert) |
+| Plex | HTTP(s) | `http://192.168.3.21:32400/web` | Plex runs in LXC on Proxmox |
+
+### General Settings
+
+- **Check interval**: 60s for most services; 30s for critical ones (Traefik, Pi-hole, Gluetun)
+- **Retries**: 3 retries before alerting (avoids false positives during container restarts)
+- **HTTPS monitors with self-signed certs**: enable "Ignore TLS/SSL errors" in monitor settings
+
+---
+
 ## Manual Test
 
 You can test the webhook directly with curl:
