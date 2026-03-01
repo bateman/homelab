@@ -250,7 +250,6 @@ services:
       - .env.secrets
     environment:
       <<: *common-env
-      SETTINGS_ENCRYPTION_KEY: ${DUPLICATI_ENCRYPTION_KEY}
     volumes:
       - ./config/duplicati:/config
       - ./config:/source/config:ro        # Service configs (read-only)
