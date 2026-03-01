@@ -365,32 +365,52 @@ make restart
 
 ## Troubleshooting
 
-### First run: certificate errors and "middleware does not exist"
+### Certificate errors: "failed to find any PEM data"
 
-If Traefik logs show these errors on first startup:
+If Traefik logs show:
 
 ```
 ERR Unable to append certificate ... "tls: failed to find any PEM data in certificate input"
-ERR error="middleware \"authelia@docker\" does not exist"
 ```
 
-**Cause**: Certificates and/or Authelia secrets were not generated. This typically happens when `make setup` was not run before starting the stack, or when it failed partway through (e.g., due to folder permission issues).
+**Cause**: The TLS certificate files are missing or corrupt (empty). This happens when `make setup` was not run, or a previous run failed partway through leaving empty cert files.
 
 **Fix**:
 
 ```bash
-# 1. Run the full setup (generates certs, secrets, folder structure, env files)
+# Delete any corrupt cert files so make setup regenerates them
+rm -f docker/config/traefik/certs/home.local.crt docker/config/traefik/certs/home.local.key
+
+# Re-run setup (validates certs with openssl before skipping)
 make setup
 
-# 2. Edit configuration files with your values
-#    - docker/.env        → verify PUID, PGID, TZ
-#    - docker/.env.secrets → fill in passwords and API keys
-
-# 3. Restart the stack
+# Restart the stack
 make down && make up
+```
 
-# 4. Verify Traefik starts cleanly
-docker logs traefik --tail 20
+> **Note**: `make setup` now validates certificate PEM content — not just file existence — so re-running it will automatically regenerate corrupt certificates.
+
+### Middleware errors: "authelia@docker does not exist"
+
+If Traefik logs show:
+
+```
+ERR error="middleware \"authelia@docker\" does not exist"
+```
+
+**Cause**: Traefik started before Authelia's container was registered with Docker, so the Docker provider's initial scan missed Authelia's middleware labels. This was a startup race condition.
+
+**Fix**: This is resolved by the `depends_on` configuration in `compose.yml` — Traefik now waits for Authelia to pass its healthcheck before starting. If you still see this error:
+
+```bash
+# Verify Authelia is healthy
+docker inspect --format='{{.State.Health.Status}}' authelia
+
+# If unhealthy, check its logs
+docker logs authelia --tail 30
+
+# Restart the full stack (respects depends_on ordering)
+make down && make up
 ```
 
 ### DNS not resolving

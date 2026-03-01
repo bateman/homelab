@@ -139,13 +139,14 @@ setup: check-compose
 		printf "$(GREEN)>>> Authelia secrets already exist (skipping)$(NC)\n"; \
 	fi
 	@echo ">>> Generating TLS certificates..."
-	@if [ ! -f docker/config/traefik/certs/home.local.crt ]; then \
+	@if [ ! -f docker/config/traefik/certs/home.local.crt ] || ! openssl x509 -noout -in docker/config/traefik/certs/home.local.crt 2>/dev/null; then \
+		rm -f docker/config/traefik/certs/home.local.crt docker/config/traefik/certs/home.local.key; \
 		if [ ! -x scripts/generate-certs.sh ]; then \
 			chmod +x scripts/generate-certs.sh; \
 		fi; \
 		./scripts/generate-certs.sh; \
 	else \
-		printf "$(GREEN)>>> TLS certificates already exist (skipping)$(NC)\n"; \
+		printf "$(GREEN)>>> TLS certificates already exist and are valid (skipping)$(NC)\n"; \
 	fi
 	@printf "$(GREEN)>>> Setup complete$(NC)\n"
 
