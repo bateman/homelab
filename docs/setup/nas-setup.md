@@ -390,7 +390,7 @@ make setup
 # Edit .env with correct values (PUID/PGID — see below)
 nano docker/.env
 
-# Edit .env.secrets with passwords and credentials
+# Review .env.secrets (passwords auto-generated; configure VPN if needed)
 nano docker/.env.secrets
 ```
 
