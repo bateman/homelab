@@ -67,6 +67,14 @@ if [[ ! -d "$SECRETS_DIR" ]]; then
     mkdir -p "$SECRETS_DIR"
 fi
 
+# Verify the directory is writable (previous setup runs may have chowned it)
+if ! touch "$SECRETS_DIR/.write_test" 2>/dev/null; then
+    log_error "Cannot write to $SECRETS_DIR"
+    log_error "Fix with: sudo chown -R \$(whoami) $(dirname "$SECRETS_DIR")"
+    exit 1
+fi
+rm -f "$SECRETS_DIR/.write_test"
+
 # Function to generate a secret
 generate_secret() {
     local name=$1
