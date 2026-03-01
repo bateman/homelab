@@ -62,13 +62,19 @@ if [[ -f "$KEY_FILE" && -f "$CERT_FILE" ]]; then
     echo "       $CERT_FILE"
 
     # Show expiration
-    EXPIRY=$(openssl x509 -enddate -noout -in "$CERT_FILE" 2>/dev/null | cut -d= -f2)
+    EXPIRY=$(openssl x509 -enddate -noout -in "$CERT_FILE" 2>/dev/null | cut -d= -f2) || EXPIRY="(unable to read — file may be corrupt)"
     echo "       Expires: $EXPIRY"
     echo
-    read -p "Do you want to regenerate them? [y/N] " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Operation cancelled."
+    if [[ -t 0 ]]; then
+        read -p "Do you want to regenerate them? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Operation cancelled."
+            exit 0
+        fi
+    else
+        echo -e "${YELLOW}[SKIP]${NC} Non-interactive mode. Delete existing files to regenerate:"
+        echo "       rm -f $KEY_FILE $CERT_FILE"
         exit 0
     fi
 fi

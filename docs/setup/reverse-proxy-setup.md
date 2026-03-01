@@ -365,32 +365,49 @@ make restart
 
 ## Troubleshooting
 
-### First run: certificate errors and "middleware does not exist"
+### Certificate errors: "failed to find any PEM data"
 
-If Traefik logs show these errors on first startup:
+If Traefik logs show:
 
 ```
 ERR Unable to append certificate ... "tls: failed to find any PEM data in certificate input"
+```
+
+**Cause**: The TLS certificate files are missing or corrupt (empty). This happens when `make setup` was not run, or a previous run failed partway through leaving empty cert files.
+
+**Fix**: Re-run setup — it validates certificate PEM content with `openssl x509` and automatically regenerates corrupt or missing certificates:
+
+```bash
+make setup
+make down && make up
+```
+
+### Middleware errors: "authelia@docker does not exist"
+
+If Traefik logs show:
+
+```
 ERR error="middleware \"authelia@docker\" does not exist"
 ```
 
-**Cause**: Certificates and/or Authelia secrets were not generated. This typically happens when `make setup` was not run before starting the stack, or when it failed partway through (e.g., due to folder permission issues).
+**Cause**: Traefik started before Authelia was ready. This was a startup race condition, now resolved — `compose.yml` uses `depends_on` with `condition: service_healthy` so Traefik waits for Authelia to pass its healthcheck before starting.
 
-**Fix**:
+**Fix**: Restart the stack to apply the updated dependency ordering:
 
 ```bash
-# 1. Run the full setup (generates certs, secrets, folder structure, env files)
-make setup
-
-# 2. Edit configuration files with your values
-#    - docker/.env        → verify PUID, PGID, TZ
-#    - docker/.env.secrets → fill in passwords and API keys
-
-# 3. Restart the stack
 make down && make up
+```
 
-# 4. Verify Traefik starts cleanly
-docker logs traefik --tail 20
+If Traefik fails to start entirely (not the same error — Docker Compose will report a dependency timeout), Authelia itself is unhealthy:
+
+```bash
+# Check Authelia health status
+docker inspect --format='{{.State.Health.Status}}' authelia
+
+# If unhealthy, check its logs for the root cause
+docker logs authelia --tail 30
+
+# Common causes: missing secrets (run make setup), bad configuration
 ```
 
 ### DNS not resolving
