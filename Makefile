@@ -329,7 +329,17 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:8200,Duplicati)
 	$(call check_service,http://localhost:3001,UptimeKuma)
 	$(call check_service,http://localhost:8383/v1/metrics,Watchtower)
-	$(call check_service,http://localhost:80/ping,Traefik)
+	@# Traefik health check (uses Docker healthcheck via --ping=true)
+	@HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' traefik 2>/dev/null); \
+	if [ "$$HEALTH" = "healthy" ]; then \
+		printf "Traefik: $(GREEN)OK (healthy)$(NC)\n"; \
+	elif [ "$$HEALTH" = "starting" ]; then \
+		printf "Traefik: $(YELLOW)STARTING$(NC)\n"; \
+	elif [ -z "$$HEALTH" ]; then \
+		printf "Traefik: $(YELLOW)NOT RUNNING$(NC)\n"; \
+	else \
+		printf "Traefik: $(RED)UNHEALTHY$(NC)\n"; \
+	fi
 	@# Tailscale health check
 	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^tailscale$$'; then \
 		HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' tailscale 2>/dev/null); \
