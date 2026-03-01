@@ -325,7 +325,19 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:11011/health,Cleanuparr)
 	$(call check_service,http://localhost:8191/health,FlareSolverr)
 	$(call check_service,http://localhost:8081/admin/,Pi-hole)
-	@# $(call check_service,http://localhost:8123/api/,HomeAssistant)  # Disabled - see compose.homeassistant.yml
+	@# Home Assistant runs on separate compose file (compose.homeassistant.yml)
+	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^homeassistant$$'; then \
+		STATUS=$$(curl -sLk -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:8123/api/ 2>/dev/null); \
+		if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "401" ]; then \
+			printf "HomeAssistant: $(GREEN)OK ($$STATUS)$(NC)\n"; \
+		elif [ -n "$$STATUS" ] && [ "$$STATUS" != "000" ]; then \
+			printf "HomeAssistant: $(YELLOW)$$STATUS$(NC)\n"; \
+		else \
+			printf "HomeAssistant: $(RED)DOWN$(NC)\n"; \
+		fi; \
+	else \
+		printf "HomeAssistant: $(YELLOW)NOT RUNNING (separate compose)$(NC)\n"; \
+	fi
 	$(call check_service,http://localhost:8200,Duplicati)
 	$(call check_service,http://localhost:3001,UptimeKuma)
 	$(call check_service,http://localhost:8383/v1/metrics,Watchtower)
@@ -401,7 +413,7 @@ show-urls:
 	@echo ""
 	@printf "$(GREEN)Infrastructure$(NC)\n"
 	@echo "  Pi-hole:      http://$(HOST_IP):8081/admin"
-	# @echo "  Home Assist:  http://$(HOST_IP):8123"  # Disabled - see compose.homeassistant.yml
+	@echo "  Home Assist:  http://$(HOST_IP):8123  (separate compose)"
 	@echo "  Portainer:    https://$(HOST_IP):9443"
 	@echo "  Duplicati:    http://$(HOST_IP):8200"
 	@echo "  Traefik:      https://traefik.home.local (requires DNS)"
