@@ -183,13 +183,13 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | mDNS | 5353 |
 
 > [!NOTE]
-> **Traefik** — reverse proxy HTTPS port (Rule 7). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO.
+> **Traefik** — reverse proxy HTTPS port (Rule 8). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO.
 >
-> **Media Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 7) for Authelia-protected access.
+> **Media Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 8) for Authelia-protected access.
 >
-> **NAS Management** — infrastructure/admin direct ports exposed to Media VLAN (Rule 8): SSH (22), QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). All services have their own authentication. Also accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3). These services are additionally reachable from Media VLAN through Traefik (Rule 7) with Authelia SSO. Note: QNAP QTS factory defaults are 8080 (HTTP) and 443 (HTTPS) — ports were changed to 5000/5001 to avoid conflicts with qBittorrent (8080) and Traefik (443). See [`nas-setup.md`](../setup/nas-setup.md#change-qts-system-ports).
+> **NAS Management** — infrastructure/admin direct ports exposed to Media VLAN (Rule 9): SSH (22), QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). All services have their own authentication. Also accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3). These services are additionally reachable from Media VLAN through Traefik (Rule 8) with Authelia SSO. Note: QNAP QTS factory defaults are 8080 (HTTP) and 443 (HTTPS) — ports were changed to 5000/5001 to avoid conflicts with qBittorrent (8080) and Traefik (443). See [`nas-setup.md`](../setup/nas-setup.md#change-qts-system-ports).
 >
-> **Proxmox Management** — Proxmox VE web interface (Rule 9): port 8006. Allows wireless devices to manage VMs and LXC containers. Proxmox has its own authentication.
+> **Proxmox Management** — Proxmox VE web interface (Rule 10): port 8006. Allows wireless devices to manage VMs and LXC containers. Proxmox has its own authentication.
 
 ---
 
@@ -259,7 +259,20 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | Printer (192.168.3.30) |
 | Port | Printing (631, 9100) |
 
-### Rule 6 — Allow Media to Home Assistant
+### Rule 6 — Allow Media to Printer Bonjour (AirPrint Discovery)
+
+| Field | Value |
+|-------|-------|
+| Name | Allow Media to Printer Bonjour |
+| Action | Accept |
+| Protocol | UDP |
+| Source | VLAN Media |
+| Destination | Printer (192.168.3.30) |
+| Port | mDNS (5353) |
+
+> Enables Bonjour service discovery for AirPrint from Media VLAN devices (iPhones, iPads, Macs). Works together with mDNS reflection (enabled on VLANs 3 and 4) and Rule 5 (printing ports) to provide full AirPrint functionality. mDNS reflection handles multicast relay at the gateway, while this rule allows unicast mDNS responses between VLANs.
+
+### Rule 7 — Allow Media to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -272,7 +285,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows Media devices (phones, tablets) to access the Home Assistant interface.
 
-### Rule 7 — Allow Media to Traefik
+### Rule 8 — Allow Media to Traefik
 
 | Field | Value |
 |-------|-------|
@@ -285,7 +298,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows Media VLAN devices (phones, tablets, laptops on WiFi) to access all services through Traefik reverse proxy with Authelia SSO authentication. This is the primary access path for managing services from wireless devices.
 
-### Rule 8 — Allow Media to NAS Management
+### Rule 9 — Allow Media to NAS Management
 
 | Field | Value |
 |-------|-------|
@@ -296,9 +309,9 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | NAS (192.168.3.10) |
 | Port | NAS Management (22, 5000, 5001, 8081, 9443, 8200, 3001) |
 
-> Allows Media VLAN devices (phones, laptops on WiFi) to access NAS management services directly: SSH (22), QTS (5000/5001), Pi-hole (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). All services have their own authentication. This provides direct-port access as an alternative to Traefik (Rule 7).
+> Allows Media VLAN devices (phones, laptops on WiFi) to access NAS management services directly: SSH (22), QTS (5000/5001), Pi-hole (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). All services have their own authentication. This provides direct-port access as an alternative to Traefik (Rule 8).
 
-### Rule 9 — Allow Media to Proxmox
+### Rule 10 — Allow Media to Proxmox
 
 | Field | Value |
 |-------|-------|
@@ -311,7 +324,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows Media VLAN devices (phones, laptops on WiFi) to access the Proxmox VE web interface for VM and LXC management. Proxmox has its own authentication.
 
-### Rule 10 — Allow IoT to Home Assistant
+### Rule 11 — Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -324,7 +337,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
-### Rule 11 — Block IoT to All Private
+### Rule 12 — Block IoT to All Private
 
 | Field | Value |
 |-------|-------|
@@ -335,9 +348,9 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | RFC1918 |
 
 > [!TIP]
-> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 10).
+> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 11).
 
-### Rule 12 — Block Guest to All Private
+### Rule 13 — Block Guest to All Private
 
 | Field | Value |
 |-------|-------|
@@ -349,7 +362,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Complete Guest network isolation. Internet access only.
 
-### Rule 13 — Allow Management from Servers
+### Rule 14 — Allow Management from Servers
 
 | Field | Value |
 |-------|-------|
@@ -361,7 +374,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows desktop PC (VLAN 3) to access switch and AP management interfaces. Uses the native UniFi "Management" network as destination (not a custom network list).
 
-### Rule 14 — Block All Inter-VLAN (Catch-All)
+### Rule 15 — Block All Inter-VLAN (Catch-All)
 
 | Field | Value |
 |-------|-------|
@@ -393,7 +406,7 @@ Enable mDNS reflection to allow automatic discovery across VLANs:
 | 6 (IoT) | Yes | HA smart device discovery |
 
 > [!NOTE]
-> mDNS reflection only exposes service names (e.g., "Printer._ipp._tcp.local"), it doesn't provide access. The firewall continues to block unauthorized traffic between VLANs.
+> mDNS reflection only exposes service names (e.g., "Printer._ipp._tcp.local"), it doesn't provide access. The firewall continues to block unauthorized traffic between VLANs. For AirPrint, mDNS reflection works together with Rule 6 (Bonjour mDNS) and Rule 5 (printing ports) to enable full discovery and printing from Media VLAN devices.
 
 ---
 
