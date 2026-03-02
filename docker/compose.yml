@@ -169,7 +169,7 @@ services:
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
-    command: -H unix:///var/run/docker.sock --http-enabled
+    command: -H unix:///var/run/docker.sock
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/portainer:/data
@@ -197,7 +197,10 @@ services:
       - "traefik.http.routers.portainer.entrypoints=websecure"
       - "traefik.http.routers.portainer.tls=true"
       - "traefik.http.routers.portainer.middlewares=authelia@docker"
-      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9443"
+      - "traefik.http.services.portainer.loadbalancer.server.scheme=https"
+      - "traefik.http.serversTransports.portainer.insecureSkipVerify=true"
+      - "traefik.http.services.portainer.loadbalancer.serversTransport=portainer@docker"
 
   watchtower:
     image: containrrr/watchtower:latest
