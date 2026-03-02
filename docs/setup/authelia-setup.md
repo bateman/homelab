@@ -89,7 +89,7 @@ docker run --rm authelia/authelia:latest \
 # Copy the output hash (starts with $argon2id$...)
 ```
 
-Edit `docker/config/authelia/users_database.yml`:
+Edit `docker/config/authelia/users_database.yml` (created from the `.example` template by `make setup`):
 
 ```yaml
 users:
@@ -109,14 +109,8 @@ users:
 > [!WARNING]
 > Delete or disable the default `admin` account after creating your own.
 
-After creating your account, tell git to stop tracking your local copy so future `git pull` won't overwrite your users:
-
-```bash
-git update-index --assume-unchanged docker/config/authelia/users_database.yml
-```
-
 > [!TIP]
-> The template file stays in the repo for fresh installs, but git will ignore your local edits. To re-track the file later: `git update-index --no-assume-unchanged docker/config/authelia/users_database.yml`
+> Your `users_database.yml` is gitignored — only the `.example` template is tracked. You can `git pull` safely without overwriting your users.
 
 ---
 
@@ -307,7 +301,7 @@ The configuration includes bypass rules for API endpoints. If an app's API isn't
 docker run --rm authelia/authelia:latest \
   authelia crypto hash generate argon2 --password 'NEW_PASSWORD'
 
-# Update users_database.yml with new hash
+# Edit docker/config/authelia/users_database.yml with new hash
 # Restart Authelia
 docker restart authelia
 ```
@@ -345,7 +339,8 @@ Authelia is a Traefik middleware — it only sees requests that go through Traef
 | File | Purpose |
 |------|---------|
 | `docker/config/authelia/configuration.yml` | Main Authelia config |
-| `docker/config/authelia/users_database.yml` | User accounts and passwords |
+| `docker/config/authelia/users_database.yml.example` | User accounts template (copied to `users_database.yml` by `make setup`) |
+| `docker/config/authelia/users_database.yml` | Your local user database (gitignored) |
 | `docker/secrets/authelia/JWT_SECRET` | JWT signing key |
 | `docker/secrets/authelia/SESSION_SECRET` | Session encryption key |
 | `docker/secrets/authelia/STORAGE_ENCRYPTION_KEY` | Database encryption key |

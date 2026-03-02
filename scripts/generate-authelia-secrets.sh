@@ -113,7 +113,7 @@ echo "==========================================================================
 echo "                              NEXT STEPS"
 echo "============================================================================="
 echo ""
-echo "1. EDIT YOUR USER in docker/config/authelia/users_database.yml"
+echo "1. EDIT YOUR USER in docker/config/authelia/users_database.yml (copied from .example by make setup)"
 echo "   -----------------------------------------------------------------------------"
 echo "   Generate a password hash:"
 echo "     docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'YOUR_PASSWORD'"

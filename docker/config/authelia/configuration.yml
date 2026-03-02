@@ -56,7 +56,7 @@ webauthn:
 # Authentication Backend
 # -----------------------------------------------------------------------------
 # Using file-based backend for simplicity (no LDAP needed for homelab)
-# Users are defined in users_database.yml
+# Users are defined in users_database.yml (created from users_database.yml.example by make setup)
 #
 authentication_backend:
   # Disable password reset via email (use CLI instead)

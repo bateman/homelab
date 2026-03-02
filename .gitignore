@@ -28,9 +28,10 @@ docker/config/traefik/certs/
 
 # Exception: keep Authelia configuration templates
 !docker/config/authelia/
-# But ignore SQLite database and runtime files
+# But ignore SQLite database, runtime files, and user database (contains password hashes)
 docker/config/authelia/db.sqlite3
 docker/config/authelia/notification.txt
+docker/config/authelia/users_database.yml
 
 # Exception: keep Pi-hole adlists file (blocklist URLs for bulk import)
 !docker/config/pihole/

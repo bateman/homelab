@@ -182,6 +182,20 @@ make_dir "${CONFIG_ROOT}/tailscale"
 SECRETS_ROOT="${SCRIPT_DIR}/../docker/secrets"
 make_dir "${SECRETS_ROOT}/authelia"
 
+# Copy Authelia users database template if not already present
+AUTHELIA_USERS="${CONFIG_ROOT}/authelia/users_database.yml"
+AUTHELIA_USERS_EXAMPLE="${CONFIG_ROOT}/authelia/users_database.yml.example"
+if [[ -f "$AUTHELIA_USERS_EXAMPLE" && ! -f "$AUTHELIA_USERS" ]]; then
+    if [[ "$DRY_RUN" == true ]]; then
+        log_info "[DRY-RUN] Would copy ${AUTHELIA_USERS_EXAMPLE} -> ${AUTHELIA_USERS}"
+    else
+        cp "$AUTHELIA_USERS_EXAMPLE" "$AUTHELIA_USERS"
+        log_info "Created ${AUTHELIA_USERS} from template (edit this with your own users)"
+    fi
+elif [[ -f "$AUTHELIA_USERS" ]]; then
+    log_info "Authelia users database already exists, skipping"
+fi
+
 # Permissions note:
 # Container config ownership is NOT set here. It's unnecessary because:
 #   - Linuxserver.io images (sonarr, radarr, etc.) auto-chown their config
