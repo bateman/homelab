@@ -109,6 +109,15 @@ users:
 > [!WARNING]
 > Delete or disable the default `admin` account after creating your own.
 
+After creating your account, tell git to stop tracking your local copy so future `git pull` won't overwrite your users:
+
+```bash
+git update-index --assume-unchanged docker/config/authelia/users_database.yml
+```
+
+> [!TIP]
+> The template file stays in the repo for fresh installs, but git will ignore your local edits. To re-track the file later: `git update-index --no-assume-unchanged docker/config/authelia/users_database.yml`
+
 ---
 
 ## Phase 3: Add DNS Record
