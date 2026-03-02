@@ -1,0 +1,14 @@
+# =============================================================================
+# Traefik ServersTransport Configuration
+#
+# Reusable transport for backends that serve self-signed HTTPS certificates
+# (e.g., Portainer on port 9443).
+#
+# Reference from Docker labels:
+#   traefik.http.services.<name>.loadbalancer.serversTransport=insecure-skip-verify@file
+# =============================================================================
+
+http:
+  serversTransports:
+    insecure-skip-verify:
+      insecureSkipVerify: true
