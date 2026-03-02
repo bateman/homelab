@@ -93,15 +93,18 @@ Edit `docker/config/authelia/users_database.yml`:
 
 ```yaml
 users:
-  yourname:
+  yourname:                                          # <-- this is your LOGIN username
     disabled: false
-    displayname: "Your Name"
-    password: "$argon2id$v=19$m=65536,t=3,p=4$..."  # Paste hash here
+    displayname: "Your Name"                         # display only, NOT for login
+    password: "$argon2id$v=19$m=65536,t=3,p=4$..."   # Paste hash here
     email: you@example.com
     groups:
       - admins
       - users
 ```
+
+> [!CAUTION]
+> The **YAML key** (e.g., `yourname`) is what you type at the login screen. The `displayname` field is cosmetic only — you cannot log in with it.
 
 > [!WARNING]
 > Delete or disable the default `admin` account after creating your own.
@@ -224,6 +227,21 @@ If your passkey is unavailable, you can use TOTP (Google Authenticator, etc.):
 ---
 
 ## Troubleshooting
+
+### "User not found" on login
+
+The most common cause is a mismatch between your login username and the YAML key in `users_database.yml`. Authelia uses the **YAML key** as the username, not the `displayname`:
+
+```yaml
+users:
+  fabio:                    # <-- you must log in as "fabio"
+    displayname: "Fabio"    # <-- this is NOT used for login
+```
+
+Other causes:
+- **User is `disabled: true`** — check the `disabled` field
+- **YAML indentation error** — use spaces, not tabs
+- **File not mounted** — run `docker exec authelia cat /config/users_database.yml` to verify
 
 ### "Access Denied" after login
 

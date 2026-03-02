@@ -19,10 +19,10 @@ server:
 # Logging
 # -----------------------------------------------------------------------------
 log:
-  level: info
+  level: debug
   format: text
-  # Uncomment for debugging:
-  # level: debug
+  # Change back to 'info' after debugging:
+  # level: info
 
 # -----------------------------------------------------------------------------
 # TOTP Configuration (backup 2FA method)
