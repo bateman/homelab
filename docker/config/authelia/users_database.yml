@@ -2,11 +2,14 @@
 # Authelia Users Database
 # =============================================================================
 # Define your users here. Each user needs:
-#   - username (login name)
-#   - displayname (shown in UI)
+#   - username (the YAML key — this is what you type at the login screen)
+#   - displayname (shown in UI after login, NOT used for login)
 #   - password (hashed with argon2)
 #   - email (for notifications and password reset)
 #   - groups (for access control rules)
+#
+# IMPORTANT: The YAML key (e.g., "fabio:" below) IS the login username.
+# The "displayname" field is only cosmetic — you CANNOT log in with it.
 #
 # To generate a password hash, run:
 #   docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'YOUR_PASSWORD'
@@ -39,11 +42,13 @@ users:
   # Example regular user (optional)
   # ---------------------------------------------------------------------------
   # Uncomment and modify to add family members or additional users
+  # Remember: the YAML key (e.g., "fabio") is the login username!
   #
-  # user:
+  # fabio:                                    # <-- login username
   #   disabled: false
-  #   displayname: "Regular User"
+  #   displayname: "Fabio"                    # <-- display only, NOT for login
   #   password: "$argon2id$v=19$m=65536,t=3,p=4$..."
-  #   email: user@home.local
+  #   email: fabio@home.local
   #   groups:
+  #     - admins
   #     - users
