@@ -81,7 +81,7 @@ A reverse proxy allows accessing services using readable names (e.g., `sonarr.ho
 
 Access Pi-hole: `http://192.168.3.10:8081`
 
-**Sttings → Local DNS Records**, add:
+**Settings → Local DNS Records**, add:
 
 | Domain | IP |
 |--------|-----|
@@ -92,6 +92,7 @@ Access Pi-hole: `http://192.168.3.10:8081`
 | `lidarr.home.local` | 192.168.3.10 |
 | `prowlarr.home.local` | 192.168.3.10 |
 | `bazarr.home.local` | 192.168.3.10 |
+| `cleanuparr.home.local` | 192.168.3.10 |
 | `qbit.home.local` | 192.168.3.10 |
 | `nzbget.home.local` | 192.168.3.10 |
 | `pihole.home.local` | 192.168.3.10 |
