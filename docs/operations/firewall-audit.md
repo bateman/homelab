@@ -13,8 +13,8 @@
 |----------|-------|
 | HIGH | 0 (2 fixed) |
 | MEDIUM | 8 (1 fixed) |
-| LOW | 8 |
-| INFO | 7 (1 fixed) |
+| LOW | 6 (2 fixed) |
+| INFO | 6 (1 fixed) |
 
 Overall the firewall follows sound principles ("deny all, allow specific") with proper rule ordering. Two HIGH findings (H1, H2) have been resolved — the Authelia API bypass is now scoped to *arr domains, and Media VLAN can reach Traefik on port 443 for authenticated access. Remaining MEDIUM findings relate to direct-port exposure, DNS filtering gaps, and wireless management rules (Rules 9-10) that expose infrastructure admin interfaces to the Media VLAN. A former Media → UniFi Controller rule was removed as redundant — the UDM-SE controller is accessible at the VLAN gateway IP without a firewall rule.
 
