@@ -169,7 +169,7 @@ services:
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
-    command: -H unix:///var/run/docker.sock
+    command: -H unix:///var/run/docker.sock --http-enabled
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/portainer:/data
@@ -197,8 +197,7 @@ services:
       - "traefik.http.routers.portainer.entrypoints=websecure"
       - "traefik.http.routers.portainer.tls=true"
       - "traefik.http.routers.portainer.middlewares=authelia@docker"
-      - "traefik.http.services.portainer.loadbalancer.server.port=9443"
-      - "traefik.http.services.portainer.loadbalancer.server.scheme=https"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
 
   watchtower:
     image: containrrr/watchtower:latest
@@ -450,6 +449,9 @@ services:
       - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
       - "traefik.http.routers.traefik-dashboard.tls=true"
       - "traefik.http.routers.traefik-dashboard.middlewares=authelia@docker"
+      # Explicit port required: Traefik exposes ports 80+443, and without this label
+      # the Docker provider cannot resolve the multi-port ambiguity and skips the container
+      - "traefik.http.services.traefik-dashboard.loadbalancer.server.port=80"
 
   # ---------------------------------------------------------------------------
   # Remote Access (Tailscale)
