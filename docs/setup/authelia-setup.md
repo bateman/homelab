@@ -157,6 +157,44 @@ docker ps | grep authelia
 
 ---
 
+## Phase 6: Enable SSO for *arr Apps (Eliminate Double Login)
+
+By default, *arr apps (Radarr, Sonarr, etc.) still show their own login form after Authelia authentication. This means you log in twice — once at Authelia, once at the app. To fix this, configure each app to trust Authelia's `Remote-User` header.
+
+### Configure Each App
+
+For **Radarr, Sonarr, Lidarr, Prowlarr, Bazarr** — repeat these steps in each app's WebUI:
+
+1. Go to **Settings → General**
+2. Scroll to the **Security** section
+3. Change **Authentication Method** from `Forms (Login Page)` to `External`
+4. Click **Save Changes**
+
+> [!CAUTION]
+> With "External" authentication, direct port access (e.g., `http://192.168.3.10:7878`) has **no authentication at all**. This is acceptable in a homelab where:
+> - The NAS is on a trusted VLAN
+> - Firewall rules block access from untrusted networks
+> - All normal access goes through Traefik (`https://radarr.home.local`)
+>
+> If you need direct port access to remain protected, keep the app's auth set to `Forms` and accept the double login.
+
+### Verify SSO Works
+
+1. Clear your browser cookies for `home.local` (or open an incognito window)
+2. Navigate to `https://radarr.home.local`
+3. You should be redirected to Authelia login
+4. After authenticating, you should land **directly** in Radarr — no second login
+
+### Apps That Should NOT Use External Auth
+
+| App | Reason |
+|-----|--------|
+| **Portainer** | Has its own user/role system; requires two-factor via Authelia anyway |
+| **Pi-hole** | Simple admin password; not an *arr app |
+| **Home Assistant** | Has its own robust auth system; not behind Authelia middleware |
+
+---
+
 ## Access Control Policies
 
 Services are protected with different security levels:
@@ -255,6 +293,16 @@ docker logs authelia --tail 50
 # - Policy misconfiguration
 ```
 
+### Blank page after passkey authentication
+
+After authenticating with a passkey, the browser may show a blank page instead of redirecting to the requested service. This is a known behavior with Authelia's WebAuthn flow — the JavaScript redirect sometimes fails to fire after the passkey ceremony completes.
+
+**Workaround:** Refresh the page (F5). The session cookie is already set, so the refresh will complete the redirect to the original service.
+
+This happens most often with:
+- Passkey/WebAuthn authentication (less common with password login)
+- First access after session expiry
+
 ### Passkey not working
 
 ```bash
@@ -317,7 +365,7 @@ docker restart authelia
 
 Authelia is a Traefik middleware — it only sees requests that go through Traefik. Anything that bypasses Traefik bypasses Authelia:
 
-- **Direct port access** (e.g., `http://192.168.3.10:8989`) — requests go straight to the container, never touching Traefik or Authelia. This is why each *arr app still needs its own username/password as a fallback.
+- **Direct port access** (e.g., `http://192.168.3.10:8989`) — requests go straight to the container, never touching Traefik or Authelia. If you configured *arr apps with "External" auth (see [Phase 6](#phase-6-enable-sso-for-arr-apps-eliminate-double-login)), direct port access has **no authentication**. If you kept "Forms" auth, the app's own login protects direct access as a fallback.
 - **API endpoints** (`/api/*`, `/ping`, `/health`) — intentionally bypassed so *arr services can communicate with each other.
 - **Home Assistant** — has its own robust auth; Authelia middleware is not applied to its Traefik route.
 
