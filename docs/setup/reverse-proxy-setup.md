@@ -153,11 +153,11 @@ Traefik labels are already added to all services in compose files:
 | NZBGet | https://nzbget.home.local | :6789 |
 | Cleanuparr | https://cleanuparr.home.local | :11011 |
 | Pi-hole | https://pihole.home.local | :8081 |
-| Portainer | https://portainer.home.local | :9000 |
+| Portainer | https://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | https://duplicati.home.local | :8200 |
 | Uptime Kuma | https://uptime.home.local | :3001 |
 | Home Assistant | https://ha.home.local | :8123 |
-| Traefik Dashboard | https://traefik.home.local | api@internal |
+| Traefik Dashboard | https://traefik.home.local | (via reverse proxy) |
 
 ### 2.3 Home Assistant Configuration
 
@@ -348,7 +348,7 @@ make restart
 | Cleanuparr | https://cleanuparr.home.local | :11011 |
 | Pi-hole | https://pihole.home.local | :8081 |
 | Home Assistant | https://ha.home.local | :8123 |
-| Portainer | https://portainer.home.local | :9000 |
+| Portainer | https://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | https://duplicati.home.local | :8200 |
 | Uptime Kuma | https://uptime.home.local | :3001 |
 | Plex | https://plex.home.local | :32400 (on 192.168.3.21) |
