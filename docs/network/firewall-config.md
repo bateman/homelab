@@ -181,6 +181,7 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | Printing | 631, 9100 |
 | Proxmox Management | 8006 |
 | mDNS | 5353 |
+| WoL | 9 |
 
 > [!NOTE]
 > **Traefik** — reverse proxy HTTPS port (Rule 8). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO.
@@ -324,7 +325,25 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows Media VLAN devices (phones, laptops on WiFi) to access the Proxmox VE web interface for VM and LXC management. Proxmox has its own authentication.
 
-### Rule 11 — Allow IoT to Home Assistant
+### Rule 11 — Allow Media WoL to Printer and Proxmox
+
+| Field | Value |
+|-------|-------|
+| Name | Allow Media WoL |
+| Action | Accept |
+| Protocol | UDP |
+| Source | VLAN Media |
+| Destination | Mini PC (192.168.3.20), Printer (192.168.3.30) |
+| Port | WoL (9) |
+
+> [!NOTE]
+> Allows Wake-on-LAN magic packets from Media VLAN (phones, tablets) to wake the Printer and Proxmox Mini PC. **Cross-VLAN WoL limitation**: magic packets are Layer 2 broadcasts and don't cross VLAN boundaries on their own. This rule enables directed (unicast) WoL for apps that send to the target's IP address. For reliable cross-VLAN WoL, use one of these methods:
+>
+> 1. **NAS relay via SSH** (recommended): `ssh admin@192.168.3.10 "wakeonlan <MAC>"` — already allowed by Rule 9 (port 22). See [`proxmox-setup.md` Section 8.2.6](../setup/proxmox-setup.md#826-wol-from-iphone-with-shortcuts).
+> 2. **WoL app with broadcast address**: Configure the app to send to `192.168.3.255` (Servers VLAN broadcast). Requires the UDM-SE to forward directed broadcasts.
+> 3. **UniFi controller**: Use the UniFi app → select device → send WoL from the controller itself.
+
+### Rule 12 — Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -337,7 +356,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
-### Rule 12 — Block IoT to All Private
+### Rule 13 — Block IoT to All Private
 
 | Field | Value |
 |-------|-------|
@@ -348,9 +367,9 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | RFC1918 |
 
 > [!TIP]
-> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 11).
+> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 12).
 
-### Rule 13 — Block Guest to All Private
+### Rule 14 — Block Guest to All Private
 
 | Field | Value |
 |-------|-------|
@@ -362,7 +381,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Complete Guest network isolation. Internet access only.
 
-### Rule 14 — Allow Management from Servers
+### Rule 15 — Allow Management from Servers
 
 | Field | Value |
 |-------|-------|
@@ -374,7 +393,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows desktop PC (VLAN 3) to access switch and AP management interfaces. Uses the native UniFi "Management" network as destination (not a custom network list).
 
-### Rule 15 — Block All Inter-VLAN (Catch-All)
+### Rule 16 — Block All Inter-VLAN (Catch-All)
 
 | Field | Value |
 |-------|-------|
