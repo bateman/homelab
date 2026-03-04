@@ -161,6 +161,9 @@ For each monitor you want to track:
 
 Below are the recommended monitor types for each service in the homelab. Use container hostnames (e.g., `http://sonarr:8989`) when possible — Uptime Kuma is on the same Docker network, so this is more reliable than host IPs.
 
+> [!TIP]
+> For the full operational guide on managing monitors (adding new services, status pages, maintenance windows, troubleshooting), see [Uptime Kuma Monitors Runbook](../operations/uptime-kuma-monitors.md).
+
 ### Infrastructure (compose.yml)
 
 | Service | Monitor Type | URL / Target | Notes |
