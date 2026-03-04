@@ -40,15 +40,16 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    - **Schedule**: Daily at 23:00
    - **Retention**: Smart backup retention (7 daily, 4 weekly, 3 monthly)
    - **Encryption**: Optional but recommended for offsite backups
-4. Configure **Filters** (Source Data tab → Filters):
+4. Configure **Filters** (Source Data tab → Filters → Add filter → Exclude directories).
+   Add one entry per pattern:
    ```
-   -*/portainer/chisel/
-   -*/portainer/bin/
-   -*/portainer/compose/
-   -*/portainer/docker_config/
-   -*/portainer/tls/
-   -*/portainer/certs/
-   -*/tailscale/
+   */portainer/chisel/
+   */portainer/bin/
+   */portainer/compose/
+   */portainer/docker_config/
+   */portainer/tls/
+   */portainer/certs/
+   */tailscale/
    ```
    **Why:** These directories are root-owned (700) and contain only runtime data:
    - **Portainer** (`chisel`, `bin`, `compose`, `docker_config`): auto-downloaded on first start. The restorable data is `portainer.db`.
