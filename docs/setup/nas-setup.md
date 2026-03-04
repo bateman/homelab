@@ -437,7 +437,7 @@ ls -la /share/data/
 # Should contain: torrents/, usenet/, media/
 
 # Verify config folders
-ls -la ./config/
+ls -la docker/config/
 # Should contain subfolders for each service
 
 # Verify ownership matches PUID:PGID in docker/.env
@@ -777,7 +777,7 @@ docker exec recyclarr recyclarr config create
 
 ### Configure recyclarr.yml
 
-Edit `./config/recyclarr/recyclarr.yml`:
+Edit `docker/config/recyclarr/recyclarr.yml`:
 
 ```yaml
 # Minimal configuration example

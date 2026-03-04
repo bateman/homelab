@@ -238,7 +238,7 @@ ls -ln /share/data
 
 # If needed, fix permissions:
 sudo chown -R 1001:100 /share/data
-sudo chown -R 1001:100 ./config
+sudo chown -R 1001:100 docker/config
 ```
 
 ### 4.2.2 Free DNS Port (Port 53)
@@ -534,7 +534,7 @@ make backup      # Additional manual backup
 | Problem | Quick Solution |
 |---------|----------------|
 | Container won't start | `docker compose logs <service>` |
-| Permission denied | `sudo chown -R $PUID:$PGID ./config` (use values from .env) |
+| Permission denied | `sudo chown -R $PUID:$PGID docker/config` (use values from .env) |
 | Hardlink fails | Verify same filesystem |
 | Service unreachable | Verify firewall rules |
 | Pi-hole doesn't resolve | Verify port 53 is free (`netstat -tulnp \| grep ':53 '`), disable dnsmasq if needed (see §4.2.2) |
