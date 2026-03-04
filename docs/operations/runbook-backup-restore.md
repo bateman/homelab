@@ -10,15 +10,15 @@ The strategy follows the **3-2-1 rule**: three copies of data, on two different 
 
 | Component | Data | Frequency | Destination | Retention |
 |-----------|------|-----------|-------------|-----------|
-| Docker configs | ./config/* (includes *arr, Traefik, Pi-hole, etc.) | Daily | NAS + Cloud | 30 days |
+| Docker configs | docker/config/* (includes *arr, Traefik, Pi-hole, etc.) | Daily | NAS + Cloud | 30 days |
 | Docker compose | compose.yml, compose.media.yml, .env | On each change | Git + NAS | Unlimited |
 | QNAP config | QTS system | Weekly | USB + Cloud | 5 versions |
 | Proxmox VMs | All VMs | Weekly | NAS | 4 versions |
 | Media library | /share/data/media | Never (rebuildable) | — | — |
-| *arr databases | SQLite in ./config | Daily | Included in Docker configs | 30 days |
+| *arr databases | SQLite in docker/config | Daily | Included in Docker configs | 30 days |
 
 > [!NOTE]
-> The `./config` folder contains configurations for all Docker services: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr, qBittorrent, NZBGet, Pi-hole, Home Assistant, Portainer, Duplicati, Uptime Kuma, Recyclarr, Traefik, Cleanuparr.
+> The `docker/config` folder contains configurations for all Docker services: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr, qBittorrent, NZBGet, Pi-hole, Home Assistant, Portainer, Duplicati, Uptime Kuma, Recyclarr, Traefik, Cleanuparr.
 
 ---
 
@@ -60,7 +60,7 @@ crontab -e
 
 # Backup at 23:00 (requires ~1 minute downtime, before NAS shutdown at 01:00)
 # Note: adjust path to your installation
-0 23 * * * cd /share/container/mediastack && make down && tar -czf /share/backup/docker-config-$(date +\%Y\%m\%d).tar.gz ./config && make up
+0 23 * * * cd /share/container/homelab && make down && tar -czf /share/backup/docker-config-$(date +\%Y\%m\%d).tar.gz docker/config && make up
 
 # Clean old backups (keep last 30) - runs at 23:30 after backup
 30 23 * * * find /share/backup -name "docker-config-*.tar.gz" -mtime +30 -delete
@@ -178,10 +178,10 @@ make logs-sonarr  # First check logs to understand the problem
 docker compose -f docker/compose.yml -f docker/compose.media.yml stop sonarr
 
 # Backup corrupted config (for analysis)
-mv ./config/sonarr ./config/sonarr.corrupted
+mv docker/config/sonarr docker/config/sonarr.corrupted
 
 # Restore from backup
-tar -xzf /share/backup/docker-config-YYYYMMDD.tar.gz ./config/sonarr
+tar -xzf /share/backup/docker-config-YYYYMMDD.tar.gz docker/config/sonarr
 
 # Restart
 docker compose -f docker/compose.yml -f docker/compose.media.yml start sonarr
@@ -204,8 +204,8 @@ cd /share/container/homelab
 tar -xzf /share/backup/docker-config-YYYYMMDD.tar.gz -C .
 
 # 5. Verify permissions
-sudo chown -R 1001:100 ./config
-sudo chmod -R 775 ./config
+sudo chown -R 1001:100 docker/config
+sudo chmod -R 775 docker/config
 
 # 6. Copy .env
 cp docker/.env.example docker/.env

@@ -118,5 +118,5 @@ These sections reference Pi-hole but are not part of the initial setup flow.
 | DNS architecture & fallback | [Firewall Config — DNS Architecture](../network/firewall-config.md#dns-architecture) |
 | Authelia DNS prerequisite | [Authelia Setup — Phase 3: Add DNS Record](authelia-setup.md#phase-3-add-dns-record) |
 | Uptime Kuma monitoring | [Notifications Setup — monitor table](notifications-setup.md) — Pi-hole monitored via DNS query to `pi.hole` |
-| Backup scope | [Backup Runbook](../operations/runbook-backup-restore.md) — Pi-hole config included in daily `./config/*` backup |
+| Backup scope | [Backup Runbook](../operations/runbook-backup-restore.md) — Pi-hole config included in daily `docker/config/*` backup |
 | Troubleshooting | [NAS Setup — Common Troubleshooting](nas-setup.md#common-troubleshooting) — "Pi-hole doesn't resolve" entry |
