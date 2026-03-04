@@ -40,6 +40,23 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    - **Schedule**: Daily at 23:00
    - **Retention**: Smart backup retention (7 daily, 4 weekly, 3 monthly)
    - **Encryption**: Optional but recommended for offsite backups
+4. Configure **Filters** (Source Data tab → Filters):
+   ```
+   -*/portainer/chisel/
+   -*/portainer/bin/
+   -*/portainer/compose/
+   -*/portainer/docker_config/
+   -*/portainer/tls/
+   -*/portainer/certs/
+   -*/tailscale/
+   ```
+   **Why:** These directories are root-owned (700) and contain only runtime data:
+   - **Portainer** (`chisel`, `bin`, `compose`, `docker_config`): auto-downloaded on first start. The restorable data is `portainer.db`.
+   - **Portainer TLS** (`tls`, `certs`): auto-generated on start.
+   - **Tailscale**: machine-specific state; requires re-auth on new install.
+
+   > **Tip:** If you see new "PermissionDenied" warnings after adding a service,
+   > check if the directory contains only runtime/regenerable data and add it to the filters.
 
 **Trigger manual backup:**
 ```bash
@@ -164,6 +181,7 @@ Duplicati has built-in support for Dropbox and Google Drive:
 5. Source: `/source/config`
 6. Schedule: daily
 7. Retention: Smart (7 daily, 4 weekly, 3 monthly)
+8. Configure same **Filters** as the local backup (see Docker Configurations Backup, step 4)
 
 ---
 
