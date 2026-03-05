@@ -109,7 +109,7 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 | Traefik | HTTP(s) | `http://traefik:80/ping` | Il ping è sull'entrypoint `web` (porta 80), non su 8080 (`api.insecure` non è attivo); non usare `traefik.home.local` (bloccato da Authelia) |
 | Authelia | HTTP(s) | `http://authelia:9091/api/health` | Endpoint health dedicato |
 | Pi-hole | DNS | Query `pi.hole` @ `192.168.3.10` | Testa la risoluzione DNS, non solo la web UI |
-| Portainer | HTTP(s) | `https://192.168.3.10:9443/` | Abilitare "Ignore TLS/SSL errors" (cert self-signed); accettare codici 200-399 ("Accepted Status Codes") poiché la root può restituire un redirect 303 |
+| Portainer | HTTP(s) | `https://192.168.3.10:9443/` | Monitor primario (nessun Docker healthcheck — immagine scratch senza wget/curl); abilitare "Ignore TLS/SSL errors"; accettare codici 200-399 ("Accepted Status Codes") poiché la root può restituire un redirect 303 |
 | Duplicati | HTTP(s) | `http://duplicati:8200` | Verifica semplice della web UI |
 | Tailscale | Docker Container | Container: `tailscale` | L'health check integrato esegue `tailscale status --json`; usa `network_mode: host` quindi non è raggiungibile via rete Docker. Per il setup completo vedi [Tailscale Setup](../setup/tailscale-setup.md) |
 | Socket Proxy | Docker Container | Container: `socket-proxy` | Interno, nessun endpoint HTTP esposto |
