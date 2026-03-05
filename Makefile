@@ -125,6 +125,10 @@ setup: check-compose
 		printf "$(GREEN)>>> Passwords auto-generated for: Pi-hole, Duplicati (web UI + encryption key)$(NC)\n"; \
 		printf "$(YELLOW)WARNING: Review docker/.env.secrets — configure VPN credentials if needed$(NC)\n"; \
 	fi
+	@if [ -f docker/.env.secrets ]; then \
+		chmod 600 docker/.env.secrets; \
+		printf "$(GREEN)>>> docker/.env.secrets permissions set to 600 (owner-only)$(NC)\n"; \
+	fi
 	@echo ">>> Creating folder structure..."
 	@if [ ! -x scripts/setup-folders.sh ]; then \
 		chmod +x scripts/setup-folders.sh; \
