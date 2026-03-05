@@ -32,6 +32,7 @@ set -uo pipefail
 BACKUP_DIR="${QTS_BACKUP_DIR:-/share/backup/qts-config}"
 RETENTION_COUNT="${QTS_BACKUP_RETENTION:-5}"  # Keep last N backups
 HA_WEBHOOK_URL="${HA_WEBHOOK_URL:-}"  # Set in environment or .env.secrets
+BACKUP_CMD=""  # Set by check_qnap: "qcli_backuprestore" or "config_util"
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="qts-config-${DATE}.bin"
 
@@ -118,9 +119,14 @@ check_qnap() {
         return 1
     fi
 
-    # Check if config_util exists and is executable
-    if [ ! -x /sbin/config_util ]; then
-        log "${RED}ERROR: /sbin/config_util not found${NC}"
+    # Check if backup utility exists and is executable
+    # Newer QNAP firmware uses qcli_backuprestore instead of config_util
+    if [ -x /sbin/qcli_backuprestore ]; then
+        BACKUP_CMD="qcli_backuprestore"
+    elif [ -x /sbin/config_util ]; then
+        BACKUP_CMD="config_util"
+    else
+        log "${RED}ERROR: No QNAP backup utility found (/sbin/qcli_backuprestore or /sbin/config_util)${NC}"
         log "Make sure you're running as admin/root"
         return 1
     fi
@@ -140,8 +146,14 @@ create_backup() {
     local backup_path="${BACKUP_DIR}/${BACKUP_FILE}"
 
     # Execute QNAP config backup
-    # The -e flag exports the configuration
-    if /sbin/config_util -e "$backup_path" 2>/dev/null; then
+    local cmd_result=0
+    if [ "$BACKUP_CMD" = "qcli_backuprestore" ]; then
+        /sbin/qcli_backuprestore -B "path=${backup_path}" 2>/dev/null || cmd_result=$?
+    else
+        /sbin/config_util -e "$backup_path" 2>/dev/null || cmd_result=$?
+    fi
+
+    if [ "$cmd_result" -eq 0 ]; then
         log "${GREEN}Backup created: ${backup_path}${NC}"
 
         # Verify file was created and has content
@@ -156,7 +168,7 @@ create_backup() {
             return 1
         fi
     else
-        log "${RED}ERROR: config_util failed${NC}"
+        log "${RED}ERROR: ${BACKUP_CMD} failed${NC}"
         log "Verify you have administrator permissions"
         return 1
     fi
