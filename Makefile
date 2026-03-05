@@ -5,7 +5,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup setup-dry-run up down restart logs pull update status backup backup-qts verify-backup clean health show-urls urls \
+.PHONY: help setup setup-dry-run up down restart logs pull update status backup backup-portainer backup-qts verify-backup clean health show-urls urls \
         validate check-docker check-compose check-curl recyclarr-sync recyclarr-config \
         logs-% shell-%
 
@@ -87,9 +87,10 @@ help:
 	@printf "    $(CYAN)make show-urls$(NC)   - Show WebUI URLs\n"
 	@printf "\n"
 	@printf "  $(PURPLE)Backup$(NC)\n"
-	@printf "    $(CYAN)make backup$(NC)        - Trigger Duplicati backup on demand\n"
-	@printf "    $(CYAN)make backup-qts$(NC)    - Backup QNAP QTS system configuration\n"
-	@printf "    $(CYAN)make verify-backup$(NC) - Verify backup integrity (extraction + SQLite)\n"
+	@printf "    $(CYAN)make backup$(NC)           - Trigger Duplicati backup on demand\n"
+	@printf "    $(CYAN)make backup-portainer$(NC) - Snapshot portainer.db (stop/copy/start ~2s)\n"
+	@printf "    $(CYAN)make backup-qts$(NC)       - Backup QNAP QTS system configuration\n"
+	@printf "    $(CYAN)make verify-backup$(NC)    - Verify backup integrity (extraction + SQLite)\n"
 	@printf "                         Duplicati WebUI: http://$(HOST_IP):8200\n"
 	@printf "\n"
 	@printf "  $(PURPLE)Utilities$(NC)\n"
@@ -225,7 +226,7 @@ shell-%: check-compose
 		exit 1; \
 	}
 
-backup: check-docker check-curl
+backup: check-docker check-curl backup-portainer
 	@echo ">>> Triggering Duplicati backup..."
 	@if docker ps --format '{{.Names}}' | grep -q '^duplicati$$'; then \
 		BACKUP_ID=$$(curl -s http://localhost:8200/api/v1/backups 2>/dev/null | grep -o '"ID":"[^"]*"' | head -1 | cut -d'"' -f4); \
@@ -242,6 +243,12 @@ backup: check-docker check-curl
 		echo "Run 'make up' first"; \
 		exit 1; \
 	fi
+
+backup-portainer: check-docker
+	@if [ ! -x scripts/backup-portainer-db.sh ]; then \
+		chmod +x scripts/backup-portainer-db.sh; \
+	fi
+	@./scripts/backup-portainer-db.sh --verbose
 
 verify-backup:
 	@echo ">>> Verifying backup integrity..."

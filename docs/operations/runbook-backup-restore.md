@@ -43,15 +43,34 @@ The Duplicati container manages automatic backups with deduplication and encrypt
 4. Configure **Filters** (Source Data tab → Filters → Add filter → Exclude expression):
    ```
    */tailscale/
+   */portainer/portainer.db
    ```
-   **Why:** Tailscale state is machine-specific and requires re-auth on new install — not useful to back up.
+   - **Tailscale**: machine-specific state; requires re-auth on new install — not useful to back up.
+   - **portainer.db**: always file-locked while Portainer runs. Backed up via `portainer.db.bak` instead (see step 5).
 
    > **Note:** Duplicati runs as PUID=0 (root) so it can read all config files including
    > root-owned ones (Portainer, Pi-hole). The source volume is mounted `:ro` for safety.
 
+5. **Portainer DB snapshot** — Portainer keeps `portainer.db` locked while running, so Duplicati
+   cannot read it. The `scripts/backup-portainer-db.sh` script handles this by briefly stopping
+   Portainer (~2s), copying the DB to `portainer.db.bak`, and restarting it. Duplicati then
+   backs up the `.bak` copy automatically.
+
+   Schedule it 5 minutes before the Duplicati backup:
+   ```bash
+   # On NAS crontab (ssh admin@192.168.3.10)
+   55 22 * * * /share/container/homelab/scripts/backup-portainer-db.sh >> /var/log/backup-portainer-db.log 2>&1
+   ```
+
+   Or trigger manually:
+   ```bash
+   make backup-portainer  # Just the snapshot
+   make backup            # Snapshot + Duplicati trigger
+   ```
+
 **Trigger manual backup:**
 ```bash
-make backup  # Triggers Duplicati via API
+make backup  # Snapshots portainer.db, then triggers Duplicati via API
 ```
 
 **Verify backup:**
