@@ -53,16 +53,23 @@ The Duplicati container manages automatic backups with deduplication and encrypt
 
 5. **Portainer DB snapshot** — Portainer keeps `portainer.db` locked while running, so Duplicati
    cannot read it. The `scripts/backup-portainer-db.sh` script handles this by briefly stopping
-   Portainer (~2s), copying the DB to `portainer.db.bak`, and restarting it. Duplicati then
-   backs up the `.bak` copy automatically.
+   Portainer (~2s), using `docker cp` to extract the DB to `portainer.db.bak`, and restarting it.
+   Duplicati then backs up the `.bak` copy automatically.
 
-   Schedule it 5 minutes before the Duplicati backup:
+   **Automated scheduling (required):** the snapshot **must** run before the Duplicati backup job.
+   If Duplicati is scheduled at 23:00, schedule the snapshot at 22:55:
+
    ```bash
    # On NAS crontab (ssh admin@192.168.3.10)
    55 22 * * * /share/container/homelab/scripts/backup-portainer-db.sh >> /var/log/backup-portainer-db.log 2>&1
    ```
 
-   Or trigger manually:
+   | Job | Schedule | What it does |
+   |-----|----------|--------------|
+   | Portainer snapshot | Daily 22:55 | Stops Portainer → `docker cp` → restarts (~2s downtime) |
+   | Duplicati backup | Daily 23:00 | Backs up `/source/config` including `portainer.db.bak` |
+
+   **Manual trigger:**
    ```bash
    make backup-portainer  # Just the snapshot
    make backup            # Snapshot + Duplicati trigger
