@@ -48,6 +48,10 @@ The Duplicati container manages automatic backups with deduplication and encrypt
 
    > **Note:** Duplicati runs as PUID=0 (root) so it can read all config files including
    > root-owned ones (Portainer, Pi-hole). The source volume is mounted `:ro` for safety.
+   >
+   > A "FileLocked" warning for `portainer.db` is expected — Portainer keeps its SQLite
+   > database open. Duplicati will skip it on that run and capture it on a subsequent backup
+   > when the lock is briefly released. This is harmless.
 
 **Trigger manual backup:**
 ```bash
