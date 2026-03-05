@@ -15,17 +15,37 @@
 
 ## Tipi di Monitor
 
-Uptime Kuma supporta diversi tipi di monitor. In questo homelab se ne usano quattro:
+Uptime Kuma supporta diversi tipi di monitor. In questo homelab se ne usano tre:
 
 | Tipo | Quando usarlo | Esempio |
 |------|---------------|---------|
 | **HTTP(s)** | Il servizio espone un endpoint HTTP verificabile | Sonarr `/ping`, Authelia `/api/health` |
 | **DNS** | Verificare che la risoluzione DNS funzioni | Pi-hole: query `pi.hole` |
-| **Ping** | Il servizio non ha endpoint HTTP ma risponde a ICMP | Tailscale IP (`100.x.x.x`) |
-| **Docker Container** | Il container non espone endpoint utili o richiedono autenticazione | Socket Proxy, Watchtower, Gluetun |
+| **Docker Container** | Il container non espone endpoint utili, richiedono autenticazione, o non è raggiungibile via rete Docker | Socket Proxy, Watchtower, Gluetun, Tailscale |
 
 > [!NOTE]
-> I monitor di tipo **Docker Container** funzionano perché Uptime Kuma ha accesso al Docker socket (montato read-only in `compose.yml`).
+> I monitor di tipo **Docker Container** richiedono la configurazione di un **Docker Host** in Uptime Kuma (vedi sezione sotto).
+
+### Configurare il Docker Host
+
+Prima di creare monitor di tipo "Docker Container", è necessario configurare la connessione al Docker daemon:
+
+1. In Uptime Kuma, andare su **Settings** (icona ingranaggio) → **Docker Hosts**
+2. Click **Setup Docker Host**
+3. Compilare i campi:
+
+| Campo | Valore |
+|-------|--------|
+| **Nome** | `QNAP NAS` (o un nome descrittivo a piacere) |
+| **Tipo di connessione** | `Socket` |
+| **Daemon Docker** | `/var/run/docker.sock` |
+
+4. Click **Fai una prova** per verificare la connessione
+5. Click **Salva**
+
+> Funziona perché il container Uptime Kuma monta il Docker socket in read-only (`/var/run/docker.sock:/var/run/docker.sock:ro` in `compose.yml`).
+
+Quando si crea un monitor di tipo **Docker Container**, selezionare il Docker Host appena configurato (`QNAP NAS`) e inserire il nome del container nel campo **Container Name / ID** (es. `gluetun`, `socket-proxy`, `watchtower`, `tailscale`).
 
 ---
 
@@ -33,22 +53,50 @@ Uptime Kuma supporta diversi tipi di monitor. In questo homelab se ne usano quat
 
 1. Aprire Uptime Kuma → click **Add New Monitor** (pulsante in alto)
 2. Selezionare il **Monitor Type** appropriato (vedi tabella sopra)
-3. Compilare i campi:
+3. Compilare i campi comuni:
 
 | Campo | Valore consigliato |
 |-------|-------------------|
 | **Friendly Name** | Nome del servizio (es. `Sonarr`) |
-| **URL / Hostname** | Vedi [Tabella Monitor](#tabella-monitor-per-servizio) |
 | **Heartbeat Interval** | `60` secondi (standard) o `30` secondi (servizi critici) |
 | **Retries** | `3` (evita falsi positivi durante i restart) |
-| **Ignore TLS/SSL Errors** | Abilitare per endpoint HTTPS con certificati self-signed |
 
-4. Nella sezione **Notifications**, abilitare `Home Assistant iOS` (vedi [notifications-setup.md](../setup/notifications-setup.md))
-5. Click **Save**
-6. Verificare che il monitor diventi verde entro 1-2 minuti
+4. Compilare i campi specifici per tipo di monitor (vedi sotto)
+5. Nella sezione **Notifications**, abilitare `Home Assistant iOS` (vedi [notifications-setup.md](../setup/notifications-setup.md))
+6. Click **Save**
+7. Verificare che il monitor diventi verde entro 1-2 minuti
+
+### Campi per tipo di monitor
+
+#### HTTP(s)
+
+| Campo | Valore |
+|-------|--------|
+| **URL** | L'endpoint del servizio (vedi [Tabella Monitor](#tabella-monitor-per-servizio)) |
+| **Ignore TLS/SSL Errors** | Abilitare per endpoint HTTPS con certificati self-signed (es. Portainer, Proxmox) |
+
+#### DNS
+
+Usato per verificare che Pi-hole risolva correttamente i domini.
+
+| Campo | Valore |
+|-------|--------|
+| **Hostname** | Il dominio da risolvere, es. `pi.hole` |
+| **Resolver Server** | L'IP di Pi-hole: `192.168.3.10` |
+| **Port** | `53` (default DNS) |
+| **Resource Record Type** | `A` |
+
+> Pi-hole risponde alla query `pi.hole` con il proprio IP. Se la risposta arriva, il servizio DNS funziona. Questo è più affidabile di un semplice check HTTP sulla web UI, perché testa la funzione primaria di Pi-hole (risolvere DNS).
+
+#### Docker Container
+
+| Campo | Valore |
+|-------|--------|
+| **Docker Host** | Selezionare il Docker Host configurato (es. `QNAP NAS`) |
+| **Container Name / ID** | Il nome del container, es. `gluetun`, `socket-proxy`, `watchtower`, `tailscale` |
 
 > [!TIP]
-> Usa gli hostname dei container (es. `http://sonarr:8989`) anziché gli IP dell'host quando possibile. Uptime Kuma è sulla stessa rete Docker (`media_net`), quindi la risoluzione DNS interna è più affidabile.
+> Per i monitor HTTP(s), usa gli hostname dei container (es. `http://sonarr:8989`) anziché gli IP dell'host quando possibile. Uptime Kuma è sulla stessa rete Docker (`media_net`), quindi la risoluzione DNS interna è più affidabile.
 
 ---
 
@@ -58,18 +106,23 @@ Uptime Kuma supporta diversi tipi di monitor. In questo homelab se ne usano quat
 
 | Servizio | Tipo | URL / Target | Note |
 |----------|------|--------------|------|
-| Traefik | HTTP(s) | `http://traefik:8080/ping` | Endpoint interno di ping; non usare `traefik.home.local` (bloccato da Authelia) |
+| Traefik | HTTP(s) | `http://traefik:80/ping` | Il ping è sull'entrypoint `web` (porta 80), non su 8080 (`api.insecure` non è attivo); non usare `traefik.home.local` (bloccato da Authelia) |
 | Authelia | HTTP(s) | `http://authelia:9091/api/health` | Endpoint health dedicato |
 | Pi-hole | DNS | Query `pi.hole` @ `192.168.3.10` | Testa la risoluzione DNS, non solo la web UI |
 | Portainer | HTTP(s) | `https://192.168.3.10:9443/api/system/status` | Abilitare "Ignore TLS/SSL errors" (cert self-signed) |
 | Duplicati | HTTP(s) | `http://duplicati:8200` | Verifica semplice della web UI |
-| Tailscale | Ping | IP Tailscale (`100.x.x.x`) | Verifica che il tunnel mesh sia raggiungibile |
+| Tailscale | Docker Container | Container: `tailscale` | L'health check integrato esegue `tailscale status --json`; usa `network_mode: host` quindi non è raggiungibile via rete Docker. Per il setup completo vedi [Tailscale Setup](../setup/tailscale-setup.md) |
 | Socket Proxy | Docker Container | Container: `socket-proxy` | Interno, nessun endpoint HTTP esposto |
 | Watchtower | Docker Container | Container: `watchtower` | L'endpoint metriche richiede auth; il monitor Docker è più semplice |
-| Home Assistant | HTTP(s) | `http://192.168.3.10:8123/api/` | Usare l'IP dell'host — HA usa `network_mode: host` |
 
 > [!NOTE]
 > Non creare un monitor per Uptime Kuma stesso — non può monitorare in modo affidabile la propria disponibilità.
+
+### Home Assistant (compose.homeassistant.yml)
+
+| Servizio | Tipo | URL / Target | Note |
+|----------|------|--------------|------|
+| Home Assistant | HTTP(s) | `http://192.168.3.10:8123/api/` | Usare l'IP dell'host — HA usa `network_mode: host`, non è raggiungibile via hostname Docker |
 
 ### Media Stack (compose.media.yml)
 
@@ -102,7 +155,7 @@ Uptime Kuma supporta diversi tipi di monitor. In questo homelab se ne usano quat
 
 Quando aggiungi un nuovo servizio Docker al homelab, segui questa checklist per il monitoraggio:
 
-- [ ] Identificare il tipo di monitor appropriato (HTTP, DNS, Ping, Docker Container)
+- [ ] Identificare il tipo di monitor appropriato (HTTP, DNS, Docker Container)
 - [ ] Trovare l'endpoint di health check (controllare l'`healthcheck` nel compose file)
 - [ ] Creare il monitor in Uptime Kuma con le impostazioni consigliate
 - [ ] Abilitare la notifica `Home Assistant iOS`
@@ -120,7 +173,8 @@ Le Status Page raggruppano i monitor in una vista pubblica o interna.
 2. Click **New Status Page**
 3. Inserire un nome (es. `Homelab`) e uno slug (es. `homelab`)
 4. Aggiungere gruppi tematici:
-   - **Infrastructure**: Traefik, Authelia, Pi-hole, Portainer
+   - **Infrastructure**: Traefik, Authelia, Pi-hole, Portainer, Duplicati, Tailscale, Socket Proxy, Watchtower
+   - **Home Assistant**: Home Assistant
    - **Media**: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr
    - **Download**: qBittorrent, NZBGet, Gluetun (solo profilo `vpn`)
    - **Proxmox**: Proxmox, Plex
