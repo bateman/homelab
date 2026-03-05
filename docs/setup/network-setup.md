@@ -607,6 +607,43 @@ In **UDM-SE** (Network application): Settings → WiFi → Select Network → Wi
    - Homelab-IoT → should get 192.168.6.x IP
 3. Verify Internet connectivity on each network
 
+### 7.6 Troubleshooting: AP Not Broadcasting WiFi
+
+If the U6-Pro shows **"This AP is not broadcasting client-facing WiFi"** in the UniFi controller, the WiFi networks are no longer assigned to the AP. This can happen after a controller update, AP firmware upgrade, or if the AP was re-adopted.
+
+**Step 1: Check WiFi networks still exist**
+
+1. In **UDM-SE**: Settings → WiFi
+2. Verify that the three networks (Homelab, Homelab-Guest, Homelab-IoT) are listed
+3. If missing, recreate them following [Phase 7.3](#73-create-wifi-networks-ssids)
+
+**Step 2: Re-assign WiFi networks to the AP**
+
+1. In **UDM-SE**: Devices → U6-Pro → click the info banner "Assign WiFi Network"
+2. Alternatively: Devices → U6-Pro → Settings (gear icon) → WiFi Networks
+3. Enable all three SSIDs for this AP:
+   - Homelab (Media VLAN 4)
+   - Homelab-Guest (Guest VLAN 5)
+   - Homelab-IoT (IoT VLAN 6)
+4. Click "Apply Changes"
+5. Wait ~30 seconds for the AP to start broadcasting
+
+**Step 3: Check WiFi Blackout Schedule**
+
+If WiFi disappears at specific times, the blackout schedule may be active:
+
+1. Settings → WiFi → select each network → WiFi Blackout Schedule
+2. Verify the schedule matches [Phase 7.4](#74-wifi-blackout-schedule-optional) or disable it to test
+3. Note: blackout disables the radio but keeps the AP powered — networks should return automatically when the schedule window reopens
+
+**Step 4: Verify recovery**
+
+1. Check that the AP shows connected clients (client count > 0)
+2. Connect a device to each SSID and confirm correct VLAN IPs (see [Phase 7.5](#75-verify-wifi))
+
+> [!TIP]
+> If the AP repeatedly loses its WiFi assignment after reboots or updates, check that it is fully adopted (not in "Managed by Other" state) and that the controller firmware is up to date.
+
 ---
 
 ## Phase 8: Iliad Box Configuration
