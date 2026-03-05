@@ -105,7 +105,7 @@ docker exec tailscale tailscale ip -4
 
 Oppure consultare la [Tailscale Admin Console](https://login.tailscale.com/admin/machines) e cercare la macchina `nas-tailscale` (l'hostname configurato in `compose.yml`).
 
-> Questo monitor verifica che il tunnel mesh Tailscale sia attivo e raggiungibile. Se il ping fallisce, il NAS non è accessibile da remoto via Tailscale.
+> Questo monitor verifica che il tunnel mesh Tailscale sia attivo e raggiungibile. Se il ping fallisce, il NAS non è accessibile da remoto via Tailscale. Per il setup completo di Tailscale, vedi [Tailscale Setup](../setup/tailscale-setup.md).
 
 #### Docker Container
 

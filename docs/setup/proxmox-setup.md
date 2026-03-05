@@ -565,14 +565,12 @@ If it shows "Transcoding":
 > [!NOTE]
 > Tailscale runs as a Docker container on the NAS (always-on) instead of on the Mini PC, so remote access remains available even when the Mini PC is powered off.
 
-See the Tailscale service in `docker/compose.yml` for configuration. Setup steps:
+For the complete setup guide, see **[Tailscale Setup](tailscale-setup.md)**. In summary:
 
 1. Generate an auth key at https://login.tailscale.com/admin/settings/keys
 2. Add `TS_AUTHKEY` to `docker/.env.secrets`
 3. Start the stack: `make up`
 4. Approve subnet routes at https://login.tailscale.com/admin/machines
-
-For full details, see the Tailscale section in `docker/compose.yml` and `docker/.env.secrets.example`.
 
 ---
 

@@ -35,7 +35,7 @@ A reverse proxy allows accessing services using readable names (e.g., `sonarr.ho
 
 - [ ] Docker stack running on NAS (192.168.3.10)
 - [ ] Pi-hole configured and active
-- [ ] Tailscale running as Docker container on NAS (see `docker/compose.yml`)
+- [ ] Tailscale running as Docker container on NAS (see [Tailscale Setup](tailscale-setup.md))
 
 ---
 
