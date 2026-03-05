@@ -117,9 +117,21 @@ The `scripts/backup-qts-config.sh` script automates QTS configuration backup.
 - Installed apps and their configurations
 - Scheduled tasks
 
+**Prerequisites (QCLI 5.x+ firmware):**
+
+Newer QNAP firmware uses `qcli_backuprestore` which requires authentication.
+Add your QNAP admin credentials to `docker/.env.secrets`:
+
+```bash
+QNAP_ADMIN_USER=admin
+QNAP_ADMIN_PASSWORD=your_admin_password
+```
+
+The script automatically detects firmware version — older NAS with `config_util` don't need credentials.
+
 **Manual backup:**
 ```bash
-make backup-qts  # Runs backup and shows detailed output
+sudo make backup-qts  # Runs backup and shows detailed output
 ```
 
 **Automation with cron (recommended):**
@@ -128,7 +140,8 @@ make backup-qts  # Runs backup and shows detailed output
 crontab -e
 
 # Sunday at 08:00 (after NAS power-on at 07:00)
-0 8 * * 0 /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
+# Source credentials from .env.secrets before running
+0 8 * * 0 cd /share/container/mediastack && /usr/bin/env $(grep '^QNAP_ADMIN' docker/.env.secrets | xargs) /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
 ```
 
 **Configurable parameters (environment variables):**
@@ -137,6 +150,8 @@ crontab -e
 | `QTS_BACKUP_DIR` | `/share/backup/qts-config` | Backup destination directory |
 | `QTS_BACKUP_RETENTION` | `5` | Number of backups to keep |
 | `HA_WEBHOOK_URL` | - | Home Assistant webhook URL for notifications |
+| `QNAP_ADMIN_USER` | `admin` | QNAP admin username |
+| `QNAP_ADMIN_PASSWORD` | - | QNAP admin password (required for QCLI 5.x+) |
 
 **Check available backups:**
 ```bash
