@@ -178,7 +178,7 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | NAS Management | 22, 5000, 5001, 8081, 9443, 8200, 3001 |
 | Traefik | 443 |
 | Home Assistant | 8123 |
-| Printing | 443, 631, 9100 |
+| Printing | 80, 443, 631, 9100 |
 | Proxmox Management | 8006 |
 | mDNS | 5353 |
 | WoL | 9 |
@@ -190,7 +190,7 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 >
 > **NAS Management** — infrastructure/admin direct ports exposed to Media VLAN (Rule 9): SSH (22), QTS HTTP (5000), QTS HTTPS (5001), Pi-hole admin (8081), Portainer (9443), Duplicati (8200), Uptime Kuma (3001). All services have their own authentication. Also accessible from Desktop PC (192.168.3.40) via same-VLAN connectivity (both on VLAN 3). These services are additionally reachable from Media VLAN through Traefik (Rule 8) with Authelia SSO. Note: QNAP QTS factory defaults are 8080 (HTTP) and 443 (HTTPS) — ports were changed to 5000/5001 to avoid conflicts with qBittorrent (8080) and Traefik (443). See [`nas-setup.md`](../setup/nas-setup.md#change-qts-system-ports).
 >
-> **Printing** — AirPrint and direct printing ports (Rules 5-6): IPPS (443), IPP (631), RAW/JetDirect (9100). Port 443 is required because AirPrint printers advertise `_ipps._tcp` (IPP over TLS) and macOS prefers IPPS when available. Without port 443, Bonjour discovery succeeds but print jobs fail with "filter error" because macOS cannot establish the IPPS connection. This port 443 targets only the Printer IP (192.168.3.30), so it does not conflict with Traefik (Rule 8) which targets the NAS IP (192.168.3.10).
+> **Printing** — AirPrint and direct printing ports (Rules 5-6): HTTP admin (80), IPPS (443), IPP (631), RAW/JetDirect (9100). Ports 80/443 provide access to the printer's web admin panel and IPPS printing. Port 443 is required because AirPrint printers advertise `_ipps._tcp` (IPP over TLS) and macOS prefers IPPS when available. These ports target only the Printer IP (192.168.3.30), so they do not conflict with Traefik (Rule 8) which targets the NAS IP (192.168.3.10). **Troubleshooting "filter error" on macOS**: If Bonjour discovery works but printing fails with "filter error", remove the printer and re-add it via IP (System Settings → Printers & Scanners → + → IP tab → address `192.168.3.30`, protocol IPP, queue `/ipp/print`) selecting the printer-specific driver instead of AirPrint. This bypasses the AirPrint raster filter which can fail cross-VLAN.
 >
 > **Proxmox Management** — Proxmox VE web interface (Rule 10): port 8006. Allows wireless devices to manage VMs and LXC containers. Proxmox has its own authentication.
 
@@ -260,7 +260,7 @@ Rules are processed in order, from first to last. Order matters.
 | Protocol | TCP |
 | Source | VLAN Media |
 | Destination | Printer (192.168.3.30) |
-| Port | Printing (443, 631, 9100) |
+| Port | Printing (80, 443, 631, 9100) |
 
 ### Rule 6 — Allow Media to Printer Bonjour (AirPrint Discovery)
 
