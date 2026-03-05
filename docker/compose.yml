@@ -255,7 +255,7 @@ services:
       PGID: "0"
     volumes:
       - ./config/duplicati:/config
-      - ./config:/source/config:ro        # Service configs (read-only)
+      - ./config:/source/config:ro        # Service configs (read-only, PUID=0 reads all)
       - /share/backup:/backups            # Local backup destination
     ports:
       - "8200:8200"
