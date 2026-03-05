@@ -136,7 +136,12 @@ With the `vpn` profile, qBittorrent and NZBGet are reachable via hostname `gluet
 | `novpn` | `COMPOSE_PROFILES=novpn make up` | `qbittorrent:8080` / `nzbget:6789` |
 
 > [!IMPORTANT]
-> When changing profiles, remember to update hostnames in *arr apps!
+> When changing profiles:
+> 1. Remove the old download client containers first — they share the same `container_name` across profiles, so Docker will error with a name conflict:
+>    ```bash
+>    docker rm qbittorrent nzbget
+>    ```
+> 2. Update hostnames in *arr apps (`gluetun` for vpn, `qbittorrent`/`nzbget` for novpn)
 
 ---
 
@@ -216,7 +221,25 @@ To get credentials:
 > [!CAUTION]
 > Mullvad no longer supports port forwarding since 2023.
 
-### PrivadoVPN (OpenVPN with Port Forwarding)
+### PrivadoVPN (WireGuard - Recommended)
+
+```bash
+# .env.secrets
+VPN_SERVICE_PROVIDER=privado
+VPN_TYPE=wireguard
+WIREGUARD_PRIVATE_KEY=<your_private_key>
+WIREGUARD_ADDRESSES=<your_assigned_address>/32
+SERVER_CITIES=Milan
+VPN_PORT_FORWARDING=on
+```
+
+To get credentials:
+1. Log in to https://privadovpn.com/control-panel/
+2. Go to **Account** → **WireGuard Configuration**
+3. Download the `.conf` file for your preferred city
+4. Copy the `PrivateKey` and `Address` values from the `[Interface]` section
+
+### PrivadoVPN (OpenVPN)
 
 ```bash
 # .env.secrets
@@ -234,7 +257,7 @@ To get credentials:
 3. Copy your **Username** and **Password**
 
 > [!TIP]
-> PrivadoVPN supports port forwarding, which improves torrent speeds.
+> PrivadoVPN supports port forwarding, which improves torrent speeds. WireGuard is recommended over OpenVPN for better performance and lower CPU usage.
 
 ---
 
