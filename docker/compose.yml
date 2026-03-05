@@ -435,7 +435,7 @@ services:
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/ping"]
       <<: *common-healthcheck
     deploy:
       resources:
