@@ -25,7 +25,28 @@ Uptime Kuma supporta diversi tipi di monitor. In questo homelab se ne usano quat
 | **Docker Container** | Il container non espone endpoint utili o richiedono autenticazione | Socket Proxy, Watchtower, Gluetun |
 
 > [!NOTE]
-> I monitor di tipo **Docker Container** funzionano perché Uptime Kuma ha accesso al Docker socket (montato read-only in `compose.yml`).
+> I monitor di tipo **Docker Container** richiedono la configurazione di un **Docker Host** in Uptime Kuma (vedi sezione sotto).
+
+### Configurare il Docker Host
+
+Prima di creare monitor di tipo "Docker Container", è necessario configurare la connessione al Docker daemon:
+
+1. In Uptime Kuma, andare su **Settings** (icona ingranaggio) → **Docker Hosts**
+2. Click **Setup Docker Host**
+3. Compilare i campi:
+
+| Campo | Valore |
+|-------|--------|
+| **Nome** | `QNAP NAS` (o un nome descrittivo a piacere) |
+| **Tipo di connessione** | `Socket` |
+| **Deamon Docker** | `/var/run/docker.sock` |
+
+4. Click **Fai una prova** per verificare la connessione
+5. Click **Salva**
+
+> Funziona perché il container Uptime Kuma monta il Docker socket in read-only (`/var/run/docker.sock:/var/run/docker.sock:ro` in `compose.yml`).
+
+Quando si crea un monitor di tipo **Docker Container**, selezionare il Docker Host appena configurato (`QNAP NAS`) e inserire il nome del container nel campo **Container Name / ID** (es. `gluetun`, `socket-proxy`, `watchtower`).
 
 ---
 
