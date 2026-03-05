@@ -80,9 +80,86 @@ The Duplicati container manages automatic backups with deduplication and encrypt
 make backup  # Snapshots portainer.db, then triggers Duplicati via API
 ```
 
+**Encryption (recommended for offsite backups):**
+
+- **Local backup (`docker-configs-local`)**: encryption is optional — the NAS itself is the trust boundary.
+- **Offsite backup (cloud)**: enable AES-256 encryption with the passphrase from `.env.secrets`:
+  ```bash
+  grep 'SETTINGS_ENCRYPTION_KEY' docker/.env.secrets
+  ```
+  In Duplicati Add Backup wizard → Encryption → AES-256, built-in → paste the key above.
+
+  > [!IMPORTANT]
+  > Store the encryption key somewhere outside the NAS (password manager, printed copy).
+  > Without it, offsite backups are unrecoverable.
+
 **Verify backup:**
 - Access Duplicati WebUI → Select backup → "Show log"
 - Or: Restore → Browse to verify contents
+- Or: Operations → "Verify files" (checks remote backup integrity)
+- CLI via `make backup` triggers all configured jobs and reports status
+
+#### Duplicati REST API
+
+The `make backup` target uses the Duplicati REST API to trigger backups programmatically.
+This is useful for automation and integration with cron jobs.
+
+**Authentication:**
+```bash
+# Get an access token (password from .env.secrets)
+TOKEN=$(curl -sf -X POST http://localhost:8200/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"password":"YOUR_DUPLICATI_PASSWORD"}' \
+  | grep -o '"AccessToken":"[^"]*"' | cut -d'"' -f4)
+```
+
+**List configured backup jobs:**
+```bash
+curl -sf http://localhost:8200/api/v1/backups \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+```
+
+**Trigger a backup job:**
+```bash
+# Get backup IDs first (from list above), then trigger
+curl -sf -X POST "http://localhost:8200/api/v1/backup/{ID}/run" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Check backup status:**
+```bash
+curl -sf http://localhost:8200/api/v1/progressstate \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+> [!NOTE]
+> `make backup` automates all of the above: it snapshots Portainer DB first, then
+> authenticates and triggers every configured Duplicati backup job.
+
+#### Duplicati Restore via WebUI
+
+To restore specific files (not a full disaster recovery):
+
+1. Access `http://192.168.3.10:8200`
+2. Select the backup job → **Restore**
+3. Choose the restore point (date/time)
+4. Browse the file tree and select files/folders to restore
+5. Choose restore destination:
+   - **Original location**: overwrites existing files
+   - **Custom path**: restore to a different location (e.g., `/backups/restore-test/`)
+6. Set permissions: "Restore read/write permissions" (recommended)
+
+For restoring from an offsite backup after disaster, see [Complete Disaster Recovery](#4-complete-disaster-recovery).
+
+#### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `make backup` fails with "login failed" | Wrong password or Duplicati not running | Check `DUPLICATI__WEBSERVICE_PASSWORD` in `.env.secrets`; run `make health` |
+| Backup job shows "Warning" | File locked during backup (e.g., SQLite) | Schedule Portainer snapshot before Duplicati (22:55 vs 23:00) |
+| "No backup job configured yet" | Duplicati has no jobs | Configure via WebUI at `http://192.168.3.10:8200` |
+| Backup size keeps growing | Deduplication not working or retention not applied | WebUI → Job → "Compact now"; verify retention policy |
+| Offsite backup fails with auth error | Cloud OAuth token expired | WebUI → Edit backup → Destination → re-authenticate |
 
 #### Alternative: Manual backup with cron
 
@@ -119,7 +196,9 @@ The `scripts/backup-qts-config.sh` script automates QTS configuration backup.
 
 **Prerequisites (QCLI 5.x+ firmware):**
 
-Newer QNAP firmware uses `qcli_backuprestore` which requires authentication.
+Newer QNAP firmware (QCLI 5.x+) requires authentication. The script authenticates via `qcli` to obtain
+a session ID, then downloads the backup through the QTS web API (`sysRequest.cgi`).
+
 Add your QNAP admin credentials to `docker/.env.secrets`:
 
 ```bash
@@ -149,6 +228,7 @@ crontab -e
 |----------|---------|-------------|
 | `QTS_BACKUP_DIR` | `/share/backup/qts-config` | Backup destination directory |
 | `QTS_BACKUP_RETENTION` | `5` | Number of backups to keep |
+| `QTS_HTTPS_PORT` | `5001` | QTS web UI HTTPS port |
 | `HA_WEBHOOK_URL` | - | Home Assistant webhook URL for notifications |
 | `QNAP_ADMIN_USER` | `admin` | QNAP admin username |
 | `QNAP_ADMIN_PASSWORD` | - | QNAP admin password (required for QCLI 5.x+) |
@@ -451,6 +531,7 @@ For advanced homelabs:
 
 | Date | Change |
 |------|--------|
+| 2026-03-05 | Expanded Duplicati docs: REST API, encryption, restore, troubleshooting; updated QTS backup to web API method |
 | 2026-01-06 | Added backup-qts-config.sh script for QTS backup automation |
 | 2025-01-04 | Revision: Duplicati as primary method, docker compose command fixes, QTS port clarifications |
 | 2025-01-02 | Document creation |
