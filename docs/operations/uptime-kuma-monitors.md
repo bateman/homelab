@@ -80,9 +80,11 @@ Uptime Kuma supporta diversi tipi di monitor. In questo homelab se ne usano quat
 | Lidarr | HTTP(s) | `http://lidarr:8686/ping` | Come sopra |
 | Prowlarr | HTTP(s) | `http://prowlarr:9696/ping` | Come sopra |
 | Bazarr | HTTP(s) | `http://bazarr:6767/ping` | Come sopra |
-| qBittorrent | HTTP(s) | `http://gluetun:8080` | Passa attraverso Gluetun (profilo VPN); usare `http://qbittorrent:8080` per novpn |
-| NZBGet | HTTP(s) | `http://gluetun:6789` | Come sopra — passa attraverso la rete di Gluetun |
-| Gluetun | Docker Container | Container: `gluetun` | L'health check integrato valida il tunnel VPN |
+| qBittorrent (VPN) | HTTP(s) | `http://gluetun:8080` | Profilo `vpn` — il traffico passa attraverso Gluetun; l'hostname è `gluetun` perché qBittorrent usa `network_mode: service:gluetun` |
+| qBittorrent (no VPN) | HTTP(s) | `http://qbittorrent:8080` | Profilo `novpn` — connessione diretta; l'hostname è il container stesso |
+| NZBGet (VPN) | HTTP(s) | `http://gluetun:6789` | Profilo `vpn` — come qBittorrent, passa attraverso la rete di Gluetun |
+| NZBGet (no VPN) | HTTP(s) | `http://nzbget:6789` | Profilo `novpn` — connessione diretta; l'hostname è il container stesso |
+| Gluetun | Docker Container | Container: `gluetun` | Solo profilo `vpn` — l'health check integrato valida il tunnel VPN; non presente con profilo `novpn` |
 | FlareSolverr | HTTP(s) | `http://flaresolverr:8191/health` | Endpoint `/health` dedicato |
 | Recyclarr | Docker Container | Container: `recyclarr` | Eseguito su schedule, nessuna web UI |
 | Cleanuparr | HTTP(s) | `http://cleanuparr:11011/health` | Endpoint `/health` dedicato |
@@ -120,7 +122,7 @@ Le Status Page raggruppano i monitor in una vista pubblica o interna.
 4. Aggiungere gruppi tematici:
    - **Infrastructure**: Traefik, Authelia, Pi-hole, Portainer
    - **Media**: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr
-   - **Download**: qBittorrent, NZBGet, Gluetun
+   - **Download**: qBittorrent, NZBGet, Gluetun (solo profilo `vpn`)
    - **Proxmox**: Proxmox, Plex
 5. Trascinare i monitor nei gruppi corrispondenti
 6. Click **Save**
@@ -153,6 +155,8 @@ Per evitare notifiche durante aggiornamenti pianificati o riavvii:
 |----------|-------|-----------|
 | Monitor sempre rosso su un servizio funzionante | URL errato o rete Docker sbagliata | Verificare che Uptime Kuma sia sulla stessa rete del container target (`media_net`) |
 | "Connection refused" su container VPN | qBittorrent/NZBGet passano per Gluetun | Usare `http://gluetun:<porta>` anziché l'hostname del container |
+| "Connection refused" su container no VPN | Il monitor punta ancora a `gluetun` ma il profilo attivo è `novpn` | Usare l'hostname diretto del container: `http://qbittorrent:8080` o `http://nzbget:6789` |
+| Monitor Gluetun rosso con profilo `novpn` | Gluetun non viene avviato con il profilo `novpn` | Rimuovere o disabilitare il monitor Gluetun quando si usa il profilo `novpn` |
 | Falsi positivi frequenti | Intervallo troppo basso o retries insufficienti | Aumentare l'intervallo a 60s e i retries a 3 |
 | Monitor Docker Container non funziona | Docker socket non montato | Verificare il volume `/var/run/docker.sock:/var/run/docker.sock:ro` in `compose.yml` |
 | Errore TLS su Portainer/Proxmox | Certificato self-signed | Abilitare "Ignore TLS/SSL errors" nelle impostazioni del monitor |
