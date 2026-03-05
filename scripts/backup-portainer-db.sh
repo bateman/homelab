@@ -71,7 +71,7 @@ log_verbose() { [ "$VERBOSE" = true ] && log "$1"; }
 if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
     log "${YELLOW}Portainer is not running — copying DB without stop/start${NC}"
     if [ -f "$DB_PATH" ]; then
-        cp "$DB_PATH" "$BAK_PATH"
+        sudo cp "$DB_PATH" "$BAK_PATH"
         log "${GREEN}Snapshot created: portainer.db.bak${NC}"
         exit 0
     else
@@ -95,7 +95,7 @@ fi
 
 # Copy database
 log_verbose "Copying portainer.db -> portainer.db.bak..."
-if cp "$DB_PATH" "$BAK_PATH"; then
+if sudo cp "$DB_PATH" "$BAK_PATH"; then
     log_verbose "${GREEN}Snapshot created${NC}"
 else
     log "${RED}Error: failed to copy database${NC}"
