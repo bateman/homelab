@@ -40,7 +40,7 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    - **Schedule**: Daily at 23:00
    - **Retention**: Smart backup retention (7 daily, 4 weekly, 3 monthly)
    - **Encryption**: Optional but recommended for offsite backups
-4. Configure **Filters** (Source Data tab → Filters → Add filter → Exclude directories).
+4. Configure **Filters** (Source Data tab → Filters → Add filter → Exclude expression).
    Add one entry per pattern:
    ```
    */portainer/chisel/
