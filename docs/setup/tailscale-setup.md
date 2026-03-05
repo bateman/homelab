@@ -179,10 +179,10 @@ The Tailscale service in `docker/compose.yml`:
 tailscale:
   image: tailscale/tailscale:latest
   container_name: tailscale
-  hostname: nas-tailscale
   env_file:
     - .env.secrets
   environment:
+    TS_HOSTNAME: ${HOSTNAME:-nas-tailscale}
     TS_STATE_DIR: /var/lib/tailscale
     TS_ROUTES: ${TS_ROUTES:-192.168.3.0/24,192.168.4.0/24}
     TS_USERSPACE: "false"
@@ -205,6 +205,7 @@ Key configuration notes:
 | `network_mode: host` | Yes | Subnet router needs direct access to the host network |
 | `cap_add: NET_ADMIN, NET_RAW` | Yes | Required to create the tunnel interface and manage routing |
 | `/dev/net/tun` | Yes | TUN device for the VPN tunnel |
+| `TS_HOSTNAME` | Yes | Sets the device name in Tailscale; uses `$HOSTNAME` from the host, falls back to `nas-tailscale` |
 | `TS_USERSPACE: "false"` | Recommended | Uses kernel networking (better performance) instead of userspace |
 | `TS_STATE_DIR` + volume | Yes | Auth state survives container restarts |
 
