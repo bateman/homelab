@@ -154,7 +154,8 @@ qcli_login() {
     login_output=$(/sbin/qcli -l "user=${QNAP_ADMIN_USER}" "pw=${QNAP_ADMIN_PASSWORD}" 2>&1)
 
     # Extract session ID from qcli output
-    QCLI_SID=$(echo "$login_output" | grep -o 'sid:[^ ]*' | cut -d: -f2)
+    # Format: "sid is <id>" (QCLI 5.x) or "sid:<id>" (older)
+    QCLI_SID=$(echo "$login_output" | sed -n 's/.*sid[: ]*is *\([^ ]*\)/\1/p; s/.*sid:\([^ ]*\)/\1/p' | head -1)
 
     if [ -z "$QCLI_SID" ]; then
         log "${RED}ERROR: qcli login failed${NC}"
