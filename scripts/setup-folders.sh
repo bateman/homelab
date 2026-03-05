@@ -219,8 +219,11 @@ if [[ "$DRY_RUN" != true ]]; then
     PERM_OK=true
     for dir in "${DATA_ROOT}/media/movies" "${DATA_ROOT}/media/tv" "${DATA_ROOT}/media/music"; do
         if [[ -d "$dir" ]]; then
-            OWNER_UID=$(stat -c '%u' "$dir" 2>/dev/null || stat -f '%u' "$dir" 2>/dev/null)
-            if [[ "$OWNER_UID" != "$PUID" ]]; then
+            OWNER_UID=$(stat -c '%u' "$dir" 2>/dev/null || stat -f '%u' "$dir" 2>/dev/null || echo "")
+            if [[ -z "$OWNER_UID" ]]; then
+                log_warn "$dir — could not determine owner UID"
+                PERM_OK=false
+            elif [[ "$OWNER_UID" != "$PUID" ]]; then
                 log_warn "$dir is owned by UID $OWNER_UID (expected $PUID)"
                 PERM_OK=false
             fi
