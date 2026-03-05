@@ -136,7 +136,12 @@ With the `vpn` profile, qBittorrent and NZBGet are reachable via hostname `gluet
 | `novpn` | `COMPOSE_PROFILES=novpn make up` | `qbittorrent:8080` / `nzbget:6789` |
 
 > [!IMPORTANT]
-> When changing profiles, remember to update hostnames in *arr apps!
+> When changing profiles:
+> 1. Remove the old download client containers first — they share the same `container_name` across profiles, so Docker will error with a name conflict:
+>    ```bash
+>    docker rm qbittorrent nzbget
+>    ```
+> 2. Update hostnames in *arr apps (`gluetun` for vpn, `qbittorrent`/`nzbget` for novpn)
 
 ---
 
