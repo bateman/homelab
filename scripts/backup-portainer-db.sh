@@ -32,10 +32,11 @@ set -uo pipefail
 
 CONTAINER_NAME="portainer"
 CONTAINER_DB_PATH="/data/portainer.db"
+CONTAINER_BAK_PATH="/data/portainer.db.bak"
 # Resolve paths relative to this script's location (homelab/scripts/)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
-BAK_PATH="${REPO_DIR}/docker/config/portainer/portainer.db.bak"
+CONFIG_DIR="${REPO_DIR}/docker/config/portainer"
 VERBOSE=false
 
 # Colors (disabled if not terminal)
@@ -87,11 +88,10 @@ if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
     fi
 fi
 
-# Copy database using docker cp (no sudo needed)
-# Remove old .bak first — may be root-owned from a previous sudo cp
-rm -f "$BAK_PATH" 2>/dev/null || true
+# Copy database inside a throwaway container (config dir is root-owned,
+# so we need root context — a quick alpine container avoids sudo on host)
 log_verbose "Copying portainer.db -> portainer.db.bak..."
-if docker cp "${CONTAINER_NAME}:${CONTAINER_DB_PATH}" "$BAK_PATH"; then
+if docker run --rm -v "${CONFIG_DIR}:/data" alpine cp "$CONTAINER_DB_PATH" "$CONTAINER_BAK_PATH"; then
     log_verbose "${GREEN}Snapshot created${NC}"
 else
     log "${RED}Error: failed to copy database${NC}"
