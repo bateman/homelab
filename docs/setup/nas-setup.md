@@ -710,17 +710,25 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 - [ ] Adlists → Bulk import all recommended blocklists:
 
   ```bash
+  # Backup gravity database first
+  docker exec pihole cp /etc/pihole/gravity.db /etc/pihole/gravity.db.bak
+
   # Import all lists from docker/config/pihole/adlists.txt into gravity DB
   # Each URL has an inline comment (e.g., "https://... # Description")
-  docker exec pihole bash -c '
-    while IFS= read -r line; do
-      [[ "$line" =~ ^#|^$ ]] && continue
-      url="${line%% #*}"
-      comment="${line##*# }"
-      sqlite3 /etc/pihole/gravity.db \
-        "INSERT OR IGNORE INTO adlist (address, enabled, comment) VALUES ('"'"'$url'"'"', 1, '"'"'$comment'"'"');"
-    done < /etc/pihole/adlists.txt && pihole -g
-  '
+  docker exec -i pihole bash << 'EOF'
+  sql="BEGIN TRANSACTION;"
+  while IFS= read -r line; do
+    [[ "$line" =~ ^#|^$ ]] && continue
+    url="${line%% #*}"
+    comment="${line##*# }"
+    # Escape single quotes for SQL safety
+    url="${url//\'/\'\'}"
+    comment="${comment//\'/\'\'}"
+    sql+="INSERT OR IGNORE INTO adlist (address, enabled, comment) VALUES ('${url}', 1, '${comment}');"
+  done < /etc/pihole/adlists.txt
+  sql+="COMMIT;"
+  sqlite3 /etc/pihole/gravity.db "$sql" && pihole -g
+  EOF
   ```
 
   The adlists file (`docker/config/pihole/adlists.txt`) contains:
