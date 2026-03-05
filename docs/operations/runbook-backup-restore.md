@@ -43,8 +43,10 @@ The Duplicati container manages automatic backups with deduplication and encrypt
 4. Configure **Filters** (Source Data tab → Filters → Add filter → Exclude expression):
    ```
    */tailscale/
+   */portainer/portainer.db
    ```
-   **Why:** Tailscale state is machine-specific and requires re-auth on new install — not useful to back up.
+   - **Tailscale**: machine-specific state; requires re-auth on new install — not useful to back up.
+   - **portainer.db**: always file-locked while Portainer runs. Backed up via `portainer.db.bak` instead (see step 5).
 
    > **Note:** Duplicati runs as PUID=0 (root) so it can read all config files including
    > root-owned ones (Portainer, Pi-hole). The source volume is mounted `:ro` for safety.
@@ -53,9 +55,6 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    cannot read it. The `scripts/backup-portainer-db.sh` script handles this by briefly stopping
    Portainer (~2s), copying the DB to `portainer.db.bak`, and restarting it. Duplicati then
    backs up the `.bak` copy automatically.
-
-   A "FileLocked" warning for `portainer.db` is still expected and harmless — the actual data
-   is captured via `portainer.db.bak`.
 
    Schedule it 5 minutes before the Duplicati backup:
    ```bash
