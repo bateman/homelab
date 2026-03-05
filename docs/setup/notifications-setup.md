@@ -168,7 +168,7 @@ Below are the recommended monitor types for each service in the homelab. Use con
 
 | Service | Monitor Type | URL / Target | Notes |
 |---------|-------------|--------------|-------|
-| Traefik | HTTP(s) | `http://traefik:8080/ping` | Internal ping endpoint; `https://traefik.home.local` is blocked by Authelia |
+| Traefik | HTTP(s) | `http://traefik:80/ping` | Ping is on the `web` entrypoint (port 80), not 8080; `https://traefik.home.local` is blocked by Authelia |
 | Authelia | HTTP(s) | `http://authelia:9091/api/health` | Dedicated health endpoint |
 | Pi-hole | DNS | Query `pi.hole` @ `192.168.3.10` | Tests DNS resolution, not just the web UI |
 | Portainer | HTTP(s) | `https://192.168.3.10:9443/api/system/status` | Enable "Ignore TLS/SSL errors" (self-signed cert) |

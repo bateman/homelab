@@ -106,7 +106,7 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 
 | Servizio | Tipo | URL / Target | Note |
 |----------|------|--------------|------|
-| Traefik | HTTP(s) | `http://traefik:8080/ping` | Endpoint interno di ping; non usare `traefik.home.local` (bloccato da Authelia) |
+| Traefik | HTTP(s) | `http://traefik:80/ping` | Il ping è sull'entrypoint `web` (porta 80), non su 8080 (`api.insecure` non è attivo); non usare `traefik.home.local` (bloccato da Authelia) |
 | Authelia | HTTP(s) | `http://authelia:9091/api/health` | Endpoint health dedicato |
 | Pi-hole | DNS | Query `pi.hole` @ `192.168.3.10` | Testa la risoluzione DNS, non solo la web UI |
 | Portainer | HTTP(s) | `https://192.168.3.10:9443/api/system/status` | Abilitare "Ignore TLS/SSL errors" (cert self-signed) |

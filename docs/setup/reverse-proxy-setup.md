@@ -75,7 +75,7 @@ A reverse proxy allows accessing services using readable names (e.g., `sonarr.ho
 4. Enable **Override local DNS**
 
 > [!NOTE]
-> Make sure subnet routes are approved (see Phase 6 in proxmox-setup.md)
+> Make sure subnet routes are approved (see [Tailscale Setup — Phase 3.2](tailscale-setup.md#32-approve-subnet-routes))
 
 ### 1.3 Add DNS Records in Pi-hole
 
