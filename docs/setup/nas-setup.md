@@ -718,7 +718,7 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
       url="${line%% #*}"
       comment="${line##*# }"
       sqlite3 /etc/pihole/gravity.db \
-        "INSERT OR IGNORE INTO adlist (address, enabled, comment) VALUES (\"$url\", 1, \"$comment\");"
+        "INSERT OR IGNORE INTO adlist (address, enabled, comment) VALUES ('"'"'$url'"'"', 1, '"'"'$comment'"'"');"
     done < /etc/pihole/adlists.txt && pihole -g
   '
   ```
