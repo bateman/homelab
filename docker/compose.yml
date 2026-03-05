@@ -226,7 +226,7 @@ services:
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO /dev/null --header \"Authorization: Bearer $$WATCHTOWER_HTTP_API_TOKEN\" http://localhost:8080/v1/metrics"]
+      test: ["CMD", "/watchtower", "--health-check"]
       <<: *common-healthcheck
     deploy:
       resources:
