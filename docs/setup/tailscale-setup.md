@@ -85,15 +85,11 @@ Default values in `docker/.env`:
 ```bash
 # Subnet routes to advertise (comma-separated CIDR ranges)
 TS_ROUTES=192.168.3.0/24,192.168.4.0/24
-
-# Extra Tailscale arguments (optional)
-# TS_EXTRA_ARGS=--accept-routes
 ```
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `TS_ROUTES` | `192.168.3.0/24,192.168.4.0/24` | Subnets to make reachable via Tailscale. `192.168.3.0/24` = Server VLAN, `192.168.4.0/24` = IoT VLAN |
-| `TS_EXTRA_ARGS` | `--accept-routes` (compose fallback) | Extra arguments for Tailscale. Not set in `.env` by default; the compose file provides the fallback value |
 
 > [!TIP]
 > If you only have the Server VLAN (192.168.3.0/24), you can remove the IoT subnet from `TS_ROUTES`.
@@ -187,10 +183,8 @@ tailscale:
   env_file:
     - .env.secrets
   environment:
-    TS_AUTHKEY: ${TS_AUTHKEY:-}
     TS_STATE_DIR: /var/lib/tailscale
     TS_ROUTES: ${TS_ROUTES:-192.168.3.0/24,192.168.4.0/24}
-    TS_EXTRA_ARGS: ${TS_EXTRA_ARGS:---accept-routes}
     TS_USERSPACE: "false"
   volumes:
     - ./config/tailscale:/var/lib/tailscale
