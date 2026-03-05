@@ -76,7 +76,7 @@ help:
 	@printf "  $(PURPLE)Container Management$(NC)\n"
 	@printf "    $(CYAN)make up$(NC)          - Start all containers\n"
 	@printf "    $(CYAN)make down$(NC)        - Stop all containers\n"
-	@printf "    $(CYAN)make restart$(NC)     - Full restart\n"
+	@printf "    $(CYAN)make restart$(NC)     - Full restart (or make restart s=radarr)\n"
 	@printf "    $(CYAN)make pull$(NC)        - Update Docker images\n"
 	@printf "    $(CYAN)make update$(NC)      - Pull images and restart (pull + restart)\n"
 	@printf "\n"
@@ -178,7 +178,16 @@ down: check-compose
 	@$(COMPOSE_CMD) down
 	@printf "$(GREEN)>>> Stack stopped$(NC)\n"
 
-restart: down up
+restart: check-compose
+ifdef s
+	@printf ">>> Restarting $(s)...\n"
+	@$(COMPOSE_CMD) up -d --force-recreate $(s) && \
+		printf "$(GREEN)>>> $(s) restarted$(NC)\n" || \
+		{ printf "$(RED)>>> Error restarting $(s)$(NC)\n"; exit 1; }
+else
+	@$(MAKE) --no-print-directory down
+	@$(MAKE) --no-print-directory up
+endif
 
 pull: check-compose
 	@echo ">>> Pulling updated images..."
