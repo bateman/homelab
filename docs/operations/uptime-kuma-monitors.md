@@ -91,9 +91,21 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 
 #### Ping
 
+Usato per Tailscale, che non espone endpoint HTTP ma risponde a ICMP.
+
 | Campo | Valore |
 |-------|--------|
-| **Hostname** | L'IP del servizio (es. IP Tailscale `100.x.x.x`) |
+| **Hostname** | L'IP Tailscale del NAS (es. `100.64.0.1`) |
+
+Per trovare l'IP Tailscale del NAS, eseguire sul NAS:
+
+```bash
+docker exec tailscale tailscale ip -4
+```
+
+Oppure consultare la [Tailscale Admin Console](https://login.tailscale.com/admin/machines) e cercare la macchina `nas-tailscale` (l'hostname configurato in `compose.yml`).
+
+> Questo monitor verifica che il tunnel mesh Tailscale sia attivo e raggiungibile. Se il ping fallisce, il NAS non è accessibile da remoto via Tailscale.
 
 #### Docker Container
 
@@ -118,7 +130,7 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 | Pi-hole | DNS | Query `pi.hole` @ `192.168.3.10` | Testa la risoluzione DNS, non solo la web UI |
 | Portainer | HTTP(s) | `https://192.168.3.10:9443/api/system/status` | Abilitare "Ignore TLS/SSL errors" (cert self-signed) |
 | Duplicati | HTTP(s) | `http://duplicati:8200` | Verifica semplice della web UI |
-| Tailscale | Ping | IP Tailscale (`100.x.x.x`) | Verifica che il tunnel mesh sia raggiungibile |
+| Tailscale | Ping | IP Tailscale del NAS (ricavare con `docker exec tailscale tailscale ip -4`) | Verifica che il tunnel mesh sia raggiungibile |
 | Socket Proxy | Docker Container | Container: `socket-proxy` | Interno, nessun endpoint HTTP esposto |
 | Watchtower | Docker Container | Container: `watchtower` | L'endpoint metriche richiede auth; il monitor Docker è più semplice |
 | Home Assistant | HTTP(s) | `http://192.168.3.10:8123/api/` | Usare l'IP dell'host — HA usa `network_mode: host` |
