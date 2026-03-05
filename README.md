@@ -111,6 +111,7 @@ All commands should be run in the `/share/container/mediastack` directory on the
 | Command | Description |
 |---------|-------------|
 | `make setup` | Create folder structure and `.env` file (run once during installation) |
+| `make setup-dry-run` | Preview folder structure without making changes |
 | `make validate` | Verify compose file syntax before startup |
 
 ### Container Management
@@ -119,7 +120,7 @@ All commands should be run in the `/share/container/mediastack` directory on the
 |---------|-------------|
 | `make up` | Start all containers (validates config automatically) |
 | `make down` | Stop all containers |
-| `make restart` | Full restart (down + up) |
+| `make restart` | Full restart, or single service: `make restart s=radarr` |
 | `make pull` | Download updated Docker image versions |
 | `make update` | Update and restart in one command (pull + restart) |
 
@@ -138,6 +139,9 @@ All commands should be run in the `/share/container/mediastack` directory on the
 | Command | Description |
 |---------|-------------|
 | `make backup` | Start Duplicati backup on-demand |
+| `make backup-portainer` | Snapshot portainer.db (stop/copy/start) |
+| `make backup-qts` | Backup QNAP QTS system configuration |
+| `make verify-backup` | Verify backup integrity (extraction + SQLite check) |
 | Duplicati WebUI | http://192.168.3.10:8200 - configuration and scheduled backups |
 
 ### Utilities
