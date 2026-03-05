@@ -727,7 +727,7 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
     sql+="INSERT OR IGNORE INTO adlist (address, enabled, comment) VALUES ('${url}', 1, '${comment}');"
   done < /etc/pihole/adlists.txt
   sql+="COMMIT;"
-  sqlite3 /etc/pihole/gravity.db "$sql" && pihole -g
+  pihole-FTL sqlite3 /etc/pihole/gravity.db "$sql" && pihole -g
   EOF
   ```
 
