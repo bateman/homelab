@@ -40,24 +40,31 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    - **Schedule**: Daily at 23:00
    - **Retention**: Smart backup retention (7 daily, 4 weekly, 3 monthly)
    - **Encryption**: Optional but recommended for offsite backups
-4. Configure **Filters** (Source Data tab → Filters → Add filter → Exclude directories).
+4. Configure **Filters** (Source Data tab → Filters → Add filter → Exclude expression).
    Add one entry per pattern:
    ```
-   */portainer/chisel/
-   */portainer/bin/
-   */portainer/compose/
-   */portainer/docker_config/
-   */portainer/tls/
-   */portainer/certs/
+   */portainer/
    */tailscale/
+   */pihole/etc-pihole/config_backups/
+   */pihole/etc-pihole/gravity_backups/
+   */pihole/etc-pihole/hosts/
    ```
-   **Why:** These directories are root-owned (700) and contain only runtime data:
-   - **Portainer** (`chisel`, `bin`, `compose`, `docker_config`): auto-downloaded on first start. The restorable data is `portainer.db`.
-   - **Portainer TLS** (`tls`, `certs`): auto-generated on start.
-   - **Tailscale**: machine-specific state; requires re-auth on new install.
+   **Why:** Duplicati runs as PUID=1001 and cannot read root-owned (700) files. These exclusions suppress PermissionDenied warnings:
+   - **Portainer**: entire directory is root-owned. Use Portainer's built-in backup instead (see below).
+   - **Tailscale**: machine-specific state; requires re-auth on new install anyway.
+   - **Pi-hole** (`config_backups`, `gravity_backups`, `hosts`): internal rotation copies and root-owned DNS records. Use Pi-hole Teleporter instead (see below).
 
    > **Tip:** If you see new "PermissionDenied" warnings after adding a service,
    > check if the directory contains only runtime/regenerable data and add it to the filters.
+
+5. **Services not covered by Duplicati** — these require their own backup tools because their data is root-owned:
+
+   | Service | What to back up | How |
+   |---------|----------------|-----|
+   | Portainer | Settings, stacks, users | Settings → Backup configuration → Download backup file |
+   | Pi-hole | DNS records, config, adlists | Settings → Teleporter → Export |
+
+   Store exported files in `/share/backup/` alongside the Duplicati backups.
 
 **Trigger manual backup:**
 ```bash
@@ -182,7 +189,7 @@ Duplicati has built-in support for Dropbox and Google Drive:
 5. Source: `/source/config`
 6. Schedule: daily
 7. Retention: Smart (7 daily, 4 weekly, 3 monthly)
-8. Configure same **Filters** as the local backup (see Docker Configurations Backup, step 4)
+8. Configure same **Filters** as the local backup (see Docker Configurations Backup, steps 4–5)
 
 ---
 
