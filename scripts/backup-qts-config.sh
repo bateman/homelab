@@ -33,6 +33,9 @@ BACKUP_DIR="${QTS_BACKUP_DIR:-/share/backup/qts-config}"
 RETENTION_COUNT="${QTS_BACKUP_RETENTION:-5}"  # Keep last N backups
 HA_WEBHOOK_URL="${HA_WEBHOOK_URL:-}"  # Set in environment or .env.secrets
 BACKUP_CMD=""  # Set by check_qnap: "qcli_backuprestore" or "config_util"
+QCLI_SID=""    # Set by qcli_login: session ID for qcli commands
+QNAP_ADMIN_USER="${QNAP_ADMIN_USER:-admin}"
+QNAP_ADMIN_PASSWORD="${QNAP_ADMIN_PASSWORD:-}"
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="qts-config-${DATE}.bin"
 
@@ -72,9 +75,11 @@ while [ $# -gt 0 ]; do
             echo "  --notify, -n     Send notification to Home Assistant"
             echo ""
             echo "Environment:"
-            echo "  QTS_BACKUP_DIR       Backup directory (default: /share/backup/qts-config)"
-            echo "  QTS_BACKUP_RETENTION Number of backups to keep (default: 5)"
-            echo "  HA_WEBHOOK_URL       Home Assistant webhook URL for notifications"
+            echo "  QTS_BACKUP_DIR        Backup directory (default: /share/backup/qts-config)"
+            echo "  QTS_BACKUP_RETENTION  Number of backups to keep (default: 5)"
+            echo "  HA_WEBHOOK_URL        Home Assistant webhook URL for notifications"
+            echo "  QNAP_ADMIN_USER       QNAP admin username (default: admin)"
+            echo "  QNAP_ADMIN_PASSWORD   QNAP admin password (required for QCLI 5.x+)"
             exit 0
             ;;
         *)
@@ -134,6 +139,33 @@ check_qnap() {
     return 0
 }
 
+qcli_login() {
+    # Authenticate with qcli and obtain a session ID
+    # Required for qcli_backuprestore on QCLI 5.x+ firmware
+    if [ -z "$QNAP_ADMIN_PASSWORD" ]; then
+        log "${RED}ERROR: QNAP_ADMIN_PASSWORD not set${NC}"
+        log "Set it in docker/.env.secrets or export it before running"
+        return 1
+    fi
+
+    log_verbose "Authenticating with qcli as '${QNAP_ADMIN_USER}'..."
+
+    local login_output
+    login_output=$(/sbin/qcli -l "user=${QNAP_ADMIN_USER}" "pw=${QNAP_ADMIN_PASSWORD}" 2>&1)
+
+    # Extract session ID from qcli output
+    QCLI_SID=$(echo "$login_output" | grep -o 'sid:[^ ]*' | cut -d: -f2)
+
+    if [ -z "$QCLI_SID" ]; then
+        log "${RED}ERROR: qcli login failed${NC}"
+        log "Output: ${login_output}"
+        return 1
+    fi
+
+    log_verbose "qcli session obtained"
+    return 0
+}
+
 create_backup() {
     log "Creating backup..."
 
@@ -148,7 +180,7 @@ create_backup() {
     # Execute QNAP config backup
     local cmd_result=0
     if [ "$BACKUP_CMD" = "qcli_backuprestore" ]; then
-        /sbin/qcli_backuprestore -B "path=${backup_path}" 2>/dev/null || cmd_result=$?
+        /sbin/qcli_backuprestore -B "path=${backup_path}" "sid=${QCLI_SID}" 2>/dev/null || cmd_result=$?
     else
         /sbin/config_util -e "$backup_path" 2>/dev/null || cmd_result=$?
     fi
@@ -247,6 +279,14 @@ ERRORS=0
 if ! check_qnap; then
     notify_ha "QTS backup failed: missing prerequisites" "error"
     exit 2
+fi
+
+# Authenticate with qcli (required for QCLI 5.x+ firmware)
+if [ "$BACKUP_CMD" = "qcli_backuprestore" ]; then
+    if ! qcli_login; then
+        notify_ha "QTS backup failed: qcli authentication failed" "error"
+        exit 2
+    fi
 fi
 
 # Create backup

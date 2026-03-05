@@ -281,7 +281,9 @@ backup-qts:
 	@if [ ! -x scripts/backup-qts-config.sh ]; then \
 		chmod +x scripts/backup-qts-config.sh; \
 	fi
-	@./scripts/backup-qts-config.sh --verbose
+	@export QNAP_ADMIN_USER=$$(grep '^QNAP_ADMIN_USER=' docker/.env.secrets 2>/dev/null | cut -d= -f2-); \
+	export QNAP_ADMIN_PASSWORD=$$(grep '^QNAP_ADMIN_PASSWORD=' docker/.env.secrets 2>/dev/null | cut -d= -f2-); \
+	./scripts/backup-qts-config.sh --verbose
 
 clean: check-docker
 	@echo ">>> Cleaning orphan Docker resources..."
