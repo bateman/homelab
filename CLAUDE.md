@@ -146,6 +146,7 @@ When facing trade-offs, **ask the user**:
 | Notifications | `docs/setup/notifications-setup.md` |
 | Backup procedures | `docs/operations/runbook-backup-restore.md` |
 | Energy saving | `docs/operations/energy-saving-strategies.md` |
+| Uptime Kuma monitors | `docs/operations/uptime-kuma-monitors.md` |
 
 ## Quick Commands
 
