@@ -45,7 +45,7 @@ Prima di creare monitor di tipo "Docker Container", è necessario configurare la
 
 > Funziona perché il container Uptime Kuma monta il Docker socket in read-only (`/var/run/docker.sock:/var/run/docker.sock:ro` in `compose.yml`).
 
-Quando si crea un monitor di tipo **Docker Container**, selezionare il Docker Host appena configurato (`QNAP NAS`) e inserire il nome del container nel campo **Container Name / ID** (es. `gluetun`, `socket-proxy`, `watchtower`).
+Quando si crea un monitor di tipo **Docker Container**, selezionare il Docker Host appena configurato (`QNAP NAS`) e inserire il nome del container nel campo **Container Name / ID** (es. `gluetun`, `socket-proxy`, `watchtower`, `tailscale`).
 
 ---
 
@@ -173,7 +173,8 @@ Le Status Page raggruppano i monitor in una vista pubblica o interna.
 2. Click **New Status Page**
 3. Inserire un nome (es. `Homelab`) e uno slug (es. `homelab`)
 4. Aggiungere gruppi tematici:
-   - **Infrastructure**: Traefik, Authelia, Pi-hole, Portainer
+   - **Infrastructure**: Traefik, Authelia, Pi-hole, Portainer, Duplicati, Tailscale, Socket Proxy, Watchtower
+   - **Home Assistant**: Home Assistant
    - **Media**: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr
    - **Download**: qBittorrent, NZBGet, Gluetun (solo profilo `vpn`)
    - **Proxmox**: Proxmox, Plex

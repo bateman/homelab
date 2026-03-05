@@ -134,8 +134,8 @@ docker exec tailscale tailscale status
 # Show the Tailscale IP assigned to the NAS
 docker exec tailscale tailscale ip -4
 
-# Verify advertised subnet routes
-docker exec tailscale tailscale status --json | grep -A5 "AllowedIPs"
+# Verify advertised subnet routes (look for AdvertiseRoutes)
+docker exec tailscale tailscale debug prefs | grep AdvertiseRoutes
 ```
 
 Expected output of `tailscale status`:
@@ -184,6 +184,8 @@ tailscale:
   image: tailscale/tailscale:latest
   container_name: tailscale
   hostname: nas-tailscale
+  env_file:
+    - .env.secrets
   environment:
     TS_AUTHKEY: ${TS_AUTHKEY:-}
     TS_STATE_DIR: /var/lib/tailscale
@@ -205,6 +207,7 @@ Key configuration notes:
 
 | Setting | Required | Reason |
 |---------|----------|--------|
+| `env_file: .env.secrets` | Yes | Loads `TS_AUTHKEY` from the secrets file |
 | `network_mode: host` | Yes | Subnet router needs direct access to the host network |
 | `cap_add: NET_ADMIN, NET_RAW` | Yes | Required to create the tunnel interface and manage routing |
 | `/dev/net/tun` | Yes | TUN device for the VPN tunnel |
