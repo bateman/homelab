@@ -88,6 +88,8 @@ if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
 fi
 
 # Copy database using docker cp (no sudo needed)
+# Remove old .bak first — may be root-owned from a previous sudo cp
+rm -f "$BAK_PATH" 2>/dev/null || true
 log_verbose "Copying portainer.db -> portainer.db.bak..."
 if docker cp "${CONTAINER_NAME}:${CONTAINER_DB_PATH}" "$BAK_PATH"; then
     log_verbose "${GREEN}Snapshot created${NC}"
