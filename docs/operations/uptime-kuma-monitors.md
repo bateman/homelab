@@ -54,22 +54,56 @@ Quando si crea un monitor di tipo **Docker Container**, selezionare il Docker Ho
 
 1. Aprire Uptime Kuma → click **Add New Monitor** (pulsante in alto)
 2. Selezionare il **Monitor Type** appropriato (vedi tabella sopra)
-3. Compilare i campi:
+3. Compilare i campi comuni:
 
 | Campo | Valore consigliato |
 |-------|-------------------|
 | **Friendly Name** | Nome del servizio (es. `Sonarr`) |
-| **URL / Hostname** | Vedi [Tabella Monitor](#tabella-monitor-per-servizio) |
 | **Heartbeat Interval** | `60` secondi (standard) o `30` secondi (servizi critici) |
 | **Retries** | `3` (evita falsi positivi durante i restart) |
-| **Ignore TLS/SSL Errors** | Abilitare per endpoint HTTPS con certificati self-signed |
 
-4. Nella sezione **Notifications**, abilitare `Home Assistant iOS` (vedi [notifications-setup.md](../setup/notifications-setup.md))
-5. Click **Save**
-6. Verificare che il monitor diventi verde entro 1-2 minuti
+4. Compilare i campi specifici per tipo di monitor (vedi sotto)
+5. Nella sezione **Notifications**, abilitare `Home Assistant iOS` (vedi [notifications-setup.md](../setup/notifications-setup.md))
+6. Click **Save**
+7. Verificare che il monitor diventi verde entro 1-2 minuti
+
+### Campi per tipo di monitor
+
+#### HTTP(s)
+
+| Campo | Valore |
+|-------|--------|
+| **URL** | L'endpoint del servizio (vedi [Tabella Monitor](#tabella-monitor-per-servizio)) |
+| **Ignore TLS/SSL Errors** | Abilitare per endpoint HTTPS con certificati self-signed (es. Portainer, Proxmox) |
+
+#### DNS
+
+Usato per verificare che Pi-hole risolva correttamente i domini.
+
+| Campo | Valore |
+|-------|--------|
+| **Hostname** | Il dominio da risolvere, es. `pi.hole` |
+| **Resolver Server** | L'IP di Pi-hole: `192.168.3.10` |
+| **Port** | `53` (default DNS) |
+| **Resource Record Type** | `A` |
+
+> Pi-hole risponde alla query `pi.hole` con il proprio IP. Se la risposta arriva, il servizio DNS funziona. Questo è più affidabile di un semplice check HTTP sulla web UI, perché testa la funzione primaria di Pi-hole (risolvere DNS).
+
+#### Ping
+
+| Campo | Valore |
+|-------|--------|
+| **Hostname** | L'IP del servizio (es. IP Tailscale `100.x.x.x`) |
+
+#### Docker Container
+
+| Campo | Valore |
+|-------|--------|
+| **Docker Host** | Selezionare il Docker Host configurato (es. `QNAP NAS`) |
+| **Container Name / ID** | Il nome del container, es. `gluetun`, `socket-proxy`, `watchtower` |
 
 > [!TIP]
-> Usa gli hostname dei container (es. `http://sonarr:8989`) anziché gli IP dell'host quando possibile. Uptime Kuma è sulla stessa rete Docker (`media_net`), quindi la risoluzione DNS interna è più affidabile.
+> Per i monitor HTTP(s), usa gli hostname dei container (es. `http://sonarr:8989`) anziché gli IP dell'host quando possibile. Uptime Kuma è sulla stessa rete Docker (`media_net`), quindi la risoluzione DNS interna è più affidabile.
 
 ---
 
