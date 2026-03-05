@@ -141,6 +141,26 @@ make_dir "${DATA_ROOT}/media/movies"
 make_dir "${DATA_ROOT}/media/tv"
 make_dir "${DATA_ROOT}/media/music"
 
+# Set ownership on data directories so containers (PUID:PGID) can write
+# This is critical for *arr apps — without it, Radarr/Sonarr/Lidarr will
+# fail to add root folders with "not writable by user 'abc'" errors.
+# Note: QTS may ignore chown on shared folder roots, but it works on
+# subdirectories. If chown fails, the script continues — the QTS Control
+# Panel warning below covers that case.
+if [[ "$DRY_RUN" == true ]]; then
+    log_info "[DRY-RUN] Would set ownership ${PUID}:${PGID} on data directories"
+else
+    log_info "Setting ownership ${PUID}:${PGID} on data directories..."
+    for dir in "${DATA_ROOT}/torrents" "${DATA_ROOT}/usenet" "${DATA_ROOT}/media"; do
+        if [[ -d "$dir" ]]; then
+            chown -R "${PUID}:${PGID}" "$dir" 2>/dev/null || \
+                log_warn "Could not chown $dir — set permissions via QTS Control Panel"
+            chmod -R 775 "$dir" 2>/dev/null || \
+                log_warn "Could not chmod $dir — set permissions via QTS Control Panel"
+        fi
+    done
+fi
+
 # Backup destination (for Duplicati)
 log_info "Creating backup destination in $BACKUP_ROOT..."
 
@@ -183,17 +203,37 @@ SECRETS_ROOT="${SCRIPT_DIR}/../docker/secrets"
 make_dir "${SECRETS_ROOT}/authelia"
 
 # Permissions note:
-# Container config ownership is NOT set here. It's unnecessary because:
-#   - Linuxserver.io images (sonarr, radarr, etc.) auto-chown their config
-#     dirs to PUID:PGID on every container startup
-#   - Other services (Traefik, Authelia, Portainer, Pi-hole) run as root
-# Running chown here locks the host user out of directories needed for
-# cert generation and secret management.
-#
-# QNAP shared folders (/share/data, /share/backup) must be configured
-# via QTS Control Panel → Shared Folders → Edit Permissions.
-log_info "Set shared folder permissions via QTS Control Panel (PUID=$PUID, PGID=$PGID)"
-log_info "Ensure dockeruser (uid $PUID) has RW access to: data, backup, container"
+# - Data directories (/share/data/{torrents,usenet,media}) are chown'd above
+#   so *arr apps can write via PUID:PGID. This prevents "not writable by
+#   user 'abc'" errors in Radarr/Sonarr/Lidarr.
+# - Container config ownership is NOT set here because Linuxserver.io images
+#   auto-chown their config dirs to PUID:PGID on every container startup.
+#   Other services (Traefik, Authelia, Portainer, Pi-hole) run as root.
+# - If chown failed above (QNAP may ignore it on shared folder roots),
+#   permissions must be set via QTS Control Panel → Shared Folders → Edit Permissions.
+log_info "Ensure dockeruser (uid $PUID) has RW access via QTS Control Panel: data, backup, container"
+
+# Verify data directory permissions
+if [[ "$DRY_RUN" != true ]]; then
+    log_info "Verifying data directory permissions..."
+    PERM_OK=true
+    for dir in "${DATA_ROOT}/media/movies" "${DATA_ROOT}/media/tv" "${DATA_ROOT}/media/music"; do
+        if [[ -d "$dir" ]]; then
+            OWNER_UID=$(stat -c '%u' "$dir" 2>/dev/null || stat -f '%u' "$dir" 2>/dev/null)
+            if [[ "$OWNER_UID" != "$PUID" ]]; then
+                log_warn "$dir is owned by UID $OWNER_UID (expected $PUID)"
+                PERM_OK=false
+            fi
+        fi
+    done
+    if [[ "$PERM_OK" == false ]]; then
+        log_warn "Some data directories are not owned by PUID=$PUID."
+        log_warn "Fix via: QTS Control Panel → Shared Folders → data → Edit Permissions → grant RW to dockeruser"
+        log_warn "Then re-run this script."
+    else
+        log_info "Data directory permissions OK (owned by UID $PUID)"
+    fi
+fi
 
 echo ""
 if [[ "$DRY_RUN" == true ]]; then
