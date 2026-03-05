@@ -32,8 +32,9 @@ set -uo pipefail
 BACKUP_DIR="${QTS_BACKUP_DIR:-/share/backup/qts-config}"
 RETENTION_COUNT="${QTS_BACKUP_RETENTION:-5}"  # Keep last N backups
 HA_WEBHOOK_URL="${HA_WEBHOOK_URL:-}"  # Set in environment or .env.secrets
-BACKUP_CMD=""  # Set by check_qnap: "qcli_backuprestore" or "config_util"
-QCLI_SID=""    # Set by qcli_login: session ID for qcli commands
+BACKUP_METHOD=""  # Set by check_qnap: "web_api" (qcli auth + curl download) or "config_util"
+QCLI_SID=""       # Set by qcli_login: session ID for web API calls
+QTS_PORT="${QTS_HTTPS_PORT:-5001}"  # QTS web UI HTTPS port
 QNAP_ADMIN_USER="${QNAP_ADMIN_USER:-admin}"
 QNAP_ADMIN_PASSWORD="${QNAP_ADMIN_PASSWORD:-}"
 DATE=$(date +%Y%m%d_%H%M%S)
@@ -124,14 +125,20 @@ check_qnap() {
         return 1
     fi
 
-    # Check if backup utility exists and is executable
-    # Newer QNAP firmware uses qcli_backuprestore instead of config_util
-    if [ -x /sbin/qcli_backuprestore ]; then
-        BACKUP_CMD="qcli_backuprestore"
+    # Determine backup method
+    # QCLI 5.x+: authenticate via qcli, download backup via QTS web API (sysRequest.cgi)
+    # Older firmware: use config_util which writes directly to a file
+    if [ -x /sbin/qcli ]; then
+        # Verify curl is available (needed for web API download)
+        if ! command -v curl >/dev/null 2>&1; then
+            log "${RED}ERROR: curl not found (required for QTS backup download)${NC}"
+            return 1
+        fi
+        BACKUP_METHOD="web_api"
     elif [ -x /sbin/config_util ]; then
-        BACKUP_CMD="config_util"
+        BACKUP_METHOD="config_util"
     else
-        log "${RED}ERROR: No QNAP backup utility found (/sbin/qcli_backuprestore or /sbin/config_util)${NC}"
+        log "${RED}ERROR: No QNAP backup utility found (/sbin/qcli or /sbin/config_util)${NC}"
         log "Make sure you're running as admin/root"
         return 1
     fi
@@ -141,7 +148,7 @@ check_qnap() {
 
 qcli_login() {
     # Authenticate with qcli and obtain a session ID
-    # Required for qcli_backuprestore on QCLI 5.x+ firmware
+    # Required for QTS web API backup download on QCLI 5.x+ firmware
     if [ -z "$QNAP_ADMIN_PASSWORD" ]; then
         log "${RED}ERROR: QNAP_ADMIN_PASSWORD not set${NC}"
         log "Set it in docker/.env.secrets or export it before running"
@@ -155,7 +162,8 @@ qcli_login() {
 
     # Extract session ID from qcli output
     # Format: "sid is <id>" (QCLI 5.x) or "sid:<id>" (older)
-    QCLI_SID=$(echo "$login_output" | sed -n 's/.*sid[: ]*is *\([^ ]*\)/\1/p; s/.*sid:\([^ ]*\)/\1/p' | head -1)
+    # Strip non-printable characters with tr to avoid "Malformed input" curl errors
+    QCLI_SID=$(echo "$login_output" | sed -n 's/.*sid[: ]*is *\([^ ]*\)/\1/p; s/.*sid:\([^ ]*\)/\1/p' | head -1 | tr -d '\r\n ')
 
     if [ -z "$QCLI_SID" ]; then
         log "${RED}ERROR: qcli login failed${NC}"
@@ -163,7 +171,7 @@ qcli_login() {
         return 1
     fi
 
-    log_verbose "qcli session obtained"
+    log_verbose "qcli session obtained (SID: ${QCLI_SID})"
     return 0
 }
 
@@ -180,29 +188,47 @@ create_backup() {
 
     # Execute QNAP config backup
     local cmd_result=0
-    if [ "$BACKUP_CMD" = "qcli_backuprestore" ]; then
-        /sbin/qcli_backuprestore -B "path=${backup_path}" "sid=${QCLI_SID}" 2>/dev/null || cmd_result=$?
+    if [ "$BACKUP_METHOD" = "web_api" ]; then
+        # QCLI 5.x+: download backup via QTS web API (sysRequest.cgi)
+        # Note: qcli_backuprestore -B does NOT write to disk — it stages for HTTP download.
+        # We must use curl against the QTS web API to get the actual .bin file.
+        local api_url="https://localhost:${QTS_PORT}/cgi-bin/sys/sysRequest.cgi"
+        log_verbose "Downloading backup from QTS web API (port ${QTS_PORT})..."
+
+        # Build URL separately to avoid shell expansion issues with curl
+        local full_url="${api_url}?subfunc=backup_setting&sid=${QCLI_SID}"
+
+        curl -sk --max-time 60 --output "$backup_path" "$full_url" 2>/dev/null || cmd_result=$?
     else
+        # Older firmware: config_util writes directly to file
         /sbin/config_util -e "$backup_path" 2>/dev/null || cmd_result=$?
     fi
 
-    if [ "$cmd_result" -eq 0 ]; then
-        log "${GREEN}Backup created: ${backup_path}${NC}"
+    if [ "$cmd_result" -ne 0 ]; then
+        log "${RED}ERROR: Backup download failed (exit code: ${cmd_result})${NC}"
+        log "Verify QTS web UI is accessible on port ${QTS_PORT}"
+        rm -f "$backup_path" 2>/dev/null
+        return 1
+    fi
 
-        # Verify file was created and has content
-        if [ -f "$backup_path" ] && [ -s "$backup_path" ]; then
-            local size
-            size=$(du -h "$backup_path" | cut -f1)
-            log "Size: $size"
-            return 0
-        else
-            log "${RED}ERROR: Backup file empty or not created${NC}"
+    # Verify file was created and has content
+    if [ -f "$backup_path" ] && [ -s "$backup_path" ]; then
+        # Check it's not an HTML error page (QTS returns HTML on auth failure)
+        if head -c 20 "$backup_path" 2>/dev/null | grep -qi "<!DOCTYPE\|<html"; then
+            log "${RED}ERROR: QTS returned HTML instead of backup (authentication may have failed)${NC}"
+            log "Try regenerating the session: verify QNAP_ADMIN_PASSWORD is correct"
             rm -f "$backup_path" 2>/dev/null
             return 1
         fi
+
+        local size
+        size=$(du -h "$backup_path" | cut -f1)
+        log "${GREEN}Backup created: ${backup_path}${NC}"
+        log "Size: $size"
+        return 0
     else
-        log "${RED}ERROR: ${BACKUP_CMD} failed${NC}"
-        log "Verify you have administrator permissions"
+        log "${RED}ERROR: Backup file empty or not created${NC}"
+        rm -f "$backup_path" 2>/dev/null
         return 1
     fi
 }
@@ -282,8 +308,8 @@ if ! check_qnap; then
     exit 2
 fi
 
-# Authenticate with qcli (required for QCLI 5.x+ firmware)
-if [ "$BACKUP_CMD" = "qcli_backuprestore" ]; then
+# Authenticate with qcli (required for web API backup on QCLI 5.x+ firmware)
+if [ "$BACKUP_METHOD" = "web_api" ]; then
     if ! qcli_login; then
         notify_ha "QTS backup failed: qcli authentication failed" "error"
         exit 2
