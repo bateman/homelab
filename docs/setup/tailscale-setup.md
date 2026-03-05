@@ -183,7 +183,6 @@ tailscale:
   env_file:
     - .env.secrets
   environment:
-    TS_AUTHKEY: ${TS_AUTHKEY:-}
     TS_STATE_DIR: /var/lib/tailscale
     TS_ROUTES: ${TS_ROUTES:-192.168.3.0/24,192.168.4.0/24}
     TS_USERSPACE: "false"
