@@ -229,15 +229,23 @@ shell-%: check-compose
 backup: check-docker check-curl backup-portainer
 	@echo ">>> Triggering Duplicati backup..."
 	@if docker ps --format '{{.Names}}' | grep -q '^duplicati$$'; then \
-		BACKUP_ID=$$(curl -s http://localhost:8200/api/v1/backups 2>/dev/null | grep -o '"ID":"[^"]*"' | head -1 | cut -d'"' -f4); \
+		PASS=$$(grep '^DUPLICATI__WEBSERVICE_PASSWORD=' docker/.env.secrets 2>/dev/null | cut -d= -f2-); \
+		if [ -z "$$PASS" ]; then \
+			printf "$(RED)Error: DUPLICATI__WEBSERVICE_PASSWORD not found in docker/.env.secrets$(NC)\n"; \
+			exit 1; \
+		fi; \
+		COOKIE=$$(mktemp); \
+		curl -s -c "$$COOKIE" http://localhost:8200/login.cgi --data-urlencode "password=$$PASS" >/dev/null; \
+		BACKUP_ID=$$(curl -s -b "$$COOKIE" http://localhost:8200/api/v1/backups 2>/dev/null | grep -o '"ID":"[^"]*"' | head -1 | cut -d'"' -f4); \
 		if [ -n "$$BACKUP_ID" ]; then \
-			curl -s -X POST "http://localhost:8200/api/v1/backup/$$BACKUP_ID/run" >/dev/null && \
+			curl -s -b "$$COOKIE" -X POST "http://localhost:8200/api/v1/backup/$$BACKUP_ID/run" >/dev/null && \
 			printf "$(GREEN)>>> Backup started (ID: $$BACKUP_ID)$(NC)\n" && \
 			echo "Monitor progress at http://$(HOST_IP):8200"; \
 		else \
 			printf "$(YELLOW)No backup job configured yet$(NC)\n"; \
 			echo "Configure backup via http://$(HOST_IP):8200"; \
 		fi; \
+		rm -f "$$COOKIE"; \
 	else \
 		printf "$(RED)Error: duplicati container not running$(NC)\n"; \
 		echo "Run 'make up' first"; \
