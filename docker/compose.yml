@@ -251,13 +251,11 @@ services:
       - .env.secrets
     environment:
       <<: *common-env
+      PUID: "0"   # Run as root to read all config files (volume is :ro)
+      PGID: "0"
     volumes:
       - ./config/duplicati:/config
       - ./config:/source/config:ro        # Service configs (read-only)
-      # NOTE: Some configs (Portainer, Tailscale) have root-owned dirs (700)
-      # unreadable by Duplicati (PUID=1001). These contain runtime data only.
-      # Configure exclusion filters in Duplicati WebUI to suppress warnings.
-      # See: docs/operations/runbook-backup-restore.md
       - /share/backup:/backups            # Local backup destination
     ports:
       - "8200:8200"
