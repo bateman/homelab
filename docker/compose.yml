@@ -181,7 +181,7 @@ services:
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD", "wget", "-qO", "/dev/null", "--no-check-certificate", "https://localhost:9443/api/system/status"]
+      test: ["CMD", "wget", "-q", "--spider", "--no-check-certificate", "https://localhost:9443/"]
       <<: *common-healthcheck
     deploy:
       resources:
