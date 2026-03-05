@@ -226,7 +226,7 @@ shell-%: check-compose
 		exit 1; \
 	}
 
-backup: check-docker backup-portainer
+backup: check-docker check-curl backup-portainer
 	@echo ">>> Triggering Duplicati backup..."
 	@if docker ps --format '{{.Names}}' | grep -q '^duplicati$$'; then \
 		PASS=$$(grep '^DUPLICATI__WEBSERVICE_PASSWORD=' docker/.env.secrets 2>/dev/null | cut -d= -f2-); \
@@ -234,17 +234,28 @@ backup: check-docker backup-portainer
 			printf "$(RED)Error: DUPLICATI__WEBSERVICE_PASSWORD not found in docker/.env.secrets$(NC)\n"; \
 			exit 1; \
 		fi; \
-		BACKUP_ID=$$(docker exec duplicati duplicati-server-util list-backups \
-			--server-url=http://localhost:8200 --password="$$PASS" 2>/dev/null \
-			| grep -o '^[0-9]*' | head -1); \
-		if [ -n "$$BACKUP_ID" ]; then \
-			docker exec duplicati duplicati-server-util run "$$BACKUP_ID" \
-				--server-url=http://localhost:8200 --password="$$PASS" >/dev/null && \
-			printf "$(GREEN)>>> Backup started (ID: $$BACKUP_ID)$(NC)\n" && \
-			echo "Monitor progress at http://$(HOST_IP):8200"; \
-		else \
+		PASS_ESC=$$(printf '%s' "$$PASS" | sed 's/[\\"]/\\&/g'); \
+		TOKEN=$$(curl -sf -X POST http://localhost:8200/api/v1/auth/login \
+			-H "Content-Type: application/json" \
+			-d "{\"password\":\"$$PASS_ESC\"}" \
+			| grep -o '"AccessToken":"[^"]*"' | cut -d'"' -f4); \
+		if [ -z "$$TOKEN" ]; then \
+			printf "$(RED)Error: Duplicati login failed (check password or container health)$(NC)\n"; \
+			exit 1; \
+		fi; \
+		BACKUP_IDS=$$(curl -sf http://localhost:8200/api/v1/backups \
+			-H "Authorization: Bearer $$TOKEN" \
+			| grep -o '"ID":"[^"]*"' | cut -d'"' -f4); \
+		if [ -z "$$BACKUP_IDS" ]; then \
 			printf "$(YELLOW)No backup job configured yet$(NC)\n"; \
 			echo "Configure backup via http://$(HOST_IP):8200"; \
+		else \
+			for ID in $$BACKUP_IDS; do \
+				curl -sf -X POST "http://localhost:8200/api/v1/backup/$$ID/run" \
+					-H "Authorization: Bearer $$TOKEN" >/dev/null && \
+				printf "$(GREEN)>>> Backup queued (ID: $$ID)$(NC)\n"; \
+			done; \
+			echo "Monitor progress at http://$(HOST_IP):8200"; \
 		fi; \
 	else \
 		printf "$(RED)Error: duplicati container not running$(NC)\n"; \
