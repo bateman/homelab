@@ -543,35 +543,87 @@ In **UDM-SE** (Network application): Devices → U6-Pro → Settings (gear icon)
 
 In **UDM-SE** (Network application): Settings → WiFi → Create New WiFi Network
 
-**Network 1: Homelab**
+For each network below, configure the **General**, **Security**, **Behavior Controls**, and **Advanced** sections as described.
 
-| Field | Value |
-|-------|-------|
-| Name/SSID | Homelab |
-| Network | Media (VLAN 4) |
-| Security | WPA3/WPA2 |
-| Password | (set a strong password) |
-| Notes | TVs, phones, tablets |
+#### Network 1: Homelab
 
-**Network 2: Homelab-Guest**
+**General**
 
-| Field | Value |
-|-------|-------|
-| Name/SSID | Homelab-Guest |
-| Network | Guest (VLAN 5) |
-| Security | WPA3/WPA2 |
-| Password | (set a strong password) |
-| Notes | Guests, complete isolation |
+| Field | Value | Reason |
+|-------|-------|--------|
+| Name | Homelab | Main home network SSID |
+| Password | (set a strong password, min 8 chars) | |
+| Network | Media (VLAN 4) | Media devices: TVs, phones, tablets |
+| Broadcasting APs | **All** | Single AP setup — broadcast on all APs |
+| Application | **Standard** | Normal home use (not Hotspot/IoT profile) |
+| Radio Band | **5 GHz only** | Better throughput for media streaming; 2.4 GHz disabled to reduce interference |
 
-**Network 3: Homelab-IoT**
+**Security**
 
-| Field | Value |
-|-------|-------|
-| Name/SSID | Homelab-IoT |
-| Network | IoT (VLAN 6) |
-| Security | WPA3/WPA2 |
-| Password | (set a strong password) |
-| Notes | Alexa, smart WiFi devices |
+| Field | Value | Reason |
+|-------|-------|--------|
+| Security Protocol | **WPA2/WPA3** | Best compatibility while supporting WPA3 |
+| PMF (Protected Management Frames) | **Optional** | Required for WPA3 but "Optional" keeps WPA2 clients compatible |
+| Private Pre-Shared Keys | Unchecked | Not needed for home use |
+| Hide WiFi Name | Unchecked | SSID should be visible |
+| Client Device Isolation | Unchecked | Devices on this network need to see each other (e.g., casting) |
+| SAE Anti-clogging | **5** | Default — WPA3-SAE anti-clogging threshold |
+| SAE Sync Time | **5** | Default — WPA3-SAE sync timeout |
+
+**Behavior Controls**
+
+| Field | Value | Reason |
+|-------|-------|--------|
+| Band Steering | Unchecked | Only one radio band enabled (5 GHz) |
+| Proxy ARP | Unchecked | Not needed for small network |
+| BSS Transition | **Checked** | Helps clients transition between BSSes (802.11v) |
+| UAPSD | Unchecked | Unscheduled Automatic Power Save — can cause issues with some clients |
+| MAC Address Filter | Unchecked | No MAC filtering needed |
+| RADIUS MAC Authentication | Unchecked | No RADIUS server in use |
+| WiFi Speed Limit | Unchecked | No bandwidth limits on primary network |
+| Auto 802.11 DTIM Period | **Checked** | Let the controller optimize DTIM interval |
+| Group Rekey Interval | Unchecked | Default interval is fine |
+| Show Access Point Name in Beacon | Unchecked | Not needed for single AP |
+| WiFi Blackout Schedule | **On** | See [Phase 7.4](#74-wifi-blackout-schedule-optional) for schedule details |
+
+**Advanced** (set to **Manual**)
+
+| Field | Value | Reason |
+|-------|-------|--------|
+| Fast Roaming (802.11r) | Unchecked | Only useful with multiple APs |
+| Minimum Data Rate (Basic & Multicast) | Unchecked | Default rates are fine for single AP |
+| Multicast and Broadcast Blocker | Unchecked | Multicast needed for casting/discovery (e.g., Chromecast, AirPlay) |
+| Multicast to Unicast | Unchecked | Not needed for small network |
+
+#### Network 2: Homelab-Guest
+
+Use the same **Security**, **Behavior Controls**, and **Advanced** settings as Homelab above, with these General differences:
+
+| Field | Value | Reason |
+|-------|-------|--------|
+| Name | Homelab-Guest | Isolated guest access |
+| Password | (set a different strong password) | |
+| Network | Guest (VLAN 5) | Complete isolation from other VLANs |
+| Broadcasting APs | **All** | |
+| Application | **Standard** | |
+| Radio Band | **2.4 GHz + 5 GHz** | Guests may have older devices that need 2.4 GHz |
+| Client Device Isolation | **Checked** | Guests should not see each other's devices |
+
+#### Network 3: Homelab-IoT
+
+Use the same **Security**, **Behavior Controls**, and **Advanced** settings as Homelab above, with these General differences:
+
+| Field | Value | Reason |
+|-------|-------|--------|
+| Name | Homelab-IoT | Smart home devices |
+| Password | (set a different strong password) | |
+| Network | IoT (VLAN 6) | Isolated IoT VLAN |
+| Broadcasting APs | **All** | |
+| Application | **IoT** | Optimized for IoT device behavior |
+| Radio Band | **2.4 GHz + 5 GHz** | Many IoT devices only support 2.4 GHz |
+
+> [!WARNING]
+> Legacy or IoT clients may experience connectivity issues with PMF. If IoT devices fail to connect to Homelab-IoT, set PMF to **Disabled** on that specific SSID, or create a separate WPA2-only network.
 
 > [!NOTE]
 > No SSID needed for Management or Servers — the devices on these VLANs (switch, AP, NAS, Proxmox) are all wired.
