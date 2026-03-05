@@ -105,6 +105,16 @@ When using VPN, configure *arr apps with hostname `gluetun` (not `qbittorrent`/`
 5. Update service table in `docs/network/rack-homelab-config.md`
 6. Add firewall rules if inter-VLAN access needed → `docs/network/firewall-config.md`
 
+### Shell Scripts (BusyBox Compliance)
+QNAP QTS uses BusyBox, not GNU coreutils. All scripts in `scripts/` must be BusyBox-compatible:
+1. **`stat`**: Use `stat -c '%u'` (BusyBox/GNU). Do NOT use `stat -f` — on BusyBox `-f` means filesystem status, not format string (macOS-only)
+2. **`find`**: No `-printf`. Use `-exec` or pipe to `xargs`
+3. **`sed`**: No `-i ''` (macOS). Use `sed -i` (no argument) for in-place edits
+4. **`grep`**: No `--include`/`--exclude`. Use with `find` or `xargs` instead
+5. **`date`**: No `date -d`. Use `date -D FMT` for custom input formats
+6. **`readlink`**: No `readlink -f`. Use `realpath` or manual resolution
+7. **General**: Avoid GNU-only long options (e.g., `--recursive`). Use short flags (`-R`)
+
 ### Firewall Rules
 1. Rule order matters - processed sequentially
 2. "Allow Established/Related" must be first
