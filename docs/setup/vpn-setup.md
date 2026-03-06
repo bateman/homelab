@@ -327,6 +327,7 @@ nc -zv <VPN_IP> <forwarded_port>
 | Torrents "stalled" | No port forwarding | Check provider support or change provider |
 | Container in restart loop | `/dev/net/tun` not available | Verify tun module is loaded on NAS |
 | *arr can't reach download clients | Wrong network_mode | Verify qbit/nzbget use `network_mode: "service:gluetun"` |
+| `MTU discovery: VPN route not found` | Gluetun MTU auto-discovery bug ([#3142](https://github.com/qdm12/gluetun/issues/3142)) | Set `OPENVPN_MSSFIX=1450` in gluetun environment |
 
 ### Verify TUN Module
 
