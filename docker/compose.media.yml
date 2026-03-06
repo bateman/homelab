@@ -121,6 +121,9 @@ services:
       TZ: ${TZ:-Europe/Rome}
       # Health check configuration
       HEALTH_TARGET_ADDRESSES: 1.1.1.1:443
+      # Fix Gluetun MTU discovery bug (https://github.com/qdm12/gluetun/issues/3142)
+      # Sets fixed MSS to prevent buggy auto-discovery on OpenVPN connections
+      OPENVPN_MSSFIX: 1450
     volumes:
       - ./config/gluetun:/gluetun
     ports:
