@@ -780,7 +780,7 @@ On first boot, Recyclarr creates a template file. To generate a complete configu
 make recyclarr-config
 
 # Or manually
-docker exec recyclarr recyclarr config create
+docker exec recyclarr recyclarr config create --force
 ```
 
 ### Configure recyclarr.yml
