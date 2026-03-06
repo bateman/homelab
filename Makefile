@@ -327,7 +327,7 @@ recyclarr-sync: check-compose
 recyclarr-config: check-compose
 	@echo ">>> Generating Recyclarr configuration template..."
 	@if docker ps --format '{{.Names}}' | grep -q '^recyclarr$$'; then \
-		docker exec recyclarr recyclarr config create --force && \
+		docker exec recyclarr recyclarr config create -f && \
 		printf "$(GREEN)>>> Template created in docker/config/recyclarr/$(NC)\n"; \
 	else \
 		printf "$(RED)Error: recyclarr container not running$(NC)\n"; \
