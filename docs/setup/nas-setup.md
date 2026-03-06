@@ -771,21 +771,20 @@ rm /share/data/torrents/movies/test.txt /share/data/media/movies/test.txt
 
 Recyclarr automatically syncs Quality Profiles from [Trash Guides](https://trash-guides.info/).
 
-### Generate Base Configuration
+### Install Configuration
 
-On first boot, Recyclarr creates a template file. To generate a complete configuration:
+Install the Recyclarr configuration template (copies `docker/recyclarr.yml` to the config directory):
 
 ```bash
-# Generate config template
 make recyclarr-config
 
 # Or manually
-docker exec recyclarr recyclarr config create -f
+cp docker/recyclarr.yml docker/config/recyclarr/recyclarr.yml
 ```
 
 ### Configure recyclarr.yml
 
-Edit `docker/config/recyclarr/recyclarr.yml` (see full template in `docker/recyclarr.yml`):
+The installed config (`docker/config/recyclarr/recyclarr.yml`) contains:
 
 ```yaml
 sonarr:

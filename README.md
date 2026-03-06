@@ -151,7 +151,7 @@ All commands should be run in the `/share/container/mediastack` directory on the
 | `make shell-<service>` | Open shell in container (e.g., `make shell-radarr`) |
 | `make clean` | Remove orphan Docker resources (asks for confirmation) |
 | `make recyclarr-sync` | Manual Trash Guides quality profile sync |
-| `make recyclarr-config` | Generate Recyclarr configuration template |
+| `make recyclarr-config` | Install Recyclarr config from template |
 | `make help` | Show all available commands |
 
 ## Requirements
