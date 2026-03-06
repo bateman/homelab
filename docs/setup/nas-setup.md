@@ -835,6 +835,22 @@ radarr:
 > [!TIP]
 > Full documentation: https://recyclarr.dev/wiki/yaml/config-reference/
 
+### Set API Keys
+
+The config reads API keys from environment variables. Set them in `docker/.env.secrets`:
+
+```bash
+# Get keys from each service: Settings → General → API Key
+SONARR_API_KEY=your_sonarr_api_key_here
+RADARR_API_KEY=your_radarr_api_key_here
+```
+
+After setting the keys, restart recyclarr to pick them up:
+
+```bash
+make restart s=recyclarr
+```
+
 ### Synchronization
 
 ```bash
