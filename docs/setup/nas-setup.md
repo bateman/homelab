@@ -780,33 +780,58 @@ On first boot, Recyclarr creates a template file. To generate a complete configu
 make recyclarr-config
 
 # Or manually
-docker exec recyclarr recyclarr config create
+docker exec recyclarr recyclarr config create --force
 ```
 
 ### Configure recyclarr.yml
 
-Edit `docker/config/recyclarr/recyclarr.yml`:
+Edit `docker/config/recyclarr/recyclarr.yml` (see full template in `docker/recyclarr.yml`):
 
 ```yaml
-# Minimal configuration example
 sonarr:
   series:
     base_url: http://sonarr:8989
-    api_key: <SONARR_API_KEY>  # From Sonarr → Settings → General
+    api_key: !env_var SONARR_API_KEY  # Set in docker/.env.secrets
+    delete_old_custom_formats: true
     quality_definition:
       type: series
     quality_profiles:
-      - name: WEB-1080p
+      - trash_id: 72dae194fc92bf828f32cde7744e51a1  # WEB-1080p
+        reset_unmatched_scores:
+          enabled: true
+    media_naming:
+      series: default
+      season: default
+      episodes:
+        rename: true
+        standard: default
+        daily: default
+        anime: default
+    media_management:
+      propers_and_repacks: do_not_prefer
 
 radarr:
   movies:
     base_url: http://radarr:7878
-    api_key: <RADARR_API_KEY>  # From Radarr → Settings → General
+    api_key: !env_var RADARR_API_KEY  # Set in docker/.env.secrets
+    delete_old_custom_formats: true
     quality_definition:
       type: movie
     quality_profiles:
-      - name: HD Bluray + WEB
+      - trash_id: d1d67249d3890e49bc12e275d989a7e9  # HD Bluray + WEB
+        reset_unmatched_scores:
+          enabled: true
+    media_naming:
+      folder: plex-tmdb
+      movie:
+        rename: true
+        standard: plex-tmdb
+    media_management:
+      propers_and_repacks: do_not_prefer
 ```
+
+> [!NOTE]
+> Recyclarr only supports Sonarr and Radarr. Lidarr and other *arr apps are not supported.
 
 > [!TIP]
 > Full documentation: https://recyclarr.dev/wiki/yaml/config-reference/

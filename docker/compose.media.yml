@@ -459,6 +459,8 @@ services:
     image: ghcr.io/recyclarr/recyclarr:latest
     container_name: recyclarr
     user: ${PUID:-1001}:${PGID:-100}
+    env_file:
+      - .env.secrets
     environment:
       TZ: ${TZ:-Europe/Rome}
       RECYCLARR_CREATE_CONFIG: "true"
