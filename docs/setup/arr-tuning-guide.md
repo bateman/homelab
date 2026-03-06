@@ -335,7 +335,9 @@ Lidarr → Settings → Metadata:
 |---------|-------------|-----|
 | Rename Tracks | **Yes** | Consistent naming |
 | Use Hardlinks instead of Copy | **Yes** | Same filesystem requirement as Sonarr/Radarr |
-| Standard Track Format | `{Artist Name} - {Album Title} ({Release Year})/{Medium Format} {medium:00}/{track:00} - {Track Title}` | Clean organization |
+| Standard Track Format | `{track:00} - {Track Title}` | Clean, numbered tracks |
+| Artist Folder | `{Artist Name}` | One folder per artist |
+| Album Folder | `{Album Title} ({Release Year})` | Sortable by year |
 | Propers and Repacks | **Do not Prefer** | Consistent with the rest of the stack |
 | Root Folder | `/data/media/music` | Standard path for hardlinking |
 
@@ -391,7 +393,7 @@ Bazarr → Settings → Subtitles:
 | Path mapping | **Not needed** if Bazarr uses the same Docker volume mounts as Sonarr/Radarr |
 
 > [!NOTE]
-> Bazarr mounts `/data/media:/data/media` (read-only access to the media folder is sufficient). Since Sonarr/Radarr also use `/data/media`, paths are consistent and no mapping is required.
+> Bazarr mounts `/share/data/media:/data/media` (only the media folder, not the full `/share/data` tree). Inside the container, Bazarr sees `/data/media` — the same path that Sonarr/Radarr see (they mount `/share/data:/data`). No path mapping is required.
 
 ### Post-Processing
 
