@@ -20,13 +20,19 @@ networks:
   media_net:
     name: homelab_media_net
     driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 9000
   proxy:
     name: homelab_proxy
     driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 9000
   socket_proxy:
     name: homelab_socket_proxy
     driver: bridge
     internal: true  # No external access - only container to container
+    driver_opts:
+      com.docker.network.driver.mtu: 9000
 
 # =============================================================================
 # Reusable YAML Anchors
