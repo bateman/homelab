@@ -150,17 +150,20 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
       # Traefik routes for qBittorrent (via Gluetun network)
+      # NOTE: .service= is required because this container exposes multiple Traefik services
       - "traefik.enable=true"
       - "traefik.http.routers.qbit.rule=Host(`qbit.home.local`)"
       - "traefik.http.routers.qbit.entrypoints=websecure"
       - "traefik.http.routers.qbit.tls=true"
       - "traefik.http.routers.qbit.middlewares=authelia@docker"
+      - "traefik.http.routers.qbit.service=qbit"
       - "traefik.http.services.qbit.loadbalancer.server.port=8080"
       # Traefik routes for NZBGet (via Gluetun network)
       - "traefik.http.routers.nzbget.rule=Host(`nzbget.home.local`)"
       - "traefik.http.routers.nzbget.entrypoints=websecure"
       - "traefik.http.routers.nzbget.tls=true"
       - "traefik.http.routers.nzbget.middlewares=authelia@docker"
+      - "traefik.http.routers.nzbget.service=nzbget"
       - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
 
   # ===========================================================================

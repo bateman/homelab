@@ -126,6 +126,9 @@ With the `vpn` profile, qBittorrent and NZBGet are reachable via hostname `gluet
 > [!IMPORTANT]
 > Containers with `network_mode: "service:gluetun"` share the network stack with Gluetun. So qBittorrent and NZBGet are reachable at Gluetun's address.
 
+> [!NOTE]
+> **Traefik reverse proxy**: Since gluetun exposes multiple Traefik services (qBittorrent and NZBGet) from a single container, each router must explicitly specify its service (e.g., `traefik.http.routers.qbit.service=qbit`). Without this, Traefik cannot determine which service to route to and `qbit.home.local` / `nzbget.home.local` will not work. This is already configured in `compose.media.yml`.
+
 ---
 
 ## Available Profiles
@@ -323,6 +326,7 @@ nc -zv <VPN_IP> <forwarded_port>
 | Gluetun won't connect | Wrong credentials | Check `.env.secrets`, regenerate credentials |
 | `AUTH_FAILED` | Wrong username/password | For Mullvad: use private key, not account number |
 | qBittorrent/NZBGet not reachable | Ports not exposed on gluetun | Check gluetun `ports` section |
+| WebUI not reachable via Traefik (`*.home.local`) | Missing `.service` label on gluetun (required when one container has multiple Traefik services) | Add `traefik.http.routers.qbit.service=qbit` and `traefik.http.routers.nzbget.service=nzbget` to gluetun labels |
 | Slow speeds | VPN server too far | Change `SERVER_COUNTRIES` |
 | Torrents "stalled" | No port forwarding | Check provider support or change provider |
 | Container in restart loop | `/dev/net/tun` not available | Verify tun module is loaded on NAS |
