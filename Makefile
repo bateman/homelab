@@ -327,7 +327,7 @@ recyclarr-sync: check-compose
 recyclarr-config: check-compose
 	@echo ">>> Installing Recyclarr configuration..."
 	@docker cp docker/recyclarr.yml recyclarr:/config/recyclarr.yml
-	@printf "$(GREEN)>>> Configuration installed to recyclarr:/config/recyclarr.yml$(NC)\n"
+	@printf "$(GREEN)>>> Configuration installed to docker/config/recyclarr/recyclarr.yml$(NC)\n"
 	@printf "$(YELLOW)>>> Remember to set SONARR_API_KEY and RADARR_API_KEY in docker/.env.secrets$(NC)\n"
 
 # =============================================================================
