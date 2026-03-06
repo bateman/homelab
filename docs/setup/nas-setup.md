@@ -791,7 +791,7 @@ Edit `docker/config/recyclarr/recyclarr.yml` (see full template in `docker/recyc
 sonarr:
   series:
     base_url: http://sonarr:8989
-    api_key: <SONARR_API_KEY>  # From Sonarr → Settings → General
+    api_key: !env_var SONARR_API_KEY  # Set in docker/.env.secrets
     delete_old_custom_formats: true
     quality_definition:
       type: series
@@ -813,7 +813,7 @@ sonarr:
 radarr:
   movies:
     base_url: http://radarr:7878
-    api_key: <RADARR_API_KEY>  # From Radarr → Settings → General
+    api_key: !env_var RADARR_API_KEY  # Set in docker/.env.secrets
     delete_old_custom_formats: true
     quality_definition:
       type: movie
