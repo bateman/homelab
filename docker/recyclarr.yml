@@ -61,9 +61,8 @@ sonarr:
         reset_unmatched_scores:
           enabled: true
 
-      # Uncomment for additional profiles:
-      # WEB-2160p (4K)
-      # - trash_id: placeholder
+      # Uncomment for additional profiles (find trash_ids via Trash Guides):
+      # - trash_id: <WEB-2160p trash_id>
       #   reset_unmatched_scores:
       #     enabled: true
 
