@@ -851,6 +851,9 @@ docker exec recyclarr recyclarr sync
 - [ ] Verify Quality Profiles created in Radarr (Settings → Profiles)
 - [ ] Verify Custom Formats imported
 
+> [!TIP]
+> For quality profile selection, custom format tuning, and recommended settings for all *arr apps, see the [*arr Tuning Guide](arr-tuning-guide.md).
+
 ---
 
 ## Post-Installation
