@@ -773,13 +773,13 @@ Recyclarr automatically syncs Quality Profiles from [Trash Guides](https://trash
 
 ### Install Configuration
 
-Install the Recyclarr configuration template (copies `docker/recyclarr.yml` to the config directory):
+Install the Recyclarr configuration template (copies `docker/recyclarr.yml` into the container volume):
 
 ```bash
 make recyclarr-config
 
-# Or manually
-cp docker/recyclarr.yml docker/config/recyclarr/recyclarr.yml
+# Or manually (requires recyclarr container to exist)
+docker cp docker/recyclarr.yml recyclarr:/config/recyclarr.yml
 ```
 
 ### Configure recyclarr.yml
