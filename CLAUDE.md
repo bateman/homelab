@@ -155,6 +155,7 @@ When facing trade-offs, **ask the user**:
 | Reverse proxy (Traefik) | `docs/setup/reverse-proxy-setup.md` |
 | Authelia SSO | `docs/setup/authelia-setup.md` |
 | Notifications | `docs/setup/notifications-setup.md` |
+| *arr tuning (Trash Guides) | `docs/setup/arr-tuning-guide.md` |
 | Backup procedures | `docs/operations/runbook-backup-restore.md` |
 | Energy saving | `docs/operations/energy-saving-strategies.md` |
 | Uptime Kuma monitors | `docs/operations/uptime-kuma-monitors.md` |
