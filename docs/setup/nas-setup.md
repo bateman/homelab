@@ -860,8 +860,11 @@ docker exec recyclarr recyclarr sync
 cd /share/container/mediastack
 make backup
 ```
-- [ ] Backup created in `/share/backup` (Duplicati destination)
+- [ ] Verify backup completed in `/share/backup`
 - [ ] Copy backup offsite (USB, cloud)
+
+> [!NOTE]
+> `make backup` snapshots the Portainer database, then triggers all Duplicati backup jobs via its REST API. Duplicati writes the actual backup files to `/share/backup`. After initial setup, this runs automatically via cron (Portainer snapshot at 22:55, Duplicati job at 23:00 — see [Backup & Restore Runbook](../operations/runbook-backup-restore.md) for scheduling details).
 
 ### QTS Config Backup
 - [ ] Control Panel → System → Backup/Restore → Backup System Settings
