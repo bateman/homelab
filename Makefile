@@ -96,7 +96,7 @@ help:
 	@printf "  $(PURPLE)Utilities$(NC)\n"
 	@printf "    $(CYAN)make clean$(NC)            - Remove orphan Docker resources\n"
 	@printf "    $(CYAN)make recyclarr-sync$(NC)   - Manual Trash Guides profile sync\n"
-	@printf "    $(CYAN)make recyclarr-config$(NC) - Generate Recyclarr config template\n"
+	@printf "    $(CYAN)make recyclarr-config$(NC) - Install Recyclarr config from template\n"
 	@printf "\n"
 	@printf "  $(PURPLE)Per service$(NC)\n"
 	@printf "    $(CYAN)make logs-SERVICE$(NC)  - Single service logs (e.g., make logs-sonarr)\n"
@@ -324,16 +324,12 @@ recyclarr-sync: check-compose
 		exit 1; \
 	fi
 
-recyclarr-config: check-compose
-	@echo ">>> Generating Recyclarr configuration template..."
-	@if docker ps --format '{{.Names}}' | grep -q '^recyclarr$$'; then \
-		docker exec recyclarr rm -f /config/recyclarr.yml && \
-		docker exec recyclarr recyclarr config create && \
-		printf "$(GREEN)>>> Template created in docker/config/recyclarr/$(NC)\n"; \
-	else \
-		printf "$(RED)Error: recyclarr container not running$(NC)\n"; \
-		exit 1; \
-	fi
+recyclarr-config:
+	@echo ">>> Installing Recyclarr configuration..."
+	@mkdir -p docker/config/recyclarr
+	@cp docker/recyclarr.yml docker/config/recyclarr/recyclarr.yml
+	@printf "$(GREEN)>>> Configuration installed to docker/config/recyclarr/recyclarr.yml$(NC)\n"
+	@printf "$(YELLOW)>>> Remember to set SONARR_API_KEY and RADARR_API_KEY in docker/.env.secrets$(NC)\n"
 
 # =============================================================================
 # Health Check
