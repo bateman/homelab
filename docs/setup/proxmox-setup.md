@@ -1273,8 +1273,9 @@ EOF
 Verify the configuration:
 
 ```bash
-# Dry run to confirm Plex would be upgraded
-unattended-upgrade --dry-run --debug 2>&1 | grep -i plex
+# Confirm Plex origin is in the allowed list
+unattended-upgrade --dry-run --debug 2>&1 | grep "Allowed origins"
+# Should include: origin=Artifactory,label=Artifactory
 ```
 
 > [!NOTE]
