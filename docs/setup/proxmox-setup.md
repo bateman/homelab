@@ -165,9 +165,12 @@ Before configuring NFS on Proxmox, enable NFS export on the NAS:
 
 Verify available exports:
 ```bash
-# From NAS
+# From Proxmox (showmount not available on QNAP BusyBox)
 showmount -e 192.168.3.10
 # Should show /share/data/media and /share/backup
+
+# From NAS
+cat /etc/exports
 ```
 
 #### Add NFS Storage in Proxmox
