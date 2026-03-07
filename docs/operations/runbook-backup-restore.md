@@ -44,9 +44,12 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    ```
    */tailscale/
    */portainer/portainer.db
+   */duplicati/
    ```
    - **Tailscale**: machine-specific state; requires re-auth on new install — not useful to back up.
    - **portainer.db**: always file-locked while Portainer runs. Backed up via `portainer.db.bak` instead (see step 5).
+   - **Duplicati**: its own database (backup metadata, deduplication index) is regenerated from
+     backup destinations. Including it creates circular growth — each backup makes the source larger.
 
    > **Note:** Duplicati runs as PUID=0 (root) so it can read all config files including
    > root-owned ones (Portainer, Pi-hole). The source volume is mounted `:ro` for safety.
