@@ -286,17 +286,25 @@ Datacenter → proxmox → Create CT
 
 ### 4.3 Configure NFS Mount Point
 
-Before starting, add mount point for media:
+Before starting, add a bind mount for media (container must be stopped):
 
 ```bash
 # On Proxmox host
-pct set 100 -mp0 /mnt/nas-media,mp=/media
+pct set 100 -mp0 /mnt/pve/nas-media,mp=/media
 ```
 
-Or via WebUI:
-Container 100 → Resources → Add → Mount Point
-- Storage: nas-media
-- Mount Point: /media
+> [!WARNING]
+> Do **not** use the WebUI "Add → Mount Point" with "Storage: nas-media" — that creates
+> a virtual disk image on the NAS, not a bind mount of the media files.
+> Use the CLI command above instead.
+
+Verify the mount point was set correctly:
+
+```bash
+pct config 100 | grep mp
+# Should show: mp0: /mnt/pve/nas-media,mp=/media
+# NOT: mp0: nas-media:100/vm-100-disk-0.raw (this is wrong — it's a disk image)
+```
 
 ### 4.4 Start Container and Install Plex
 
@@ -307,12 +315,20 @@ pct start 100
 # Enter container
 pct enter 100
 
-# Update system
+# Update system and install prerequisites
 apt update && apt upgrade -y
+apt install -y curl gnupg
 
 # Add Plex repository
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | gpg --dearmor -o /usr/share/keyrings/plex-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/plex-archive-keyring.gpg] https://downloads.plex.tv/repo/deb public main" > /etc/apt/sources.list.d/plexmediaserver.list
+
+# Workaround: Plex GPG key uses SHA1 binding signatures, rejected by Debian Trixie's
+# Sequoia PGP policy since 2026-02-01. Extend the deadline until Plex updates their key.
+# See: https://forums.plex.tv/t/debian-13-gpg-key-is-not-bound-no-binding-signature-at-time-sha1/919206
+mkdir -p /etc/crypto-policies/back-ends
+cp /usr/share/apt/default-sequoia.config /etc/crypto-policies/back-ends/apt-sequoia.config
+sed -i 's/^sha1.second_preimage_resistance.*/sha1.second_preimage_resistance = 2027-01-01/' /etc/crypto-policies/back-ends/apt-sequoia.config
 
 # Install Plex
 apt update
@@ -321,6 +337,35 @@ apt install plexmediaserver -y
 # Verify status
 systemctl status plexmediaserver
 ```
+
+### Verify NFS Mount
+
+Before configuring Plex, verify that the NFS mount is working and permissions are correct:
+
+```bash
+# Check mount is active
+df -h /media
+# Should show 192.168.3.10:/share/data/media
+
+# Verify directory structure exists
+ls -la /media/
+# Should show: movies/ tv/ music/
+
+# Verify Plex user can read files (plex user is created by the package)
+sudo -u plex ls /media/movies/
+
+# Check UID/GID match (should match PUID/PGID from Docker stack)
+stat -c '%u:%g' /media/movies/
+# Should show 1001:100 (dockeruser)
+```
+
+> [!WARNING]
+> If `/media` is empty or shows "Permission denied", check:
+> 1. NFS export permissions on QNAP (Section 3.4)
+> 2. Mount point configuration: `pct config 100 | grep mp0`
+>    - Must show `/mnt/pve/nas-media,mp=/media`
+>    - If it shows `nas-media:100/vm-100-disk-0.raw`, you have a disk image instead of a bind mount — see Section 4.3
+> 3. NFS service status on NAS: `showmount -e 192.168.3.10`
 
 ### Verify Plex
 
@@ -333,12 +378,32 @@ Open browser: `http://192.168.3.21:32400/web`
 > [!NOTE]
 > This section follows the [official Trash Guides recommendations](https://trash-guides.info/Plex/Tips/Plex-media-server/) to optimize Plex Media Server.
 
-### 5.1 Initial Setup
+### 5.1 Claim Server (Initial Setup)
 
-1. [ ] Access `http://192.168.3.21:32400/web`
-2. [ ] Login with Plex account (or create one)
-3. [ ] Name the server: "Homelab Plex"
-4. [ ] Guided initial configuration
+Plex requires the server to be "claimed" (linked to your Plex account). New servers only allow claiming from **localhost**, so you need an SSH tunnel since Plex runs inside an LXC container.
+
+**From your workstation** (the machine where you'll open the browser):
+
+```bash
+# Create SSH tunnel: local port 8888 → Plex LXC port 32400 via Proxmox
+ssh -L 8888:192.168.3.21:32400 root@192.168.3.20
+```
+
+Then open your browser and go to:
+
+```
+http://localhost:8888/web
+```
+
+> [!IMPORTANT]
+> You **must** use `localhost:8888`, not `192.168.3.21:32400`. Plex checks the connecting IP — only localhost is allowed to claim an unclaimed server.
+
+1. [ ] Login with your Plex account (or create one)
+2. [ ] Name the server: "Homelab Plex"
+3. [ ] Skip the "Add Library" wizard (we'll configure libraries properly in 5.2)
+4. [ ] Close the SSH tunnel (Ctrl+C) once claimed
+
+After claiming, access Plex normally at `http://192.168.3.21:32400/web`.
 
 ### 5.2 Add Libraries
 
@@ -1027,6 +1092,7 @@ iface vmbr0 inet dhcp
     bridge-ports enxAABBCCDDEEFF
     bridge-stp off
     bridge-fd 0
+    mtu 9000
 ```
 
 Key changes from the installer defaults:
