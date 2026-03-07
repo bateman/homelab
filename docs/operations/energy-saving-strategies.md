@@ -51,21 +51,24 @@ ssh admin@192.168.3.10 "wakeonlan AA:BB:CC:DD:EE:FF"
 
 ### 1.1 Scheduled Shutdown & Wake-Up (Cron)
 
-Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it down overnight and wake it before evening usage.
+Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it down overnight and wake it when the NAS boots.
 
 #### Nightly Cycle Timeline
 
 ```
 23:00  Duplicati backup runs (on NAS)
 00:30  ── Shutdown Mini PC ──     (cron: ssh shutdown)
-01:00  ── NAS shuts down ──       (QTS Power Schedule)
+01:00  ── NAS shuts down ──       (QTS Power Schedule, optional)
        │
-       │  Both devices OFF (saves ~40-60W)
+       │  Mini PC OFF (saves ~20-30W; both OFF saves ~40-60W)
        │
-07:00  ── NAS powers on ──       (QTS Power Schedule)
+07:00  ── NAS powers on ──       (QTS Power Schedule, or manual reboot)
 07:02  ── Wake Mini PC ──        (@reboot cron: WOL after 2 min delay)
 07:03  Plex available
 ```
+
+> [!TIP]
+> The NAS shutdown/power-on lines (01:00/07:00) are optional — see [Section 2.3](#23-scheduled-power-onoff-optional). If the NAS stays always-on, the `@reboot` cron still fires on manual NAS reboots or after power outages.
 
 > [!NOTE]
 > The Mini PC wake is triggered by the NAS boot (`@reboot` cron), not a fixed time. This ensures the Mini PC always comes up shortly after the NAS, regardless of when the NAS powers on. The 2-minute delay gives the NAS time to fully initialize networking.
@@ -683,10 +686,12 @@ echo "powersave" > /sys/module/pcie_aspm/parameters/policy
 - [ ] Set CPU governor to powersave
 - [ ] Install NUT for UPS monitoring
 
-### Phase 3: Service Scheduling
+### Phase 3: Scheduled Power Cycle & Service Scheduling
 
-- [ ] Create power-save scripts
-- [ ] Configure cron jobs on NAS
+- [ ] Configure Mini PC shutdown/wake-up cron jobs on NAS (see [Section 1.1](#11-scheduled-shutdown--wake-up-cron))
+- [ ] Test Mini PC shutdown → WOL wake cycle
+- [ ] Create power-save scripts (container scheduling)
+- [ ] Configure container scheduling cron jobs on NAS
 - [ ] Test service stop/start cycle
 - [ ] Add Makefile targets
 
@@ -740,6 +745,9 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 |-------|-------|----------|
 | Services don't stop | Script permissions | `chmod +x scripts/power-save-*.sh` |
 | WOL doesn't work | Not on same VLAN | Send from device on VLAN 3 |
+| Mini PC not waking on NAS boot | `@reboot` cron not running | Verify with `crontab -l`; check NAS cron supports `@reboot` |
+| Mini PC not waking on NAS boot | Network not ready at `@reboot` | Increase sleep delay (e.g., `sleep 180`) |
+| Shutdown cron fails | SSH key not configured | Set up passwordless SSH (see [Section 1.1 Prerequisites](#11-scheduled-shutdown--wake-up-cron)) |
 | HDD won't spin down | Constant access | Check which process with `iotop` |
 | High idle power | Background tasks | Review container resource usage |
 | AP won't power on | PoE budget exceeded | Check switch PoE allocation |
