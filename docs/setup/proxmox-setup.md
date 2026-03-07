@@ -986,6 +986,7 @@ vainfo: Supported profile and entrypoints
 | Maximum simultaneous GPU transcodes | Unlimited | Adjust if sharing resources |
 | Maximum simultaneous CPU transcodes | Unlimited | Fallback when GPU can't handle a codec |
 | Maximum simultaneous background video transcode | 1 | Limits optimizer/download I/O impact |
+| Background transcoding x264 preset | Very Fast | CPU preset for background transcodes; faster = less CPU |
 
 #### 8.3.7 Verify Active Hardware Transcoding
 
