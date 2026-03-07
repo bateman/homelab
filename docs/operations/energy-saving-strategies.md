@@ -201,11 +201,13 @@ Reduce LED brightness overnight to save minor power and reduce light pollution.
 
 ## 3. Wi-Fi Access Point Scheduling
 
-> WiFi Blackout Schedule and guest network scheduling are configured during initial setup. See [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wifi-blackout-schedule-optional).
+### 3.1 WiFi Blackout Schedule (Radio Disable)
 
-This section covers additional power-saving options beyond radio scheduling.
+WiFi Blackout Schedule and guest network scheduling are configured during initial setup. See [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wifi-blackout-schedule-optional).
 
-### 3.2 Alternative: Device-Level Scheduling
+This disables the radio on schedule but keeps the AP powered for management.
+
+### 3.2 Device-Level Scheduling (Full Power Off)
 
 To completely power off the AP (saves more power than radio disable):
 
