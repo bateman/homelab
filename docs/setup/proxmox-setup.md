@@ -1220,6 +1220,53 @@ ethtool enp2s0 | grep Wake-on
 | No IP after switching to DHCP | `dhclient` missing (PVE 9+) | Install `dhcpcd` (see [8.4.3](#843-install-dhcp-client)) |
 | Wrong IP from DHCP | Reservation not set | Check UDM-SE DHCP reservation matches MAC of `enxAABBCCDDEEFF` |
 
+### 8.5 Automatic Plex Updates
+
+Plex is installed via apt inside the LXC container. Use `unattended-upgrades` to automatically install new Plex releases from the official repo.
+
+```bash
+# Enter Plex container
+pct enter 100
+
+# Install unattended-upgrades
+apt update && apt install -y unattended-upgrades
+
+# Enable automatic updates
+dpkg-reconfigure -plow unattended-upgrades
+# Select "Yes" when prompted
+```
+
+Add the Plex repo to the allowed origins:
+
+```bash
+cat >> /etc/apt/apt.conf.d/50unattended-upgrades << 'EOF'
+
+// Auto-update Plex Media Server
+Unattended-Upgrade::Allowed-Origins {
+    "https://downloads.plex.tv/repo/deb:public";
+};
+EOF
+```
+
+Configure update frequency:
+
+```bash
+cat > /etc/apt/apt.conf.d/20auto-upgrades << 'EOF'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+EOF
+```
+
+Verify the configuration:
+
+```bash
+# Dry run to confirm Plex would be upgraded
+unattended-upgrade --dry-run --debug 2>&1 | grep -i plex
+```
+
+> [!NOTE]
+> `unattended-upgrades` runs daily via systemd timer. Plex restarts automatically after package upgrade. Check logs at `/var/log/unattended-upgrades/`.
+
 ---
 
 ## Final Verification
@@ -1237,6 +1284,7 @@ ethtool enp2s0 | grep Wake-on
 - [ ] Libraries synced
 - [ ] Local playback working
 - [ ] Remote access via Tailscale working (Tailscale runs on NAS — see `docker/compose.yml`)
+- [ ] Automatic updates configured (Section 8.5)
 
 ---
 
