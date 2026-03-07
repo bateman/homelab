@@ -223,6 +223,13 @@ services:
       WATCHTOWER_TIMEOUT: 30s
       WATCHTOWER_HTTP_API_METRICS: "true"
       WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_API_TOKEN:-watchtower}
+      # Discord notifications via Shoutrrr (optional, set URL in .env.secrets)
+      # Report mode: only notifies on successful updates or errors (silent otherwise)
+      WATCHTOWER_NOTIFICATION_URL: ${WATCHTOWER_NOTIFICATION_URL:-}
+      WATCHTOWER_NOTIFICATION_REPORT: "true"
+      WATCHTOWER_NOTIFICATION_TEMPLATE: >-
+        {{- if .Updated}}{{len .Updated}} container(s) updated:{{range .Updated}}{{"\n"}}- {{.Name}} ({{.ImageName}}){{end}}{{end}}
+        {{- if .Failed}}{{"\n"}}{{len .Failed}} container(s) failed:{{range .Failed}}{{"\n"}}- {{.Name}}: {{.Error}}{{end}}{{end}}
     ports:
       - "8383:8080"
     networks:

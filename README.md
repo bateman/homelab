@@ -93,7 +93,7 @@ Details in [`docs/setup/network-setup.md`](docs/setup/network-setup.md).
 - [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md) - Proxmox and Plex setup
 - [`docs/setup/vpn-setup.md`](docs/setup/vpn-setup.md) - VPN protection for download clients (Gluetun)
 - [`docs/setup/reverse-proxy-setup.md`](docs/setup/reverse-proxy-setup.md) - Traefik, HTTPS certificates, Pi-hole DNS
-- [`docs/setup/notifications-setup.md`](docs/setup/notifications-setup.md) - Uptime Kuma notifications via Home Assistant
+- [`docs/setup/notifications-setup.md`](docs/setup/notifications-setup.md) - Notifications (Uptime Kuma, Watchtower)
 
 ### Reference
 - [`CLAUDE.md`](CLAUDE.md) - Project guide and development guidelines
