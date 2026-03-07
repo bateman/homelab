@@ -157,10 +157,10 @@ Before configuring NFS on Proxmox, enable NFS export on the NAS:
 3. [ ] Enable NFS v3 and/or NFS v4 Service
 4. Control Panel → Shared Folders
 5. For each folder to export (data, backup):
-   - Select folder → Edit → NFS Permissions → Add
+   - Select folder → Edit Shared Folder Permissions → Select permission type: NSF host access
    - Host/IP: `192.168.3.20` (Proxmox)
    - Permission: `read/write`
-   - Squash: `no_root_squash` (for backup)
+   - Squash: `Squash no users`
    - Apply
 
 Verify available exports:
