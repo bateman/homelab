@@ -277,7 +277,6 @@ Datacenter → proxmox → Create CT
 | Field | Value |
 |-------|--------|
 | Bridge | vmbr0 |
-| MTU | 9000 |
 | IPv4 | Static |
 | IPv4/CIDR | 192.168.3.21/24 |
 | Gateway | 192.168.3.1 |
@@ -1028,6 +1027,7 @@ iface vmbr0 inet dhcp
     bridge-ports enxAABBCCDDEEFF
     bridge-stp off
     bridge-fd 0
+    mtu 9000
 ```
 
 Key changes from the installer defaults:
