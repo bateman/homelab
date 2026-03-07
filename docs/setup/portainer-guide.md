@@ -53,13 +53,56 @@ Portainer è una GUI web per gestire Docker. Nel contesto di questo homelab, dov
 | Porte esposte e mapping | **Containers** → click → **Inspect** → sezione Ports |
 | Immagine in uso e tag | **Containers** → colonna **Image** |
 
-### Manutenzione
+### Manutenzione e Pulizia
+
+#### Immagini
 
 | Scenario | Cosa fare in Portainer |
 |----------|----------------------|
-| Verificare immagini obsolete dopo aggiornamenti Watchtower | **Images** → ordinare per "Unused" per vedere immagini orfane |
-| Controllare lo spazio occupato dai volumi | **Volumes** → lista con dimensioni |
-| Visualizzare le reti Docker e le connessioni | **Networks** → mappa delle reti e container collegati |
+| Trovare immagini non più utilizzate | **Images** → click **Filter** → spuntare **Unused** (etichetta arancione) |
+| Eliminare immagini obsolete | **Images** → filtrare per Unused → selezionare con checkbox → **Remove** |
+| Verificare quale immagine usa un container | **Containers** → colonna **Image** (nome e tag) |
+
+> [!NOTE]
+> Watchtower (`WATCHTOWER_CLEANUP=true`) rimuove automaticamente le vecchie immagini dopo aver aggiornato un container. Le immagini "Unused" in Portainer sono tipicamente residui di aggiornamenti manuali o container rimossi.
+
+#### Volumi
+
+| Scenario | Cosa fare in Portainer |
+|----------|----------------------|
+| Vedere i volumi e il loro stato | **Volumes** → lista con nome, driver, mount point e stato (Unused/In use) |
+| Eliminare volumi orfani | **Volumes** → selezionare i volumi non in uso → **Remove** |
+
+> [!IMPORTANT]
+> Portainer CE **non mostra le dimensioni** dei volumi Docker. Per verificare lo spazio occupato usare da CLI: `docker system df -v`.
+
+#### Reti
+
+| Scenario | Cosa fare in Portainer |
+|----------|----------------------|
+| Vedere le reti Docker configurate | **Networks** → lista con nome, driver, scope e subnet |
+| Verificare quali container sono collegati a una rete | **Networks** → click su una rete → sezione **Containers** |
+| Rimuovere reti non utilizzate | **Networks** → selezionare → **Remove** (solo se nessun container è collegato) |
+
+> [!NOTE]
+> Portainer CE non offre una mappa visuale delle reti. La visualizzazione è una lista tabellare — per vedere i container collegati serve entrare nel dettaglio di ogni rete.
+
+#### Pulizia massiva
+
+Portainer CE **non ha un equivalente di `docker system prune`**. Per la pulizia massiva usare:
+
+```bash
+make clean    # docker system prune + docker volume prune (con conferma interattiva)
+```
+
+#### Riepilogo strumenti di pulizia
+
+| Strumento | Cosa pulisce | Quando |
+|-----------|-------------|--------|
+| **Watchtower** | Vecchie immagini dopo aggiornamento | Automatico, daily 07:30 |
+| **Portainer** | Immagini/volumi/reti selezionati manualmente | On-demand, da GUI |
+| **`make clean`** | Tutto: container fermati, immagini dangling, volumi orfani, reti inutilizzate | On-demand, da CLI |
+| **Cleanuparr** | Download bloccati/falliti nelle code *arr | Automatico, ogni 10-15 min |
 
 ### Visione d'Insieme
 
@@ -86,6 +129,9 @@ Questo equivale a eseguire `docker ps -a`, `docker stats`, `docker images` e `do
 | Modifica configurazione | ❌ Editare compose file | Editare YAML → `make up` |
 | Ispezione variabili/volumi/network | Click → Inspect (tutto visuale) | `docker inspect <nome>` (JSON) |
 | Confronto risorse tra container | Colonne sortabili | `docker stats` (testo, non ordinabile) |
+| Eliminare immagini unused | Images → Filter Unused → Remove | `docker image prune` |
+| Pulizia massiva (prune) | ❌ Non disponibile | `make clean` |
+| Spazio disco volumi | ❌ Non disponibile | `docker system df -v` |
 
 **Regola pratica:**
 - **Portainer** → monitoraggio, troubleshooting, operazioni rapide su singoli container
