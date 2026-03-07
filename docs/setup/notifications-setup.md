@@ -351,13 +351,17 @@ Trigger a manual update check:
 docker exec watchtower /watchtower --run-once
 ```
 
-You should see a Discord message in your channel with update results.
+If containers were updated or errors occurred, you should see a Discord message. If nothing needed updating, no notification is sent (this is the expected behavior).
 
-### Customizing the Template
+### How Notification Filtering Works
 
-The notification template is defined in `docker/compose.yml` under the watchtower service. It forwards Watchtower's default messages (one per container updated/failed).
+Watchtower runs in **report mode** (`WATCHTOWER_NOTIFICATION_REPORT=true`), which sends a single summary per update cycle instead of per-container messages. The notification template only renders content when containers were `.Updated` or `.Failed` — when neither condition is true (i.e., no updates found), the template renders empty and Watchtower skips sending the notification entirely.
 
-To customize, edit `WATCHTOWER_NOTIFICATION_TEMPLATE` in `compose.yml`. See [Watchtower notifications docs](https://containrrr.dev/watchtower/notifications/) for Go template syntax.
+**You will only receive Discord messages when:**
+- One or more containers were successfully updated
+- One or more containers failed to update
+
+To customize the template, edit `WATCHTOWER_NOTIFICATION_TEMPLATE` in `docker/compose.yml`. Report mode templates have access to `.Updated`, `.Failed`, `.Skipped`, `.Stale`, and `.Fresh` container lists. See [Watchtower notifications docs](https://containrrr.dev/watchtower/notifications/) for Go template syntax.
 
 ### Troubleshooting
 
