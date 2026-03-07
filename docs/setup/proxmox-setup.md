@@ -951,27 +951,42 @@ vainfo
 
 Example `vainfo` output for i5-13420H:
 ```
-libva info: VA-API version 1.17.0
+libva info: VA-API version 1.22.0
 libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so
-libva info: Found init function __vaDriverInit_1_17
+libva info: Found init function __vaDriverInit_1_22
 libva info: va_openDriver() returns 0
-vainfo: VA-API version: 1.17 (libva 2.12.0)
-vainfo: Driver version: Intel iHD driver for Intel(R) Gen Graphics - 23.1.1
+vainfo: VA-API version: 1.22 (libva 2.22.0)
+vainfo: Driver version: Intel iHD driver for Intel(R) Gen Graphics - 25.2.3 ()
 vainfo: Supported profile and entrypoints
       VAProfileH264Main               : VAEntrypointVLD
-      VAProfileH264Main               : VAEntrypointEncSlice
+      VAProfileH264Main               : VAEntrypointEncSliceLP
+      VAProfileH264High               : VAEntrypointVLD
+      VAProfileH264High               : VAEntrypointEncSliceLP
       VAProfileHEVCMain               : VAEntrypointVLD
-      VAProfileHEVCMain               : VAEntrypointEncSlice
+      VAProfileHEVCMain               : VAEntrypointEncSliceLP
+      VAProfileHEVCMain10             : VAEntrypointVLD
+      VAProfileHEVCMain10             : VAEntrypointEncSliceLP
+      VAProfileVP9Profile0            : VAEntrypointVLD
+      VAProfileVP9Profile0            : VAEntrypointEncSliceLP
       ...
 ```
 
 #### 8.3.6 Configure Plex for Hardware Transcoding
 
 1. Access **Plex** web interface: `http://192.168.3.21:32400/web`
-2. Settings → Transcoder
-3. [ ] **Hardware transcoding**: Enabled (requires Plex Pass)
-4. [ ] **Use hardware acceleration when available**: Checked
-5. [ ] **Use hardware-accelerated video encoding**: Checked
+2. Settings → Transcoder (requires Plex Pass)
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| Disable video stream transcoding | Unchecked | Must be unchecked for transcoding to work |
+| Use hardware acceleration when available | Checked | Enables Quick Sync decode/encode |
+| Use hardware-accelerated video encoding | Checked | Uses GPU for encoding, not just decoding |
+| Enable HEVC video Encoding (experimental) | Never | Can cause client compatibility issues |
+| Hardware transcoding device | Auto | Auto-detects Intel iGPU |
+| Maximum simultaneous GPU transcodes | Unlimited | Adjust if sharing resources |
+| Maximum simultaneous CPU transcodes | Unlimited | Fallback when GPU can't handle a codec |
+| Maximum simultaneous background video transcode | 1 | Limits optimizer/download I/O impact |
+| Background transcoding x264 preset | Very Fast | CPU preset for background transcodes; faster = less CPU |
 
 #### 8.3.7 Verify Active Hardware Transcoding
 
