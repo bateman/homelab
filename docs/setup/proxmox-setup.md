@@ -882,15 +882,16 @@ modprobe i915
 echo "i915" >> /etc/modules
 ```
 
-#### 8.3.3 Configure Device Permissions
+#### 8.3.3 Identify Device Group IDs
+
+On the **Proxmox host**, find the GIDs for the `render` and `video` groups:
 
 ```bash
-# Identify GID of render and video groups
 getent group render video
 # Typical output: render:x:108:  video:x:44:
-
-# Note the numbers (108 and 44 in the example)
 ```
+
+Note these GIDs — you'll need them in Section 8.3.5 to grant the Plex user GPU access inside the container.
 
 #### 8.3.4 Configure LXC for GPU Passthrough
 
@@ -926,6 +927,15 @@ pct start 100
 
 # Enter container
 pct enter 100
+
+# Create render/video groups with same GIDs as host (use numbers from 8.3.3)
+groupadd -g 108 render 2>/dev/null; groupadd -g 44 video 2>/dev/null
+
+# Add plex user to GPU groups
+usermod -aG render,video plex
+
+# Restart Plex to pick up new group membership
+systemctl restart plexmediaserver
 
 # Verify available devices
 ls -la /dev/dri/
