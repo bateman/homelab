@@ -13,7 +13,7 @@ This document covers power management strategies for the homelab infrastructure:
 | UPS | Yes | No | Powers entire rack |
 | UDM-SE | Yes | No | Gateway, firewall, routing |
 | PoE Switch | Yes | No | Network backbone |
-| QNAP NAS | Yes | Partial | HDD spindown, service scheduling |
+| QNAP NAS | No | Yes | Scheduled power off 01:00–07:00, HDD spindown |
 | Mini PC (Proxmox) | No | Yes | WOL available, Plex on-demand |
 | Wi-Fi AP (U6-Pro) | Partial | Yes | Schedule overnight shutdown |
 
@@ -58,20 +58,17 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 ```
 23:00  Duplicati backup runs (on NAS)
 00:30  ── Shutdown Mini PC ──     (cron: ssh shutdown)
-01:00  ── NAS shuts down ──       (QTS Power Schedule, optional)
+01:00  ── NAS shuts down ──       (QTS Power Schedule)
        │
-       │  Mini PC OFF (saves ~20-30W; both OFF saves ~40-60W)
+       │  Both devices OFF (saves ~40-60W)
        │
-07:00  ── NAS powers on ──       (QTS Power Schedule, or manual reboot)
+07:00  ── NAS powers on ──       (QTS Power Schedule)
 07:02  ── Wake Mini PC ──        (@reboot cron: WOL after 2 min delay)
 07:03  Plex available
 ```
 
-> [!TIP]
-> The NAS shutdown/power-on lines (01:00/07:00) are optional — see [Section 2.3](#23-scheduled-power-onoff-optional). If the NAS stays always-on, the `@reboot` cron still fires on manual NAS reboots or after power outages.
-
 > [!NOTE]
-> The Mini PC wake is triggered by the NAS boot (`@reboot` cron), not a fixed time. This ensures the Mini PC always comes up shortly after the NAS, regardless of when the NAS powers on. The 2-minute delay gives the NAS time to fully initialize networking.
+> The Mini PC wake is triggered by the NAS boot (`@reboot` cron). Since the NAS has scheduled power on/off, this ensures the Mini PC always comes up ~2 minutes after the NAS powers on. The `@reboot` cron also fires on manual NAS reboots and after power outages.
 
 #### Prerequisites
 
@@ -100,7 +97,7 @@ crontab -e
 # === Mini PC Scheduled Power Cycle ===
 # Shutdown at 00:30 (after Duplicati backup at 23:00, before NAS shutdown at 01:00)
 30 0 * * * ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
-# Wake Mini PC 2 minutes after NAS boots (wait for network to initialize)
+# Wake Mini PC 2 minutes after NAS boots (handles scheduled power-on, reboots, and power outages)
 @reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
 
@@ -108,7 +105,7 @@ crontab -e
 > Replace `AA:BB:CC:DD:EE:FF` with the Mini PC's actual MAC address (integrated NIC). See [proxmox-setup.md §8.2.4](../setup/proxmox-setup.md#824-note-mac-address).
 
 > [!TIP]
-> The shutdown cron will silently fail if the Mini PC is already off (SSH connection refused) — this is expected and harmless.
+> Both the shutdown cron (SSH to an off host) and the wake cron (WOL to an already-on host) are harmless no-ops — safe to run even when the Mini PC is in the "wrong" state.
 
 #### Verify the Cycle
 
@@ -138,11 +135,10 @@ cat /var/log/minipc-power.log
 | Weekday evenings only | 00:30 daily | 18:00 Mon-Fri | `0 18 * * 1-5` |
 | Always on (override) | Comment out shutdown cron | — | — |
 
-You can combine `@reboot` with a fixed-time fallback:
+If the NAS is always-on (no scheduled power cycle), replace `@reboot` with a fixed-time cron or combine both:
 ```bash
-# Wake on NAS boot (primary — handles scheduled and manual NAS reboots)
+# @reboot alone won't fire if the NAS never reboots — add a fixed-time fallback
 @reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
-# Fallback: also wake at 07:15 in case @reboot missed (harmless if already on)
 15 7 * * * wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
 
@@ -181,12 +177,10 @@ Reduce LED brightness overnight to save minor power and reduce light pollution.
 2. LED Brightness → Schedule
 3. Set schedule: 23:00–07:00 → Dim/Off
 
-### 2.3 Scheduled Power On/Off (Optional)
+### 2.3 Scheduled Power On/Off
 
 > [!CAUTION]
-> Only enable NAS power scheduling if you don't need 24/7 access to media services or backups. This is **not recommended** for most homelab setups.
-
-If your usage pattern is predictable:
+> NAS power scheduling means no access to media services or backups during the off window (01:00-07:00). Ensure all scheduled tasks (backups, updates) run outside this window.
 
 1. Control Panel → System → Power → Power Schedule
 2. Configure:
@@ -201,7 +195,7 @@ If your usage pattern is predictable:
 - Mini PC shutdown cron (00:30) must run before NAS shutdown (01:00)
 
 > [!TIP]
-> If using NAS scheduled power on/off, the `@reboot` cron in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) will automatically wake the Mini PC when the NAS powers on at 07:00.
+> The `@reboot` cron in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) automatically wakes the Mini PC when the NAS powers on at 07:00.
 
 ---
 
@@ -338,7 +332,7 @@ echo "[$(date)] All services resumed."
 ### 4.3 Configure Cron Jobs
 
 > [!NOTE]
-> If using **NAS scheduled shutdown** (01:00-07:00), skip this section—the NAS being off stops all containers automatically. Use power-save scripts only if you want to keep the NAS running but stop non-critical services.
+> Since the NAS has **scheduled shutdown** (01:00-07:00), the NAS being off stops all containers automatically. The power-save scripts below are only needed if you disable NAS scheduled shutdown and want to keep the NAS running but stop non-critical services overnight.
 
 ```bash
 # On NAS (ssh admin@192.168.3.10)
@@ -730,7 +724,10 @@ upsc eaton ups.load
 ### Log Review
 
 ```bash
-# Check power save script execution
+# Check Mini PC shutdown/wake-up cycle
+tail -f /var/log/minipc-power.log
+
+# Check power save script execution (container scheduling)
 tail -f /var/log/power-save.log
 
 # Check container status
