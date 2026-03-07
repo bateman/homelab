@@ -330,6 +330,33 @@ apt install plexmediaserver -y
 systemctl status plexmediaserver
 ```
 
+### Verify NFS Mount
+
+Before configuring Plex, verify that the NFS mount is working and permissions are correct:
+
+```bash
+# Check mount is active
+df -h /media
+# Should show 192.168.3.10:/share/data/media
+
+# Verify directory structure exists
+ls -la /media/
+# Should show: movies/ tv/ music/
+
+# Verify Plex user can read files (plex user is created by the package)
+sudo -u plex ls /media/movies/
+
+# Check UID/GID match (should match PUID/PGID from Docker stack)
+stat -c '%u:%g' /media/movies/
+# Should show 1001:100 (dockeruser)
+```
+
+> [!WARNING]
+> If `/media` is empty or shows "Permission denied", check:
+> 1. NFS export permissions on QNAP (Section 3.4)
+> 2. Mount point configuration: `pct config 100 | grep mp0`
+> 3. NFS service status on NAS: `showmount -e 192.168.3.10`
+
 ### Verify Plex
 
 Open browser: `http://192.168.3.21:32400/web`
@@ -341,12 +368,32 @@ Open browser: `http://192.168.3.21:32400/web`
 > [!NOTE]
 > This section follows the [official Trash Guides recommendations](https://trash-guides.info/Plex/Tips/Plex-media-server/) to optimize Plex Media Server.
 
-### 5.1 Initial Setup
+### 5.1 Claim Server (Initial Setup)
 
-1. [ ] Access `http://192.168.3.21:32400/web`
-2. [ ] Login with Plex account (or create one)
-3. [ ] Name the server: "Homelab Plex"
-4. [ ] Guided initial configuration
+Plex requires the server to be "claimed" (linked to your Plex account). New servers only allow claiming from **localhost**, so you need an SSH tunnel since Plex runs inside an LXC container.
+
+**From your workstation** (the machine where you'll open the browser):
+
+```bash
+# Create SSH tunnel: local port 8888 → Plex LXC port 32400 via Proxmox
+ssh -L 8888:192.168.3.21:32400 root@192.168.3.20
+```
+
+Then open your browser and go to:
+
+```
+http://localhost:8888/web
+```
+
+> [!IMPORTANT]
+> You **must** use `localhost:8888`, not `192.168.3.21:32400`. Plex checks the connecting IP — only localhost is allowed to claim an unclaimed server.
+
+1. [ ] Login with your Plex account (or create one)
+2. [ ] Name the server: "Homelab Plex"
+3. [ ] Skip the "Add Library" wizard (we'll configure libraries properly in 5.2)
+4. [ ] Close the SSH tunnel (Ctrl+C) once claimed
+
+After claiming, access Plex normally at `http://192.168.3.21:32400/web`.
 
 ### 5.2 Add Libraries
 
