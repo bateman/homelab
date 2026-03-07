@@ -561,6 +561,16 @@ Edit Library → Advanced:
 | Enable intro detection | ✅ Enabled | "Skip Intro" feature |
 | Enable credits detection | ✅ Enabled | "Skip Credits" feature |
 
+#### For Music Library
+
+Edit Library → Advanced:
+
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| Sonic Analysis | ❌ Disabled | Resource-intensive audio fingerprinting; not needed for basic music playback |
+| Prefer local metadata | ✅ Enabled | Uses embedded tags and local files (cover art, lyrics) — consistent with Lidarr-managed metadata |
+| Store track progress | ❌ Disabled | Primarily useful for podcasts/audiobooks, not music tracks |
+
 ### 5.7 Recommended Client Settings
 
 > Reference: [Media Clients Wiki](https://mediaclients.wiki/Plex) for device-specific settings.
