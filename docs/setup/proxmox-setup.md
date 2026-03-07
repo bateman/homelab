@@ -317,7 +317,13 @@ pct enter 100
 
 # Update system and install prerequisites
 apt update && apt upgrade -y
-apt install -y curl gnupg
+apt install -y curl gnupg locales
+
+# Fix locale warnings (LXC containers have minimal locale config)
+sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+# Exit and re-enter container (exit → pct enter 100) for locale to take effect
 
 # Add Plex repository
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | gpg --dearmor -o /usr/share/keyrings/plex-archive-keyring.gpg
@@ -1231,19 +1237,26 @@ pct enter 100
 # Install unattended-upgrades
 apt update && apt install -y unattended-upgrades
 
+# Fix locale if not done during initial setup (Phase 4)
+# Without this, dpkg-reconfigure shows perl locale warnings
+apt install -y locales
+sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+# Exit and re-enter container (exit → pct enter 100) for locale to take effect
+
 # Enable automatic updates
 dpkg-reconfigure -plow unattended-upgrades
 # Select "Yes" when prompted
 ```
 
-Add the Plex repo to the allowed origins:
+Add the Plex repo to the allowed origins (separate file to avoid editing the default config):
 
 ```bash
-cat >> /etc/apt/apt.conf.d/50unattended-upgrades << 'EOF'
-
+cat > /etc/apt/apt.conf.d/51unattended-upgrades-plex << 'EOF'
 // Auto-update Plex Media Server
-Unattended-Upgrade::Allowed-Origins {
-    "https://downloads.plex.tv/repo/deb:public";
+Unattended-Upgrade::Origins-Pattern {
+    "origin=Artifactory,label=Artifactory";
 };
 EOF
 ```
@@ -1260,8 +1273,9 @@ EOF
 Verify the configuration:
 
 ```bash
-# Dry run to confirm Plex would be upgraded
-unattended-upgrade --dry-run --debug 2>&1 | grep -i plex
+# Confirm Plex origin is in the allowed list
+unattended-upgrade --dry-run --debug 2>&1 | grep "Allowed origins"
+# Should include: origin=Artifactory,label=Artifactory
 ```
 
 > [!NOTE]
