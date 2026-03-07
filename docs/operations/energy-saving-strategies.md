@@ -552,7 +552,9 @@ Home Assistant can centralize power management with intelligent automations.
 ```
 
 > [!NOTE]
-> Choose either cron (Section 4.3) OR Home Assistant automations for power save scheduling, not both.
+> Choose **either** cron **or** Home Assistant automations, not both:
+> - Mini PC shutdown/wake-up: cron ([Section 1.1](#11-scheduled-shutdown--wake-up-cron)) or HA "Shutdown Plex Overnight" + "Wake Plex on Arrival" above
+> - Container scheduling: cron ([Section 4.3](#43-configure-cron-jobs)) or HA "Enter/Exit Power Save Mode" above
 
 > [!TIP]
 > For UniFi AP PoE control, the built-in UniFi integration doesn't support PoE port toggling directly. Use the UniFi Controller's WiFi Blackout Schedule instead (see [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wifi-blackout-schedule-optional)), or create custom shell commands using the UniFi API.
@@ -709,7 +711,7 @@ Measure baseline power consumption with a smart plug or UPS monitoring:
 | Full load | ~200-250W | All services active, transcoding |
 | Normal idle | ~80-120W | All services running, no activity |
 | Power save | ~50-70W | Non-critical services stopped |
-| Minimal | ~30-40W | Mini PC off, HDDs spun down |
+| Minimal (overnight) | ~30-40W | Both NAS and Mini PC off, only network devices |
 
 ### Verify Savings
 

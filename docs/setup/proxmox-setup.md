@@ -692,7 +692,7 @@ If it shows "Transcoding":
 ## Phase 6: Remote Access (Tailscale)
 
 > [!NOTE]
-> Tailscale runs as a Docker container on the NAS (always-on) instead of on the Mini PC, so remote access remains available even when the Mini PC is powered off. The NAS subnet router advertises `192.168.3.0/24` (Servers VLAN), making Plex at `192.168.3.21:32400` reachable from any Tailscale-connected device.
+> Tailscale runs as a Docker container on the NAS instead of on the Mini PC, so remote access remains available when the Mini PC is powered off (during NAS uptime hours, 07:00–01:00). The NAS subnet router advertises `192.168.3.0/24` (Servers VLAN), making Plex at `192.168.3.21:32400` reachable from any Tailscale-connected device.
 
 For the complete Tailscale setup guide, see **[Tailscale Setup](tailscale-setup.md)**. In summary:
 
@@ -990,7 +990,7 @@ You can create an iOS shortcut to power on the Mini PC and open Plex:
 
 To power on the Mini PC when away from home:
 
-1. The NAS (192.168.3.10) must be always on (it is)
+1. The NAS (192.168.3.10) must be on (available 07:00–01:00 with scheduled power cycle)
 2. Tailscale runs on the NAS as a Docker container (see `docker/compose.yml`)
 3. From remote, connect via Tailscale to the NAS
 4. Execute: `wakeonlan AA:BB:CC:DD:EE:FF`

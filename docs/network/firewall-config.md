@@ -727,6 +727,6 @@ To eliminate Double NAT:
 
 - **Legacy Network**: The 192.168.1.0/24 subnet remains for Iliad Box and Vimar devices. Not managed by UDM-SE.
 - **Double NAT**: See dedicated section above.
-- **Tailscale**: Runs as Docker container on NAS (always-on), provides mesh VPN access without port forwarding.
+- **Tailscale**: Runs as Docker container on NAS (available during NAS uptime, 07:00–01:00), provides mesh VPN access without port forwarding.
 - **Home Assistant**: Accessible from Media VLAN (phones/tablets) and IoT VLAN (smart devices).
 - **Config backup**: Export regularly from UDM-SE: Settings → System → Backup.
