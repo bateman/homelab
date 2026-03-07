@@ -286,17 +286,25 @@ Datacenter → proxmox → Create CT
 
 ### 4.3 Configure NFS Mount Point
 
-Before starting, add mount point for media:
+Before starting, add a bind mount for media (container must be stopped):
 
 ```bash
 # On Proxmox host
-pct set 100 -mp0 /mnt/nas-media,mp=/media
+pct set 100 -mp0 /mnt/pve/nas-media,mp=/media
 ```
 
-Or via WebUI:
-Container 100 → Resources → Add → Mount Point
-- Storage: nas-media
-- Mount Point: /media
+> [!WARNING]
+> Do **not** use the WebUI "Add → Mount Point" with "Storage: nas-media" — that creates
+> a virtual disk image on the NAS, not a bind mount of the media files.
+> Use the CLI command above instead.
+
+Verify the mount point was set correctly:
+
+```bash
+pct config 100 | grep mp
+# Should show: mp0: /mnt/pve/nas-media,mp=/media
+# NOT: mp0: nas-media:100/vm-100-disk-0.raw (this is wrong — it's a disk image)
+```
 
 ### 4.4 Start Container and Install Plex
 
@@ -355,6 +363,8 @@ stat -c '%u:%g' /media/movies/
 > If `/media` is empty or shows "Permission denied", check:
 > 1. NFS export permissions on QNAP (Section 3.4)
 > 2. Mount point configuration: `pct config 100 | grep mp0`
+>    - Must show `/mnt/pve/nas-media,mp=/media`
+>    - If it shows `nas-media:100/vm-100-disk-0.raw`, you have a disk image instead of a bind mount — see Section 4.3
 > 3. NFS service status on NAS: `showmount -e 192.168.3.10`
 
 ### Verify Plex
