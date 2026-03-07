@@ -468,9 +468,7 @@ Configuration lives in `docker/recyclarr.yml` (source file, committed to git) an
 
 ### Adding a Second Quality Profile
 
-To add a 4K profile alongside the default 1080p:
-
-**Radarr example** — uncomment in `docker/recyclarr.yml`:
+Both 1080p and 4K profiles are already active in `docker/recyclarr.yml`:
 
 ```yaml
 quality_profiles:
@@ -479,7 +477,7 @@ quality_profiles:
     reset_unmatched_scores:
       enabled: true
 
-  # UHD Bluray + WEB (4K) - uncomment to enable
+  # UHD Bluray + WEB (4K) - already active, 4K with 1080p fallback
   - trash_id: 64fb5f9858489bdac2af690e27c8f42f
     reset_unmatched_scores:
       enabled: true
