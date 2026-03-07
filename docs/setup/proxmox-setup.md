@@ -307,8 +307,9 @@ pct start 100
 # Enter container
 pct enter 100
 
-# Update system
+# Update system and install prerequisites
 apt update && apt upgrade -y
+apt install -y curl gnupg
 
 # Add Plex repository
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | gpg --dearmor -o /usr/share/keyrings/plex-archive-keyring.gpg
