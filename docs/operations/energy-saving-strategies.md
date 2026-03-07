@@ -197,6 +197,9 @@ Reduce LED brightness overnight to save minor power and reduce light pollution.
 > [!TIP]
 > The `@reboot` cron in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) automatically wakes the Mini PC when the NAS powers on at 07:00.
 
+> [!NOTE]
+> Docker containers on the NAS auto-restart on boot thanks to `restart: unless-stopped` — no additional startup scripts needed. See [NAS Setup — Auto-Start on Boot](../setup/nas-setup.md#auto-start-on-boot) for details.
+
 ---
 
 ## 3. Wi-Fi Access Point Scheduling
