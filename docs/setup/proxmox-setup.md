@@ -1256,7 +1256,7 @@ Add the Plex repo to the allowed origins (separate file to avoid editing the def
 cat > /etc/apt/apt.conf.d/51unattended-upgrades-plex << 'EOF'
 // Auto-update Plex Media Server
 Unattended-Upgrade::Origins-Pattern {
-    "site=downloads.plex.tv";
+    "origin=Artifactory,label=Artifactory";
 };
 EOF
 ```
