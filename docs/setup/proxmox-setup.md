@@ -67,7 +67,7 @@ sudo dd bs=4M if=proxmox-ve_*.iso of=/dev/sdX conv=fsync status=progress
 ### 2.3 Network Configuration
 
 > [!NOTE]
-> The Proxmox installer requires a static IP. Use `192.168.3.20` during installation — after setup, the bridge will be switched to DHCP and the UDM-SE DHCP reservation will assign this same IP. See [Section 8.4](#84-dual-nic-configuration-25gbe-usb-c--1gbe-integrated).
+> The Proxmox installer requires a static IP. Use `192.168.3.20` during installation. For dual-NIC configuration (adding the integrated NIC for Wake-on-LAN), see [Section 8.4](#84-dual-nic-configuration-25gbe-usb-c--1gbe-integrated).
 
 | Field | Value |
 |-------|--------|
@@ -1393,7 +1393,10 @@ ethtool enp2s0 | grep Wake-on
 > [!NOTE]
 > **Update your saved MAC address.** The MAC for WOL magic packets must be the integrated NIC's MAC (enp2s0), not the USB adapter's.
 
-#### 8.4.5 Verify Configuration
+#### 8.4.5 Verify Configuration (Bridge Migration)
+
+> [!NOTE]
+> These checks apply after bridge migration ([Section 8.4.4](#844-bridge-migration-installed-on-integrated-nic)). If you followed [Section 8.4.3](#843-add-integrated-nic-for-wol-installed-on-usb-adapter), verification is already included in those steps.
 
 ```bash
 # Verify bridge is on the 2.5GbE adapter
