@@ -42,11 +42,32 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    - **Encryption**: Optional but recommended for offsite backups
 4. Configure **Filters** (Source Data tab → Filters → Add filter → Exclude expression):
    ```
+   # Service-specific (not useful to back up)
    */tailscale/
    */portainer/portainer.db
+   */duplicati/
+
+   # Regenerable data (re-downloaded/recreated automatically on restore)
+   */MediaCover/
+   */Backups/
+   */Cache/
+   */cache/
+   */logs/
+   */BT_backup/
    ```
+
+   **Service-specific exclusions:**
    - **Tailscale**: machine-specific state; requires re-auth on new install — not useful to back up.
    - **portainer.db**: always file-locked while Portainer runs. Backed up via `portainer.db.bak` instead (see step 5).
+   - **Duplicati**: its own database (backup metadata, deduplication index) is regenerated from
+     backup destinations. Including it creates circular growth — each backup makes the source larger.
+
+   **Regenerable data exclusions:**
+   - **MediaCover**: poster/banner image cache in *arr apps (hundreds of MB per app). Re-downloaded automatically on first library sync after restore.
+   - **Backups**: *arr apps' internal scheduled backups — redundant since Duplicati already backs up the databases.
+   - **Cache/cache**: API response and HTTP caches across all services. Rebuilt automatically.
+   - **logs**: application log files across all services. Not needed for disaster recovery.
+   - **BT_backup**: qBittorrent torrent resume data. Torrents can be re-added from *arr apps if needed.
 
    > **Note:** Duplicati runs as PUID=0 (root) so it can read all config files including
    > root-owned ones (Portainer, Pi-hole). The source volume is mounted `:ro` for safety.
@@ -159,6 +180,7 @@ For restoring from an offsite backup after disaster, see [Complete Disaster Reco
 | Backup job shows "Warning" | File locked during backup (e.g., SQLite) | Schedule Portainer snapshot before Duplicati (22:55 vs 23:00) |
 | "No backup job configured yet" | Duplicati has no jobs | Configure via WebUI at `http://192.168.3.10:8200` |
 | Backup size keeps growing | Deduplication not working or retention not applied | WebUI → Job → "Compact now"; verify retention policy |
+| Source size >200 MB | Missing exclusion filters for regenerable data | Verify all filters from step 4 are applied (MediaCover, Backups, Cache, logs, BT_backup) |
 | Offsite backup fails with auth error | Cloud OAuth token expired | WebUI → Edit backup → Destination → re-authenticate |
 
 #### Alternative: Manual backup with cron
