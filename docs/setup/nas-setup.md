@@ -862,8 +862,10 @@ radarr:
 
 ### Synchronization
 
+Recyclarr syncs automatically every day at 18:00 via `CRON_SCHEDULE` in `compose.media.yml`.
+
 ```bash
-# Manual sync
+# Manual sync (on-demand)
 make recyclarr-sync
 
 # Or

@@ -464,6 +464,7 @@ services:
     environment:
       TZ: ${TZ:-Europe/Rome}
       RECYCLARR_CREATE_CONFIG: "true"
+      CRON_SCHEDULE: "0 18 * * *"
     volumes:
       - ./config/recyclarr:/config
     networks:

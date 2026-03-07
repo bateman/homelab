@@ -10,7 +10,7 @@
 # 2. Get API key from Sonarr: Settings → General → API Key
 # 3. Get API key from Radarr: Settings → General → API Key
 # 4. Set SONARR_API_KEY and RADARR_API_KEY in docker/.env.secrets
-# 5. Run manual sync: make recyclarr-sync
+# 5. Restart container to start automatic daily sync (or run: make recyclarr-sync)
 #
 # API keys are read from environment variables (passed via compose).
 # See: https://recyclarr.dev/wiki/yaml/env-vars/
@@ -60,6 +60,30 @@ sonarr:
       - trash_id: 72dae194fc92bf828f32cde7744e51a1
         reset_unmatched_scores:
           enabled: true
+
+      # Any - Custom profile limited to 720p-2160p (no SD/480p/BR-DISK)
+      - name: Any
+        qualities:
+          - name: WEB 2160p
+            qualities:
+              - WEBDL-2160p
+              - WEBRip-2160p
+          - name: Bluray-2160p Remux
+          - name: Bluray-2160p
+          - name: HDTV-2160p
+          - name: WEB 1080p
+            qualities:
+              - WEBDL-1080p
+              - WEBRip-1080p
+          - name: Bluray-1080p Remux
+          - name: Bluray-1080p
+          - name: HDTV-1080p
+          - name: WEB 720p
+            qualities:
+              - WEBDL-720p
+              - WEBRip-720p
+          - name: Bluray-720p
+          - name: HDTV-720p
 
       # Uncomment for additional profiles (find trash_ids via Trash Guides):
       # - trash_id: <WEB-2160p trash_id>
@@ -148,12 +172,35 @@ radarr:
         reset_unmatched_scores:
           enabled: true
 
-      # Uncomment for additional profiles:
-      # UHD Bluray + WEB (4K)
-      # - trash_id: 64fb5f9858489bdac2af690e27c8f42f
-      #   reset_unmatched_scores:
-      #     enabled: true
-      #
+      # UHD Bluray + WEB (4K) - 4K with 1080p fallback
+      - trash_id: 64fb5f9858489bdac2af690e27c8f42f
+        reset_unmatched_scores:
+          enabled: true
+
+      # Any - Custom profile limited to 720p-2160p (no SD/480p/BR-DISK)
+      - name: Any
+        qualities:
+          - name: WEB 2160p
+            qualities:
+              - WEBDL-2160p
+              - WEBRip-2160p
+          - name: Bluray-2160p Remux
+          - name: Bluray-2160p
+          - name: HDTV-2160p
+          - name: WEB 1080p
+            qualities:
+              - WEBDL-1080p
+              - WEBRip-1080p
+          - name: Bluray-1080p Remux
+          - name: Bluray-1080p
+          - name: HDTV-1080p
+          - name: WEB 720p
+            qualities:
+              - WEBDL-720p
+              - WEBRip-720p
+          - name: Bluray-720p
+          - name: HDTV-720p
+
       # Remux + WEB 1080p
       # - trash_id: 9ca12ea80aa55ef916e3751f4b874151
       #   reset_unmatched_scores:
