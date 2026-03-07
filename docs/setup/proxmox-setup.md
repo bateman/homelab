@@ -320,7 +320,10 @@ apt update && apt upgrade -y
 apt install -y curl gnupg locales
 
 # Fix locale warnings (LXC containers have minimal locale config)
-locale-gen en_US.UTF-8
+sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+# Exit and re-enter container (exit → pct enter 100) for locale to take effect
 
 # Add Plex repository
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | gpg --dearmor -o /usr/share/keyrings/plex-archive-keyring.gpg
