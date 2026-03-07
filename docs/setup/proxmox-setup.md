@@ -315,6 +315,13 @@ apt install -y curl gnupg
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | gpg --dearmor -o /usr/share/keyrings/plex-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/plex-archive-keyring.gpg] https://downloads.plex.tv/repo/deb public main" > /etc/apt/sources.list.d/plexmediaserver.list
 
+# Workaround: Plex GPG key uses SHA1 binding signatures, rejected by Debian Trixie's
+# Sequoia PGP policy since 2026-02-01. Extend the deadline until Plex updates their key.
+# See: https://forums.plex.tv/t/debian-13-gpg-key-is-not-bound-no-binding-signature-at-time-sha1/919206
+mkdir -p /etc/crypto-policies/back-ends
+cp /usr/share/apt/default-sequoia.config /etc/crypto-policies/back-ends/apt-sequoia.config
+sed -i 's/^sha1.second_preimage_resistance.*/sha1.second_preimage_resistance = 2027-01-01/' /etc/crypto-policies/back-ends/apt-sequoia.config
+
 # Install Plex
 apt update
 apt install plexmediaserver -y
