@@ -57,16 +57,18 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 
 ```
 23:00  Duplicati backup runs (on NAS)
-00:30  ── Shutdown Mini PC ──  (cron: ssh shutdown)
+00:30  ── Shutdown Mini PC ──     (cron: ssh shutdown)
+01:00  ── NAS shuts down ──       (QTS Power Schedule)
        │
-       │  Mini PC OFF (~17.5 hours, saves ~20-30W)
+       │  Both devices OFF (saves ~40-60W)
        │
-18:00  ── Wake Mini PC ──     (cron: WOL magic packet)
-18:01  Plex available for evening usage
+07:00  ── NAS powers on ──       (QTS Power Schedule)
+07:02  ── Wake Mini PC ──        (@reboot cron: WOL after 2 min delay)
+07:03  Plex available
 ```
 
 > [!NOTE]
-> The shutdown at 00:30 ensures Duplicati (23:00) has completed. The wake at 18:00 gives Plex time to start before typical evening use. Adjust times to match your routine.
+> The Mini PC wake is triggered by the NAS boot (`@reboot` cron), not a fixed time. This ensures the Mini PC always comes up shortly after the NAS, regardless of when the NAS powers on. The 2-minute delay gives the NAS time to fully initialize networking.
 
 #### Prerequisites
 
@@ -93,10 +95,10 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 crontab -e
 
 # === Mini PC Scheduled Power Cycle ===
-# Shutdown at 00:30 (after Duplicati backup at 23:00)
+# Shutdown at 00:30 (after Duplicati backup at 23:00, before NAS shutdown at 01:00)
 30 0 * * * ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
-# Wake at 18:00 on weekdays (before evening Plex usage)
-0 18 * * 1-5 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+# Wake Mini PC 2 minutes after NAS boots (wait for network to initialize)
+@reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
 
 > [!IMPORTANT]
@@ -128,17 +130,17 @@ cat /var/log/minipc-power.log
 
 | Scenario | Shutdown | Wake | Cron Schedule (wake) |
 |----------|----------|------|---------------------|
+| Wake on NAS boot (recommended) | 00:30 daily | ~2 min after NAS boot | `@reboot sleep 120 && wakeonlan ...` |
+| Fixed time daily | 00:30 daily | 07:00 daily | `0 7 * * *` |
 | Weekday evenings only | 00:30 daily | 18:00 Mon-Fri | `0 18 * * 1-5` |
-| Every day | 00:30 daily | 18:00 daily | `0 18 * * *` |
-| Weekends earlier | 00:30 daily | 10:00 Sat-Sun | `0 10 * * 6,0` |
 | Always on (override) | Comment out shutdown cron | — | — |
 
-To combine weekday + weekend schedules, add multiple wake cron lines:
+You can combine `@reboot` with a fixed-time fallback:
 ```bash
-# Wake at 18:00 on weekdays
-0 18 * * 1-5 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
-# Wake at 10:00 on weekends
-0 10 * * 6,0 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+# Wake on NAS boot (primary — handles scheduled and manual NAS reboots)
+@reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+# Fallback: also wake at 07:15 in case @reboot missed (harmless if already on)
+15 7 * * * wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
 
 > [!NOTE]
@@ -193,6 +195,10 @@ If your usage pattern is predictable:
 - Watchtower (07:30), QTS backup (08:00 Sun), and verification (08:30 Sun) run after power on
 - No services require overnight access (01:00-07:00)
 - UPS must support scheduled wake (via RTC or network signal)
+- Mini PC shutdown cron (00:30) must run before NAS shutdown (01:00)
+
+> [!TIP]
+> If using NAS scheduled power on/off, the `@reboot` cron in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) will automatically wake the Mini PC when the NAS powers on at 07:00.
 
 ---
 
