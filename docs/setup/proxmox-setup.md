@@ -317,7 +317,10 @@ pct enter 100
 
 # Update system and install prerequisites
 apt update && apt upgrade -y
-apt install -y curl gnupg
+apt install -y curl gnupg locales
+
+# Fix locale warnings (LXC containers have minimal locale config)
+locale-gen en_US.UTF-8
 
 # Add Plex repository
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | gpg --dearmor -o /usr/share/keyrings/plex-archive-keyring.gpg
