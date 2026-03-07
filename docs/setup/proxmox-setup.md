@@ -1250,14 +1250,13 @@ dpkg-reconfigure -plow unattended-upgrades
 # Select "Yes" when prompted
 ```
 
-Add the Plex repo to the allowed origins:
+Add the Plex repo to the allowed origins (separate file to avoid editing the default config):
 
 ```bash
-cat >> /etc/apt/apt.conf.d/50unattended-upgrades << 'EOF'
-
+cat > /etc/apt/apt.conf.d/51unattended-upgrades-plex << 'EOF'
 // Auto-update Plex Media Server
-Unattended-Upgrade::Allowed-Origins {
-    "https://downloads.plex.tv/repo/deb:public";
+Unattended-Upgrade::Origins-Pattern {
+    "site=downloads.plex.tv";
 };
 EOF
 ```
