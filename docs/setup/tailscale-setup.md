@@ -251,6 +251,7 @@ docker restart tailscale
 
 | Topic | File |
 |-------|------|
+| **Plex remote access via Tailscale** | [proxmox-setup.md — Phase 6](proxmox-setup.md#phase-6-remote-access-tailscale) |
 | Pi-hole DNS for Tailscale | [reverse-proxy-setup.md — Phase 1](reverse-proxy-setup.md#phase-1-pi-hole-configuration-as-tailscale-dns) |
 | Firewall and subnet routing | [firewall-config.md](../network/firewall-config.md) |
 | Remote WOL via Tailscale | [proxmox-setup.md — Section 8.2.7](proxmox-setup.md#827-wol-via-tailscale-remote) |

@@ -524,12 +524,13 @@ echo "tmpfs /tmp/plex tmpfs size=2G,mode=1777 0 0" >> /etc/fstab
 | Secure connections | Preferred | Accepts and prefers secure connections when available |
 | Enable local network discovery (GDM) | ✅ Enabled | Allows automatic server/app discovery on local network |
 | Enable Relay | ❌ Disabled | Limited to ~2 Mbps, causes playback issues. We'll use Tailscale |
-| Custom server access URLs | (empty) | Configure if using reverse proxy |
-| LAN Networks | `192.168.3.0/24,192.168.4.0/24` | **Important**: Specify local networks to prevent LAN devices from appearing as remote |
+| Custom server access URLs | `http://192.168.3.21:32400` | Add Tailscale URL after setup (see [Phase 6](#phase-6-remote-access-tailscale)) |
+| LAN Networks | `192.168.3.0/24,192.168.4.0/24,100.64.0.0/10` | **Important**: Include Tailscale CGNAT range so Tailscale clients get LAN treatment (Direct Play, no bandwidth limits) |
 | Treat WAN IP As LAN Bandwidth | ✅ Enabled | Useful if you have DNS rebinding protection active |
+| Remote Access | ❌ Disabled | **Critical**: Do NOT enable. We use Tailscale instead of Plex's built-in remote access (which requires port forwarding) |
 
 > [!IMPORTANT]
-> If your local devices are seen as "remote", properly configure **LAN Networks** with your subnets.
+> **LAN Networks** must include `100.64.0.0/10` (Tailscale CGNAT range). Without this, Tailscale clients appear as "remote" and Plex applies bandwidth limits / forces transcoding. See [Phase 6](#phase-6-remote-access-tailscale) for details.
 
 ### 5.6 Specific Library Settings
 
@@ -654,9 +655,10 @@ Post-configuration checklist:
 
 - [ ] Libraries added and scan completed
 - [ ] Direct Play working on local client
-- [ ] LAN Networks configured correctly (devices don't appear as "remote")
+- [ ] LAN Networks configured correctly with Tailscale CGNAT (`192.168.3.0/24,192.168.4.0/24,100.64.0.0/10`)
 - [ ] Hardware transcoding active (verify with `intel_gpu_top` during transcoding)
 - [ ] Relay disabled
+- [ ] Remote Access disabled (using Tailscale instead)
 - [ ] Transcoder temporary directory on RAM/local SSD
 
 #### Test Direct Play
@@ -675,14 +677,122 @@ If it shows "Transcoding":
 ## Phase 6: Remote Access (Tailscale)
 
 > [!NOTE]
-> Tailscale runs as a Docker container on the NAS (always-on) instead of on the Mini PC, so remote access remains available even when the Mini PC is powered off.
+> Tailscale runs as a Docker container on the NAS (always-on) instead of on the Mini PC, so remote access remains available even when the Mini PC is powered off. The NAS subnet router advertises `192.168.3.0/24` (Servers VLAN), making Plex at `192.168.3.21:32400` reachable from any Tailscale-connected device.
 
-For the complete setup guide, see **[Tailscale Setup](tailscale-setup.md)**. In summary:
+For the complete Tailscale setup guide, see **[Tailscale Setup](tailscale-setup.md)**. In summary:
 
 1. Generate an auth key at https://login.tailscale.com/admin/settings/keys
 2. Add `TS_AUTHKEY` to `docker/.env.secrets`
 3. Start the stack: `make up`
 4. Approve subnet routes at https://login.tailscale.com/admin/machines
+
+### 6.1 Why Tailscale Instead of Port Forwarding
+
+| Approach | Security | Setup | Double NAT |
+|----------|----------|-------|------------|
+| **Tailscale (chosen)** | Encrypted mesh, no exposed ports | Simple | No issue (NAT traversal) |
+| Port forwarding (32400) | Service exposed to Internet | Requires UDM-SE + Iliad Box | Doesn't work (Double NAT) |
+| Plex Relay | Encrypted but ~2 Mbps limit | Automatic | Works |
+
+Tailscale is the best option: zero exposed ports, full bandwidth, and works despite the Double NAT limitation (see [firewall-config.md — Double NAT](../network/firewall-config.md#double-nat-known-limitation)).
+
+### 6.2 Configure Plex Network Settings for Tailscale
+
+In **Plex** web interface (`http://192.168.3.21:32400/web`): Settings → Network
+
+#### 6.2.1 Disable Remote Access
+
+Settings → Remote Access → **Disable Remote Access**
+
+Plex's built-in remote access requires port forwarding (which doesn't work with Double NAT). With Tailscale, remote devices reach Plex through the mesh network using the local IP — no port forwarding needed.
+
+> [!WARNING]
+> Do NOT enable "Remote Access". It's unnecessary with Tailscale and would attempt to punch through the firewall via UPnP/NAT-PMP.
+
+#### 6.2.2 Add Tailscale Subnet to LAN Networks
+
+Settings → Network → **LAN Networks**:
+
+```
+192.168.3.0/24,192.168.4.0/24,100.64.0.0/10
+```
+
+| Subnet | Purpose |
+|--------|---------|
+| `192.168.3.0/24` | Servers VLAN (local) |
+| `192.168.4.0/24` | Media VLAN (local) |
+| `100.64.0.0/10` | Tailscale CGNAT range |
+
+> [!IMPORTANT]
+> `100.64.0.0/10` is the Tailscale IP range. Without it, Tailscale clients appear as "remote" in Plex, which causes:
+> - Bandwidth throttling (remote streaming quality limits)
+> - Forced transcoding instead of Direct Play
+> - Incorrect "remote" badge on the Plex dashboard
+
+#### 6.2.3 Disable Relay
+
+Settings → Network → **Enable Relay**: ❌ Disabled
+
+Relay is limited to ~2 Mbps. With Tailscale providing full-bandwidth connectivity, the relay is unnecessary and would degrade quality if used as fallback.
+
+### 6.3 Configure Tailscale Client (Remote Devices)
+
+Install Tailscale on each device that needs remote Plex access:
+
+| Platform | Install | Notes |
+|----------|---------|-------|
+| iPhone/iPad | [App Store](https://apps.apple.com/app/tailscale/id1470499037) | Always-on VPN mode recommended |
+| Android | [Google Play](https://play.google.com/store/apps/details?id=com.tailscale.ipn) | Always-on VPN mode recommended |
+| macOS | [Mac App Store](https://apps.apple.com/app/tailscale/id1475387142) | Menu bar app |
+| Windows | [tailscale.com/download](https://tailscale.com/download) | System tray app |
+
+After installing:
+1. Log in with the same Tailscale account
+2. Tailscale connects automatically
+3. Access Plex at `http://192.168.3.21:32400/web` — same URL as local
+
+### 6.4 Configure Plex App on Remote Clients
+
+In the Plex app on each remote device:
+
+1. **Quality** → Remote Streaming → **Maximum / Original**
+   - Since Tailscale provides full bandwidth, treat remote like local
+2. **Direct Play**: ✅ Enabled
+3. **Direct Stream**: ✅ Enabled
+
+> [!TIP]
+> With Tailscale + `100.64.0.0/10` in LAN Networks, Plex treats your remote device as "local". You get the same Direct Play quality as if you were at home.
+
+### 6.5 Verify Remote Access
+
+From a remote device (connected to Tailscale, NOT on home WiFi):
+
+```bash
+# 1. Verify Tailscale is connected
+tailscale status
+
+# 2. Ping the Plex LXC container
+tailscale ping 192.168.3.21
+
+# 3. Verify Plex is reachable
+curl -s -o /dev/null -w "%{http_code}" http://192.168.3.21:32400/web
+# Expected: 200
+
+# 4. Open Plex in browser
+# http://192.168.3.21:32400/web
+```
+
+On the Plex dashboard, your remote device should appear as **local** (not "remote") — confirming that the `100.64.0.0/10` LAN Networks setting is working.
+
+### 6.6 Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Plex shows device as "remote" | Missing Tailscale CGNAT in LAN Networks | Add `100.64.0.0/10` to Settings → Network → LAN Networks |
+| Remote playback buffers/transcodes | Quality set to "limited" for remote | Set remote quality to Maximum/Original in client settings |
+| Can't reach Plex from remote | Tailscale subnet routes not approved | Approve in [Tailscale Admin](https://login.tailscale.com/admin/machines) → nas-tailscale → Edit route settings |
+| Can't reach Plex from remote | Mini PC is off (energy saving) | Wake via WOL (see [Section 8.2](#82-wake-on-lan-wol)) |
+| Plex relay active (slow ~2 Mbps) | Relay enabled as fallback | Disable relay in Settings → Network |
 
 ---
 
