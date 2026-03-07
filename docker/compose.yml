@@ -223,6 +223,9 @@ services:
       WATCHTOWER_TIMEOUT: 30s
       WATCHTOWER_HTTP_API_METRICS: "true"
       WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_API_TOKEN:-watchtower}
+      # Discord notifications via Shoutrrr (optional, set URL in .env.secrets)
+      WATCHTOWER_NOTIFICATION_URL: ${WATCHTOWER_NOTIFICATION_URL:-}
+      WATCHTOWER_NOTIFICATION_TEMPLATE: "{{range .}}{{.Message}}{{println}}{{end}}"
     ports:
       - "8383:8080"
     networks:
