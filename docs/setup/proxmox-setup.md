@@ -1237,6 +1237,14 @@ pct enter 100
 # Install unattended-upgrades
 apt update && apt install -y unattended-upgrades
 
+# Fix locale if not done during initial setup (Phase 4)
+# Without this, dpkg-reconfigure shows perl locale warnings
+apt install -y locales
+sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+# Exit and re-enter container (exit → pct enter 100) for locale to take effect
+
 # Enable automatic updates
 dpkg-reconfigure -plow unattended-upgrades
 # Select "Yes" when prompted
