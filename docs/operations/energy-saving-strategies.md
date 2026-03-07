@@ -47,13 +47,102 @@ ssh admin@192.168.3.10 "wakeonlan AA:BB:CC:DD:EE:FF"
 |--------|---------|-------|
 | iOS Shortcut | Manual | See proxmox-setup.md |
 | Home Assistant | Automation | See [Section 6](#6-home-assistant-power-automations) |
-| Cron (NAS) | Scheduled | See below |
+| Cron (NAS) | Scheduled | See [Section 1.1](#11-scheduled-shutdown--wake-up-cron) |
 
-**Scheduled wake via cron (NAS)**:
-```bash
-# Wake Mini PC at 18:00 on weekdays (before typical Plex usage)
-0 18 * * 1-5 wakeonlan AA:BB:CC:DD:EE:FF
+### 1.1 Scheduled Shutdown & Wake-Up (Cron)
+
+Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it down overnight and wake it before evening usage.
+
+#### Nightly Cycle Timeline
+
 ```
+23:00  Duplicati backup runs (on NAS)
+00:30  ── Shutdown Mini PC ──  (cron: ssh shutdown)
+       │
+       │  Mini PC OFF (~17.5 hours, saves ~20-30W)
+       │
+18:00  ── Wake Mini PC ──     (cron: WOL magic packet)
+18:01  Plex available for evening usage
+```
+
+> [!NOTE]
+> The shutdown at 00:30 ensures Duplicati (23:00) has completed. The wake at 18:00 gives Plex time to start before typical evening use. Adjust times to match your routine.
+
+#### Prerequisites
+
+1. **WOL configured** on Mini PC — see [proxmox-setup.md §8.2](../setup/proxmox-setup.md#82-wake-on-lan-wol)
+2. **SSH key** from NAS to Proxmox (passwordless):
+   ```bash
+   # On NAS (ssh admin@192.168.3.10)
+   ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+   ssh-copy-id -i ~/.ssh/id_ed25519.pub root@192.168.3.20
+   # Test: should connect without password prompt
+   ssh root@192.168.3.20 "hostname"
+   ```
+3. **`wakeonlan` installed** on NAS:
+   ```bash
+   # Check if available
+   which wakeonlan
+   # On QNAP: usually available via Entware or pre-installed
+   ```
+
+#### Configure Cron Jobs
+
+```bash
+# On NAS (ssh admin@192.168.3.10)
+crontab -e
+
+# === Mini PC Scheduled Power Cycle ===
+# Shutdown at 00:30 (after Duplicati backup at 23:00)
+30 0 * * * ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
+# Wake at 18:00 on weekdays (before evening Plex usage)
+0 18 * * 1-5 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+```
+
+> [!IMPORTANT]
+> Replace `AA:BB:CC:DD:EE:FF` with the Mini PC's actual MAC address (integrated NIC). See [proxmox-setup.md §8.2.4](../setup/proxmox-setup.md#824-note-mac-address).
+
+> [!TIP]
+> The shutdown cron will silently fail if the Mini PC is already off (SSH connection refused) — this is expected and harmless.
+
+#### Verify the Cycle
+
+```bash
+# 1. Test shutdown from NAS
+ssh root@192.168.3.20 "shutdown -h now"
+
+# 2. Wait 30 seconds, confirm it's off
+ping -c 3 192.168.3.20  # Should fail (host unreachable)
+
+# 3. Test WOL wake
+wakeonlan AA:BB:CC:DD:EE:FF
+
+# 4. Wait 60 seconds, confirm it's back
+ping -c 3 192.168.3.20  # Should succeed
+
+# 5. After a full cycle, check the log
+cat /var/log/minipc-power.log
+```
+
+#### Customization
+
+| Scenario | Shutdown | Wake | Cron Schedule (wake) |
+|----------|----------|------|---------------------|
+| Weekday evenings only | 00:30 daily | 18:00 Mon-Fri | `0 18 * * 1-5` |
+| Every day | 00:30 daily | 18:00 daily | `0 18 * * *` |
+| Weekends earlier | 00:30 daily | 10:00 Sat-Sun | `0 10 * * 6,0` |
+| Always on (override) | Comment out shutdown cron | — | — |
+
+To combine weekday + weekend schedules, add multiple wake cron lines:
+```bash
+# Wake at 18:00 on weekdays
+0 18 * * 1-5 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+# Wake at 10:00 on weekends
+0 10 * * 6,0 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+```
+
+> [!NOTE]
+> Choose **either** cron (this section) **or** Home Assistant automations ([Section 6](#6-home-assistant-power-automations)) for scheduled power management, not both. Cron is simpler; HA adds conditional logic (e.g., skip shutdown if Plex is streaming).
 
 ---
 
@@ -667,3 +756,4 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 | Date | Change |
 |------|--------|
 | 2026-02-01 | Document creation |
+| 2026-03-07 | Added end-to-end scheduled shutdown & wake-up section (§1.1) |
