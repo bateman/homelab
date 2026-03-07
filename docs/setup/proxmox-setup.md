@@ -570,7 +570,6 @@ Edit Library → Advanced:
 | Sonic Analysis | ❌ Disabled | Resource-intensive audio fingerprinting; not needed for basic music playback |
 | Popular Tracks | ✅ Enabled | Powers radio stations and the popular tracks area on artist pages |
 | Find Lyrics | ✅ Enabled | Automatically finds and displays lyrics for tracks |
-| Concerts | ❌ Disabled | Loads concert data for artists; not needed for a home music library |
 | Prefer local metadata | ✅ Enabled | Uses embedded tags and local files (cover art, lyrics) — consistent with Lidarr-managed metadata |
 | Store track progress | ❌ Disabled | Primarily useful for podcasts/audiobooks, not music tracks |
 | Genres | Plex Music | Uses Plex's genre classification for artists and albums |
