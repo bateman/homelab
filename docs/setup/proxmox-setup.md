@@ -974,10 +974,18 @@ vainfo: Supported profile and entrypoints
 #### 8.3.6 Configure Plex for Hardware Transcoding
 
 1. Access **Plex** web interface: `http://192.168.3.21:32400/web`
-2. Settings → Transcoder
-3. [ ] **Hardware transcoding**: Enabled (requires Plex Pass)
-4. [ ] **Use hardware acceleration when available**: Checked
-5. [ ] **Use hardware-accelerated video encoding**: Checked
+2. Settings → Transcoder (requires Plex Pass)
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| Disable video stream transcoding | Unchecked | Must be unchecked for transcoding to work |
+| Use hardware acceleration when available | Checked | Enables Quick Sync decode/encode |
+| Use hardware-accelerated video encoding | Checked | Uses GPU for encoding, not just decoding |
+| Enable HEVC video Encoding (experimental) | Never | Can cause client compatibility issues |
+| Hardware transcoding device | Auto | Auto-detects Intel iGPU |
+| Maximum simultaneous GPU transcodes | Unlimited | Adjust if sharing resources |
+| Maximum simultaneous CPU transcodes | Unlimited | Fallback when GPU can't handle a codec |
+| Maximum simultaneous background video transcode | 1 | Limits optimizer/download I/O impact |
 
 #### 8.3.7 Verify Active Hardware Transcoding
 
