@@ -450,7 +450,11 @@ Add Library → Music:
 | Tone mapping algorithm | Hable | Better preserves details in bright and dark areas |
 | Use hardware acceleration when available | ✅ Enabled | Significantly improves performance |
 | Use hardware-accelerated video encoding | ✅ Enabled | Reduces CPU load (requires Plex Pass) |
-| Maximum simultaneous video transcode | Based on hardware | 2-4 for modern CPUs with Quick Sync |
+| Enable HEVC video Encoding (experimental) | Never | Leave disabled unless clients support HEVC |
+| Hardware transcoding device | Auto | Auto-detects Intel iGPU |
+| Maximum simultaneous GPU transcodes | Unlimited | Adjust if sharing GPU resources |
+| Maximum simultaneous CPU transcodes | Unlimited | Fallback when GPU can't handle a codec |
+| Maximum simultaneous background video transcode | 1 | Limits optimizer/download I/O impact |
 
 #### Configure Temporary Directory on RAM
 
