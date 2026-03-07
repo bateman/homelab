@@ -67,16 +67,19 @@ sudo dd bs=4M if=proxmox-ve_*.iso of=/dev/sdX conv=fsync status=progress
 ### 2.3 Network Configuration
 
 > [!NOTE]
-> The Proxmox installer requires a static IP. Use `192.168.3.20` during installation — after setup, the bridge will be switched to DHCP and the UDM-SE DHCP reservation will assign this same IP. See [Phase 8.4](#84-switch-to-25gbe-usb-adapter).
+> The Proxmox installer requires a static IP. Use `192.168.3.20` during installation. For dual-NIC configuration (adding the integrated NIC for Wake-on-LAN), see [Section 8.4](#84-dual-nic-configuration-25gbe-usb-c--1gbe-integrated).
 
 | Field | Value |
 |-------|--------|
-| Management Interface | eth0 (or main interface) |
+| Management Interface | USB 2.5GbE adapter (`enx*`) — see tip below |
 | Hostname (FQDN) | proxmox.servers.local |
 | IP Address | 192.168.3.20 |
 | Netmask | 255.255.255.0 (/24) |
 | Gateway | 192.168.3.1 |
 | DNS Server | 192.168.3.1 (or 1.1.1.1) |
+
+> [!TIP]
+> **Which NIC to select?** During installation, Proxmox lists detected network interfaces. If the USB 2.5GbE adapter (StarTech US2GC30) is connected, it appears as `enx*` (MAC-based name). The integrated Intel NIC appears as `enp*`. Select the **USB adapter** (`enx*`) — this gives 2.5GbE throughput for management and keeps the integrated NIC available for Wake-on-LAN (USB ports lose power when the system is off, so only the integrated NIC can receive WoL magic packets). After installation, add the integrated NIC for WoL — see [Section 8.4.3](#843-add-integrated-nic-for-wol-installed-on-usb-adapter).
 
 ### 2.4 Credentials
 
@@ -865,7 +868,7 @@ The Mini PC can be powered on remotely via Wake-on-LAN, useful for saving energy
 when Plex is not in use and powering it on only when needed.
 
 > [!IMPORTANT]
-> **Dual-NIC setup:** WOL only works on the integrated Intel NIC (enp2s0), not on the USB-C 2.5GbE adapter. USB ports lose power when the system is off. If you migrated management to the USB-C adapter (see [Section 8.4](#84-network-interface-migration-25gbe-usb-c-adapter)), ensure WOL is configured on the integrated NIC and that the WOL magic packet uses the integrated NIC's MAC address.
+> **Dual-NIC setup:** WOL only works on the integrated Intel NIC (enp2s0), not on the USB-C 2.5GbE adapter. USB ports lose power when the system is off. If you have a dual-NIC setup (see [Section 8.4](#84-dual-nic-configuration-25gbe-usb-c--1gbe-integrated)), ensure WOL is configured on the integrated NIC and that the WOL magic packet uses the integrated NIC's MAC address.
 
 #### 8.2.1 Enable WOL in BIOS
 
@@ -1184,13 +1187,13 @@ the codec during transcoding.
 > [!IMPORTANT]
 > Hardware transcoding requires **Plex Pass** subscription.
 
-### 8.4 Network Interface Migration (2.5GbE USB-C Adapter)
+### 8.4 Dual-NIC Configuration (2.5GbE USB-C + 1GbE Integrated)
 
 The Mini PC has two network interfaces:
 - **Integrated**: 1x 1GbE RJ45 (Intel) — supports WOL
 - **USB-C adapter**: 1x 2.5GbE (StarTech US2GC30) — does NOT support WOL
 
-This section documents how to move Proxmox management to the 2.5GbE adapter while keeping the integrated 1GbE connected for Wake-on-LAN only.
+This section covers configuring both NICs: the USB adapter for Proxmox management and the integrated NIC for Wake-on-LAN.
 
 > [!IMPORTANT]
 > USB network adapters cannot receive magic packets when the system is powered off (USB ports lose power in S5 state). The integrated Intel NIC must remain connected to the switch for WOL to work.
@@ -1225,7 +1228,53 @@ ethtool enxAABBCCDDEEFF | grep -i speed  # Should show 2500Mb/s
 > [!TIP]
 > USB network adapters on Linux typically get a name starting with `enx` followed by the MAC address (e.g., `enxaabbccddeeff`). This naming is deterministic and won't change across reboots.
 
-#### 8.4.3 Install DHCP Client
+#### 8.4.3 Add Integrated NIC for WOL (Installed on USB Adapter)
+
+> [!NOTE]
+> If you selected the USB 2.5GbE adapter during Proxmox installation ([Section 2.3](#23-network-configuration)), `vmbr0` is already on the USB adapter. You only need to add the integrated NIC for WOL. If you installed on the integrated NIC instead, skip to [Section 8.4.4](#844-bridge-migration-installed-on-integrated-nic).
+
+1. [ ] Backup current configuration:
+
+```bash
+cp /etc/network/interfaces /etc/network/interfaces.bak
+```
+
+2. [ ] Add the integrated NIC stanza to `/etc/network/interfaces`:
+
+```bash
+cat >> /etc/network/interfaces << 'EOF'
+
+# Integrated 1GbE Intel NIC — WOL only, no IP
+auto enp2s0
+iface enp2s0 inet manual
+    # Keep link up for WOL but no IP address
+EOF
+```
+
+> [!TIP]
+> Replace `enp2s0` with your integrated NIC name from [Section 8.4.2](#842-identify-interface-names) if different.
+
+3. [ ] Apply the configuration:
+
+```bash
+ifreload -a
+```
+
+4. [ ] Verify the integrated NIC is up with no IP:
+
+```bash
+ip addr show enp2s0
+# Should show state UP but no inet address
+```
+
+5. [ ] Configure WOL on the integrated NIC — follow [Section 8.2.1](#821-enable-wol-in-bios) through [Section 8.2.5](#825-test-wake-on-lan)
+
+#### 8.4.4 Bridge Migration (Installed on Integrated NIC)
+
+> [!NOTE]
+> This section is for users who installed Proxmox on the **integrated NIC** (`enp*`) and need to move the bridge to the USB 2.5GbE adapter. If you already installed on the USB adapter, see [Section 8.4.3](#843-add-integrated-nic-for-wol-installed-on-usb-adapter) instead.
+
+##### Install DHCP Client
 
 > [!IMPORTANT]
 > The Proxmox installer sets a static IP. This step switches the host to DHCP so the UDM-SE DHCP reservation assigns `192.168.3.20` based on MAC address. This must be done **before** editing the network configuration.
@@ -1250,7 +1299,7 @@ EOF
 > [!NOTE]
 > On PVE 8.x, the ISC `dhclient` is available by default and no extra package is needed. You can skip the install step, but the `allowinterfaces` restriction is still recommended if using `dhcpcd`.
 
-#### 8.4.4 Reconfigure Network Interfaces
+##### Reconfigure Network Interfaces
 
 1. [ ] Backup current configuration:
 
@@ -1297,7 +1346,7 @@ Key changes from the installer defaults:
 > [!WARNING]
 > **This will disconnect your SSH session.** You'll need physical access (monitor + keyboard) or apply via the Proxmox WebUI (System → Network) if the change doesn't work.
 
-#### 8.4.5 Apply Configuration
+##### Apply Configuration
 
 **Option A: Via Proxmox WebUI (safer)**
 
@@ -1318,7 +1367,36 @@ ifreload -a
 # cp /etc/network/interfaces.bak /etc/network/interfaces && ifreload -a
 ```
 
-#### 8.4.6 Verify Configuration
+##### Update WOL Configuration
+
+Since WOL must use the integrated NIC, update the persistent WOL configuration:
+
+```bash
+# WOL must target the integrated NIC (enp2s0), NOT the USB adapter
+cat > /etc/systemd/network/99-wol.link << EOF
+[Match]
+# Match the integrated Intel NIC by MAC address for reliability
+MACAddress=XX:XX:XX:XX:XX:XX
+
+[Link]
+WakeOnLan=magic
+EOF
+
+# Restart networking
+systemctl restart systemd-networkd
+
+# Verify WOL is enabled on the integrated NIC
+ethtool enp2s0 | grep Wake-on
+# Should show: Wake-on: g
+```
+
+> [!NOTE]
+> **Update your saved MAC address.** The MAC for WOL magic packets must be the integrated NIC's MAC (enp2s0), not the USB adapter's.
+
+#### 8.4.5 Verify Configuration (Bridge Migration)
+
+> [!NOTE]
+> These checks apply after bridge migration ([Section 8.4.4](#844-bridge-migration-installed-on-integrated-nic)). If you followed [Section 8.4.3](#843-add-integrated-nic-for-wol-installed-on-usb-adapter), verification is already included in those steps.
 
 ```bash
 # Verify bridge is on the 2.5GbE adapter
@@ -1346,33 +1424,7 @@ ping 192.168.3.1   # Gateway
 ping 192.168.3.10  # NAS
 ```
 
-#### 8.4.7 Update WOL Configuration
-
-Since WOL must use the integrated NIC, update the persistent WOL configuration:
-
-```bash
-# WOL must target the integrated NIC (enp2s0), NOT the USB adapter
-cat > /etc/systemd/network/99-wol.link << EOF
-[Match]
-# Match the integrated Intel NIC by MAC address for reliability
-MACAddress=XX:XX:XX:XX:XX:XX
-
-[Link]
-WakeOnLan=magic
-EOF
-
-# Restart networking
-systemctl restart systemd-networkd
-
-# Verify WOL is enabled on the integrated NIC
-ethtool enp2s0 | grep Wake-on
-# Should show: Wake-on: g
-```
-
-> [!NOTE]
-> **Update your saved MAC address.** The MAC for WOL magic packets must be the integrated NIC's MAC (enp2s0), not the USB adapter's.
-
-#### 8.4.8 Dual-NIC Troubleshooting
+#### 8.4.6 Dual-NIC Troubleshooting
 
 | Problem | Cause | Solution |
 |---------|-------|----------|
@@ -1382,7 +1434,7 @@ ethtool enp2s0 | grep Wake-on
 | WOL stopped working | WOL configured on wrong NIC | Must be on integrated NIC (enp2s0) |
 | LXC containers lose network | Bridge on wrong interface | Verify `bridge-ports` in vmbr0 |
 | Lost SSH after change | New interface not up | Use Proxmox console (monitor+keyboard) to fix |
-| No IP after switching to DHCP | `dhclient` missing (PVE 9+) | Install `dhcpcd` (see [8.4.3](#843-install-dhcp-client)) |
+| No IP after switching to DHCP | `dhclient` missing (PVE 9+) | Install `dhcpcd` (see [8.4.4](#844-bridge-migration-installed-on-integrated-nic)) |
 | Wrong IP from DHCP | Reservation not set | Check UDM-SE DHCP reservation matches MAC of `enxAABBCCDDEEFF` |
 
 ### 8.5 Automatic Plex Updates
