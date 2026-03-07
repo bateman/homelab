@@ -4,6 +4,7 @@
 > Scope: All firewall rules, IP/Port groups, DNS, mDNS, IDS/IPS, Authelia, Traefik TLS, Docker socket security
 > Updated: 2026-02-25 — QTS-Management removed, Rule 9 now uses NAS Management; L8 resolved, M1/M3/M9 updated
 > Updated: 2026-03-02 — Rule 6 (Bonjour/AirPrint mDNS) added; rules 6-14 renumbered to 7-15; I1 resolved
+> Updated: 2026-03-07 — Rule 11 (Allow Media SSH to Plex) added; rules 11-16 renumbered to 12-17
 
 ---
 
@@ -106,11 +107,11 @@ Portainer with direct Docker socket access (`/var/run/docker.sock`) has full con
 
 **Recommendation:** Access Portainer exclusively through Traefik (`portainer.home.local`) with Authelia 2FA. If the direct port must remain accessible for emergency Docker management, restrict it to the Desktop PC by adding host-level firewall rules (iptables) on the NAS. Alternatively, remove port 9443 from the `NAS Management` port group and access Portainer only via Traefik (Rule 8).
 
-### M2 — Rule 14 is overly permissive (Servers → Management)
+### M2 — Rule 16 is overly permissive (Servers → Management)
 
-**Location:** `docs/network/firewall-config.md` — Rule 14
+**Location:** `docs/network/firewall-config.md` — Rule 16
 
-**Issue:** Rule 14 allows **all protocols** from the entire VLAN Servers subnet (192.168.3.0/24) to the entire VLAN Management subnet (192.168.2.0/24). The stated purpose is "desktop PC to access switch and AP management interfaces," but the rule grants access from every device on VLAN 3 (NAS, Proxmox, Printer, Desktop PC) to every device on VLAN 2 (UDM-SE, Switch, AP).
+**Issue:** Rule 16 allows **all protocols** from the entire VLAN Servers subnet (192.168.3.0/24) to the entire VLAN Management subnet (192.168.2.0/24). The stated purpose is "desktop PC to access switch and AP management interfaces," but the rule grants access from every device on VLAN 3 (NAS, Proxmox, Printer, Desktop PC) to every device on VLAN 2 (UDM-SE, Switch, AP).
 
 A compromised NAS or Proxmox host could pivot to the Management VLAN and access the UDM-SE controller (192.168.2.1), switch (192.168.2.10), and access point (192.168.2.20) management interfaces.
 
@@ -160,18 +161,18 @@ This undermines Pi-hole's ad-blocking and any DNS-based security filtering.
 
 ### M5 — Guest VLAN can reach Pi-hole DNS (information leak)
 
-**Location:** `docs/network/firewall-config.md` — Rules 2 and 13
+**Location:** `docs/network/firewall-config.md` — Rules 2 and 15
 
-**Issue:** Rule 2 (`Allow Any → NAS:53`) fires **before** Rule 13 (`Block Guest → RFC1918`). This means Guest devices can reach Pi-hole.
+**Issue:** Rule 2 (`Allow Any → NAS:53`) fires **before** Rule 15 (`Block Guest → RFC1918`). This means Guest devices can reach Pi-hole.
 
-**Verified by rule trace:** Guest (192.168.5.x) → NAS (192.168.3.10):53 — Rule 2 matches → **ACCEPT**. Rule 13 never evaluates.
+**Verified by rule trace:** Guest (192.168.5.x) → NAS (192.168.3.10):53 — Rule 2 matches → **ACCEPT**. Rule 15 never evaluates.
 
 While DHCP only configures Cloudflare DNS for Guest VLAN, a technically savvy guest can manually set their DNS to `192.168.3.10` and:
 - Resolve `*.home.local` names (sonarr.home.local, portainer.home.local, etc.)
 - Discover internal service topology and hostnames
 - Identify the NAS IP address and running services
 
-This is an information leak that aids reconnaissance, though the guest still cannot reach those services (blocked by Rule 13 on other ports).
+This is an information leak that aids reconnaissance, though the guest still cannot reach those services (blocked by Rule 15 on other ports).
 
 **Recommendation:** Add a rule before Rule 2 that blocks Guest VLAN → NAS:53 specifically, or restructure Rule 2 to exclude Guest VLAN as a source:
 
@@ -356,8 +357,8 @@ The following security measures are well-implemented:
 - **VLAN segmentation**: Clean separation of Management, Servers, Media, Guest, IoT
 - **Traefik+Authelia access path**: Rule 8 enables Media VLAN to access services through Traefik with SSO authentication
 - **Wireless management scoping**: Rules 9-10 are narrowly scoped — TCP-only, specific destination IPs (not subnets), specific ports. NAS admin services (QTS, Pi-hole, Portainer, Duplicati, Uptime Kuma) and Proxmox (8006) each have their own authentication. UniFi Controller is accessed via the VLAN gateway IP without crossing into the Management VLAN
-- **Guest isolation**: RFC1918 block (Rule 13) prevents access to internal services (note: DNS exception exists per M5)
-- **IoT isolation**: RFC1918 block (Rule 12) with targeted HA exception (Rule 11) — well-scoped
+- **Guest isolation**: RFC1918 block (Rule 15) prevents access to internal services (note: DNS exception exists per M5)
+- **IoT isolation**: RFC1918 block (Rule 14) with targeted HA exception (Rule 13) — well-scoped
 - **Docker socket proxy**: Deny-by-default with explicit API permissions (14 endpoints explicitly denied)
 - **Socket proxy network**: `internal: true` prevents external access to the socket proxy
 - **IDS/IPS**: Enabled in prevention mode (not just detection) on IoT and Guest VLANs
