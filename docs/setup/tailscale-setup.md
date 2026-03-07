@@ -10,7 +10,7 @@ Tailscale runs as a **subnet router** on the QNAP NAS (`192.168.3.10`), advertis
 
 ### Why on the NAS?
 
-The NAS is always-on, so remote access remains available even when the Mini PC (Proxmox) is powered off. This also enables Wake-on-LAN of the Mini PC from remote via SSH through Tailscale.
+The NAS runs on a predictable schedule (on 07:00–01:00, off overnight), so remote access via Tailscale is available during those hours even when the Mini PC is powered off. This also enables Wake-on-LAN of the Mini PC from remote via SSH through Tailscale (during NAS uptime hours).
 
 ### Architecture
 

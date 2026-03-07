@@ -13,7 +13,7 @@ This document covers power management strategies for the homelab infrastructure:
 | UPS | Yes | No | Powers entire rack |
 | UDM-SE | Yes | No | Gateway, firewall, routing |
 | PoE Switch | Yes | No | Network backbone |
-| QNAP NAS | Yes | Partial | HDD spindown, service scheduling |
+| QNAP NAS | No | Yes | Scheduled power off 01:00–07:00, HDD spindown |
 | Mini PC (Proxmox) | No | Yes | WOL available, Plex on-demand |
 | Wi-Fi AP (U6-Pro) | Partial | Yes | Schedule overnight shutdown |
 
@@ -47,13 +47,103 @@ ssh admin@192.168.3.10 "wakeonlan AA:BB:CC:DD:EE:FF"
 |--------|---------|-------|
 | iOS Shortcut | Manual | See proxmox-setup.md |
 | Home Assistant | Automation | See [Section 6](#6-home-assistant-power-automations) |
-| Cron (NAS) | Scheduled | See below |
+| Cron (NAS) | Scheduled | See [Section 1.1](#11-scheduled-shutdown--wake-up-cron) |
 
-**Scheduled wake via cron (NAS)**:
-```bash
-# Wake Mini PC at 18:00 on weekdays (before typical Plex usage)
-0 18 * * 1-5 wakeonlan AA:BB:CC:DD:EE:FF
+### 1.1 Scheduled Shutdown & Wake-Up (Cron)
+
+Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it down overnight and wake it when the NAS boots.
+
+#### Nightly Cycle Timeline
+
 ```
+23:00  Duplicati backup runs (on NAS)
+00:30  ── Shutdown Mini PC ──     (cron: ssh shutdown)
+01:00  ── NAS shuts down ──       (QTS Power Schedule)
+       │
+       │  Both devices OFF (saves ~40-60W)
+       │
+07:00  ── NAS powers on ──       (QTS Power Schedule)
+07:02  ── Wake Mini PC ──        (@reboot cron: WOL after 2 min delay)
+07:03  Plex available
+```
+
+> [!NOTE]
+> The Mini PC wake is triggered by the NAS boot (`@reboot` cron). Since the NAS has scheduled power on/off, this ensures the Mini PC always comes up ~2 minutes after the NAS powers on. The `@reboot` cron also fires on manual NAS reboots and after power outages.
+
+#### Prerequisites
+
+1. **WOL configured** on Mini PC — see [proxmox-setup.md §8.2](../setup/proxmox-setup.md#82-wake-on-lan-wol)
+2. **SSH key** from NAS to Proxmox (passwordless):
+   ```bash
+   # On NAS (ssh admin@192.168.3.10)
+   ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+   ssh-copy-id -i ~/.ssh/id_ed25519.pub root@192.168.3.20
+   # Test: should connect without password prompt
+   ssh root@192.168.3.20 "hostname"
+   ```
+3. **`wakeonlan` installed** on NAS:
+   ```bash
+   # Check if available
+   which wakeonlan
+   # On QNAP: usually available via Entware or pre-installed
+   ```
+
+#### Configure Cron Jobs
+
+```bash
+# On NAS (ssh admin@192.168.3.10)
+crontab -e
+
+# === Mini PC Scheduled Power Cycle ===
+# Shutdown at 00:30 (after Duplicati backup at 23:00, before NAS shutdown at 01:00)
+30 0 * * * ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
+# Wake Mini PC 2 minutes after NAS boots (handles scheduled power-on, reboots, and power outages)
+@reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+```
+
+> [!IMPORTANT]
+> Replace `AA:BB:CC:DD:EE:FF` with the Mini PC's actual MAC address (integrated NIC). See [proxmox-setup.md §8.2.4](../setup/proxmox-setup.md#824-note-mac-address).
+
+> [!TIP]
+> Both the shutdown cron (SSH to an off host) and the wake cron (WOL to an already-on host) are harmless no-ops — safe to run even when the Mini PC is in the "wrong" state.
+
+#### Verify the Cycle
+
+```bash
+# 1. Test shutdown from NAS
+ssh root@192.168.3.20 "shutdown -h now"
+
+# 2. Wait 30 seconds, confirm it's off
+ping -c 3 192.168.3.20  # Should fail (host unreachable)
+
+# 3. Test WOL wake
+wakeonlan AA:BB:CC:DD:EE:FF
+
+# 4. Wait 60 seconds, confirm it's back
+ping -c 3 192.168.3.20  # Should succeed
+
+# 5. After a full cycle, check the log
+cat /var/log/minipc-power.log
+```
+
+#### Customization
+
+| Scenario | Shutdown | Wake | Cron Schedule (wake) |
+|----------|----------|------|---------------------|
+| Wake on NAS boot (recommended) | 00:30 daily | ~2 min after NAS boot | `@reboot sleep 120 && wakeonlan ...` |
+| Fixed time daily | 00:30 daily | 07:00 daily | `0 7 * * *` |
+| Weekday evenings only | 00:30 daily | 18:00 Mon-Fri | `0 18 * * 1-5` |
+| Always on (override) | Comment out shutdown cron | — | — |
+
+If the NAS is always-on (no scheduled power cycle), replace `@reboot` with a fixed-time cron or combine both:
+```bash
+# @reboot alone won't fire if the NAS never reboots — add a fixed-time fallback
+@reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+15 7 * * * wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+```
+
+> [!NOTE]
+> Choose **either** cron (this section) **or** Home Assistant automations ([Section 6](#6-home-assistant-power-automations)) for scheduled power management, not both. Cron is simpler; HA adds conditional logic (e.g., skip shutdown if Plex is streaming).
 
 ---
 
@@ -87,12 +177,10 @@ Reduce LED brightness overnight to save minor power and reduce light pollution.
 2. LED Brightness → Schedule
 3. Set schedule: 23:00–07:00 → Dim/Off
 
-### 2.3 Scheduled Power On/Off (Optional)
+### 2.3 Scheduled Power On/Off
 
 > [!CAUTION]
-> Only enable NAS power scheduling if you don't need 24/7 access to media services or backups. This is **not recommended** for most homelab setups.
-
-If your usage pattern is predictable:
+> NAS power scheduling means no access to media services or backups during the off window (01:00-07:00). Ensure all scheduled tasks (backups, updates) run outside this window.
 
 1. Control Panel → System → Power → Power Schedule
 2. Configure:
@@ -104,16 +192,22 @@ If your usage pattern is predictable:
 - Watchtower (07:30), QTS backup (08:00 Sun), and verification (08:30 Sun) run after power on
 - No services require overnight access (01:00-07:00)
 - UPS must support scheduled wake (via RTC or network signal)
+- Mini PC shutdown cron (00:30) must run before NAS shutdown (01:00)
+
+> [!TIP]
+> The `@reboot` cron in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) automatically wakes the Mini PC when the NAS powers on at 07:00.
 
 ---
 
 ## 3. Wi-Fi Access Point Scheduling
 
-> WiFi Blackout Schedule and guest network scheduling are configured during initial setup. See [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wifi-blackout-schedule-optional).
+### 3.1 WiFi Blackout Schedule (Radio Disable)
 
-This section covers additional power-saving options beyond radio scheduling.
+WiFi Blackout Schedule and guest network scheduling are configured during initial setup. See [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wifi-blackout-schedule-optional).
 
-### 3.2 Alternative: Device-Level Scheduling
+This disables the radio on schedule but keeps the AP powered for management.
+
+### 3.2 Device-Level Scheduling (Full Power Off)
 
 To completely power off the AP (saves more power than radio disable):
 
@@ -240,7 +334,7 @@ echo "[$(date)] All services resumed."
 ### 4.3 Configure Cron Jobs
 
 > [!NOTE]
-> If using **NAS scheduled shutdown** (01:00-07:00), skip this section—the NAS being off stops all containers automatically. Use power-save scripts only if you want to keep the NAS running but stop non-critical services.
+> Since the NAS has **scheduled shutdown** (01:00-07:00), the NAS being off stops all containers automatically. The power-save scripts below are only needed if you disable NAS scheduled shutdown and want to keep the NAS running but stop non-critical services overnight.
 
 ```bash
 # On NAS (ssh admin@192.168.3.10)
@@ -460,7 +554,9 @@ Home Assistant can centralize power management with intelligent automations.
 ```
 
 > [!NOTE]
-> Choose either cron (Section 4.3) OR Home Assistant automations for power save scheduling, not both.
+> Choose **either** cron **or** Home Assistant automations, not both:
+> - Mini PC shutdown/wake-up: cron ([Section 1.1](#11-scheduled-shutdown--wake-up-cron)) or HA "Shutdown Plex Overnight" + "Wake Plex on Arrival" above
+> - Container scheduling: cron ([Section 4.3](#43-configure-cron-jobs)) or HA "Enter/Exit Power Save Mode" above
 
 > [!TIP]
 > For UniFi AP PoE control, the built-in UniFi integration doesn't support PoE port toggling directly. Use the UniFi Controller's WiFi Blackout Schedule instead (see [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wifi-blackout-schedule-optional)), or create custom shell commands using the UniFi API.
@@ -588,10 +684,12 @@ echo "powersave" > /sys/module/pcie_aspm/parameters/policy
 - [ ] Set CPU governor to powersave
 - [ ] Install NUT for UPS monitoring
 
-### Phase 3: Service Scheduling
+### Phase 3: Scheduled Power Cycle & Service Scheduling
 
-- [ ] Create power-save scripts
-- [ ] Configure cron jobs on NAS
+- [ ] Configure Mini PC shutdown/wake-up cron jobs on NAS (see [Section 1.1](#11-scheduled-shutdown--wake-up-cron))
+- [ ] Test Mini PC shutdown → WOL wake cycle
+- [ ] Create power-save scripts (container scheduling)
+- [ ] Configure container scheduling cron jobs on NAS
 - [ ] Test service stop/start cycle
 - [ ] Add Makefile targets
 
@@ -615,7 +713,7 @@ Measure baseline power consumption with a smart plug or UPS monitoring:
 | Full load | ~200-250W | All services active, transcoding |
 | Normal idle | ~80-120W | All services running, no activity |
 | Power save | ~50-70W | Non-critical services stopped |
-| Minimal | ~30-40W | Mini PC off, HDDs spun down |
+| Minimal (overnight) | ~30-40W | Both NAS and Mini PC off, only network devices |
 
 ### Verify Savings
 
@@ -630,7 +728,10 @@ upsc eaton ups.load
 ### Log Review
 
 ```bash
-# Check power save script execution
+# Check Mini PC shutdown/wake-up cycle
+tail -f /var/log/minipc-power.log
+
+# Check power save script execution (container scheduling)
 tail -f /var/log/power-save.log
 
 # Check container status
@@ -645,6 +746,9 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 |-------|-------|----------|
 | Services don't stop | Script permissions | `chmod +x scripts/power-save-*.sh` |
 | WOL doesn't work | Not on same VLAN | Send from device on VLAN 3 |
+| Mini PC not waking on NAS boot | `@reboot` cron not running | Verify with `crontab -l`; check NAS cron supports `@reboot` |
+| Mini PC not waking on NAS boot | Network not ready at `@reboot` | Increase sleep delay (e.g., `sleep 180`) |
+| Shutdown cron fails | SSH key not configured | Set up passwordless SSH (see [Section 1.1 Prerequisites](#11-scheduled-shutdown--wake-up-cron)) |
 | HDD won't spin down | Constant access | Check which process with `iotop` |
 | High idle power | Background tasks | Review container resource usage |
 | AP won't power on | PoE budget exceeded | Check switch PoE allocation |
@@ -667,3 +771,4 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 | Date | Change |
 |------|--------|
 | 2026-02-01 | Document creation |
+| 2026-03-07 | Added end-to-end scheduled shutdown & wake-up section (§1.1) |
