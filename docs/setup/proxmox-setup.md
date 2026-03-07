@@ -104,6 +104,33 @@ Open browser: `https://192.168.3.20:8006`
 
 ---
 
+## SSH Key Setup (Workstation → Proxmox)
+
+Set up passwordless SSH before proceeding — all remaining phases use `ssh root@192.168.3.20`.
+
+**On your workstation** (Mac/PC):
+
+```bash
+# Generate key (skip if you already have ~/.ssh/id_ed25519)
+ssh-keygen -t ed25519 -C "your@email.com" -f ~/.ssh/proxmox
+
+# Copy public key to Proxmox host
+ssh-copy-id -i ~/.ssh/proxmox.pub root@192.168.3.20
+```
+
+Add to `~/.ssh/config` for convenience:
+
+```
+Host proxmox
+    HostName 192.168.3.20
+    User root
+    IdentityFile ~/.ssh/proxmox
+```
+
+Verify: `ssh proxmox` should connect without a password prompt.
+
+---
+
 ## Phase 3: Post-Installation Configuration
 
 ### 3.1 Disable Enterprise Repository
@@ -245,6 +272,13 @@ Datacenter → proxmox → Create CT
 > cat ~/.ssh/proxmox_plex.pub
 > ```
 > Paste the output into the SSH Public Key field above.
+>
+> **After creation — configure SSH key with `ssh-copy-id`:**
+>
+> If you skipped the SSH Public Key field during creation, copy your key to the running container:
+> ```bash
+> ssh-copy-id -i ~/.ssh/proxmox_plex.pub root@192.168.3.21
+> ```
 >
 > Then add to `~/.ssh/config` for easy access:
 > ```

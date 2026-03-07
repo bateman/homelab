@@ -236,6 +236,31 @@ ls -la /share/homes/fabio
 - [ ] Port: 22 (default)
 - [ ] Apply
 
+### Configure SSH Key Authentication
+
+Set up passwordless SSH for workstation access to the NAS.
+
+**On your workstation** (Mac/PC):
+
+```bash
+# Generate key (skip if you already have one)
+ssh-keygen -t ed25519 -C "your@email.com" -f ~/.ssh/qnap
+
+# Copy public key to NAS
+ssh-copy-id -i ~/.ssh/qnap.pub admin@192.168.3.10
+```
+
+Add to `~/.ssh/config`:
+
+```
+Host nas
+    HostName 192.168.3.10
+    User admin
+    IdentityFile ~/.ssh/qnap
+```
+
+Verify: `ssh nas` should connect without a password prompt.
+
 ### Verify PUID/PGID
 ```bash
 # Connect via SSH
