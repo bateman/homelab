@@ -148,11 +148,10 @@ radarr:
         reset_unmatched_scores:
           enabled: true
 
-      # Uncomment for additional profiles:
-      # UHD Bluray + WEB (4K)
-      # - trash_id: 64fb5f9858489bdac2af690e27c8f42f
-      #   reset_unmatched_scores:
-      #     enabled: true
+      # UHD Bluray + WEB (4K) - 4K with 1080p fallback
+      - trash_id: 64fb5f9858489bdac2af690e27c8f42f
+        reset_unmatched_scores:
+          enabled: true
       #
       # Remux + WEB 1080p
       # - trash_id: 9ca12ea80aa55ef916e3751f4b874151
