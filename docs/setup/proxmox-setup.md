@@ -951,17 +951,23 @@ vainfo
 
 Example `vainfo` output for i5-13420H:
 ```
-libva info: VA-API version 1.17.0
+libva info: VA-API version 1.22.0
 libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so
-libva info: Found init function __vaDriverInit_1_17
+libva info: Found init function __vaDriverInit_1_22
 libva info: va_openDriver() returns 0
-vainfo: VA-API version: 1.17 (libva 2.12.0)
-vainfo: Driver version: Intel iHD driver for Intel(R) Gen Graphics - 23.1.1
+vainfo: VA-API version: 1.22 (libva 2.22.0)
+vainfo: Driver version: Intel iHD driver for Intel(R) Gen Graphics - 25.2.3 ()
 vainfo: Supported profile and entrypoints
       VAProfileH264Main               : VAEntrypointVLD
-      VAProfileH264Main               : VAEntrypointEncSlice
+      VAProfileH264Main               : VAEntrypointEncSliceLP
+      VAProfileH264High               : VAEntrypointVLD
+      VAProfileH264High               : VAEntrypointEncSliceLP
       VAProfileHEVCMain               : VAEntrypointVLD
-      VAProfileHEVCMain               : VAEntrypointEncSlice
+      VAProfileHEVCMain               : VAEntrypointEncSliceLP
+      VAProfileHEVCMain10             : VAEntrypointVLD
+      VAProfileHEVCMain10             : VAEntrypointEncSliceLP
+      VAProfileVP9Profile0            : VAEntrypointVLD
+      VAProfileVP9Profile0            : VAEntrypointEncSliceLP
       ...
 ```
 
