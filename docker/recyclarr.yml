@@ -88,8 +88,8 @@ sonarr:
           - name: Bluray-720p
           - name: HDTV-720p
 
-      # HD - 720p/1080p - Accepts all HD qualities, cutoff at HDTV-1080p
-      - name: HD - 720p/1080p
+      # HD-1080p - All 1080p qualities, cutoff at HDTV-1080p
+      - name: HD-1080p
         min_format_score: 0
         upgrade:
           allowed: true
@@ -101,13 +101,8 @@ sonarr:
               - WEBDL-1080p
               - WEBRip-1080p
           - name: Bluray-1080p
+          - name: Remux-1080p
           - name: HDTV-1080p
-          - name: WEB 720p
-            qualities:
-              - WEBDL-720p
-              - WEBRip-720p
-          - name: Bluray-720p
-          - name: HDTV-720p
 
       # Uncomment for additional profiles (find trash_ids via Trash Guides):
       # - trash_id: <WEB-2160p trash_id>
@@ -228,8 +223,8 @@ radarr:
           - name: Bluray-720p
           - name: HDTV-720p
 
-      # HD - 720p/1080p - Accepts all HD qualities, cutoff at HDTV-1080p
-      - name: HD - 720p/1080p
+      # HD-1080p - All 1080p qualities, cutoff at HDTV-1080p
+      - name: HD-1080p
         min_format_score: 0
         upgrade:
           allowed: true
@@ -240,15 +235,9 @@ radarr:
             qualities:
               - WEBDL-1080p
               - WEBRip-1080p
-          - name: Remux-1080p
           - name: Bluray-1080p
+          - name: Remux-1080p
           - name: HDTV-1080p
-          - name: WEB 720p
-            qualities:
-              - WEBDL-720p
-              - WEBRip-720p
-          - name: Bluray-720p
-          - name: HDTV-720p
 
       # Remux + WEB 1080p
       # - trash_id: 9ca12ea80aa55ef916e3751f4b874151
