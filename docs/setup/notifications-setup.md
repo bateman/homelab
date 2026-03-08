@@ -355,13 +355,13 @@ If containers were updated or errors occurred, you should see a Discord message.
 
 ### How Notification Filtering Works
 
-Watchtower runs in **report mode** (`WATCHTOWER_NOTIFICATION_REPORT=true`), which sends a single summary per update cycle instead of per-container messages. The notification template only renders content when containers were `.Updated` or `.Failed` — when neither condition is true (i.e., no updates found), the template renders empty and Watchtower skips sending the notification entirely.
+Watchtower runs in **report mode** (`WATCHTOWER_NOTIFICATION_REPORT=true`), which sends a single summary per update cycle instead of per-container messages. The notification template only renders content when containers were `.Report.Updated` or `.Report.Failed` — when neither condition is true (i.e., no updates found), the template renders empty and Watchtower skips sending the notification entirely.
 
 **You will only receive Discord messages when:**
 - One or more containers were successfully updated
 - One or more containers failed to update
 
-To customize the template, edit `WATCHTOWER_NOTIFICATION_TEMPLATE` in `docker/compose.yml`. Report mode templates have access to `.Updated`, `.Failed`, `.Skipped`, `.Stale`, and `.Fresh` container lists. See [Watchtower notifications docs](https://containrrr.dev/watchtower/notifications/) for Go template syntax.
+To customize the template, edit `WATCHTOWER_NOTIFICATION_TEMPLATE` in `docker/compose.yml`. Report mode templates receive a `.Report` object with `.Updated`, `.Failed`, `.Skipped`, and `.Fresh` container lists (e.g., `{{.Report.Updated}}`). See [Watchtower notifications docs](https://containrrr.dev/watchtower/notifications/) for Go template syntax.
 
 ### Troubleshooting
 

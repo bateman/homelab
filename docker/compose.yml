@@ -228,8 +228,8 @@ services:
       WATCHTOWER_NOTIFICATION_URL: ${WATCHTOWER_NOTIFICATION_URL:-}
       WATCHTOWER_NOTIFICATION_REPORT: "true"
       WATCHTOWER_NOTIFICATION_TEMPLATE: >-
-        {{- if .Updated}}{{len .Updated}} container(s) updated:{{range .Updated}}{{"\n"}}- {{.Name}} ({{.ImageName}}){{end}}{{end}}
-        {{- if .Failed}}{{"\n"}}{{len .Failed}} container(s) failed:{{range .Failed}}{{"\n"}}- {{.Name}}: {{.Error}}{{end}}{{end}}
+        {{- if .Report}}{{- if .Report.Updated}}{{len .Report.Updated}} container(s) updated:{{range .Report.Updated}}{{"\n"}}- {{.Name}} ({{.ImageName}}){{end}}{{end}}
+        {{- if .Report.Failed}}{{"\n"}}{{len .Report.Failed}} container(s) failed:{{range .Report.Failed}}{{"\n"}}- {{.Name}}: {{.Error}}{{end}}{{end}}{{end}}
     ports:
       - "8383:8080"
     networks:
