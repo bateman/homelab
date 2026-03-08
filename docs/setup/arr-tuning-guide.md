@@ -645,6 +645,7 @@ This is already configured in `docker/recyclarr.yml` under `media_management.pro
 | `Unauthorized` | Invalid API key | Verify `SONARR_API_KEY`/`RADARR_API_KEY` in `docker/.env.secrets` |
 | `Connection refused` | App not running | Check container status with `docker ps` |
 | `No guide data found` | Invalid trash_id | Verify trash_id against [Trash Guides](https://trash-guides.info/) |
+| `profile ... already exists` | Profile was created manually in the UI before Recyclarr managed it | Run `docker exec recyclarr recyclarr state repair --adopt` to let Recyclarr adopt the existing profile, then re-sync |
 
 Always preview before applying:
 
