@@ -56,13 +56,9 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    # Regenerable data (re-downloaded/recreated automatically)
    */MediaCover/
    */Backups/
-   */Cache/
-   */cache/
-   */logs/
-   */log/
+   */[Cc]ache/
+   */log*/
    */BT_backup/
-   */repo/
-   */macvendor.db
    */.git/
    */listsCache/
 
@@ -85,12 +81,10 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    **Regenerable data exclusions:**
    - **MediaCover**: poster/banner image cache in *arr apps (hundreds of MB per app). Re-downloaded automatically on first library sync after restore.
    - **Backups**: *arr apps' internal scheduled backups — redundant since Duplicati already backs up the databases.
-   - **Cache/cache**: API response and HTTP caches across all services (two filters for upper/lowercase). Rebuilt automatically.
-   - **logs/log**: application log directories across all services — `logs/` for most services, `log/` for Bazarr. Not needed for disaster recovery.
+   - **[Cc]ache/**: API response and HTTP caches across all services. Glob character class `[Cc]` matches both `Cache/` and `cache/` in a single filter. Rebuilt automatically.
+   - **log\*/**: matches `log/`, `logs/`, and any other `log`-prefixed directories. Covers Bazarr (`log/`), most other services (`logs/`). Not needed for disaster recovery.
    - **BT_backup**: qBittorrent torrent resume data. Torrents can be re-added from *arr apps if needed.
-   - **repo**: Recyclarr's cloned Trash Guides git repository (~10-30 MB). Regenerated automatically on every sync.
-   - **macvendor.db**: Pi-hole MAC vendor lookup database (~30-50 MB). Regenerated with `pihole -g`.
-   - **.git/**: cloned git repositories inside service configs (e.g., Recyclarr's trash-guides repo, ~24 MB). Regenerated automatically on sync. Service configuration files are outside `.git/` and still backed up.
+   - **.git/**: cloned git repositories inside service configs (e.g., Recyclarr's trash-guides repo, ~24 MB). Regenerated automatically on sync. Service configuration files are outside `.git/` and still backed up. Also covers what `*/repo/` previously excluded.
    - **listsCache/**: Pi-hole downloaded adlist cache (~12 MB+). Rebuilt automatically with `pihole -g`.
 
    **Backup/old copy exclusions:**
@@ -212,7 +206,7 @@ For restoring from an offsite backup after disaster, see [Complete Disaster Reco
 | Backup job shows "Warning" | File locked during backup (e.g., SQLite) | Schedule Portainer snapshot before Duplicati (22:55 vs 23:00) |
 | "No backup job configured yet" | Duplicati has no jobs | Configure via WebUI at `http://192.168.3.10:8200` |
 | Backup size keeps growing | Deduplication not working or retention not applied | WebUI → Job → "Compact now"; verify retention policy |
-| Source size >500 MB | Missing exclusion filters for regenerable data | Verify all 19 glob filters from step 4 are applied (all "Exclude expression"). Expected source: ~430 MB (dominated by lidarr.db 196 MB + gravity.db 83 MB + other *arr DBs + config files) |
+| Source size >500 MB | Missing exclusion filters for regenerable data | Verify all 15 glob filters from step 4 are applied (all "Exclude expression"). Expected source: ~430 MB (dominated by lidarr.db 196 MB + gravity.db 83 MB + other *arr DBs + config files) |
 | Offsite backup fails with auth error | Cloud OAuth token expired | WebUI → Edit backup → Destination → re-authenticate |
 
 #### Alternative: Manual backup with cron
@@ -585,7 +579,7 @@ For advanced homelabs:
 
 | Date | Change |
 |------|--------|
-| 2026-03-08 | Expanded to 19 glob filters — added `.git/`, `listsCache/`, `gravity_old.db*`, `gravity.db.bak*` exclusions (saving ~140 MB); updated expected source size to ~430 MB |
+| 2026-03-08 | Optimized to 15 glob filters — combined `Cache/`+`cache/` → `[Cc]ache/`, `logs/`+`log/` → `log*/`; replaced `repo/`+`macvendor.db` with higher-impact `.git/`, `listsCache/`, `gravity_old.db*`, `gravity.db.bak*` (net ~120 MB more excluded) |
 | 2026-03-08 | Switched to all-glob filters (15 total) — regex has known Duplicati bugs with `\|` alternation and nested `[]`; optimized with `*/portainer/*/`, `*/logs.db*`, `*/pihole-FTL.db*` wildcards; added log/, repo/, macvendor.db exclusions |
 | 2026-03-05 | Expanded Duplicati docs: REST API, encryption, restore, troubleshooting; updated QTS backup to web API method |
 | 2026-01-06 | Added backup-qts-config.sh script for QTS backup automation |
