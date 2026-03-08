@@ -45,47 +45,41 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    # Service-specific (not useful to back up)
    */tailscale/
    */portainer/portainer.db
-   */portainer/chisel/
-   */portainer/bin/
-   */portainer/compose/
-   */portainer/docker_config/
-   */portainer/tls/
-   */portainer/certs/
+   [/portainer/(chisel|bin|compose|docker_config|tls|certs)/]
    */duplicati/
 
-   # Regenerable data (re-downloaded/recreated automatically on restore)
+   # Regenerable data (re-downloaded/recreated automatically)
    */MediaCover/
    */Backups/
-   */Cache/
-   */cache/
-   */logs/
+   [/[Cc]ache/]
+   [/logs?/]
    */BT_backup/
+   */repo/
+   */macvendor.db
 
-   # Log databases (separate from log directories — not needed for restore)
-   */logs.db
-   */logs.db-wal
-   */logs.db-shm
-   */pihole-FTL.db
-   */pihole-FTL.db-wal
-   */pihole-FTL.db-shm
+   # Log/analytics databases (not needed for restore)
+   [/(logs|pihole-FTL)\.db(-wal|-shm)?$]
    ```
+
+   > **Note:** Filters use Duplicati regex syntax (`[regex]`) to stay within the filter count limit.
+   > Glob filters (`*/...`) match path segments; regex filters (`[...]`) match against the full path.
 
    **Service-specific exclusions:**
    - **Tailscale**: machine-specific state; requires re-auth on new install — not useful to back up.
    - **portainer.db**: always file-locked while Portainer runs. Backed up via `portainer.db.bak` instead (see step 5).
-   - **Portainer subdirs** (chisel, bin, compose, docker_config, tls, certs): runtime data — edge agent tunnels, downloaded binaries, UI-managed stacks, Docker configs, certificates. All regenerable. Root-level files (`portainer.db.bak`, `portainer.key`, etc.) are still backed up.
+   - **Portainer subdirs** — regex matches chisel, bin, compose, docker_config, tls, certs: runtime data (edge agent tunnels, downloaded binaries, UI-managed stacks, Docker configs, certificates). All regenerable. Root-level files (`portainer.db.bak`, `portainer.key`, etc.) are still backed up.
    - **Duplicati**: its own database (backup metadata, deduplication index) is regenerated from
      backup destinations. Including it creates circular growth — each backup makes the source larger.
 
    **Regenerable data exclusions:**
    - **MediaCover**: poster/banner image cache in *arr apps (hundreds of MB per app). Re-downloaded automatically on first library sync after restore.
    - **Backups**: *arr apps' internal scheduled backups — redundant since Duplicati already backs up the databases.
-   - **Cache/cache**: API response and HTTP caches across all services. Rebuilt automatically.
-   - **logs**: application log files across all services. Not needed for disaster recovery.
+   - **Cache** (`[/[Cc]ache/]`): API response and HTTP caches across all services. Case-insensitive regex matches both `Cache/` and `cache/`. Rebuilt automatically.
+   - **logs** (`[/logs?/]`): application log directories across all services. Regex matches both `logs/` (most services) and `log/` (Bazarr). Not needed for disaster recovery.
    - **BT_backup**: qBittorrent torrent resume data. Torrents can be re-added from *arr apps if needed.
-   - **logs.db**: *arr apps' log database (separate from the main app database like `sonarr.db`). Contains only application log entries — not needed for restore.
-   - **pihole-FTL.db**: Pi-hole DNS query history database (~200-500 MB). Regenerated on startup. The important Pi-hole data (`gravity.db`, config files) is still backed up.
-   - **.db-wal / .db-shm**: SQLite write-ahead log temporary files for the above databases.
+   - **repo**: Recyclarr's cloned Trash Guides git repository (~10-30 MB). Regenerated automatically on every sync.
+   - **macvendor.db**: Pi-hole MAC vendor lookup database (~30-50 MB). Regenerated with `pihole -g`.
+   - **Log databases** (`[/(logs|pihole-FTL)\.db(-wal|-shm)?$]`): single regex covers `logs.db`, `pihole-FTL.db`, and their SQLite WAL/SHM temporary files. The *arr `logs.db` contains only application log entries (not the main app database like `sonarr.db`). The Pi-hole `pihole-FTL.db` is the DNS query history database (~200-500 MB), regenerated on startup. The important Pi-hole data (`gravity.db`, config files) is still backed up.
 
    > **Note:** Duplicati runs as PUID=0 (root) so it can read all config files including
    > root-owned ones (Portainer, Pi-hole). The source volume is mounted `:ro` for safety.
@@ -198,7 +192,7 @@ For restoring from an offsite backup after disaster, see [Complete Disaster Reco
 | Backup job shows "Warning" | File locked during backup (e.g., SQLite) | Schedule Portainer snapshot before Duplicati (22:55 vs 23:00) |
 | "No backup job configured yet" | Duplicati has no jobs | Configure via WebUI at `http://192.168.3.10:8200` |
 | Backup size keeps growing | Deduplication not working or retention not applied | WebUI → Job → "Compact now"; verify retention policy |
-| Source size >200 MB | Missing exclusion filters for regenerable data | Verify all filters from step 4 are applied (Portainer subdirs, MediaCover, Backups, Cache, logs, BT_backup, logs.db, pihole-FTL.db) |
+| Source size >400 MB | Missing exclusion filters for regenerable data | Verify all 12 regex/glob filters from step 4 are applied. Expected source: ~150-350 MB (essential databases + config files) |
 | Offsite backup fails with auth error | Cloud OAuth token expired | WebUI → Edit backup → Destination → re-authenticate |
 
 #### Alternative: Manual backup with cron
@@ -571,7 +565,7 @@ For advanced homelabs:
 
 | Date | Change |
 |------|--------|
-| 2026-03-08 | Added log database and Pi-hole FTL exclusion filters; added Portainer subdirectory exclusions |
+| 2026-03-08 | Consolidated 21 filters → 12 using Duplicati regex syntax; added Bazarr log/, Recyclarr repo/, Pi-hole macvendor.db exclusions; revised expected source size to ~150-350 MB |
 | 2026-03-05 | Expanded Duplicati docs: REST API, encryption, restore, troubleshooting; updated QTS backup to web API method |
 | 2026-01-06 | Added backup-qts-config.sh script for QTS backup automation |
 | 2025-01-04 | Revision: Duplicati as primary method, docker compose command fixes, QTS port clarifications |
