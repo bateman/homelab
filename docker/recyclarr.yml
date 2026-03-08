@@ -90,9 +90,11 @@ sonarr:
 
       # HD - 720p/1080p - Accepts all HD qualities, upgrades until WEB 1080p
       - name: HD - 720p/1080p
+        min_format_score: 0
         upgrade:
           allowed: true
           until_quality: WEB 1080p
+          until_score: 10000
         qualities:
           - name: WEB 1080p
             qualities:
@@ -228,9 +230,11 @@ radarr:
 
       # HD - 720p/1080p - Accepts all HD qualities, upgrades until WEB 1080p
       - name: HD - 720p/1080p
+        min_format_score: 0
         upgrade:
           allowed: true
           until_quality: WEB 1080p
+          until_score: 10000
         qualities:
           - name: WEB 1080p
             qualities:
