@@ -345,17 +345,17 @@ make restart s=watchtower
 
 ### Step 5: Verify
 
-Trigger a manual update check via the HTTP API:
+Trigger a manual update check:
 
 ```bash
-curl -H "Authorization: Bearer $WATCHTOWER_API_TOKEN" http://localhost:8383/v1/update
+docker exec watchtower /watchtower --run-once
 ```
 
 If containers were updated or errors occurred, you should see a Discord message. If nothing needed updating, no notification is sent (this is the expected behavior).
 
 ### How Notification Filtering Works
 
-Watchtower runs in **report mode** (`WATCHTOWER_NOTIFICATION_REPORT=true`), which sends a single summary per update cycle instead of per-container messages. The notification template only renders content when containers were `.Report.Updated` or `.Report.Failed` — when neither condition is true (i.e., no updates found), the template renders empty and Watchtower skips sending the notification entirely.
+Watchtower runs in **report mode** (`WATCHTOWER_NOTIFICATION_REPORT=true`), which sends a single summary per update cycle instead of per-container messages. The notification template only renders content when containers were updated or failed — when neither condition is true (i.e., no updates found), the template renders empty and Watchtower skips sending the notification entirely.
 
 **You will only receive Discord messages when:**
 - One or more containers were successfully updated
