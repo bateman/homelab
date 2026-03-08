@@ -185,11 +185,11 @@ Reduce LED brightness overnight to save minor power and reduce light pollution.
 1. Control Panel → System → Power → Power Schedule
 2. Configure:
    - Shutdown: 01:00 (after Duplicati backup at 23:00)
-   - Power On: 07:00 (before Watchtower updates at 07:30)
+   - Power On: 07:00 (before Watchtower updates at 08:30)
 
 **Prerequisites**:
 - Duplicati backup (23:00) must complete before shutdown
-- Watchtower (07:30), QTS backup (08:00 Sun), and verification (08:30 Sun) run after power on
+- Watchtower (08:30), QTS backup (08:00 Sun), and verification (08:30 Sun) run after power on
 - No services require overnight access (01:00-07:00)
 - UPS must support scheduled wake (via RTC or network signal)
 - Mini PC shutdown cron (00:30) must run before NAS shutdown (01:00)
@@ -256,7 +256,7 @@ Non-critical Docker containers can be stopped overnight to reduce CPU/memory usa
 | Socket-proxy | Yes | No | Required by Traefik/Watchtower |
 | Authelia | Yes | No | SSO authentication |
 | Portainer | Yes | No | Container management |
-| Watchtower | Yes | No | Container updates (runs at 07:30) |
+| Watchtower | Yes | No | Container updates (runs at 08:30) |
 | Uptime Kuma | Yes | No | Monitoring should stay |
 | Duplicati | Yes | No | Runs backups at 23:00 |
 | Gluetun | No | Yes | VPN tunnel (only with vpn profile) |
@@ -346,7 +346,7 @@ crontab -e
 # Enter power save at 00:00 (after Duplicati backup at 23:00)
 0 0 * * * /share/container/mediastack/scripts/power-save-start.sh >> /var/log/power-save.log 2>&1
 
-# Exit power save at 07:00 (before Watchtower at 07:30)
+# Exit power save at 07:00 (before Watchtower at 08:30)
 0 7 * * * /share/container/mediastack/scripts/power-save-stop.sh >> /var/log/power-save.log 2>&1
 ```
 
@@ -354,7 +354,7 @@ crontab -e
 > **Timing coordination with backups (NAS downtime 01:00-07:00):**
 > - Duplicati backup runs at 23:00 (before NAS shutdown)
 > - NAS shutdown at 01:00 / power on at 07:00
-> - Watchtower updates run at 07:30 (after NAS is up)
+> - Watchtower updates run at 08:30 (after NAS is up)
 > - QTS config backup runs at 08:00 Sunday (after NAS is up)
 > - Backup verification runs at 08:30 Sunday
 >
@@ -551,7 +551,7 @@ Home Assistant can centralize power management with intelligent automations.
 - alias: "Exit Power Save Mode"
   trigger:
     - platform: time
-      at: "07:00:00"  # Before Watchtower at 07:30
+      at: "07:00:00"  # Before Watchtower at 08:30
   action:
     - service: shell_command.power_save_stop
 ```

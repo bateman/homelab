@@ -99,7 +99,7 @@ make clean    # docker system prune + docker volume prune (con conferma interatt
 
 | Strumento | Cosa pulisce | Quando |
 |-----------|-------------|--------|
-| **Watchtower** | Vecchie immagini dopo aggiornamento | Automatico, daily 07:30 |
+| **Watchtower** | Vecchie immagini dopo aggiornamento | Automatico, daily 08:30 |
 | **Portainer** | Immagini/volumi/reti selezionati manualmente | On-demand, da GUI |
 | **`make clean`** | Tutto: container fermati, immagini dangling, volumi orfani, reti inutilizzate | On-demand, da CLI |
 | **Cleanuparr** | Download bloccati/falliti nelle code *arr | Automatico, ogni 10-15 min |
