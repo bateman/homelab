@@ -65,7 +65,7 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    **Service-specific exclusions:**
    - **Tailscale**: machine-specific state; requires re-auth on new install — not useful to back up.
    - **portainer.db**: always file-locked while Portainer runs. Backed up via `portainer.db.bak` instead (see step 5).
-   - **Portainer subdirs** (chisel, bin, compose, docker_config, tls, certs): runtime data — edge agent tunnels, downloaded binaries, UI-managed stacks, Docker configs, certificates. All regenerable; only `portainer.db.bak` is needed.
+   - **Portainer subdirs** (chisel, bin, compose, docker_config, tls, certs): runtime data — edge agent tunnels, downloaded binaries, UI-managed stacks, Docker configs, certificates. All regenerable. Root-level files (`portainer.db.bak`, `portainer.key`, etc.) are still backed up.
    - **Duplicati**: its own database (backup metadata, deduplication index) is regenerated from
      backup destinations. Including it creates circular growth — each backup makes the source larger.
 
