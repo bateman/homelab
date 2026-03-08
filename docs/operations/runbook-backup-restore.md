@@ -60,6 +60,14 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    */cache/
    */logs/
    */BT_backup/
+
+   # Log databases (separate from log directories — not needed for restore)
+   */logs.db
+   */logs.db-wal
+   */logs.db-shm
+   */pihole-FTL.db
+   */pihole-FTL.db-wal
+   */pihole-FTL.db-shm
    ```
 
    **Service-specific exclusions:**
@@ -75,6 +83,9 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    - **Cache/cache**: API response and HTTP caches across all services. Rebuilt automatically.
    - **logs**: application log files across all services. Not needed for disaster recovery.
    - **BT_backup**: qBittorrent torrent resume data. Torrents can be re-added from *arr apps if needed.
+   - **logs.db**: *arr apps' log database (separate from the main app database like `sonarr.db`). Contains only application log entries — not needed for restore.
+   - **pihole-FTL.db**: Pi-hole DNS query history database (~200-500 MB). Regenerated on startup. The important Pi-hole data (`gravity.db`, config files) is still backed up.
+   - **.db-wal / .db-shm**: SQLite write-ahead log temporary files for the above databases.
 
    > **Note:** Duplicati runs as PUID=0 (root) so it can read all config files including
    > root-owned ones (Portainer, Pi-hole). The source volume is mounted `:ro` for safety.
@@ -187,7 +198,7 @@ For restoring from an offsite backup after disaster, see [Complete Disaster Reco
 | Backup job shows "Warning" | File locked during backup (e.g., SQLite) | Schedule Portainer snapshot before Duplicati (22:55 vs 23:00) |
 | "No backup job configured yet" | Duplicati has no jobs | Configure via WebUI at `http://192.168.3.10:8200` |
 | Backup size keeps growing | Deduplication not working or retention not applied | WebUI → Job → "Compact now"; verify retention policy |
-| Source size >200 MB | Missing exclusion filters for regenerable data | Verify all filters from step 4 are applied (Portainer subdirs, MediaCover, Backups, Cache, logs, BT_backup) |
+| Source size >200 MB | Missing exclusion filters for regenerable data | Verify all filters from step 4 are applied (Portainer subdirs, MediaCover, Backups, Cache, logs, BT_backup, logs.db, pihole-FTL.db) |
 | Offsite backup fails with auth error | Cloud OAuth token expired | WebUI → Edit backup → Destination → re-authenticate |
 
 #### Alternative: Manual backup with cron
@@ -560,6 +571,7 @@ For advanced homelabs:
 
 | Date | Change |
 |------|--------|
+| 2026-03-08 | Added log database and Pi-hole FTL exclusion filters; added Portainer subdirectory exclusions |
 | 2026-03-05 | Expanded Duplicati docs: REST API, encryption, restore, troubleshooting; updated QTS backup to web API method |
 | 2026-01-06 | Added backup-qts-config.sh script for QTS backup automation |
 | 2025-01-04 | Revision: Duplicati as primary method, docker compose command fixes, QTS port clarifications |
