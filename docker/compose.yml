@@ -223,6 +223,7 @@ services:
       WATCHTOWER_TIMEOUT: 30s
       WATCHTOWER_HTTP_API_METRICS: "true"
       WATCHTOWER_HTTP_API_UPDATE: "true"
+      WATCHTOWER_HTTP_API_PERIODIC_POLLS: "true"
       WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_API_TOKEN:-watchtower}
       # Discord notifications via Shoutrrr (set WATCHTOWER_NOTIFICATION_URL in .env.secrets)
       # Report mode: only notifies on successful updates or errors (silent otherwise)

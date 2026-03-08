@@ -345,10 +345,10 @@ make restart s=watchtower
 
 ### Step 5: Verify
 
-Trigger a manual update check:
+Trigger a manual update check via the HTTP API:
 
 ```bash
-docker exec watchtower /watchtower --run-once
+curl -H "Authorization: Bearer $WATCHTOWER_API_TOKEN" http://localhost:8383/v1/update
 ```
 
 If containers were updated or errors occurred, you should see a Discord message. If nothing needed updating, no notification is sent (this is the expected behavior).
