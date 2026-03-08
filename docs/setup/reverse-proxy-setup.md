@@ -130,7 +130,7 @@ nslookup sonarr.home.local
 ### 2.1 Configuration Already Included
 
 Traefik is already configured in `docker/compose.yml` with:
-- **HTTPS enabled** with self-signed certificate for `*.home.local`
+- **HTTPS enabled** with certificate signed by a private Root CA for `*.home.local`
 - Automatic HTTP → HTTPS redirect
 - Dashboard accessible via reverse proxy at `traefik.home.local`
 - Docker auto-discovery on `homelab_proxy` network
@@ -169,7 +169,7 @@ Configuration is already present in `docker/config/traefik/homeassistant.yml`.
 
 ### 2.4 HTTPS Certificate Generation
 
-Before starting the stack, generate self-signed certificates. `make setup` runs this automatically, but you can also run it manually:
+Before starting the stack, generate the Root CA and server certificates. `make setup` runs this automatically, but you can also run it manually:
 
 ```bash
 # Generate wildcard certificate for *.home.local
@@ -203,14 +203,14 @@ docker logs traefik
 ### 2.6 Test Access via Name
 
 ```bash
-# From browser or curl (-k ignores self-signed certificate)
+# From browser or curl (-k ignores untrusted certificate)
 curl -k https://sonarr.home.local
 curl -k https://radarr.home.local
 curl -k https://pihole.home.local
 ```
 
 > [!NOTE]
-> Browser will show warning on first access because certificate is self-signed. This is normal and safe for internal use. Accept certificate once and warning won't appear again.
+> Browser will show a warning on first access because the Root CA is not publicly trusted. This is normal for internal use. Install the CA certificate (see [Phase 3](#phase-3-trust-the-homelab-ca-certificate)) to permanently remove the warning on all devices.
 
 ---
 

@@ -319,6 +319,8 @@ echo
 if [ "$DRY_RUN" = false ]; then
     cp "$CA_CERT" "$CERT_PAGE_DIR/ca.crt"
     echo -e "${GREEN}[OK]${NC} CA cert copied to $CERT_PAGE_DIR/ca.crt"
+else
+    echo -e "${YELLOW}[DRY-RUN]${NC} Would copy CA cert to $CERT_PAGE_DIR/ca.crt"
 fi
 
 echo
