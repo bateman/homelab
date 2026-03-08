@@ -45,6 +45,12 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    # Service-specific (not useful to back up)
    */tailscale/
    */portainer/portainer.db
+   */portainer/chisel/
+   */portainer/bin/
+   */portainer/compose/
+   */portainer/docker_config/
+   */portainer/tls/
+   */portainer/certs/
    */duplicati/
 
    # Regenerable data (re-downloaded/recreated automatically on restore)
@@ -59,6 +65,7 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    **Service-specific exclusions:**
    - **Tailscale**: machine-specific state; requires re-auth on new install — not useful to back up.
    - **portainer.db**: always file-locked while Portainer runs. Backed up via `portainer.db.bak` instead (see step 5).
+   - **Portainer subdirs** (chisel, bin, compose, docker_config, tls, certs): runtime data — edge agent tunnels, downloaded binaries, UI-managed stacks, Docker configs, certificates. All regenerable; only `portainer.db.bak` is needed.
    - **Duplicati**: its own database (backup metadata, deduplication index) is regenerated from
      backup destinations. Including it creates circular growth — each backup makes the source larger.
 
@@ -180,7 +187,7 @@ For restoring from an offsite backup after disaster, see [Complete Disaster Reco
 | Backup job shows "Warning" | File locked during backup (e.g., SQLite) | Schedule Portainer snapshot before Duplicati (22:55 vs 23:00) |
 | "No backup job configured yet" | Duplicati has no jobs | Configure via WebUI at `http://192.168.3.10:8200` |
 | Backup size keeps growing | Deduplication not working or retention not applied | WebUI → Job → "Compact now"; verify retention policy |
-| Source size >200 MB | Missing exclusion filters for regenerable data | Verify all filters from step 4 are applied (MediaCover, Backups, Cache, logs, BT_backup) |
+| Source size >200 MB | Missing exclusion filters for regenerable data | Verify all filters from step 4 are applied (Portainer subdirs, MediaCover, Backups, Cache, logs, BT_backup) |
 | Offsite backup fails with auth error | Cloud OAuth token expired | WebUI → Edit backup → Destination → re-authenticate |
 
 #### Alternative: Manual backup with cron
