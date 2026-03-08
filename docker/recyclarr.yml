@@ -88,8 +88,8 @@ sonarr:
           - name: Bluray-720p
           - name: HDTV-720p
 
-      # HD-1080p - All 1080p qualities, cutoff at HDTV-1080p
-      - name: HD-1080p
+      # HD - 720p/1080p - Accepts all HD qualities, cutoff at HDTV-1080p
+      - name: HD - 720p/1080p
         min_format_score: 0
         upgrade:
           allowed: true
@@ -101,7 +101,28 @@ sonarr:
               - WEBDL-1080p
               - WEBRip-1080p
           - name: Bluray-1080p
+          - name: HDTV-1080p
+          - name: WEB 720p
+            qualities:
+              - WEBDL-720p
+              - WEBRip-720p
+          - name: Bluray-720p
+          - name: HDTV-720p
+
+      # HD-1080p - Only 1080p qualities, cutoff at HDTV-1080p
+      - name: HD-1080p
+        min_format_score: 0
+        upgrade:
+          allowed: true
+          until_quality: HDTV-1080p
+          until_score: 10000
+        qualities:
           - name: Remux-1080p
+          - name: Bluray-1080p
+          - name: WEB 1080p
+            qualities:
+              - WEBDL-1080p
+              - WEBRip-1080p
           - name: HDTV-1080p
 
       # Uncomment for additional profiles (find trash_ids via Trash Guides):
@@ -223,8 +244,8 @@ radarr:
           - name: Bluray-720p
           - name: HDTV-720p
 
-      # HD-1080p - All 1080p qualities, cutoff at HDTV-1080p
-      - name: HD-1080p
+      # HD - 720p/1080p - Accepts all HD qualities, cutoff at HDTV-1080p
+      - name: HD - 720p/1080p
         min_format_score: 0
         upgrade:
           allowed: true
@@ -235,8 +256,30 @@ radarr:
             qualities:
               - WEBDL-1080p
               - WEBRip-1080p
-          - name: Bluray-1080p
           - name: Remux-1080p
+          - name: Bluray-1080p
+          - name: HDTV-1080p
+          - name: WEB 720p
+            qualities:
+              - WEBDL-720p
+              - WEBRip-720p
+          - name: Bluray-720p
+          - name: HDTV-720p
+
+      # HD-1080p - Only 1080p qualities, cutoff at HDTV-1080p
+      - name: HD-1080p
+        min_format_score: 0
+        upgrade:
+          allowed: true
+          until_quality: HDTV-1080p
+          until_score: 10000
+        qualities:
+          - name: Remux-1080p
+          - name: Bluray-1080p
+          - name: WEB 1080p
+            qualities:
+              - WEBDL-1080p
+              - WEBRip-1080p
           - name: HDTV-1080p
 
       # Remux + WEB 1080p
