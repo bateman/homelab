@@ -160,6 +160,7 @@ A quality profile defines:
 | Profile | Best For | Typical Episode Size | Notes |
 |---------|----------|---------------------|-------|
 | **WEB-1080p** | Most users | 2–5 GB | Default in this repo. Best for streaming content |
+| **HD - 720p/1080p** | Flexibility | 1–5 GB | Active in this repo. Accepts 720p–1080p (HDTV/Bluray/WEB), cutoff WEB 1080p |
 | WEB-2160p | 4K display + storage | 5–15 GB | Requires 4K-capable playback device |
 
 #### Radarr (Movies)
@@ -168,6 +169,7 @@ A quality profile defines:
 |---------|----------|-------------------|-------|
 | **HD Bluray + WEB** | Most users | 6–15 GB | Default in this repo. Mix of Bluray encodes and WEB-DL |
 | **UHD Bluray + WEB** | 4K enthusiasts | 20–60 GB | Active in this repo. 4K with 1080p fallback. Requires 4K display and HDR support |
+| **HD - 720p/1080p** | Flexibility | 4–15 GB | Active in this repo. Accepts 720p–1080p (HDTV/Bluray/WEB/Remux), cutoff WEB 1080p |
 | Remux + WEB 1080p | Quality enthusiasts | 20–40 GB | Near-lossless, large files |
 | Remux + WEB 2160p | Maximum quality | 40–100 GB | Highest storage cost |
 
@@ -509,6 +511,10 @@ docker exec recyclarr recyclarr sync --preview
 
 # Apply
 make recyclarr-sync
+
+# If the profile already exists in Sonarr/Radarr (created manually via UI),
+# use adopt=true to let Recyclarr take ownership before syncing:
+make recyclarr-sync adopt=true
 ```
 
 Verify in the Sonarr/Radarr UI: Settings → Profiles — you should see the new profile.
@@ -592,6 +598,9 @@ docker exec recyclarr recyclarr sync --preview
 # Sync (apply changes)
 make recyclarr-sync
 
+# Sync with adopt (when profiles already exist in the UI)
+make recyclarr-sync adopt=true
+
 # Sync only Sonarr or Radarr
 docker exec recyclarr recyclarr sync sonarr
 docker exec recyclarr recyclarr sync radarr
@@ -645,6 +654,7 @@ This is already configured in `docker/recyclarr.yml` under `media_management.pro
 | `Unauthorized` | Invalid API key | Verify `SONARR_API_KEY`/`RADARR_API_KEY` in `docker/.env.secrets` |
 | `Connection refused` | App not running | Check container status with `docker ps` |
 | `No guide data found` | Invalid trash_id | Verify trash_id against [Trash Guides](https://trash-guides.info/) |
+| `profile ... already exists` | Profile was created manually in the UI before Recyclarr managed it | Run `docker exec recyclarr recyclarr state repair --adopt` to let Recyclarr adopt the existing profile, then re-sync |
 
 Always preview before applying:
 
