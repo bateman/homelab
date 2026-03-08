@@ -42,9 +42,10 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    - **Encryption**: Optional but recommended for offsite backups
 4. Configure **Filters** (Source Data tab → Filters → Add filter → **Exclude expression**):
 
-   > **Note:** All filters use glob syntax ("Exclude expression" in the dropdown). Duplicati regex
-   > filters have [known bugs](https://forum.duplicati.com/t/bug-regular-expression-filter-operator-or-does-not-work-inside-parenthesis/7950)
-   > with `|` alternation and nested `[]`, so we avoid them entirely.
+   > **Note:** All filters use glob syntax ("Exclude expression" in the dropdown). Duplicati has
+   > [known bugs](https://forum.duplicati.com/t/bug-regular-expression-filter-operator-or-does-not-work-inside-parenthesis/7950)
+   > with `|` alternation and nested `[]` in regex filters. Glob `[Cc]` character classes also
+   > silently fail, so we use only simple glob wildcards (`*`, `?`).
 
    ```
    # Service-specific (not useful to back up)
@@ -56,7 +57,8 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    # Regenerable data (re-downloaded/recreated automatically)
    */MediaCover/
    */Backups/
-   */[Cc]ache/
+   */Cache/
+   */cache/
    */log*/
    */BT_backup/
    */.git/
@@ -81,7 +83,7 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    **Regenerable data exclusions:**
    - **MediaCover**: poster/banner image cache in *arr apps (hundreds of MB per app). Re-downloaded automatically on first library sync after restore.
    - **Backups**: *arr apps' internal scheduled backups — redundant since Duplicati already backs up the databases.
-   - **[Cc]ache/**: API response and HTTP caches across all services. Glob character class `[Cc]` matches both `Cache/` and `cache/` in a single filter. Rebuilt automatically.
+   - **Cache/cache**: API response and HTTP caches across all services (two filters needed — Duplicati glob doesn't support `[Cc]` character classes). Rebuilt automatically.
    - **log\*/**: matches `log/`, `logs/`, and any other `log`-prefixed directories. Covers Bazarr (`log/`), most other services (`logs/`). Not needed for disaster recovery.
    - **BT_backup**: qBittorrent torrent resume data. Torrents can be re-added from *arr apps if needed.
    - **.git/**: cloned git repositories inside service configs (e.g., Recyclarr's trash-guides repo, ~24 MB). Regenerated automatically on sync. Service configuration files are outside `.git/` and still backed up. Also covers what `*/repo/` previously excluded.
@@ -206,7 +208,7 @@ For restoring from an offsite backup after disaster, see [Complete Disaster Reco
 | Backup job shows "Warning" | File locked during backup (e.g., SQLite) | Schedule Portainer snapshot before Duplicati (22:55 vs 23:00) |
 | "No backup job configured yet" | Duplicati has no jobs | Configure via WebUI at `http://192.168.3.10:8200` |
 | Backup size keeps growing | Deduplication not working or retention not applied | WebUI → Job → "Compact now"; verify retention policy |
-| Source size >500 MB | Missing exclusion filters for regenerable data | Verify all 15 glob filters from step 4 are applied (all "Exclude expression"). Expected source: ~430 MB (dominated by lidarr.db 196 MB + gravity.db 83 MB + other *arr DBs + config files) |
+| Source size >500 MB | Missing exclusion filters for regenerable data | Verify all 16 glob filters from step 4 are applied (all "Exclude expression"). Expected source: ~445 MB (dominated by lidarr.db 196 MB + gravity.db 83 MB + other *arr DBs + config files) |
 | Offsite backup fails with auth error | Cloud OAuth token expired | WebUI → Edit backup → Destination → re-authenticate |
 
 #### Alternative: Manual backup with cron
@@ -579,7 +581,7 @@ For advanced homelabs:
 
 | Date | Change |
 |------|--------|
-| 2026-03-08 | Optimized to 15 glob filters — combined `Cache/`+`cache/` → `[Cc]ache/`, `logs/`+`log/` → `log*/`; replaced `repo/`+`macvendor.db` with higher-impact `.git/`, `listsCache/`, `gravity_old.db*`, `gravity.db.bak*` (net ~120 MB more excluded) |
+| 2026-03-08 | Optimized to 16 glob filters — combined `logs/`+`log/` → `log*/`; replaced `repo/`+`macvendor.db` with higher-impact `.git/`, `listsCache/`, `gravity_old.db*`, `gravity.db.bak*`; reverted `[Cc]ache` (Duplicati glob doesn't support character classes) |
 | 2026-03-08 | Switched to all-glob filters (15 total) — regex has known Duplicati bugs with `\|` alternation and nested `[]`; optimized with `*/portainer/*/`, `*/logs.db*`, `*/pihole-FTL.db*` wildcards; added log/, repo/, macvendor.db exclusions |
 | 2026-03-05 | Expanded Duplicati docs: REST API, encryption, restore, troubleshooting; updated QTS backup to web API method |
 | 2026-01-06 | Added backup-qts-config.sh script for QTS backup automation |
