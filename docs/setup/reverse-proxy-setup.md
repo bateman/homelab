@@ -290,8 +290,8 @@ A certificate download page is available at **https://certs.home.local** with pe
 
 1. Open **Safari** and go to `https://certs.home.local`
 2. Tap **Install Profile** — a prompt says "Profile Downloaded"
-3. Open **Settings** → **General** → **VPN & Device Management**
-4. Tap **Homelab CA Certificate** → **Install** → enter passcode
+3. Open **Settings** → **General** → **Profiles**
+4. Tap the downloaded profile → **Install** → enter passcode
 5. Go to **Settings** → **General** → **About** → **Certificate Trust Settings**
 6. Enable **Full Trust** for **Homelab Root CA**
 
