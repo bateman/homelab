@@ -497,7 +497,7 @@ show-urls:
 	@printf "$(GREEN)Utilities$(NC)\n"
 	@echo "  Cert Page:    https://certs.home.local (CA cert download)"
 	@echo ""
-	@printf "$(YELLOW)Note: All services require Authelia SSO when accessed via *.home.local$(NC)\n"
+	@printf "$(YELLOW)Note: All services require Authelia SSO via *.home.local (except certs.home.local)$(NC)\n"
 	@echo ""
 
 # Alias for show-urls
