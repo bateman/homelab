@@ -120,15 +120,38 @@ if [ "$GENERATE_CA" = true ]; then
         echo -e "${GREEN}[OK]${NC} CA key: $CA_KEY"
 
         echo "Generating Root CA certificate (valid for ${CA_DAYS} days)..."
+
+        # Use a config file for CA extensions (compatible with OpenSSL 1.0.x+)
+        CA_CNF=$(mktemp)
+        cat > "$CA_CNF" << EOF
+[req]
+default_bits = ${KEY_SIZE}
+prompt = no
+default_md = sha256
+distinguished_name = dn
+x509_extensions = v3_ca
+
+[dn]
+C = IT
+ST = Italia
+L = Home
+O = Homelab
+OU = Infrastructure
+CN = Homelab Root CA
+
+[v3_ca]
+basicConstraints = critical,CA:TRUE,pathlen:0
+keyUsage = critical,keyCertSign,cRLSign
+subjectKeyIdentifier = hash
+EOF
+
         openssl req -new -x509 \
             -key "$CA_KEY" \
             -out "$CA_CERT" \
             -days "$CA_DAYS" \
-            -subj "/C=IT/ST=Italia/L=Home/O=Homelab/OU=Infrastructure/CN=Homelab Root CA" \
-            -addext "basicConstraints=critical,CA:TRUE,pathlen:0" \
-            -addext "keyUsage=critical,keyCertSign,cRLSign" \
-            -addext "subjectKeyIdentifier=hash" \
+            -config "$CA_CNF" \
             2>/dev/null
+        rm -f "$CA_CNF"
         chmod 644 "$CA_CERT"
         echo -e "${GREEN}[OK]${NC} CA cert: $CA_CERT"
     else
