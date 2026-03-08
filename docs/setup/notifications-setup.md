@@ -183,6 +183,7 @@ Below are the recommended monitor types for each service in the homelab. Use con
 | Tailscale | Docker Container | Container: `tailscale` | Uses `network_mode: host`, not reachable via Docker network; built-in healthcheck runs `tailscale status --json` |
 | Socket Proxy | Docker Container | Container: `socket-proxy` | Internal only, no exposed HTTP endpoint |
 | Watchtower | Docker Container | Container: `watchtower` | Metrics endpoint requires auth token; Docker monitor is simpler |
+| Cert Page | HTTP(s) | `http://cert-page:80/` | CA certificate download page; no auth required |
 | Home Assistant | HTTP(s) | `http://192.168.3.10:8123/api/` | Must use host IP — HA runs in `network_mode: host` |
 
 > [!NOTE]

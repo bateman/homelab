@@ -45,6 +45,12 @@ check-curl:
 		exit 1; \
 	}
 
+check-openssl:
+	@command -v openssl >/dev/null 2>&1 || { \
+		printf "$(RED)Error: openssl not found. Install openssl before continuing.$(NC)\n"; \
+		exit 1; \
+	}
+
 validate: check-compose
 	@echo ">>> Validating configuration..."
 	@if grep -q 'COMPOSE_PROFILES=.*vpn' docker/.env 2>/dev/null && \
@@ -106,7 +112,7 @@ help:
 # Setup
 # =============================================================================
 
-setup: check-compose
+setup: check-compose check-openssl
 	@if [ ! -f docker/.env ]; then \
 		echo ">>> Creating .env from template..."; \
 		cp docker/.env.example docker/.env; \
@@ -144,11 +150,17 @@ setup: check-compose
 		printf "$(GREEN)>>> Authelia secrets already exist (skipping)$(NC)\n"; \
 	fi
 	@echo ">>> Generating TLS certificates..."
-	@if [ ! -f docker/config/traefik/certs/home.local.crt ] || ! openssl x509 -noout -in docker/config/traefik/certs/home.local.crt 2>/dev/null; then \
-		rm -f docker/config/traefik/certs/home.local.crt docker/config/traefik/certs/home.local.key; \
-		if [ ! -x scripts/generate-certs.sh ]; then \
-			chmod +x scripts/generate-certs.sh; \
-		fi; \
+	@if [ ! -x scripts/generate-certs.sh ]; then \
+		chmod +x scripts/generate-certs.sh; \
+	fi
+	@if [ ! -f docker/config/traefik/certs/ca.crt ] || ! openssl x509 -noout -in docker/config/traefik/certs/ca.crt 2>/dev/null; then \
+		echo ">>> No valid CA found — generating CA + server certificate..."; \
+		./scripts/generate-certs.sh; \
+	elif [ ! -f docker/config/traefik/certs/home.local.crt ] || ! openssl x509 -noout -in docker/config/traefik/certs/home.local.crt 2>/dev/null; then \
+		echo ">>> CA exists but server cert is missing/invalid — regenerating server cert..."; \
+		./scripts/generate-certs.sh; \
+	elif ! openssl verify -CAfile docker/config/traefik/certs/ca.crt docker/config/traefik/certs/home.local.crt >/dev/null 2>&1; then \
+		echo ">>> Server cert not signed by current CA — regenerating..."; \
 		./scripts/generate-certs.sh; \
 	else \
 		printf "$(GREEN)>>> TLS certificates already exist and are valid (skipping)$(NC)\n"; \
@@ -432,6 +444,19 @@ health: check-docker check-curl
 	else \
 		printf "Authelia: $(RED)UNHEALTHY$(NC)\n"; \
 	fi
+	@# Cert download page (no host port — Traefik only)
+	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^cert-page$$'; then \
+		HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' cert-page 2>/dev/null); \
+		if [ "$$HEALTH" = "healthy" ]; then \
+			printf "Cert-Page: $(GREEN)OK (healthy)$(NC)\n"; \
+		elif [ "$$HEALTH" = "starting" ]; then \
+			printf "Cert-Page: $(YELLOW)STARTING$(NC)\n"; \
+		else \
+			printf "Cert-Page: $(RED)UNHEALTHY$(NC)\n"; \
+		fi; \
+	else \
+		printf "Cert-Page: $(YELLOW)NOT RUNNING$(NC)\n"; \
+	fi
 	@# Portainer uses HTTPS
 	@STATUS=$$(curl -sk -o /dev/null -w '%{http_code}' --max-time 5 https://localhost:9443 2>/dev/null); \
 	if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "303" ]; then \
@@ -480,7 +505,10 @@ show-urls:
 	@printf "$(GREEN)Authentication (SSO)$(NC)\n"
 	@echo "  Authelia:     https://auth.home.local (requires DNS)"
 	@echo ""
-	@printf "$(YELLOW)Note: All services require Authelia SSO when accessed via *.home.local$(NC)\n"
+	@printf "$(GREEN)Utilities$(NC)\n"
+	@echo "  Cert Page:    https://certs.home.local (CA cert download)"
+	@echo ""
+	@printf "$(YELLOW)Note: All services require Authelia SSO via *.home.local (except certs.home.local)$(NC)\n"
 	@echo ""
 
 # Alias for show-urls

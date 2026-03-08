@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homelab CA Certificate</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a; color: #e2e8f0;
+            min-height: 100vh; padding: 2rem 1rem;
+        }
+        .container { max-width: 640px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #f8fafc; }
+        .subtitle { color: #94a3b8; margin-bottom: 2rem; }
+        .download-card {
+            background: #1e293b; border-radius: 12px; padding: 1.5rem;
+            margin-bottom: 1rem; border: 1px solid #334155;
+        }
+        .download-card h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .download-card p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; }
+        .btn {
+            display: inline-block; padding: 0.75rem 1.5rem;
+            background: #3b82f6; color: #fff; text-decoration: none;
+            border-radius: 8px; font-weight: 600; font-size: 0.95rem;
+        }
+        .btn:hover { background: #2563eb; }
+        .btn-secondary { background: #475569; }
+        .btn-secondary:hover { background: #64748b; }
+        .badge {
+            display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.5rem;
+            border-radius: 4px; background: #22c55e20; color: #4ade80;
+            margin-left: 0.5rem; vertical-align: middle;
+        }
+        details {
+            background: #1e293b; border-radius: 12px; padding: 1.5rem;
+            margin-bottom: 1rem; border: 1px solid #334155;
+        }
+        summary {
+            cursor: pointer; font-weight: 600; font-size: 1rem;
+            list-style: none; display: flex; align-items: center; gap: 0.5rem;
+        }
+        summary::before { content: "▸"; transition: transform 0.2s; }
+        details[open] summary::before { transform: rotate(90deg); }
+        .steps { margin-top: 1rem; padding-left: 1.25rem; }
+        .steps li {
+            margin-bottom: 0.75rem; color: #cbd5e1; font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .steps li strong { color: #f8fafc; }
+        code {
+            background: #0f172a; padding: 0.15rem 0.4rem; border-radius: 4px;
+            font-size: 0.85rem; color: #7dd3fc;
+        }
+        pre {
+            background: #0f172a; padding: 1rem; border-radius: 8px;
+            overflow-x: auto; margin: 0.5rem 0; font-size: 0.85rem;
+            color: #7dd3fc;
+        }
+        .note {
+            margin-top: 2rem; padding: 1rem; background: #1e293b;
+            border-radius: 8px; border-left: 3px solid #f59e0b;
+            font-size: 0.85rem; color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Homelab CA Certificate</h1>
+        <p class="subtitle">Install the Root CA to trust all *.home.local services</p>
+
+        <!-- Apple devices (recommended for iOS/iPadOS/macOS) -->
+        <div class="download-card">
+            <h2>Apple Devices <span class="badge">Recommended</span></h2>
+            <p>iPhone, iPad, Mac — installs the CA certificate with a guided flow.</p>
+            <a href="/homelab.mobileconfig" class="btn">Install Profile</a>
+        </div>
+
+        <!-- Generic CA cert for other platforms -->
+        <div class="download-card">
+            <h2>Other Platforms</h2>
+            <p>Windows, Linux, Android, Firefox — download the CA certificate file.</p>
+            <a href="/ca.crt" class="btn btn-secondary">Download CA Certificate</a>
+        </div>
+
+        <!-- Per-platform instructions -->
+        <details>
+            <summary>iPhone / iPad</summary>
+            <ol class="steps">
+                <li>Tap <strong>Install Profile</strong> above (use Safari)</li>
+                <li>A prompt appears: <strong>Profile Downloaded</strong> — tap <strong>Close</strong></li>
+                <li>Open <strong>Settings</strong> &rarr; <strong>General</strong> &rarr; <strong>VPN &amp; Device Management</strong></li>
+                <li>Tap <strong>Homelab CA Certificate</strong> &rarr; <strong>Install</strong> &rarr; enter passcode</li>
+                <li>Go to <strong>Settings</strong> &rarr; <strong>General</strong> &rarr; <strong>About</strong> &rarr; <strong>Certificate Trust Settings</strong></li>
+                <li>Enable <strong>Full Trust</strong> for <strong>Homelab Root CA</strong></li>
+            </ol>
+        </details>
+
+        <details>
+            <summary>macOS</summary>
+            <ol class="steps">
+                <li>Tap <strong>Install Profile</strong> above, or download <code>ca.crt</code></li>
+                <li>If using the profile: follow the prompts in System Settings</li>
+                <li>If using ca.crt: double-click the file &rarr; Keychain Access opens</li>
+                <li>Select <strong>System</strong> keychain &rarr; Add</li>
+                <li>Find <strong>Homelab Root CA</strong> in the list &rarr; double-click</li>
+                <li>Expand <strong>Trust</strong> &rarr; set <strong>Always Trust</strong></li>
+                <li>Or via terminal:
+                    <pre>sudo security add-trusted-cert -d -r trustRoot \
+    -k /Library/Keychains/System.keychain ca.crt</pre>
+                </li>
+            </ol>
+        </details>
+
+        <details>
+            <summary>Windows</summary>
+            <ol class="steps">
+                <li>Download <code>ca.crt</code> above</li>
+                <li>Double-click the file &rarr; <strong>Install Certificate</strong></li>
+                <li>Select <strong>Local Machine</strong> &rarr; Next</li>
+                <li><strong>Place all certificates in the following store</strong> &rarr; Browse</li>
+                <li>Select <strong>Trusted Root Certification Authorities</strong></li>
+                <li>Finish &rarr; restart browser</li>
+            </ol>
+        </details>
+
+        <details>
+            <summary>Linux (Chrome / Chromium)</summary>
+            <ol class="steps">
+                <li>Download <code>ca.crt</code> above</li>
+                <li>Import into NSS database:
+                    <pre>certutil -d sql:$HOME/.pki/nssdb -A \
+    -t "C,," -n "Homelab Root CA" -i ca.crt</pre>
+                </li>
+                <li>Restart browser</li>
+            </ol>
+        </details>
+
+        <details>
+            <summary>Firefox (all systems)</summary>
+            <ol class="steps">
+                <li>Download <code>ca.crt</code> above</li>
+                <li>Firefox: <strong>Settings</strong> &rarr; <strong>Privacy &amp; Security</strong> &rarr; <strong>Certificates</strong> &rarr; <strong>View Certificates</strong></li>
+                <li><strong>Authorities</strong> tab &rarr; <strong>Import</strong></li>
+                <li>Select <code>ca.crt</code> &rarr; check <strong>Trust this CA to identify websites</strong></li>
+            </ol>
+        </details>
+
+        <details>
+            <summary>Android</summary>
+            <ol class="steps">
+                <li>Download <code>ca.crt</code> above</li>
+                <li><strong>Settings</strong> &rarr; <strong>Security</strong> &rarr; <strong>Encryption &amp; credentials</strong></li>
+                <li><strong>Install a certificate</strong> &rarr; <strong>CA certificate</strong></li>
+                <li>Select the downloaded file</li>
+            </ol>
+        </details>
+
+        <div class="note">
+            <strong>One-time setup.</strong> Once the CA is trusted, all *.home.local services
+            (Sonarr, Radarr, etc.) will show a valid certificate — no more browser warnings.
+            The server certificate can be rotated without repeating this process.
+        </div>
+    </div>
+</body>
+</html>
