@@ -40,51 +40,52 @@ The Duplicati container manages automatic backups with deduplication and encrypt
    - **Schedule**: Daily at 23:00
    - **Retention**: Smart backup retention (7 daily, 4 weekly, 3 monthly)
    - **Encryption**: Optional but recommended for offsite backups
-4. Configure **Filters** (Source Data tab → Filters):
+4. Configure **Filters** (Source Data tab → Filters → Add filter → **Exclude expression**):
 
-   > **Important:** Duplicati has two filter types, selectable from the dropdown when adding a filter:
-   > - **Exclude expression** → glob/wildcard patterns (e.g., `*/tailscale/`)
-   > - **Exclude regular expression** → .NET regex, entered WITHOUT `[]` brackets (the UI adds them internally)
-   >
-   > The `[regex]` bracket syntax is only for CLI/parameters files. In the WebUI, select the correct
-   > dropdown type for each filter.
+   > **Note:** All filters use glob syntax ("Exclude expression" in the dropdown). Duplicati regex
+   > filters have [known bugs](https://forum.duplicati.com/t/bug-regular-expression-filter-operator-or-does-not-work-inside-parenthesis/7950)
+   > with `|` alternation and nested `[]`, so we avoid them entirely.
 
-   **Glob filters** — Add filter → **Exclude expression**:
    ```
+   # Service-specific (not useful to back up)
    */tailscale/
    */portainer/portainer.db
+   */portainer/*/
    */duplicati/
+
+   # Regenerable data (re-downloaded/recreated automatically)
    */MediaCover/
    */Backups/
+   */Cache/
+   */cache/
+   */logs/
+   */log/
    */BT_backup/
    */repo/
    */macvendor.db
-   ```
 
-   **Regex filters** — Add filter → **Exclude regular expression**:
-   ```
-   /portainer/(chisel|bin|compose|docker_config|tls|certs)/
-   /[Cc]ache/
-   /logs?/
-   /(logs|pihole-FTL)\.db(-wal|-shm)?$
+   # Log/analytics databases (not needed for restore)
+   */logs.db*
+   */pihole-FTL.db*
    ```
 
    **Service-specific exclusions:**
    - **Tailscale**: machine-specific state; requires re-auth on new install — not useful to back up.
    - **portainer.db**: always file-locked while Portainer runs. Backed up via `portainer.db.bak` instead (see step 5).
-   - **Portainer subdirs** — regex matches chisel, bin, compose, docker_config, tls, certs: runtime data (edge agent tunnels, downloaded binaries, UI-managed stacks, Docker configs, certificates). All regenerable. Root-level files (`portainer.db.bak`, `portainer.key`, etc.) are still backed up.
+   - **Portainer subdirs** (`*/portainer/*/`): wildcard matches all subdirectories (chisel, bin, compose, docker_config, tls, certs — runtime data). Root-level files (`portainer.db.bak`, `portainer.key`, etc.) are still backed up since they are files, not directories.
    - **Duplicati**: its own database (backup metadata, deduplication index) is regenerated from
      backup destinations. Including it creates circular growth — each backup makes the source larger.
 
    **Regenerable data exclusions:**
    - **MediaCover**: poster/banner image cache in *arr apps (hundreds of MB per app). Re-downloaded automatically on first library sync after restore.
    - **Backups**: *arr apps' internal scheduled backups — redundant since Duplicati already backs up the databases.
-   - **Cache** (regex `/[Cc]ache/`): API response and HTTP caches across all services. Matches both `Cache/` and `cache/`. Rebuilt automatically.
-   - **logs** (regex `/logs?/`): application log directories across all services. Matches both `logs/` (most services) and `log/` (Bazarr). Not needed for disaster recovery.
+   - **Cache/cache**: API response and HTTP caches across all services (two filters for upper/lowercase). Rebuilt automatically.
+   - **logs/log**: application log directories across all services — `logs/` for most services, `log/` for Bazarr. Not needed for disaster recovery.
    - **BT_backup**: qBittorrent torrent resume data. Torrents can be re-added from *arr apps if needed.
    - **repo**: Recyclarr's cloned Trash Guides git repository (~10-30 MB). Regenerated automatically on every sync.
    - **macvendor.db**: Pi-hole MAC vendor lookup database (~30-50 MB). Regenerated with `pihole -g`.
-   - **Log databases** (regex `/(logs|pihole-FTL)\.db(-wal|-shm)?$`): single regex covers `logs.db`, `pihole-FTL.db`, and their SQLite WAL/SHM temporary files. The *arr `logs.db` contains only application log entries (not the main app database like `sonarr.db`). The Pi-hole `pihole-FTL.db` is the DNS query history database (~200-500 MB), regenerated on startup. The important Pi-hole data (`gravity.db`, config files) is still backed up.
+   - **logs.db\***: trailing wildcard covers `logs.db`, `logs.db-wal`, `logs.db-shm` — *arr apps' log database and its SQLite temporary files. Not the main app database (e.g., `sonarr.db`).
+   - **pihole-FTL.db\***: trailing wildcard covers `pihole-FTL.db` and its WAL/SHM files — Pi-hole DNS query history database (~200-500 MB), regenerated on startup. The important Pi-hole data (`gravity.db`, config files) is still backed up.
 
    > **Note:** Duplicati runs as PUID=0 (root) so it can read all config files including
    > root-owned ones (Portainer, Pi-hole). The source volume is mounted `:ro` for safety.
@@ -197,7 +198,7 @@ For restoring from an offsite backup after disaster, see [Complete Disaster Reco
 | Backup job shows "Warning" | File locked during backup (e.g., SQLite) | Schedule Portainer snapshot before Duplicati (22:55 vs 23:00) |
 | "No backup job configured yet" | Duplicati has no jobs | Configure via WebUI at `http://192.168.3.10:8200` |
 | Backup size keeps growing | Deduplication not working or retention not applied | WebUI → Job → "Compact now"; verify retention policy |
-| Source size >400 MB | Missing or misconfigured exclusion filters | Verify all 12 filters from step 4 are applied. Regex filters must use "Exclude regular expression" dropdown (not "Exclude expression"). Expected source: ~150-350 MB |
+| Source size >400 MB | Missing exclusion filters for regenerable data | Verify all 15 glob filters from step 4 are applied (all "Exclude expression"). Expected source: ~150-350 MB (essential databases + config files) |
 | Offsite backup fails with auth error | Cloud OAuth token expired | WebUI → Edit backup → Destination → re-authenticate |
 
 #### Alternative: Manual backup with cron
@@ -570,7 +571,7 @@ For advanced homelabs:
 
 | Date | Change |
 |------|--------|
-| 2026-03-08 | Consolidated 21 → 12 filters (8 glob + 4 regex); fixed WebUI syntax — regex filters use "Exclude regular expression" dropdown, no `[]` brackets; added log/, repo/, macvendor.db exclusions |
+| 2026-03-08 | Switched to all-glob filters (15 total) — regex has known Duplicati bugs with `\|` alternation and nested `[]`; optimized with `*/portainer/*/`, `*/logs.db*`, `*/pihole-FTL.db*` wildcards; added log/, repo/, macvendor.db exclusions |
 | 2026-03-05 | Expanded Duplicati docs: REST API, encryption, restore, troubleshooting; updated QTS backup to web API method |
 | 2026-01-06 | Added backup-qts-config.sh script for QTS backup automation |
 | 2025-01-04 | Revision: Duplicati as primary method, docker compose command fixes, QTS port clarifications |
