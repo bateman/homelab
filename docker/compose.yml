@@ -226,10 +226,14 @@ services:
       WATCHTOWER_HTTP_API_PERIODIC_POLLS: "true"
       WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_API_TOKEN:-watchtower}
       # Discord notifications via Shoutrrr (set WATCHTOWER_NOTIFICATION_URL in .env.secrets)
-      WATCHTOWER_NOTIFICATIONS_LEVEL: debug
-      # TODO: re-enable report mode after verifying notifications work:
-      #   WATCHTOWER_NOTIFICATION_REPORT: "true"
-      #   and restore the report template below
+      WATCHTOWER_NOTIFICATION_REPORT: "true"
+      WATCHTOWER_NOTIFICATION_TEMPLATE: >-
+        {{- if .Report}}
+        {{- if .Report.Updated}}{{len .Report.Updated}} container(s) updated:{{range .Report.Updated}}{{"\n"}}- {{.Name}} ({{.ImageName}}){{end}}{{"\n"}}{{end}}
+        {{- if .Report.Failed}}{{len .Report.Failed}} container(s) failed:{{range .Report.Failed}}{{"\n"}}- {{.Name}}: {{.Error}}{{end}}{{"\n"}}{{end}}
+        {{- if .Report.Skipped}}{{len .Report.Skipped}} container(s) skipped:{{range .Report.Skipped}}{{"\n"}}- {{.Name}}: {{.Error}}{{end}}{{"\n"}}{{end}}
+        {{- if .Report.Fresh}}{{len .Report.Fresh}} container(s) up-to-date{{end}}
+        {{- end}}
     ports:
       - "8383:8080"
     networks:

@@ -351,15 +351,18 @@ Trigger a manual update check via the HTTP API:
 curl -H "Authorization: Bearer $WATCHTOWER_API_TOKEN" http://localhost:8383/v1/update
 ```
 
-If containers were updated or errors occurred, you should see a Discord message. If nothing needed updating, no notification is sent (this is the expected behavior).
+You should receive a Discord message — even if no containers needed updating (e.g., `N container(s) up-to-date`).
 
 ### How Notification Filtering Works
 
-Watchtower runs in **report mode** (`WATCHTOWER_NOTIFICATION_REPORT=true`), which sends a single summary per update cycle instead of per-container messages. The notification template only renders content when containers were `.Report.Updated` or `.Report.Failed` — when neither condition is true (i.e., no updates found), the template renders empty and Watchtower skips sending the notification entirely.
+Watchtower runs in **report mode** (`WATCHTOWER_NOTIFICATION_REPORT=true`), which sends a single summary per update cycle instead of per-container messages. The notification template includes `.Report.Fresh` (containers checked and found up-to-date), so it **always renders non-empty content** — a Discord notification is sent on every run.
 
-**You will only receive Discord messages when:**
-- One or more containers were successfully updated
-- One or more containers failed to update
+**You will receive Discord messages on every Watchtower run:**
+- No updates: `N container(s) up-to-date`
+- Updates found: lists updated container names and images
+- Failures: lists failed containers with error details
+
+If you stop receiving the daily notification, it means Watchtower itself is not running.
 
 To customize the template, edit `WATCHTOWER_NOTIFICATION_TEMPLATE` in `docker/compose.yml`. Report mode templates receive a `.Report` object with `.Updated`, `.Failed`, `.Skipped`, and `.Fresh` container lists (e.g., `{{.Report.Updated}}`). See [Watchtower notifications docs](https://containrrr.dev/watchtower/notifications/) for Go template syntax.
 
