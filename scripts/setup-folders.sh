@@ -195,6 +195,7 @@ make_dir "${CONFIG_ROOT}/portainer"
 make_dir "${CONFIG_ROOT}/duplicati"
 make_dir "${CONFIG_ROOT}/uptime-kuma"
 make_dir "${CONFIG_ROOT}/traefik"
+make_dir "${CONFIG_ROOT}/cert-page"
 make_dir "${CONFIG_ROOT}/authelia"
 make_dir "${CONFIG_ROOT}/tailscale"
 

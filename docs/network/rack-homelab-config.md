@@ -297,6 +297,7 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 | Watchtower | 8383 | Container auto-update |
 | Traefik | 80/443 | Reverse proxy (dashboard via traefik.home.local) |
 | Tailscale | — | Mesh VPN remote access (subnet router, `network_mode: host`) |
+| Cert Page | — | CA certificate download page (via certs.home.local) |
 
 > [!NOTE]
 > **Optional service:** Home Assistant (port 8123) is available via `compose.homeassistant.yml` but not included in the default stack. To enable, add `-f compose.homeassistant.yml` to your docker compose command.

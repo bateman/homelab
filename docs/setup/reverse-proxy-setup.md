@@ -93,6 +93,7 @@ Access Pi-hole: `http://192.168.3.10:8081`
 | `prowlarr.home.local` | 192.168.3.10 |
 | `bazarr.home.local` | 192.168.3.10 |
 | `cleanuparr.home.local` | 192.168.3.10 |
+| `certs.home.local` | 192.168.3.10 |
 | `qbit.home.local` | 192.168.3.10 |
 | `nzbget.home.local` | 192.168.3.10 |
 | `pihole.home.local` | 192.168.3.10 |
@@ -153,6 +154,7 @@ Traefik labels are already added to all services in compose files:
 | qBittorrent | https://qbit.home.local | :8080 |
 | NZBGet | https://nzbget.home.local | :6789 |
 | Cleanuparr | https://cleanuparr.home.local | :11011 |
+| Cert Page | https://certs.home.local | (via reverse proxy) |
 | Pi-hole | https://pihole.home.local | :8081 |
 | Portainer | https://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | https://duplicati.home.local | :8200 |
@@ -273,60 +275,70 @@ For each service:
 
 ---
 
-## Phase 3: Accept Self-Signed Certificate
+## Phase 3: Trust the Homelab CA Certificate
 
-HTTPS is enabled by default with self-signed certificates. Traffic is encrypted, but browsers will show a warning because certificate is not issued by a public CA.
+HTTPS is enabled by default using a private Root CA that signs the `*.home.local` wildcard certificate. Traffic is encrypted, but browsers show a warning until you install the CA certificate on your device. **This is a one-time setup per device** — once the CA is trusted, all current and future `*.home.local` services work without warnings.
 
-### 3.1 Accept in Browser (Simple Method)
+### 3.1 Install via Download Page (Recommended)
 
-On first access to each service:
+A certificate download page is available at **https://certs.home.local** with per-platform instructions and one-click downloads.
 
-1. Browser shows "Connection is not private" (or similar)
-2. Click **Advanced** → **Proceed anyway**
-3. Certificate is remembered and warning won't appear again
+> [!NOTE]
+> The first visit to `https://certs.home.local` will show a certificate warning — this is expected. Click through it once, install the CA, and all warnings disappear permanently.
 
-### 3.2 Import Certificate (Permanent Method)
+### 3.2 iPhone / iPad (via .mobileconfig profile)
 
-To eliminate warning on all services, import certificate as trusted.
+1. Open **Safari** and go to `https://certs.home.local`
+2. Tap **Install Profile** — a prompt says "Profile Downloaded"
+3. Open **Settings** → **General** → **VPN & Device Management**
+4. Tap **Homelab CA Certificate** → **Install** → enter passcode
+5. Go to **Settings** → **General** → **About** → **Certificate Trust Settings**
+6. Enable **Full Trust** for **Homelab Root CA**
 
-**Export certificate from NAS:**
+### 3.3 macOS
+
+Using the .mobileconfig profile (same as iOS), or manually:
 ```bash
-# Certificate is in:
-# docker/config/traefik/certs/home.local.crt
+sudo security add-trusted-cert -d -r trustRoot \
+    -k /Library/Keychains/System.keychain docker/config/traefik/certs/ca.crt
 ```
 
-**Windows:**
-1. Copy `home.local.crt` to PC
-2. Double-click → **Install certificate**
+### 3.4 Windows
+
+1. Download `ca.crt` from `https://certs.home.local`
+2. Double-click → **Install Certificate**
 3. Select **Local Machine** → **Next**
 4. **Place all certificates in the following store** → **Browse**
 5. Select **Trusted Root Certification Authorities**
 6. **Finish** → Restart browser
 
-**macOS:**
+### 3.5 Linux (Chrome/Chromium)
+
 ```bash
-sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain home.local.crt
+certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Homelab Root CA" -i ca.crt
 ```
 
-**Linux (Chrome/Chromium):**
-```bash
-certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Homelab" -i home.local.crt
-```
+### 3.6 Firefox (all systems)
 
-**Firefox (all systems):**
-1. In Firefox: Settings → Privacy & Security → Certificates → View Certificates
+1. Settings → Privacy & Security → Certificates → View Certificates
 2. **Authorities** tab → **Import**
-3. Select `home.local.crt`
-4. Select **Trust this CA to identify websites**
+3. Select `ca.crt` → check **Trust this CA to identify websites**
 
-### 3.3 Regenerate Certificates
+### 3.7 Regenerate Certificates
 
-If certificates expire or you want to regenerate:
+The server certificate can be regenerated without re-importing on any device (the CA stays the same):
 
 ```bash
 ./scripts/generate-certs.sh
-# Answer 'y' to overwrite
-make restart
+make restart s=traefik
+```
+
+To regenerate the CA itself (all devices must re-trust):
+
+```bash
+./scripts/generate-certs.sh --force-ca
+make restart s=traefik
+# Then re-install the new CA on all devices
 ```
 
 ---
@@ -347,6 +359,7 @@ make restart
 | qBittorrent | https://qbit.home.local | :8080 |
 | NZBGet | https://nzbget.home.local | :6789 |
 | Cleanuparr | https://cleanuparr.home.local | :11011 |
+| Cert Page | https://certs.home.local | (via reverse proxy) |
 | Pi-hole | https://pihole.home.local | :8081 |
 | Home Assistant | https://ha.home.local | :8123 |
 | Portainer | https://portainer.home.local | :9443 (HTTPS) |

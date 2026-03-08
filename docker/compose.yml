@@ -468,6 +468,38 @@ services:
       - "traefik.http.services.traefik-dashboard.loadbalancer.server.port=80"
 
   # ---------------------------------------------------------------------------
+  # Certificate Download Page
+  # ---------------------------------------------------------------------------
+  # Serves the Root CA certificate and Apple .mobileconfig profile so devices
+  # on the network can easily install and trust the homelab CA.
+  # Access: https://certs.home.local (first visit shows cert warning — expected)
+  cert-page:
+    image: nginx:alpine
+    container_name: cert-page
+    volumes:
+      - ./config/cert-page:/usr/share/nginx/html:ro
+    networks:
+      - proxy
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      <<: *common-healthcheck
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+        reservations:
+          memory: 8M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.cert-page.rule=Host(`certs.home.local`)"
+      - "traefik.http.routers.cert-page.entrypoints=websecure"
+      - "traefik.http.routers.cert-page.tls=true"
+      - "traefik.http.services.cert-page.loadbalancer.server.port=80"
+
+  # ---------------------------------------------------------------------------
   # Remote Access (Tailscale)
   # ---------------------------------------------------------------------------
   # Tailscale: mesh VPN for secure remote access without port forwarding

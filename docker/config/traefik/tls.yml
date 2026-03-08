@@ -1,7 +1,7 @@
 # =============================================================================
 # Traefik TLS Configuration
 #
-# Configura HTTPS con certificato self-signed per *.home.local
+# Configura HTTPS con certificato CA-signed per *.home.local
 # Generare i certificati con: ./scripts/generate-certs.sh
 # =============================================================================
 
