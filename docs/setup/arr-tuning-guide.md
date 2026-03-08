@@ -513,8 +513,8 @@ docker exec recyclarr recyclarr sync --preview
 make recyclarr-sync
 
 # If the profile already exists in Sonarr/Radarr (created manually via UI),
-# use adopt=1 to let Recyclarr take ownership before syncing:
-make recyclarr-sync adopt=1
+# use adopt=true to let Recyclarr take ownership before syncing:
+make recyclarr-sync adopt=true
 ```
 
 Verify in the Sonarr/Radarr UI: Settings → Profiles — you should see the new profile.
@@ -599,7 +599,7 @@ docker exec recyclarr recyclarr sync --preview
 make recyclarr-sync
 
 # Sync with adopt (when profiles already exist in the UI)
-make recyclarr-sync adopt=1
+make recyclarr-sync adopt=true
 
 # Sync only Sonarr or Radarr
 docker exec recyclarr recyclarr sync sonarr

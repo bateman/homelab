@@ -95,7 +95,7 @@ help:
 	@printf "\n"
 	@printf "  $(PURPLE)Utilities$(NC)\n"
 	@printf "    $(CYAN)make clean$(NC)            - Remove orphan Docker resources\n"
-	@printf "    $(CYAN)make recyclarr-sync$(NC)   - Manual Trash Guides profile sync (adopt=1 to adopt existing)\n"
+	@printf "    $(CYAN)make recyclarr-sync$(NC)   - Manual Trash Guides profile sync (adopt=true to adopt existing)\n"
 	@printf "    $(CYAN)make recyclarr-config$(NC) - Install Recyclarr config from template\n"
 	@printf "\n"
 	@printf "  $(PURPLE)Per service$(NC)\n"
@@ -316,7 +316,7 @@ clean: check-docker
 recyclarr-sync: check-compose
 	@echo ">>> Syncing Trash Guides quality profiles..."
 	@if docker ps --format '{{.Names}}' | grep -q '^recyclarr$$'; then \
-		if [ "$(adopt)" = "1" ]; then \
+		if [ "$(adopt)" = "true" ]; then \
 			echo ">>> Adopting existing profiles..."; \
 			docker exec recyclarr recyclarr state repair --adopt && \
 			printf "$(GREEN)>>> Adopt complete$(NC)\n"; \
