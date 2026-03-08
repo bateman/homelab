@@ -160,6 +160,7 @@ A quality profile defines:
 | Profile | Best For | Typical Episode Size | Notes |
 |---------|----------|---------------------|-------|
 | **WEB-1080p** | Most users | 2–5 GB | Default in this repo. Best for streaming content |
+| **HD - 720p/1080p** | Flexibility | 1–5 GB | Active in this repo. Accepts 720p–1080p (HDTV/Bluray/WEB), cutoff WEB 1080p |
 | WEB-2160p | 4K display + storage | 5–15 GB | Requires 4K-capable playback device |
 
 #### Radarr (Movies)
@@ -168,6 +169,7 @@ A quality profile defines:
 |---------|----------|-------------------|-------|
 | **HD Bluray + WEB** | Most users | 6–15 GB | Default in this repo. Mix of Bluray encodes and WEB-DL |
 | **UHD Bluray + WEB** | 4K enthusiasts | 20–60 GB | Active in this repo. 4K with 1080p fallback. Requires 4K display and HDR support |
+| **HD - 720p/1080p** | Flexibility | 4–15 GB | Active in this repo. Accepts 720p–1080p (HDTV/Bluray/WEB/Remux), cutoff WEB 1080p |
 | Remux + WEB 1080p | Quality enthusiasts | 20–40 GB | Near-lossless, large files |
 | Remux + WEB 2160p | Maximum quality | 40–100 GB | Highest storage cost |
 
