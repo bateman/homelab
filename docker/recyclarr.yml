@@ -88,12 +88,12 @@ sonarr:
           - name: Bluray-720p
           - name: HDTV-720p
 
-      # HD - 720p/1080p - Accepts all HD qualities, upgrades until WEB 1080p
+      # HD - 720p/1080p - Accepts all HD qualities, cutoff at HDTV-1080p
       - name: HD - 720p/1080p
         min_format_score: 0
         upgrade:
           allowed: true
-          until_quality: WEB 1080p
+          until_quality: HDTV-1080p
           until_score: 10000
         qualities:
           - name: WEB 1080p
@@ -228,12 +228,12 @@ radarr:
           - name: Bluray-720p
           - name: HDTV-720p
 
-      # HD - 720p/1080p - Accepts all HD qualities, upgrades until WEB 1080p
+      # HD - 720p/1080p - Accepts all HD qualities, cutoff at HDTV-1080p
       - name: HD - 720p/1080p
         min_format_score: 0
         upgrade:
           allowed: true
-          until_quality: WEB 1080p
+          until_quality: HDTV-1080p
           until_score: 10000
         qualities:
           - name: WEB 1080p
