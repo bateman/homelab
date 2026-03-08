@@ -218,7 +218,7 @@ services:
       DOCKER_HOST: tcp://socket-proxy:2375
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_LABEL_ENABLE: "true"
-      WATCHTOWER_SCHEDULE: "0 30 7 * * *"
+      WATCHTOWER_SCHEDULE: "0 30 8 * * *"
       WATCHTOWER_ROLLING_RESTART: "false"
       WATCHTOWER_TIMEOUT: 30s
       WATCHTOWER_HTTP_API_METRICS: "true"
@@ -226,6 +226,7 @@ services:
       WATCHTOWER_HTTP_API_PERIODIC_POLLS: "true"
       WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_API_TOKEN:-watchtower}
       # Discord notifications via Shoutrrr (set WATCHTOWER_NOTIFICATION_URL in .env.secrets)
+      WATCHTOWER_NOTIFICATIONS_LEVEL: debug
       # TODO: re-enable report mode after verifying notifications work:
       #   WATCHTOWER_NOTIFICATION_REPORT: "true"
       #   and restore the report template below
