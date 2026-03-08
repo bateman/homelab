@@ -45,6 +45,12 @@ check-curl:
 		exit 1; \
 	}
 
+check-openssl:
+	@command -v openssl >/dev/null 2>&1 || { \
+		printf "$(RED)Error: openssl not found. Install openssl before continuing.$(NC)\n"; \
+		exit 1; \
+	}
+
 validate: check-compose
 	@echo ">>> Validating configuration..."
 	@if grep -q 'COMPOSE_PROFILES=.*vpn' docker/.env 2>/dev/null && \
@@ -106,7 +112,7 @@ help:
 # Setup
 # =============================================================================
 
-setup: check-compose
+setup: check-compose check-openssl
 	@if [ ! -f docker/.env ]; then \
 		echo ">>> Creating .env from template..."; \
 		cp docker/.env.example docker/.env; \
