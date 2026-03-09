@@ -28,6 +28,9 @@ The Lenovo Mini PC running Proxmox/Plex can be powered off when not in use and w
 > [!NOTE]
 > Full WOL configuration is documented in [proxmox-setup.md](../setup/proxmox-setup.md#82-wake-on-lan-wol).
 
+> [!IMPORTANT]
+> The Plex LXC container must have `onboot: 1` enabled so it starts automatically when Proxmox boots after a WOL wake. Without this, the Mini PC wakes but Plex stays stopped. See [proxmox-setup.md §4.3](../setup/proxmox-setup.md#43-enable-auto-start).
+
 ### Quick Reference
 
 ```bash
