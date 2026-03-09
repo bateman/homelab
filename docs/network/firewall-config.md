@@ -185,7 +185,7 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | WoL | 9 |
 
 > [!NOTE]
-> **Traefik** — reverse proxy HTTPS port (Rule 8). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO.
+> **Traefik** — reverse proxy HTTPS port (Rule 8). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO, except `plex.home.local` (Plex has its own authentication).
 >
 > **Media Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 8) for Authelia-protected access.
 >
@@ -238,6 +238,8 @@ Rules are processed in order, from first to last. Order matters.
 | Source | VLAN Media |
 | Destination | Plex Server (192.168.3.21) |
 | Port | Plex (32400, 32410-32414) |
+
+> Direct access to Plex on port 32400. Plex is also accessible via Traefik (`https://plex.home.local`) through Rule 8 (port 443 to NAS). Rule 3 provides direct-port fallback and supports Plex client app discovery (GDM ports 32410-32414).
 
 ### Rule 4 — Allow Media to Media Services
 

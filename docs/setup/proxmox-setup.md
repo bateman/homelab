@@ -321,7 +321,26 @@ Datacenter → proxmox → Create CT
 **Tab DNS:**
 - Use host settings (default)
 
-### 4.3 Configure NFS Mount Point
+### 4.3 Enable Auto-Start
+
+Enable the container to start automatically when Proxmox boots:
+
+```bash
+pct set 100 -onboot 1
+```
+
+Or via WebUI: select CT 100 → Options → Start at boot → ✅ Yes
+
+> [!IMPORTANT]
+> Without this, the Plex LXC stays stopped after a Proxmox reboot or power cycle. This is critical if using Wake-on-LAN scheduling (see [energy saving strategies](../operations/energy-saving-strategies.md)) — the Mini PC wakes but Plex won't be available until the container is manually started.
+
+Verify:
+```bash
+pct config 100 | grep onboot
+# Should show: onboot: 1
+```
+
+### 4.4 Configure NFS Mount Point
 
 Before starting, add a bind mount for media (container must be stopped):
 
@@ -343,7 +362,7 @@ pct config 100 | grep mp
 # NOT: mp0: nas-media:100/vm-100-disk-0.raw (this is wrong — it's a disk image)
 ```
 
-### 4.4 Start Container and Install Plex
+### 4.5 Start Container and Install Plex
 
 ```bash
 # Start container
@@ -407,7 +426,7 @@ stat -c '%u:%g' /media/movies/
 > 1. NFS export permissions on QNAP (Section 3.4)
 > 2. Mount point configuration: `pct config 100 | grep mp0`
 >    - Must show `/mnt/pve/nas-media,mp=/media`
->    - If it shows `nas-media:100/vm-100-disk-0.raw`, you have a disk image instead of a bind mount — see Section 4.3
+>    - If it shows `nas-media:100/vm-100-disk-0.raw`, you have a disk image instead of a bind mount — see Section 4.4
 > 3. NFS service status on NAS: `showmount -e 192.168.3.10`
 
 ### Verify Plex
