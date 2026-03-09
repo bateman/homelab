@@ -1,0 +1,27 @@
+# =============================================================================
+# Traefik dynamic configuration for Plex
+# =============================================================================
+# Plex runs as an LXC container on Proxmox (192.168.3.21), not in Docker.
+# This file provides manual routing configuration.
+#
+# Access: https://plex.home.local
+# Requires Pi-hole DNS record: plex.home.local -> 192.168.3.10
+#
+# NOTE: No Authelia middleware — Plex has its own authentication (Plex account)
+# and client apps (iOS, Android, Smart TV) need direct API access.
+# =============================================================================
+
+http:
+  routers:
+    plex:
+      rule: "Host(`plex.home.local`)"
+      service: plex
+      entryPoints:
+        - websecure
+      tls: {}
+
+  services:
+    plex:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.3.21:32400"

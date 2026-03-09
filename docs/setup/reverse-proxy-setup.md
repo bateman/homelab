@@ -101,7 +101,7 @@ Access Pi-hole: `http://192.168.3.10:8081`
 | `portainer.home.local` | 192.168.3.10 |
 | `duplicati.home.local` | 192.168.3.10 |
 | `uptime.home.local` | 192.168.3.10 |
-| `plex.home.local` | 192.168.3.21 |
+| `plex.home.local` | 192.168.3.10 |
 
 ### 1.4 Verification
 
@@ -134,7 +134,7 @@ Traefik is already configured in `docker/compose.yml` with:
 - Automatic HTTP → HTTPS redirect
 - Dashboard accessible via reverse proxy at `traefik.home.local`
 - Docker auto-discovery on `homelab_proxy` network
-- File provider for non-Docker services (Home Assistant)
+- File provider for non-Docker services (Home Assistant, Plex)
 - Traefik labels already added to all services
 
 **Dashboard Access**: https://traefik.home.local (requires Pi-hole DNS configured)
@@ -160,6 +160,7 @@ Traefik labels are already added to all services in compose files:
 | Duplicati | https://duplicati.home.local | :8200 |
 | Uptime Kuma | https://uptime.home.local | :3001 |
 | Home Assistant | https://ha.home.local | :8123 |
+| Plex | https://plex.home.local | :32400 (on 192.168.3.21) |
 | Traefik Dashboard | https://traefik.home.local | (via reverse proxy) |
 
 ### 2.3 Home Assistant Configuration
@@ -167,7 +168,15 @@ Traefik labels are already added to all services in compose files:
 Home Assistant uses `network_mode: host`, so it cannot use Docker labels.
 Configuration is already present in `docker/config/traefik/homeassistant.yml`.
 
-### 2.4 HTTPS Certificate Generation
+### 2.4 Plex Configuration
+
+Plex runs as an LXC container on Proxmox (`192.168.3.21`), not in Docker.
+Configuration is already present in `docker/config/traefik/plex.yml`.
+
+> [!NOTE]
+> Plex is **not** protected by Authelia — it has its own authentication (Plex account) and client apps (iOS, Android, Smart TV) need direct API access.
+
+### 2.5 HTTPS Certificate Generation
 
 Before starting the stack, generate the Root CA and server certificates. `make setup` runs this automatically, but you can also run it manually:
 
@@ -184,7 +193,7 @@ Certificate is valid for 10 years and covers:
 - `*.home.local` (all subdomains)
 - `home.local` (base domain)
 
-### 2.5 Startup and Verification
+### 2.6 Startup and Verification
 
 ```bash
 # Create folder structure, secrets, and certificates
@@ -200,7 +209,7 @@ docker logs traefik
 # https://traefik.home.local
 ```
 
-### 2.6 Test Access via Name
+### 2.7 Test Access via Name
 
 ```bash
 # From browser or curl (-k ignores untrusted certificate)
@@ -372,7 +381,7 @@ make restart s=traefik
 > HTTP (port 80) is automatically redirected to HTTPS (port 443).
 
 > [!IMPORTANT]
-> All services accessed **via Traefik** (i.e., `https://<service>.home.local`) are protected by Authelia SSO — you authenticate once and access everything. **Exception:** `certs.home.local` has no Authelia middleware so devices can download the CA cert before authenticating. Direct IP:port access (e.g., `http://192.168.3.10:8989`) bypasses Traefik and Authelia entirely.
+> All services accessed **via Traefik** (i.e., `https://<service>.home.local`) are protected by Authelia SSO — you authenticate once and access everything. **Exceptions:** `certs.home.local` has no Authelia middleware so devices can download the CA cert before authenticating. `plex.home.local` has no Authelia middleware because Plex has its own authentication and client apps need direct API access. Direct IP:port access (e.g., `http://192.168.3.10:8989`) bypasses Traefik and Authelia entirely.
 > See [Authelia Setup](authelia-setup.md) for configuration details.
 
 ---
@@ -467,6 +476,36 @@ curl http://192.168.3.10:8989
 docker logs traefik --tail 50
 ```
 
+### Plex not accessible via `plex.home.local`
+
+**Symptom: 502 Bad Gateway**
+
+The Mini PC (Proxmox) may be powered off. It shuts down at 00:30 and wakes at ~07:02 (see [energy saving strategies](../operations/energy-saving-strategies.md)).
+
+```bash
+# Check if Plex LXC is reachable
+ping -c 3 192.168.3.21
+
+# Check Plex service
+curl -s -o /dev/null -w "%{http_code}" http://192.168.3.21:32400/web
+# Expected: 200
+
+# If Mini PC is off, wake it (from NAS)
+wakeonlan AA:BB:CC:DD:EE:FF  # Replace with actual MAC
+```
+
+**Symptom: DNS not resolving or connection timeout**
+
+Verify DNS points to Traefik (`192.168.3.10`), not directly to Plex (`192.168.3.21`):
+
+```bash
+nslookup plex.home.local
+# Should return 192.168.3.10 (Traefik on NAS)
+# If it returns 192.168.3.21, update the Pi-hole DNS record
+```
+
+**Direct access fallback**: `http://192.168.3.21:32400/web` (bypasses Traefik, requires Mini PC to be on)
+
 ### Remote access not working
 
 ```bash
@@ -487,5 +526,5 @@ tailscale status
 
 - **Direct ports**: Remain accessible as backup if Traefik has issues
 - **Home Assistant**: Requires separate file configuration (network_mode: host)
-- **Plex**: If on Proxmox, add DNS record pointing to 192.168.3.21 (LXC container IP)
+- **Plex**: Runs on Proxmox LXC (`192.168.3.21`). Routed via Traefik file provider (`plex.yml`), no Authelia.
 - **Updates**: Watchtower automatically updates Traefik
