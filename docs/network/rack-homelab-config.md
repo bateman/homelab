@@ -393,6 +393,7 @@ Internet <-> Iliad Box (router) <-> UDM-SE <-> Homelab (segmented VLANs)
 | Proxmox Mini PC | 192.168.3.20 | DHCP reservation · Plex |
 | Printer | 192.168.3.30 | DHCP reservation · Printing |
 | Desktop PC | 192.168.3.40 | DHCP reservation · Workstation |
+| Old Synology NAS (TEMP) | 192.168.3.61 | DHCP reservation · File migration, pending decommission |
 
 #### VLAN 4 — Media (192.168.4.0/24)
 
