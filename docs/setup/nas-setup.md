@@ -588,7 +588,7 @@ All services in `compose.yml` and `compose.media.yml` use `restart: unless-stopp
 
 **How it works:**
 
-1. NAS powers on (QTS Power Schedule: 07:00)
+1. NAS powers on (QTS Power Schedule: 07:00 weekdays / 08:00 weekends)
 2. Container Station starts the Docker daemon automatically
 3. Docker restarts all containers that were running before shutdown
 4. Services come up respecting `depends_on` health checks (e.g., *arr apps wait for download clients)
@@ -599,7 +599,7 @@ All services in `compose.yml` and `compose.media.yml` use `restart: unless-stopp
 > [!WARNING]
 > If you ran `make down` before the NAS shut down, containers were explicitly stopped and **will not auto-restart** on the next boot. Run `make up` manually in that case. Avoid `make down` before scheduled shutdowns — just let the NAS power off with containers running.
 
-**Coordination with power schedule:** The NAS shuts down at 01:00 and powers on at 07:00. All containers resume automatically by ~07:01. Watchtower runs at 08:30, after services are back up. See [Energy Saving Strategies](../operations/energy-saving-strategies.md#23-scheduled-power-onoff) for the full power cycle timeline.
+**Coordination with power schedule:** The NAS shuts down at 00:00 weekdays / 01:00 weekends and powers on at 07:00 weekdays / 08:00 weekends. All containers resume automatically within ~1 minute of boot. Watchtower runs at 08:30, after services are back up. See [Energy Saving Strategies](../operations/energy-saving-strategies.md#23-scheduled-power-onoff) for the full power cycle timeline.
 
 ---
 
