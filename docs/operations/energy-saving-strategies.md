@@ -101,10 +101,13 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
    # On NAS (ssh admin@192.168.3.10)
    # admin maps to root on QNAP — verify home directory used by cron:
    echo $HOME            # likely /root when logged in as admin
-   ssh-keygen -t ed25519 -N "" -f /root/.ssh/id_ed25519
-   ssh-copy-id -i /root/.ssh/id_ed25519.pub root@192.168.3.20
+   ssh-keygen -t ed25519 -N "" -f /root/.ssh/id_proxmox_ed25519
+
+   # QNAP BusyBox doesn't have ssh-copy-id — copy the key manually:
+   cat /root/.ssh/id_proxmox_ed25519.pub | ssh root@192.168.3.20 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+
    # Test: should connect without password prompt
-   ssh root@192.168.3.20 "hostname"
+   ssh -i /root/.ssh/id_proxmox_ed25519 root@192.168.3.20 "hostname"
    ```
 3. **`wakeonlan` installed** on NAS:
    ```bash
@@ -122,9 +125,9 @@ crontab -e
 # === Mini PC Scheduled Power Cycle ===
 # Shutdown 1 minute before NAS (weekday NAS shutdown: 00:00 Mon-Fri, weekend: 01:00 Sat-Sun)
 # Weeknights: 23:59 Sun-Thu (before 00:00 Mon-Fri NAS shutdown)
-59 23 * * 0-4 ssh -i /root/.ssh/id_ed25519 -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
+59 23 * * 0-4 ssh -i /root/.ssh/id_proxmox_ed25519 -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
 # Weekend nights: 00:59 Sat-Sun (before 01:00 Sat-Sun NAS shutdown)
-59 0 * * 0,6 ssh -i /root/.ssh/id_ed25519 -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
+59 0 * * 0,6 ssh -i /root/.ssh/id_proxmox_ed25519 -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
 # Wake Mini PC 2 minutes after NAS boots (handles scheduled power-on, reboots, and power outages)
 @reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
