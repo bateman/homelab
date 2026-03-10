@@ -615,6 +615,44 @@ tcpdump -i br0 -n
 cat /sys/class/net/br0/bridge/vlan_filtering
 ```
 
+### Cross-VLAN Printing — macOS "Filter Error" with Bonjour
+
+**Symptoms**: Printer discovered via Bonjour (mDNS reflection) appears in macOS System Settings but printing fails with "Filter error" ("Errore del filtro 'Filter'" in Italian locale). The CUPS web interface (`http://localhost:631/printers/`) shows the printer driver as "Local Raw Printer" instead of the correct manufacturer driver (e.g., "EPSON ET-M1180 Series").
+
+**Root cause**: UniFi mDNS reflection (enabled on VLANs 3 and 4) relays printer service announcements across VLANs, but may not faithfully relay all DNS-SD TXT records (`printer-type`, `pdl`, `URF`, etc.). macOS auto-discovers the printer but cannot retrieve full IPP attributes, so it falls back to a generic raw driver. The raw driver cannot process print jobs through the macOS filter pipeline, causing the error.
+
+**Diagnosis**:
+
+1. Open CUPS web interface: `http://localhost:631/printers/`
+2. Compare the **Make and Model** column for the broken printer vs. a working one (same model)
+3. If the broken entry shows "Local Raw Printer" — this is the problem
+4. Verify network connectivity is not the issue:
+
+```bash
+# Both should succeed (allowed by Rule 5)
+nc -zv 192.168.3.30 631    # IPP
+nc -zv 192.168.3.30 9100   # Raw printing
+```
+
+**Fix (macOS)**:
+
+1. Open **System Settings → Printers & Scanners**
+2. Select the broken printer (the Bonjour-discovered entry, e.g., `EPSON_ET_M1180__Casa_`)
+3. Click **Remove Printer** (minus button)
+4. Click **Add Printer, Scanner, or Fax...**
+5. Switch to the **IP** tab (do not use the default Bonjour discovery tab)
+6. Configure:
+   - **Address**: `192.168.3.30`
+   - **Protocol**: Internet Printing Protocol – IPP
+   - **Queue**: leave default (`ipp/print`) or as auto-populated
+7. Under **Use**, select the correct driver: **EPSON ET-M1180 Series**
+   - If the driver doesn't appear automatically, select "Select Software..." and search for "ET-M1180"
+8. Click **Add**
+9. Print a test page to verify
+
+> [!TIP]
+> For Macs on a different VLAN than the printer, always prefer adding printers manually via IP address over Bonjour auto-discovery. iOS devices (iPhones, iPads) handle cross-VLAN AirPrint discovery more reliably and typically don't need this workaround.
+
 ---
 
 ## Legacy Network Security Considerations (192.168.1.0/24)

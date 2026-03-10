@@ -776,6 +776,7 @@ nslookup google.com 192.168.3.10
 | Inter-VLAN blocked | Firewall rule | Verify rule order |
 | No Internet from VLAN | Wrong gateway | Verify DHCP options |
 | Device wrong IP | Old DHCP lease | Renew lease or set fixed IP |
+| macOS printer "Filter error" | Bonjour cross-VLAN discovery assigned wrong driver | Remove printer, re-add via IP. See [`firewall-config.md` Troubleshooting](../network/firewall-config.md#cross-vlan-printing--macos-filter-error-with-bonjour) |
 
 ---
 
