@@ -366,7 +366,7 @@ docker restart authelia
 Authelia is a Traefik middleware — it only sees requests that go through Traefik. Anything that bypasses Traefik bypasses Authelia:
 
 - **Direct port access** (e.g., `http://192.168.3.10:8989`) — requests go straight to the container, never touching Traefik or Authelia. If you configured *arr apps with "External" auth (see [Phase 6](#phase-6-enable-sso-for-arr-apps-eliminate-double-login)), direct port access has **no authentication**. If you kept "Forms" auth, the app's own login protects direct access as a fallback.
-- **API endpoints** (`/api/*`, `/ping`, `/health`) — intentionally bypassed so *arr services can communicate with each other.
+- **API endpoints** (`/api/*`, `/ping`, `/health`, `/jsonrpc`, `/xmlrpc`) — intentionally bypassed so *arr services and NZBGet can communicate with each other and with mobile apps.
 - **Home Assistant** — has its own robust auth; Authelia middleware is not applied to its Traefik route.
 - **Cert Page** (`certs.home.local`) — intentionally unprotected so devices can download the CA certificate before authenticating.
 
