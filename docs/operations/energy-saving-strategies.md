@@ -102,9 +102,12 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
    # admin maps to root on QNAP — verify home directory used by cron:
    echo $HOME            # likely /root when logged in as admin
    ssh-keygen -t ed25519 -N "" -f /root/.ssh/id_ed25519
-   ssh-copy-id -i /root/.ssh/id_ed25519.pub root@192.168.3.20
+
+   # QNAP BusyBox doesn't have ssh-copy-id — copy the key manually:
+   cat /root/.ssh/id_ed25519.pub | ssh root@192.168.3.20 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+
    # Test: should connect without password prompt
-   ssh root@192.168.3.20 "hostname"
+   ssh -i /root/.ssh/id_ed25519 root@192.168.3.20 "hostname"
    ```
 3. **`wakeonlan` installed** on NAS:
    ```bash
