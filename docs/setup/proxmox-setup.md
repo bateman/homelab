@@ -321,7 +321,26 @@ Datacenter → proxmox → Create CT
 **Tab DNS:**
 - Use host settings (default)
 
-### 4.3 Configure NFS Mount Point
+### 4.3 Enable Auto-Start
+
+Enable the container to start automatically when Proxmox boots:
+
+```bash
+pct set 100 -onboot 1
+```
+
+Or via WebUI: select CT 100 → Options → Start at boot → ✅ Yes
+
+> [!IMPORTANT]
+> Without this, the Plex LXC stays stopped after a Proxmox reboot or power cycle. This is critical if using Wake-on-LAN scheduling (see [energy saving strategies](../operations/energy-saving-strategies.md)) — the Mini PC wakes but Plex won't be available until the container is manually started.
+
+Verify:
+```bash
+pct config 100 | grep onboot
+# Should show: onboot: 1
+```
+
+### 4.4 Configure NFS Mount Point
 
 Before starting, add a bind mount for media (container must be stopped):
 
@@ -343,7 +362,7 @@ pct config 100 | grep mp
 # NOT: mp0: nas-media:100/vm-100-disk-0.raw (this is wrong — it's a disk image)
 ```
 
-### 4.4 Start Container and Install Plex
+### 4.5 Start Container and Install Plex
 
 ```bash
 # Start container
@@ -407,7 +426,7 @@ stat -c '%u:%g' /media/movies/
 > 1. NFS export permissions on QNAP (Section 3.4)
 > 2. Mount point configuration: `pct config 100 | grep mp0`
 >    - Must show `/mnt/pve/nas-media,mp=/media`
->    - If it shows `nas-media:100/vm-100-disk-0.raw`, you have a disk image instead of a bind mount — see Section 4.3
+>    - If it shows `nas-media:100/vm-100-disk-0.raw`, you have a disk image instead of a bind mount — see Section 4.4
 > 3. NFS service status on NAS: `showmount -e 192.168.3.10`
 
 ### Verify Plex
@@ -778,8 +797,25 @@ In the Plex app on each remote device:
 2. **Direct Play**: ✅ Enabled
 3. **Direct Stream**: ✅ Enabled
 
+> [!WARNING]
+> **Cellular quality is capped separately.** Plex and Plexamp have independent quality settings for cellular (mobile data) that default to low values. Without changing these, streaming over mobile data will be slow and heavily transcoded — even though Tailscale treats you as local.
+
+#### 6.4.1 Plex (Video) — Cellular Quality
+
+Settings → Video & Audio → **Cellular Quality** → **Maximum / Original**
+
+The default is **720p HD / 2 Mbps**, which forces the server to transcode all video down to 2 Mbps. With Tailscale + 5G/4G, there is no reason to limit this.
+
+#### 6.4.2 Plexamp (Music) — Cellular Quality
+
+Settings → Quality → **Dati cellulare / Cellular Data** → **Maximum**
+
+The default is **128 Kbps**, which forces FLAC files to be transcoded to 128 Kbps Opus — a massive quality loss. A typical FLAC track is 800–1400 Kbps, well within mobile data speeds.
+
+Also set **Bitrate di conversione / Conversion Bitrate** to the highest value (320 Kbps) as a fallback, so if conversion ever kicks in it uses acceptable quality.
+
 > [!TIP]
-> With Tailscale + `100.64.0.0/10` in LAN Networks, Plex treats your remote device as "local". You get the same Direct Play quality as if you were at home.
+> With Tailscale + `100.64.0.0/10` in LAN Networks, Plex treats your remote device as "local". You get the same Direct Play quality as if you were at home — but only if the **client-side** quality settings (including cellular) are set to Maximum.
 
 ### 6.5 Verify Remote Access
 
@@ -808,6 +844,7 @@ On the Plex dashboard, your remote device should appear as **local** (not "remot
 |---------|-------|----------|
 | Plex shows device as "remote" | Missing Tailscale CGNAT in LAN Networks | Add `100.64.0.0/10` to Settings → Network → LAN Networks |
 | Remote playback buffers/transcodes | Quality set to "limited" for remote | Set remote quality to Maximum/Original in client settings |
+| Slow streaming on mobile data | Cellular quality capped (separate from Wi-Fi/remote) | Plex app: Cellular Quality → Maximum. Plexamp: Cellular Data → Maximum (see [Section 6.4](#64-configure-plex-app-on-remote-clients)) |
 | Can't reach Plex from remote | Tailscale subnet routes not approved | Approve in [Tailscale Admin](https://login.tailscale.com/admin/machines) → nas-tailscale → Edit route settings |
 | Can't reach Plex from remote | Mini PC is off (energy saving) | Wake via WOL (see [Section 8.2](#82-wake-on-lan-wol)) |
 | Plex relay active (slow ~2 Mbps) | Relay enabled as fallback | Disable relay in Settings → Network |

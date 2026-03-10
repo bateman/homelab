@@ -26,6 +26,11 @@ docker/config/*/
 !docker/config/traefik/
 docker/config/traefik/certs/
 
+# Exception: keep cert download page (HTML template only, not generated files)
+!docker/config/cert-page/
+docker/config/cert-page/ca.crt
+docker/config/cert-page/homelab.mobileconfig
+
 # Exception: keep Authelia configuration templates
 !docker/config/authelia/
 # But ignore SQLite database and runtime files

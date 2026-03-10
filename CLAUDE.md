@@ -87,6 +87,9 @@ When using VPN, configure *arr apps with hostname `gluetun` (not `qbittorrent`/`
 - `docker/.env` → Non-sensitive config (PUID, PGID, TZ)
 - `docker/.env.secrets` → Passwords and API keys (gitignored)
 
+### env_file vs environment (NEVER mix them for the same variable)
+Variables loaded via `env_file:` are injected directly into the container. If you also declare the same variable in `environment:` with `${VAR:-}` interpolation, **Docker Compose resolves it from the host environment at parse time**, overriding the `env_file` value with an empty string. **Rule**: secrets from `.env.secrets` (loaded via `env_file:`) must NEVER be re-declared in the `environment:` block. Only use `${VAR:-default}` in `environment:` for variables that come from `.env` (which Compose reads automatically).
+
 ---
 
 ## When Modifying...
@@ -155,6 +158,7 @@ When facing trade-offs, **ask the user**:
 | Reverse proxy (Traefik) | `docs/setup/reverse-proxy-setup.md` |
 | Authelia SSO | `docs/setup/authelia-setup.md` |
 | Notifications | `docs/setup/notifications-setup.md` |
+| Portainer use cases | `docs/setup/portainer-guide.md` |
 | *arr tuning (Trash Guides) | `docs/setup/arr-tuning-guide.md` |
 | Backup procedures | `docs/operations/runbook-backup-restore.md` |
 | Energy saving | `docs/operations/energy-saving-strategies.md` |

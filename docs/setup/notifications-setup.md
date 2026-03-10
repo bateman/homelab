@@ -1,6 +1,13 @@
-# Notifications Setup - Uptime Kuma via Home Assistant
+# Notifications Setup
 
-> Guide to configure iOS push notifications from Uptime Kuma alerts via Home Assistant
+> Guides for configuring notifications across homelab services
+
+---
+
+## Table of Contents
+
+1. [Uptime Kuma via Home Assistant](#overview)
+2. [Watchtower via Discord](#watchtower--discord-notifications)
 
 ---
 
@@ -176,6 +183,7 @@ Below are the recommended monitor types for each service in the homelab. Use con
 | Tailscale | Docker Container | Container: `tailscale` | Uses `network_mode: host`, not reachable via Docker network; built-in healthcheck runs `tailscale status --json` |
 | Socket Proxy | Docker Container | Container: `socket-proxy` | Internal only, no exposed HTTP endpoint |
 | Watchtower | Docker Container | Container: `watchtower` | Metrics endpoint requires auth token; Docker monitor is simpler |
+| Cert Page | HTTP(s) | `http://cert-page:80/` | CA certificate download page; no auth required |
 | Home Assistant | HTTP(s) | `http://192.168.3.10:8123/api/` | Must use host IP — HA runs in `network_mode: host` |
 
 > [!NOTE]
@@ -286,9 +294,92 @@ docker logs homeassistant --tail 20
 
 ---
 
+## Watchtower — Discord Notifications
+
+Watchtower monitors running containers and automatically updates them when new images are available. This section configures Discord notifications so you are informed of every update and failure.
+
+### Prerequisites
+
+- Discord server where you have permission to create webhooks
+- Watchtower running (part of `compose.yml` infrastructure stack)
+
+### Step 1: Create Discord Webhook
+
+1. Open Discord and go to the channel where you want notifications
+2. Click **Edit Channel** (gear icon) > **Integrations** > **Webhooks**
+3. Click **New Webhook**
+4. Name it `Watchtower` (or any name you prefer)
+5. Copy the **Webhook URL** — it will look like:
+   ```
+   https://discord.com/api/webhooks/123456789012345678/AbCdEfGhIjKlMnOpQrStUvWxYz...
+   ```
+
+### Step 2: Convert to Shoutrrr Format
+
+Watchtower uses the [Shoutrrr](https://containrrr.dev/shoutrrr/v0.8/services/discord/) library. Convert the Discord URL:
+
+```
+Discord:  https://discord.com/api/webhooks/<webhook_id>/<token>
+Shoutrrr: discord://<token>@<webhook_id>
+```
+
+**Example:**
+
+```
+Discord:  https://discord.com/api/webhooks/123456789/AbCdEfGhIjKlMnOp
+Shoutrrr: discord://AbCdEfGhIjKlMnOp@123456789
+```
+
+### Step 3: Configure `.env.secrets`
+
+Add the Shoutrrr URL to `docker/.env.secrets`:
+
+```bash
+WATCHTOWER_NOTIFICATION_URL=discord://AbCdEfGhIjKlMnOp@123456789
+```
+
+### Step 4: Restart Watchtower
+
+```bash
+make restart s=watchtower
+```
+
+### Step 5: Verify
+
+Trigger a manual update check:
+
+```bash
+docker exec watchtower /watchtower --run-once
+```
+
+If containers were updated or errors occurred, you should see a Discord message. If nothing needed updating, no notification is sent (this is the expected behavior).
+
+### How Notification Filtering Works
+
+Watchtower runs in **report mode** (`WATCHTOWER_NOTIFICATION_REPORT=true`), which sends a single summary per update cycle instead of per-container messages. The notification template only renders content when containers were updated or failed — when neither condition is true (i.e., no updates found), the template renders empty and Watchtower skips sending the notification entirely.
+
+**You will only receive Discord messages when:**
+- One or more containers were successfully updated
+- One or more containers failed to update
+
+To customize the template, edit `WATCHTOWER_NOTIFICATION_TEMPLATE` in `docker/compose.yml`. Report mode templates receive a `.Report` object with `.Updated`, `.Failed`, `.Skipped`, and `.Fresh` container lists (e.g., `{{.Report.Updated}}`). See [Watchtower notifications docs](https://containrrr.dev/watchtower/notifications/) for Go template syntax.
+
+### Troubleshooting
+
+| Issue | Check |
+|-------|-------|
+| No notifications | Verify URL is set: `docker exec watchtower env \| grep NOTIFICATION` |
+| Invalid URL format | Ensure format is `discord://token@webhookid` (not the raw Discord URL) |
+| Network error | Watchtower needs outbound HTTPS (port 443) to `discord.com` |
+| Template error | Check logs: `docker logs watchtower --tail 50` |
+
+---
+
 ## References
 
 - [Home Assistant Companion App](https://companion.home-assistant.io/)
 - [HA Automation Triggers - Webhook](https://www.home-assistant.io/docs/automation/trigger/#webhook-trigger)
 - [Uptime Kuma Notifications](https://github.com/louislam/uptime-kuma/wiki/Notification-Methods)
 - [iOS Critical Alerts](https://companion.home-assistant.io/docs/notifications/critical-notifications/)
+- [Watchtower Notifications](https://containrrr.dev/watchtower/notifications/)
+- [Shoutrrr Discord Service](https://containrrr.dev/shoutrrr/v0.8/services/discord/)

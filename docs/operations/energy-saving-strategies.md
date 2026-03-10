@@ -28,6 +28,9 @@ The Lenovo Mini PC running Proxmox/Plex can be powered off when not in use and w
 > [!NOTE]
 > Full WOL configuration is documented in [proxmox-setup.md](../setup/proxmox-setup.md#82-wake-on-lan-wol).
 
+> [!IMPORTANT]
+> The Plex LXC container must have `onboot: 1` enabled so it starts automatically when Proxmox boots after a WOL wake. Without this, the Mini PC wakes but Plex stays stopped. See [proxmox-setup.md §4.3](../setup/proxmox-setup.md#43-enable-auto-start).
+
 ### Quick Reference
 
 ```bash
@@ -126,6 +129,14 @@ crontab -e
 > [!TIP]
 > Both the shutdown cron (SSH to an off host) and the wake cron (WOL to an already-on host) are harmless no-ops — safe to run even when the Mini PC is in the "wrong" state.
 
+> [!NOTE]
+> **Why SSH from NAS instead of a local cron on Proxmox?** A local `crontab` on the Mini PC would work equally well for the shutdown itself. The reason both jobs live on the NAS is practical:
+> 1. **The wake-up _must_ come from the NAS** — the Mini PC is off, so only another device can send the WOL magic packet.
+> 2. **Single point of management** — keeping shutdown _and_ wake-up in the same crontab means one place to view and edit the entire power cycle.
+> 3. **Sequence coordination** — the NAS orchestrates the full timeline (00:30 Mini PC off → 01:00 NAS off → 07:00 NAS on → 07:02 WOL). Changing timing requires editing only one machine's crontab.
+>
+> If the NAS were always-on and never rebooted, a local cron on Proxmox for shutdown would be just as valid.
+
 #### Verify the Cycle
 
 ```bash
@@ -219,7 +230,7 @@ Reduce LED brightness overnight to save minor power and reduce light pollution.
 
 **Prerequisites**:
 - Duplicati backup (23:00) must complete before shutdown
-- Watchtower (07:30), QTS backup (08:00 Sun), and verification (08:30 Sun) run after power on
+- Watchtower (08:30), QTS backup (08:00 Sun), and verification (08:30 Sun) run after power on
 - No services require overnight access
 - UPS must support scheduled wake (via RTC or network signal)
 - Mini PC shutdown cron runs 1 min before each NAS shutdown (see [Section 1.1](#11-scheduled-shutdown--wake-up-cron))
@@ -286,7 +297,7 @@ Non-critical Docker containers can be stopped overnight to reduce CPU/memory usa
 | Socket-proxy | Yes | No | Required by Traefik/Watchtower |
 | Authelia | Yes | No | SSO authentication |
 | Portainer | Yes | No | Container management |
-| Watchtower | Yes | No | Container updates (runs at 07:30) |
+| Watchtower | Yes | No | Container updates (runs at 08:30) |
 | Uptime Kuma | Yes | No | Monitoring should stay |
 | Duplicati | Yes | No | Runs backups at 23:00 |
 | Gluetun | No | Yes | VPN tunnel (only with vpn profile) |
@@ -376,7 +387,7 @@ crontab -e
 # Enter power save at 00:00 (after Duplicati backup at 23:00)
 0 0 * * * /share/container/mediastack/scripts/power-save-start.sh >> /var/log/power-save.log 2>&1
 
-# Exit power save at 07:00 (before Watchtower at 07:30)
+# Exit power save at 07:00 (before Watchtower at 08:30)
 0 7 * * * /share/container/mediastack/scripts/power-save-stop.sh >> /var/log/power-save.log 2>&1
 ```
 
@@ -385,7 +396,7 @@ crontab -e
 > - Duplicati backup runs at 23:00 (before NAS shutdown)
 > - NAS shutdown: weekdays 00:00, weekends 01:00
 > - NAS power on: weekdays 07:00, weekends 08:00
-> - Watchtower updates run at 07:30 (after weekday NAS power-on)
+> - Watchtower updates run at 08:30 (after NAS power-on)
 > - QTS config backup runs at 08:00 Sunday (after weekend NAS power-on)
 > - Backup verification runs at 08:30 Sunday
 >
@@ -582,7 +593,7 @@ Home Assistant can centralize power management with intelligent automations.
 - alias: "Exit Power Save Mode"
   trigger:
     - platform: time
-      at: "07:00:00"  # Before Watchtower at 07:30
+      at: "07:00:00"  # Before Watchtower at 08:30
   action:
     - service: shell_command.power_save_stop
 ```
@@ -806,4 +817,4 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 |------|--------|
 | 2026-02-01 | Document creation |
 | 2026-03-07 | Added end-to-end scheduled shutdown & wake-up section (§1.1) |
-| 2026-03-10 | Updated NAS power schedule for weekday/weekend split (00:00/07:00 vs 01:00/08:00); fixed WOL persistence to use post-up ethtool instead of systemd-networkd |
+| 2026-03-10 | Added note explaining why shutdown is done via SSH from NAS (§1.1); updated NAS power schedule for weekday/weekend split (00:00/07:00 vs 01:00/08:00); fixed WOL persistence to use post-up ethtool instead of systemd-networkd |

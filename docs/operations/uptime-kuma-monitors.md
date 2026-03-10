@@ -114,6 +114,7 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 | Tailscale | Docker Container | Container: `tailscale` | L'health check integrato esegue `tailscale status --json`; usa `network_mode: host` quindi non è raggiungibile via rete Docker. Per il setup completo vedi [Tailscale Setup](../setup/tailscale-setup.md) |
 | Socket Proxy | Docker Container | Container: `socket-proxy` | Interno, nessun endpoint HTTP esposto |
 | Watchtower | Docker Container | Container: `watchtower` | L'endpoint metriche richiede auth; il monitor Docker è più semplice |
+| Cert Page | HTTP(s) | `http://cert-page:80/` | Pagina download certificato CA; nessuna autenticazione richiesta |
 
 > [!NOTE]
 > Non creare un monitor per Uptime Kuma stesso — non può monitorare in modo affidabile la propria disponibilità.
@@ -173,7 +174,7 @@ Le Status Page raggruppano i monitor in una vista pubblica o interna.
 2. Click **New Status Page**
 3. Inserire un nome (es. `Homelab`) e uno slug (es. `homelab`)
 4. Aggiungere gruppi tematici:
-   - **Infrastructure**: Traefik, Authelia, Pi-hole, Portainer, Duplicati, Tailscale, Socket Proxy, Watchtower
+   - **Infrastructure**: Traefik, Authelia, Pi-hole, Portainer, Duplicati, Tailscale, Socket Proxy, Watchtower, Cert Page
    - **Home Assistant**: Home Assistant
    - **Media**: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr
    - **Download**: qBittorrent, NZBGet, Gluetun (solo profilo `vpn`)
