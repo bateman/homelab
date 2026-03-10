@@ -193,7 +193,8 @@ down: check-compose
 restart: check-compose
 ifdef s
 	@printf ">>> Restarting $(s)...\n"
-	@$(COMPOSE_CMD) up -d --force-recreate $(s) && \
+	@$(COMPOSE_CMD) stop $(s) && \
+	 $(COMPOSE_CMD) up -d --force-recreate $(s) && \
 		printf "$(GREEN)>>> $(s) restarted$(NC)\n" || \
 		{ printf "$(RED)>>> Error restarting $(s)$(NC)\n"; exit 1; }
 else
