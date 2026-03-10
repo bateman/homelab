@@ -60,9 +60,17 @@ This directly undermines the `two_factor` policy set on Portainer. Authelia rule
     - "^/ping$"
     - "^/health$"
     - "^/healthcheck$"
+
+# NZBGet uses JSON-RPC/XML-RPC endpoints, not /api/
+- domain: nzbget.home.local
+  policy: bypass
+  resources:
+    - "^/jsonrpc.*$"
+    - "^/xmlrpc.*$"
+    - "^/jsonprpc.*$"
 ```
 
-> **RESOLVED:** API bypass scoped to specific *arr domains in `docker/config/authelia/configuration.yml`. Portainer, Duplicati, Uptime Kuma, and Pi-hole `/api/` paths now require full authentication per their domain-specific policies.
+> **RESOLVED:** API bypass scoped to specific *arr domains and NZBGet in `docker/config/authelia/configuration.yml`. NZBGet uses separate bypass for its JSON-RPC/XML-RPC endpoints. Portainer, Duplicati, Uptime Kuma, and Pi-hole `/api/` paths now require full authentication per their domain-specific policies.
 
 ### H2 — ~~No firewall rule for~~ Traefik (port 443) from Media VLAN ~~— forces auth bypass~~
 

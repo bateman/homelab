@@ -170,6 +170,14 @@ access_control:
         - "^/health$"
         - "^/healthcheck$"
 
+    # NZBGet API uses JSON-RPC/XML-RPC endpoints, not /api/
+    - domain: nzbget.home.local
+      policy: bypass
+      resources:
+        - "^/jsonrpc.*$"
+        - "^/xmlrpc.*$"
+        - "^/jsonprpc.*$"
+
     # -------------------------------------------------------------------------
     # Two-factor rules (extra security for admin tools)
     # -------------------------------------------------------------------------
