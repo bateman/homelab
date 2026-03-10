@@ -94,8 +94,8 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 1. **WOL configured** on Mini PC — see [proxmox-setup.md §8.2](../setup/proxmox-setup.md#82-wake-on-lan-wol)
 2. **SSH key** from NAS to Proxmox (passwordless):
 
-   > [!IMPORTANT]
-   > On QNAP, `admin` maps to UID 0 (root). The `crontab -e` command edits root's crontab, so cron jobs run with `HOME=/root`. The SSH key **must** live in `/root/.ssh/` — not `/share/homes/admin/.ssh/` — or cron's `ssh` won't find it.
+> [!IMPORTANT]
+> On QNAP, `admin` maps to UID 0 (root). The `crontab -e` command edits root's crontab, so cron jobs run with `HOME=/root`. The SSH key **must** live in `/root/.ssh/` — not `/share/homes/admin/.ssh/` — or cron's `ssh` won't find it.
 
    ```bash
    # On NAS (ssh admin@192.168.3.10)
