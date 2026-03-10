@@ -13,7 +13,7 @@ This document covers power management strategies for the homelab infrastructure:
 | UPS | Yes | No | Powers entire rack |
 | UDM-SE | Yes | No | Gateway, firewall, routing |
 | PoE Switch | Yes | No | Network backbone |
-| QNAP NAS | No | Yes | Scheduled power off 01:00–07:00, HDD spindown |
+| QNAP NAS | No | Yes | Scheduled power off (weekdays 00:00–07:00, weekends 01:00–08:00), HDD spindown |
 | Mini PC (Proxmox) | No | Yes | WOL available, Plex on-demand |
 | Wi-Fi AP (U6-Pro) | Partial | Yes | Schedule overnight shutdown |
 
@@ -55,16 +55,32 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 
 #### Nightly Cycle Timeline
 
+**Weekdays (Mon–Fri):**
+
 ```
 23:00  Duplicati backup runs (on NAS)
-00:30  ── Shutdown Mini PC ──     (cron: ssh shutdown)
-01:00  ── NAS shuts down ──       (QTS Power Schedule)
+23:59  ── Shutdown Mini PC ──     (cron: ssh shutdown)
+00:00  ── NAS shuts down ──       (QTS Power Schedule — Weekdays)
        │
        │  Both devices OFF (saves ~40-60W)
        │
-07:00  ── NAS powers on ──       (QTS Power Schedule)
+07:00  ── NAS powers on ──       (QTS Power Schedule — Weekdays)
 07:02  ── Wake Mini PC ──        (@reboot cron: WOL after 2 min delay)
 07:03  Plex available
+```
+
+**Weekends (Sat–Sun):**
+
+```
+23:00  Duplicati backup runs (on NAS)
+00:59  ── Shutdown Mini PC ──     (cron: ssh shutdown)
+01:00  ── NAS shuts down ──       (QTS Power Schedule — Weekends)
+       │
+       │  Both devices OFF (saves ~40-60W)
+       │
+08:00  ── NAS powers on ──       (QTS Power Schedule — Weekends)
+08:02  ── Wake Mini PC ──        (@reboot cron: WOL after 2 min delay)
+08:03  Plex available
 ```
 
 > [!NOTE]
@@ -95,8 +111,11 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 crontab -e
 
 # === Mini PC Scheduled Power Cycle ===
-# Shutdown at 00:30 (after Duplicati backup at 23:00, before NAS shutdown at 01:00)
-30 0 * * * ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
+# Shutdown 1 minute before NAS (weekday NAS shutdown: 00:00 Mon-Fri, weekend: 01:00 Sat-Sun)
+# Weeknights: 23:59 Sun-Thu (before 00:00 Mon-Fri NAS shutdown)
+59 23 * * 0-4 ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
+# Weekend nights: 00:59 Sat-Sun (before 01:00 Sat-Sun NAS shutdown)
+59 0 * * 0,6 ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
 # Wake Mini PC 2 minutes after NAS boots (handles scheduled power-on, reboots, and power outages)
 @reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
@@ -130,16 +149,16 @@ cat /var/log/minipc-power.log
 
 | Scenario | Shutdown | Wake | Cron Schedule (wake) |
 |----------|----------|------|---------------------|
-| Wake on NAS boot (recommended) | 00:30 daily | ~2 min after NAS boot | `@reboot sleep 120 && wakeonlan ...` |
-| Fixed time daily | 00:30 daily | 07:00 daily | `0 7 * * *` |
-| Weekday evenings only | 00:30 daily | 18:00 Mon-Fri | `0 18 * * 1-5` |
-| Always on (override) | Comment out shutdown cron | — | — |
+| Wake on NAS boot (recommended) | 23:59 Sun-Thu / 00:59 Sat-Sun | ~2 min after NAS boot | `@reboot sleep 120 && wakeonlan ...` |
+| Fixed time daily | 23:59 Sun-Thu / 00:59 Sat-Sun | 07:00 weekdays / 08:00 weekends | `0 7 * * 1-5` + `0 8 * * 0,6` |
+| Always on (override) | Comment out shutdown crons | — | — |
 
 If the NAS is always-on (no scheduled power cycle), replace `@reboot` with a fixed-time cron or combine both:
 ```bash
-# @reboot alone won't fire if the NAS never reboots — add a fixed-time fallback
+# @reboot alone won't fire if the NAS never reboots — add fixed-time fallbacks
 @reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
-15 7 * * * wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+0 7 * * 1-5 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+0 8 * * 0,6 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
 
 > [!NOTE]
@@ -180,22 +199,33 @@ Reduce LED brightness overnight to save minor power and reduce light pollution.
 ### 2.3 Scheduled Power On/Off
 
 > [!CAUTION]
-> NAS power scheduling means no access to media services or backups during the off window (01:00-07:00). Ensure all scheduled tasks (backups, updates) run outside this window.
+> NAS power scheduling means no access to media services or backups during the off window. Ensure all scheduled tasks (backups, updates) run outside this window.
 
 1. Control Panel → System → Power → Power Schedule
-2. Configure:
-   - Shutdown: 01:00 (after Duplicati backup at 23:00)
-   - Power On: 07:00 (before Watchtower updates at 07:30)
+2. Enable schedule, then configure:
+
+| Power Action | Schedule | Start Time |
+|---|---|---|
+| Turn on the server | Weekdays | 07:00 |
+| Shutdown | Weekdays | 00:00 |
+| Turn on the server | Weekends | 08:00 |
+| Shutdown | Weekends | 01:00 |
+
+3. Check "Postpone scheduled restart/shutdown when a replication job is in progress"
+
+**Off windows:**
+- Weekdays: 00:00–07:00 (7 hours)
+- Weekends: 01:00–08:00 (7 hours)
 
 **Prerequisites**:
 - Duplicati backup (23:00) must complete before shutdown
 - Watchtower (07:30), QTS backup (08:00 Sun), and verification (08:30 Sun) run after power on
-- No services require overnight access (01:00-07:00)
+- No services require overnight access
 - UPS must support scheduled wake (via RTC or network signal)
-- Mini PC shutdown cron (00:30) must run before NAS shutdown (01:00)
+- Mini PC shutdown cron runs 1 min before each NAS shutdown (see [Section 1.1](#11-scheduled-shutdown--wake-up-cron))
 
 > [!TIP]
-> The `@reboot` cron in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) automatically wakes the Mini PC when the NAS powers on at 07:00.
+> The `@reboot` cron in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) automatically wakes the Mini PC when the NAS powers on (07:00 weekdays, 08:00 weekends).
 
 > [!NOTE]
 > Docker containers on the NAS auto-restart on boot thanks to `restart: unless-stopped` — no additional startup scripts needed. See [NAS Setup — Auto-Start on Boot](../setup/nas-setup.md#auto-start-on-boot) for details.
@@ -216,7 +246,7 @@ To completely power off the AP (saves more power than radio disable):
 
 **Option A: Smart Plug with Schedule**
 - Connect U6-Pro to a smart plug (e.g., Tapo, Shelly)
-- Schedule power off 01:00–07:00
+- Schedule power off overnight (match NAS schedule)
 - Note: PoE passthrough is lost; requires separate power adapter
 
 **Option B: PoE Port Control (via UniFi)**
@@ -337,7 +367,7 @@ echo "[$(date)] All services resumed."
 ### 4.3 Configure Cron Jobs
 
 > [!NOTE]
-> Since the NAS has **scheduled shutdown** (01:00-07:00), the NAS being off stops all containers automatically. The power-save scripts below are only needed if you disable NAS scheduled shutdown and want to keep the NAS running but stop non-critical services overnight.
+> Since the NAS has **scheduled shutdown** (weekdays 00:00–07:00, weekends 01:00–08:00), the NAS being off stops all containers automatically. The power-save scripts below are only needed if you disable NAS scheduled shutdown and want to keep the NAS running but stop non-critical services overnight.
 
 ```bash
 # On NAS (ssh admin@192.168.3.10)
@@ -351,14 +381,15 @@ crontab -e
 ```
 
 > [!IMPORTANT]
-> **Timing coordination with backups (NAS downtime 01:00-07:00):**
+> **Timing coordination with backups:**
 > - Duplicati backup runs at 23:00 (before NAS shutdown)
-> - NAS shutdown at 01:00 / power on at 07:00
-> - Watchtower updates run at 07:30 (after NAS is up)
-> - QTS config backup runs at 08:00 Sunday (after NAS is up)
+> - NAS shutdown: weekdays 00:00, weekends 01:00
+> - NAS power on: weekdays 07:00, weekends 08:00
+> - Watchtower updates run at 07:30 (after weekday NAS power-on)
+> - QTS config backup runs at 08:00 Sunday (after weekend NAS power-on)
 > - Backup verification runs at 08:30 Sunday
 >
-> All scheduled tasks avoid the 01:00-07:00 downtime window.
+> All scheduled tasks avoid the overnight downtime windows.
 
 > [!NOTE]
 > Adjust paths if you deployed the stack to a different directory.
@@ -527,7 +558,7 @@ Home Assistant can centralize power management with intelligent automations.
 
 # Shutdown Plex server at night if no active streams
 # Requires Plex integration for sensor.plex
-# Note: Scheduled before NAS shutdown (01:00) since HA runs on NAS
+# Note: Scheduled before NAS shutdown (00:00 weekdays / 01:00 weekends) since HA runs on NAS
 - alias: "Shutdown Plex Overnight"
   trigger:
     - platform: time
@@ -540,7 +571,7 @@ Home Assistant can centralize power management with intelligent automations.
 
 # Time-based service control (alternative to cron)
 # Use this if you prefer HA to manage power save instead of cron
-# Note: Skip if using NAS scheduled shutdown (01:00-07:00)
+# Note: Skip if using NAS scheduled shutdown (weekdays 00:00-07:00, weekends 01:00-08:00)
 - alias: "Enter Power Save Mode"
   trigger:
     - platform: time
@@ -775,3 +806,4 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 |------|--------|
 | 2026-02-01 | Document creation |
 | 2026-03-07 | Added end-to-end scheduled shutdown & wake-up section (§1.1) |
+| 2026-03-10 | Updated NAS power schedule for weekday/weekend split (00:00/07:00 vs 01:00/08:00); fixed WOL persistence to use post-up ethtool instead of systemd-networkd |

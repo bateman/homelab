@@ -191,7 +191,7 @@ If you prefer manual tar.gz backups without Duplicati:
 # Create cron job on NAS (ssh admin@192.168.3.10)
 crontab -e
 
-# Backup at 23:00 (requires ~1 minute downtime, before NAS shutdown at 01:00)
+# Backup at 23:00 (requires ~1 minute downtime, before NAS shutdown at 00:00 weekdays / 01:00 weekends)
 # Note: adjust path to your installation
 0 23 * * * cd /share/container/homelab && make down && tar -czf /share/backup/docker-config-$(date +\%Y\%m\%d).tar.gz docker/config && make up
 
@@ -240,7 +240,7 @@ sudo make backup-qts  # Runs backup and shows detailed output
 # On NAS, add to crontab (ssh admin@192.168.3.10)
 crontab -e
 
-# Sunday at 08:00 (after NAS power-on at 07:00)
+# Sunday at 08:00 (after NAS weekend power-on at 08:00)
 # Source credentials from .env.secrets before running
 0 8 * * 0 cd /share/container/mediastack && /usr/bin/env $(grep '^QNAP_ADMIN' docker/.env.secrets | xargs) /share/container/homelab/scripts/backup-qts-config.sh --notify >> /var/log/qts-backup.log 2>&1
 ```

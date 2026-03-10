@@ -908,39 +908,39 @@ ethtool -s nic0 wol g
 
 #### 8.2.3 Make WOL Persistent on Reboot
 
-Create a systemd-networkd configuration file:
+Proxmox uses `ifupdown` (`/etc/network/interfaces`), not `systemd-networkd`. Use a `post-up` hook to enable WOL on every boot:
 
 ```bash
-# Identify the integrated NIC (nic*, enp*, eth* — NOT enx* USB adapters)
-IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(nic|enp|eth)' | head -1)
-echo "Detected interface: $IFACE"
+# Edit network interfaces
+nano /etc/network/interfaces
 
+# Find the integrated NIC stanza and add the post-up line:
+#
+#   auto nic0
+#   iface nic0 inet manual
+#       post-up /usr/sbin/ethtool -s nic0 wol g
+#
+# Replace nic0 with your interface name if different.
 # IMPORTANT: if using dual-NIC setup (see Section 8.4), ensure this
 # matches the INTEGRATED Intel NIC, not the USB-C adapter.
 # USB adapters use enx* names and do NOT support WOL.
 
-# Create persistent WOL configuration
-cat > /etc/systemd/network/99-wol.link << EOF
-[Match]
-Name=$IFACE
-
-[Link]
-WakeOnLan=magic
-EOF
-
-# Restart networking
-systemctl restart systemd-networkd
+# Apply without reboot
+ifreload -a
 
 # Verify applied configuration
-ethtool $IFACE | grep Wake-on
+ethtool nic0 | grep Wake-on
 # Should show: Wake-on: g
 ```
+
+> [!WARNING]
+> Do **not** use `systemd-networkd` `.link` files (e.g., `99-wol.link`) — Proxmox's networking is managed by `ifupdown`, so `.link` files are silently ignored.
 
 #### 8.2.4 Note MAC Address
 
 ```bash
 # Get MAC address for WOL
-ip link show $IFACE | grep ether
+ip link show nic0 | grep ether
 # Example output: link/ether AA:BB:CC:DD:EE:FF brd ff:ff:ff:ff:ff:ff
 
 # Note the MAC address (AA:BB:CC:DD:EE:FF)
@@ -993,7 +993,7 @@ You can create an iOS shortcut to power on the Mini PC and open Plex:
 
 To power on the Mini PC when away from home:
 
-1. The NAS (192.168.3.10) must be on (available 07:00–01:00 with scheduled power cycle)
+1. The NAS (192.168.3.10) must be on (available 07:00–00:00 weekdays / 08:00–01:00 weekends)
 2. Tailscale runs on the NAS as a Docker container (see `docker/compose.yml`)
 3. From remote, connect via Tailscale to the NAS
 4. Execute: `wakeonlan AA:BB:CC:DD:EE:FF`
@@ -1008,7 +1008,7 @@ ssh admin@192.168.3.10 "wakeonlan AA:BB:CC:DD:EE:FF"
 | Problem | Cause | Solution |
 |---------|-------|----------|
 | WOL doesn't work | Not enabled in BIOS | Verify BIOS settings |
-| Wake-on: d after reboot | Config not persistent | Verify 99-wol.link |
+| Wake-on: d after reboot | Config not persistent | Add `post-up /usr/sbin/ethtool -s nic0 wol g` to `/etc/network/interfaces` |
 | Works only sometimes | Fast Startup Windows | Not applicable (Proxmox) |
 | Doesn't work from another VLAN | Broadcast doesn't pass | Send from same VLAN |
 | Doesn't work via Tailscale | Magic packet not routed | Use device on LAN |
@@ -1247,7 +1247,7 @@ cat >> /etc/network/interfaces << 'EOF'
 # Integrated 1GbE Intel NIC — WOL only, no IP
 auto nic0
 iface nic0 inet manual
-    # Keep link up for WOL but no IP address
+    post-up /usr/sbin/ethtool -s nic0 wol g
 EOF
 ```
 
@@ -1322,7 +1322,7 @@ iface lo inet loopback
 # Integrated 1GbE Intel NIC — WOL only, no IP
 auto nic0
 iface nic0 inet manual
-    # Keep link up for WOL but no IP address
+    post-up /usr/sbin/ethtool -s nic0 wol g
 
 # 2.5GbE USB-C adapter — Proxmox management
 auto enxAABBCCDDEEFF
@@ -1367,25 +1367,15 @@ ifreload -a
 # cp /etc/network/interfaces.bak /etc/network/interfaces && ifreload -a
 ```
 
-##### Update WOL Configuration
+##### Verify WOL Configuration
 
-Since WOL must use the integrated NIC, update the persistent WOL configuration:
+The `post-up` line in the interfaces file above already enables WOL on nic0. Verify it's working:
 
 ```bash
-# WOL must target the integrated NIC (nic0), NOT the USB adapter
-cat > /etc/systemd/network/99-wol.link << EOF
-[Match]
-# Match the integrated Intel NIC by MAC address for reliability
-MACAddress=XX:XX:XX:XX:XX:XX
+# Apply updated interfaces
+ifreload -a
 
-[Link]
-WakeOnLan=magic
-EOF
-
-# Restart networking
-systemctl restart systemd-networkd
-
-# Verify WOL is enabled on the integrated NIC
+# Verify WOL is enabled on the integrated NIC (nic0), NOT the USB adapter
 ethtool nic0 | grep Wake-on
 # Should show: Wake-on: g
 ```
