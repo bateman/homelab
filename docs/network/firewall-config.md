@@ -183,9 +183,12 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | Proxmox Management | 8006 |
 | mDNS | 5353 |
 | WoL | 9 |
+| File Sharing | 445, 548 |
 
 > [!NOTE]
 > **Traefik** — reverse proxy HTTPS port (Rule 8). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO, except `plex.home.local` (Plex has its own authentication).
+>
+> **File Sharing** — SMB and AFP ports for accessing NAS shared folders from Media VLAN (Rule 13): SMB (445) for Windows/macOS/Linux/Android file sharing, AFP (548) for Apple devices (Finder, Time Machine). QNAP QTS provides both protocols natively.
 >
 > **Media Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 8) for Authelia-protected access.
 >
@@ -359,7 +362,20 @@ Rules are processed in order, from first to last. Order matters.
 > 2. **WoL app with broadcast address**: Configure the app to send to `192.168.3.255` (Servers VLAN broadcast). Requires the UDM-SE to forward directed broadcasts.
 > 3. **UniFi controller**: Use the UniFi app → select device → send WoL from the controller itself.
 
-### Rule 13 — Allow IoT to Home Assistant
+### Rule 13 — Allow Media to NAS File Sharing
+
+| Field | Value |
+|-------|-------|
+| Name | Allow Media to NAS File Sharing |
+| Action | Accept |
+| Protocol | TCP |
+| Source | VLAN Media |
+| Destination | NAS (192.168.3.10) |
+| Port | File Sharing (445, 548) |
+
+> Allows Media VLAN devices (phones, tablets, laptops, Smart TVs) to access NAS shared folders via SMB (port 445) and AFP (port 548). SMB is the universal protocol supported by Windows, macOS, Linux, and Android. AFP is used by Apple devices for Finder file browsing and Time Machine backups. QNAP QTS exposes both protocols natively for its shared folders.
+
+### Rule 14 — Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -372,7 +388,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
-### Rule 14 — Block IoT to All Private
+### Rule 15 — Block IoT to All Private
 
 | Field | Value |
 |-------|-------|
@@ -383,9 +399,9 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | RFC1918 |
 
 > [!TIP]
-> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 13).
+> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 14).
 
-### Rule 15 — Block Guest to All Private
+### Rule 16 — Block Guest to All Private
 
 | Field | Value |
 |-------|-------|
@@ -397,7 +413,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Complete Guest network isolation. Internet access only.
 
-### Rule 16 — Allow Management from Servers
+### Rule 17 — Allow Management from Servers
 
 | Field | Value |
 |-------|-------|
@@ -409,7 +425,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows desktop PC (VLAN 3) to access switch and AP management interfaces. Uses the native UniFi "Management" network as destination (not a custom network list).
 
-### Rule 17 — Block All Inter-VLAN (Catch-All)
+### Rule 18 — Block All Inter-VLAN (Catch-All)
 
 | Field | Value |
 |-------|-------|
