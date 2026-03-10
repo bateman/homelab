@@ -93,10 +93,16 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 
 1. **WOL configured** on Mini PC — see [proxmox-setup.md §8.2](../setup/proxmox-setup.md#82-wake-on-lan-wol)
 2. **SSH key** from NAS to Proxmox (passwordless):
+
+   > [!IMPORTANT]
+   > On QNAP, `admin` maps to UID 0 (root). The `crontab -e` command edits root's crontab, so cron jobs run with `HOME=/root`. The SSH key **must** live in `/root/.ssh/` — not `/share/homes/admin/.ssh/` — or cron's `ssh` won't find it.
+
    ```bash
    # On NAS (ssh admin@192.168.3.10)
-   ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
-   ssh-copy-id -i ~/.ssh/id_ed25519.pub root@192.168.3.20
+   # admin maps to root on QNAP — verify home directory used by cron:
+   echo $HOME            # likely /root when logged in as admin
+   ssh-keygen -t ed25519 -N "" -f /root/.ssh/id_ed25519
+   ssh-copy-id -i /root/.ssh/id_ed25519.pub root@192.168.3.20
    # Test: should connect without password prompt
    ssh root@192.168.3.20 "hostname"
    ```
@@ -116,9 +122,9 @@ crontab -e
 # === Mini PC Scheduled Power Cycle ===
 # Shutdown 1 minute before NAS (weekday NAS shutdown: 00:00 Mon-Fri, weekend: 01:00 Sat-Sun)
 # Weeknights: 23:59 Sun-Thu (before 00:00 Mon-Fri NAS shutdown)
-59 23 * * 0-4 ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
+59 23 * * 0-4 ssh -i /root/.ssh/id_ed25519 -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
 # Weekend nights: 00:59 Sat-Sun (before 01:00 Sat-Sun NAS shutdown)
-59 0 * * 0,6 ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
+59 0 * * 0,6 ssh -i /root/.ssh/id_ed25519 -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
 # Wake Mini PC 2 minutes after NAS boots (handles scheduled power-on, reboots, and power outages)
 @reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
@@ -794,6 +800,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 | Mini PC not waking on NAS boot | `@reboot` cron not running | Verify with `crontab -l`; check NAS cron supports `@reboot` |
 | Mini PC not waking on NAS boot | Network not ready at `@reboot` | Increase sleep delay (e.g., `sleep 180`) |
 | Shutdown cron fails | SSH key not configured | Set up passwordless SSH (see [Section 1.1 Prerequisites](#11-scheduled-shutdown--wake-up-cron)) |
+| Shutdown cron fails | Key in wrong home dir | Cron runs as root (`HOME=/root`); key must be in `/root/.ssh/`, not `/share/homes/admin/.ssh/` |
 | HDD won't spin down | Constant access | Check which process with `iotop` |
 | High idle power | Background tasks | Review container resource usage |
 | AP won't power on | PoE budget exceeded | Check switch PoE allocation |
@@ -817,4 +824,4 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 |------|--------|
 | 2026-02-01 | Document creation |
 | 2026-03-07 | Added end-to-end scheduled shutdown & wake-up section (§1.1) |
-| 2026-03-10 | Added note explaining why shutdown is done via SSH from NAS (§1.1); updated NAS power schedule for weekday/weekend split (00:00/07:00 vs 01:00/08:00); fixed WOL persistence to use post-up ethtool instead of systemd-networkd |
+| 2026-03-10 | Added note explaining why shutdown is done via SSH from NAS (§1.1); updated NAS power schedule for weekday/weekend split (00:00/07:00 vs 01:00/08:00); fixed WOL persistence to use post-up ethtool instead of systemd-networkd; fixed SSH key path for cron (must use `/root/.ssh/` since QNAP admin=root) |
