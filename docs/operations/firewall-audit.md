@@ -62,12 +62,13 @@ This directly undermines the `two_factor` policy set on Portainer. Authelia rule
     - "^/healthcheck$"
 
 # NZBGet uses JSON-RPC/XML-RPC endpoints, not /api/
+# Supports both /jsonrpc and /username:password/jsonrpc auth styles
 - domain: nzbget.home.local
   policy: bypass
   resources:
-    - "^/jsonrpc.*$"
-    - "^/xmlrpc.*$"
-    - "^/jsonprpc.*$"
+    - "^(/[^/]+)?/jsonrpc.*$"
+    - "^(/[^/]+)?/xmlrpc.*$"
+    - "^(/[^/]+)?/jsonprp.*$"
 ```
 
 > **RESOLVED:** API bypass scoped to specific *arr domains and NZBGet in `docker/config/authelia/configuration.yml`. NZBGet uses separate bypass for its JSON-RPC/XML-RPC endpoints. Portainer, Duplicati, Uptime Kuma, and Pi-hole `/api/` paths now require full authentication per their domain-specific policies.
