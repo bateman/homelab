@@ -92,7 +92,6 @@ Internet
 | Mini PC Proxmox | 192.168.3.20 | DHCP reservation · Plex |
 | Printer | 192.168.3.30 | DHCP reservation · Printing from PC and Media devices |
 | Desktop PC | 192.168.3.40 | DHCP reservation · Main workstation |
-| Old Synology NAS (TEMP) | 192.168.3.61 | DHCP reservation · File migration, pending decommission |
 
 ### VLAN 4 — Media (192.168.4.0/24)
 
@@ -160,8 +159,7 @@ Before creating rules, define these lists in **UDM-SE** (Network application): S
 | Plex Server | IP Address | 192.168.3.21 |
 | Mini PC | IP Address | 192.168.3.20 |
 | Printer | IP Address | 192.168.3.30 |
-| Old Synology NAS (TEMP) | IP Address | 192.168.3.61 |
-| Servers All | IP Address | 192.168.3.10, 192.168.3.20, 192.168.3.21, 192.168.3.30, 192.168.3.61 |
+| Servers All | IP Address | 192.168.3.10, 192.168.3.20, 192.168.3.21, 192.168.3.30 |
 | VLAN Servers | Subnet | 192.168.3.0/24 |
 | VLAN Media | Subnet | 192.168.4.0/24 |
 | VLAN Guest | Subnet | 192.168.5.0/24 |
@@ -361,25 +359,7 @@ Rules are processed in order, from first to last. Order matters.
 > 2. **WoL app with broadcast address**: Configure the app to send to `192.168.3.255` (Servers VLAN broadcast). Requires the UDM-SE to forward directed broadcasts.
 > 3. **UniFi controller**: Use the UniFi app → select device → send WoL from the controller itself.
 
-### Rule 13 — Allow Media to Old Synology NAS (TEMPORARY)
-
-| Field | Value |
-|-------|-------|
-| Name | Allow Media to Old Synology (TEMP) |
-| Action | Accept |
-| Protocol | TCP |
-| Source | VLAN Media |
-| Destination | Old Synology NAS (TEMP) (192.168.3.61) |
-| Port | 5000, 5001, 445 |
-
-> **TEMPORANEO**: Accesso dalla Media VLAN alla web UI Synology DSM (5000/5001) e share SMB (445) per migrazione file. Rimuovere dopo il decommissioning:
->
-> - Rimuovere questa Rule 13 dal UDM-SE e da questo file
-> - Rimuovere "Old Synology NAS (TEMP)" dalla network list e da "Servers All"
-> - Rimuovere riga Old Synology NAS dalle tabelle IP VLAN 3 (qui e in `rack-homelab-config.md`)
-> - Rinumerare le regole (14-18 → 13-17)
-
-### Rule 14 — Allow IoT to Home Assistant
+### Rule 13 — Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -392,7 +372,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
-### Rule 15 — Block IoT to All Private
+### Rule 14 — Block IoT to All Private
 
 | Field | Value |
 |-------|-------|
@@ -403,9 +383,9 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | RFC1918 |
 
 > [!TIP]
-> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 14).
+> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 13).
 
-### Rule 16 — Block Guest to All Private
+### Rule 15 — Block Guest to All Private
 
 | Field | Value |
 |-------|-------|
@@ -417,7 +397,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Complete Guest network isolation. Internet access only.
 
-### Rule 17 — Allow Management from Servers
+### Rule 16 — Allow Management from Servers
 
 | Field | Value |
 |-------|-------|
@@ -429,7 +409,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows desktop PC (VLAN 3) to access switch and AP management interfaces. Uses the native UniFi "Management" network as destination (not a custom network list).
 
-### Rule 18 — Block All Inter-VLAN (Catch-All)
+### Rule 17 — Block All Inter-VLAN (Catch-All)
 
 | Field | Value |
 |-------|-------|
