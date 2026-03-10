@@ -110,6 +110,14 @@ crontab -e
 > [!TIP]
 > Both the shutdown cron (SSH to an off host) and the wake cron (WOL to an already-on host) are harmless no-ops — safe to run even when the Mini PC is in the "wrong" state.
 
+> [!NOTE]
+> **Why SSH from NAS instead of a local cron on Proxmox?** A local `crontab` on the Mini PC would work equally well for the shutdown itself. The reason both jobs live on the NAS is practical:
+> 1. **The wake-up _must_ come from the NAS** — the Mini PC is off, so only another device can send the WOL magic packet.
+> 2. **Single point of management** — keeping shutdown _and_ wake-up in the same crontab means one place to view and edit the entire power cycle.
+> 3. **Sequence coordination** — the NAS orchestrates the full timeline (00:30 Mini PC off → 01:00 NAS off → 07:00 NAS on → 07:02 WOL). Changing timing requires editing only one machine's crontab.
+>
+> If the NAS were always-on and never rebooted, a local cron on Proxmox for shutdown would be just as valid.
+
 #### Verify the Cycle
 
 ```bash
@@ -778,3 +786,4 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 |------|--------|
 | 2026-02-01 | Document creation |
 | 2026-03-07 | Added end-to-end scheduled shutdown & wake-up section (§1.1) |
+| 2026-03-10 | Added note explaining why shutdown is done via SSH from NAS (§1.1) |
