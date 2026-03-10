@@ -5,7 +5,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup setup-dry-run up down restart logs pull update status backup backup-portainer backup-qts verify-backup clean health show-urls urls \
+.PHONY: help setup setup-dry-run up down restart logs pull update status backup backup-portainer backup-qts verify-backup clean fix-ports health show-urls urls \
         validate check-docker check-compose check-curl recyclarr-sync recyclarr-config \
         logs-% shell-%
 
@@ -101,6 +101,7 @@ help:
 	@printf "\n"
 	@printf "  $(PURPLE)Utilities$(NC)\n"
 	@printf "    $(CYAN)make clean$(NC)            - Remove orphan Docker resources\n"
+	@printf "    $(CYAN)make fix-ports$(NC)        - Fix stale Docker port allocations\n"
 	@printf "    $(CYAN)make recyclarr-sync$(NC)   - Manual Trash Guides profile sync (adopt=true to adopt existing)\n"
 	@printf "    $(CYAN)make recyclarr-config$(NC) - Install Recyclarr config from template\n"
 	@printf "\n"
@@ -180,14 +181,14 @@ setup-dry-run:
 
 up: validate
 	@echo ">>> Starting stack..."
-	@$(COMPOSE_CMD) up -d && \
+	@$(COMPOSE_CMD) up -d --remove-orphans && \
 		printf "$(GREEN)>>> Stack started$(NC)\n" && \
 		$(MAKE) --no-print-directory status || \
 		{ printf "$(RED)>>> Error starting stack$(NC)\n"; exit 1; }
 
 down: check-compose
 	@echo ">>> Stopping stack..."
-	@$(COMPOSE_CMD) down
+	@$(COMPOSE_CMD) down --remove-orphans
 	@printf "$(GREEN)>>> Stack stopped$(NC)\n"
 
 restart: check-compose
@@ -321,6 +322,20 @@ clean: check-docker
 	else \
 		echo ">>> Operation cancelled"; \
 	fi
+
+fix-ports: check-docker
+	@echo ">>> Checking for port conflicts..."
+	@stale=$$(docker ps -a --filter "status=exited" --filter "status=dead" --filter "status=created" -q); \
+	if [ -n "$$stale" ]; then \
+		printf "$(YELLOW)>>> Removing stale containers...$(NC)\n"; \
+		docker rm -f $$stale; \
+	else \
+		echo ">>> No stale containers found"; \
+	fi
+	@docker network prune -f >/dev/null 2>&1 && \
+		echo ">>> Pruned unused networks" || true
+	@printf "$(GREEN)>>> Port cleanup complete. Try 'make up' now.$(NC)\n"
+	@printf "$(YELLOW)>>> If ports are still stuck, restart Docker: systemctl restart docker$(NC)\n"
 
 # =============================================================================
 # Recyclarr
