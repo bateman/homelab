@@ -127,7 +127,7 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 # On NAS (ssh admin@192.168.3.10)
 vi /share/data/homelab/scripts/proxmox-wol-cron.sh
 
-# Change this line to your Mini PC's real MAC (from: ip link show nic0):
+# Change this line to your Mini PC's real MAC (from Proxmox: ip link show):
 MAC_ADDRESS="AA:BB:CC:DD:EE:FF"
 ```
 
@@ -294,7 +294,7 @@ Reduce LED brightness overnight to save minor power and reduce light pollution.
 - Mini PC shutdown cron runs 1 min before each NAS shutdown (see [Section 1.1](#11-scheduled-shutdown--wake-up-cron))
 
 > [!TIP]
-> The `@reboot` cron in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) automatically wakes the Mini PC when the NAS powers on (07:00 weekdays, 08:00 weekends).
+> The `autorun.sh` script in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) automatically wakes the Mini PC when the NAS powers on (07:00 weekdays, 08:00 weekends).
 
 > [!NOTE]
 > Docker containers on the NAS auto-restart on boot thanks to `restart: unless-stopped` — no additional startup scripts needed. See [NAS Setup — Auto-Start on Boot](../setup/nas-setup.md#auto-start-on-boot) for details.
@@ -440,13 +440,20 @@ echo "[$(date)] All services resumed."
 
 ```bash
 # On NAS (ssh admin@192.168.3.10)
-crontab -e
+# Add to autorun.sh (same approach as Section 1.1 — crontab -e entries are wiped on reboot)
+sudo /etc/init.d/init_disk.sh mount_flash_config
 
-# Enter power save at 00:00 (after Duplicati backup at 23:00)
+cat >> /tmp/nasconfig_tmp/autorun.sh << 'CRON'
+# Power-save cron jobs (inject on every boot since QTS wipes crontab)
+CURRENT=$(crontab -l 2>/dev/null || true)
+if ! printf '%s\n' "$CURRENT" | grep -qF "power-save-start"; then
+  printf '%s\n%s\n' "$CURRENT" "# === Container Power Save ===
 0 0 * * * /share/container/mediastack/scripts/power-save-start.sh >> /var/log/power-save.log 2>&1
+0 7 * * * /share/container/mediastack/scripts/power-save-stop.sh >> /var/log/power-save.log 2>&1" | crontab -
+fi
+CRON
 
-# Exit power save at 07:00 (before Watchtower at 08:30)
-0 7 * * * /share/container/mediastack/scripts/power-save-stop.sh >> /var/log/power-save.log 2>&1
+sudo /etc/init.d/init_disk.sh umount_flash_config
 ```
 
 > [!IMPORTANT]
@@ -849,8 +856,8 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 |-------|-------|----------|
 | Services don't stop | Script permissions | `chmod +x scripts/power-save-*.sh` |
 | WOL doesn't work | Not on same VLAN | Send from device on VLAN 3 |
-| Mini PC not waking on NAS boot | `@reboot` cron not running | Verify with `crontab -l`; check NAS cron supports `@reboot` |
-| Mini PC not waking on NAS boot | Network not ready at `@reboot` | Increase sleep delay (e.g., `sleep 180`) |
+| Mini PC not waking on NAS boot | WOL script not in `autorun.sh` | Verify: `cat /tmp/nasconfig_tmp/autorun.sh` after mounting flash config |
+| Mini PC not waking on NAS boot | Network not ready at boot | Increase sleep delay in script (e.g., `sleep 180`) |
 | Shutdown cron fails | SSH key not configured | Set up passwordless SSH (see [Section 1.1 Prerequisites](#11-scheduled-shutdown--wake-up-cron)) |
 | Shutdown cron fails | Key in wrong home dir | Cron runs as root (`HOME=/root`); key must be in `/root/.ssh/`, not `/share/homes/admin/.ssh/` |
 | HDD won't spin down | Constant access | Check which process with `iotop` |
