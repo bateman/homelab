@@ -52,7 +52,7 @@ CRON_ENTRIES="${MARKER}
 # ---------------------------------------------------------------------------
 CURRENT_CRONTAB=$(crontab -l 2>/dev/null || true)
 
-if echo "${CURRENT_CRONTAB}" | grep -qF "${MARKER}"; then
+if printf '%s\n' "${CURRENT_CRONTAB}" | grep -qF "${MARKER}"; then
     echo "[proxmox-wol-cron] Cron jobs already present — skipping."
 else
     # Append entries to existing crontab (avoid leading blank line if empty)

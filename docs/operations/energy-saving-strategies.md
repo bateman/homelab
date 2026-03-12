@@ -68,7 +68,7 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
        │  Both devices OFF (saves ~40-60W)
        │
 07:00  ── NAS powers on ──       (QTS Power Schedule — Weekdays)
-07:02  ── Wake Mini PC ──        (@reboot cron: WOL after 2 min delay)
+07:02  ── Wake Mini PC ──        (autorun.sh: WOL after 2 min delay)
 07:03  Plex available
 ```
 
@@ -82,12 +82,12 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
        │  Both devices OFF (saves ~40-60W)
        │
 08:00  ── NAS powers on ──       (QTS Power Schedule — Weekends)
-08:02  ── Wake Mini PC ──        (@reboot cron: WOL after 2 min delay)
+08:02  ── Wake Mini PC ──        (autorun.sh: WOL after 2 min delay)
 08:03  Plex available
 ```
 
 > [!NOTE]
-> The Mini PC wake is triggered by the NAS boot (`@reboot` cron). Since the NAS has scheduled power on/off, this ensures the Mini PC always comes up ~2 minutes after the NAS powers on. The `@reboot` cron also fires on manual NAS reboots and after power outages.
+> The Mini PC wake is triggered on every NAS boot by `autorun.sh`, which calls `scripts/proxmox-wol-cron.sh`. The script injects the cron jobs (for scheduled shutdown) and sends a WOL magic packet with a 2-minute delay. Since the NAS has scheduled power on/off, this ensures the Mini PC always comes up ~2 minutes after the NAS powers on — including after manual reboots and power outages.
 
 #### Prerequisites
 
@@ -95,7 +95,7 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 2. **SSH key** from NAS to Proxmox (passwordless):
 
 > [!IMPORTANT]
-> On QNAP, `admin` maps to UID 0 (root). The `crontab -e` command edits root's crontab, so cron jobs run with `HOME=/root`. The SSH key **must** live in `/root/.ssh/` — not `/share/homes/admin/.ssh/` — or cron's `ssh` won't find it.
+> On QNAP, `admin` maps to UID 0 (root). Cron jobs run with `HOME=/root`, so the SSH key **must** live in `/root/.ssh/` — not `/share/homes/admin/.ssh/` — or cron's `ssh` won't find it.
 
    ```bash
    # On NAS (ssh admin@192.168.3.10)
