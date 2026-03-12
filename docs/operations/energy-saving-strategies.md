@@ -118,12 +118,23 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 
 #### Configure Cron Jobs
 
+> [!CAUTION]
+> **Do NOT use `crontab -e` directly on QNAP.** QTS regenerates the crontab on every reboot, wiping any custom entries. Instead, use the `autorun.sh` approach below so the cron jobs are re-injected automatically after each boot.
+
+**Step 1 — Edit the script with your MAC address:**
+
 ```bash
 # On NAS (ssh admin@192.168.3.10)
-crontab -e
+vi /share/data/homelab/scripts/proxmox-wol-cron.sh
 
+# Change this line to your Mini PC's real MAC (from: ip link show nic0):
+MAC_ADDRESS="AA:BB:CC:DD:EE:FF"
+```
+
+The script injects the following cron jobs (idempotent — safe to run multiple times):
+
+```bash
 # === Mini PC Scheduled Power Cycle ===
-# Shutdown 1 minute before NAS (weekday NAS shutdown: 00:00 Mon-Fri, weekend: 01:00 Sat-Sun)
 # Weeknights: 23:59 Sun-Thu (before 00:00 Mon-Fri NAS shutdown)
 59 23 * * 0-4 ssh -i /root/.ssh/id_proxmox_ed25519 -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
 # Weekend nights: 00:59 Sat-Sun (before 01:00 Sat-Sun NAS shutdown)
@@ -132,8 +143,45 @@ crontab -e
 @reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
 
-> [!IMPORTANT]
-> Replace `AA:BB:CC:DD:EE:FF` with the Mini PC's actual MAC address (integrated NIC). See [proxmox-setup.md §8.2.4](../setup/proxmox-setup.md#824-note-mac-address).
+**Step 2 — Enable QNAP autorun and register the script:**
+
+Autorun should already be enabled if you followed the [NAS setup](../setup/nas-setup.md#free-dns-port-port-53) (used for dnsmasq). If not:
+
+> **Control Panel → Hardware → General → "Run user defined startup processes (autorun.sh)"** — check the box and click Apply.
+
+Append the WoL cron script to the existing `autorun.sh` on the flash config partition:
+
+```bash
+# Mount flash config
+sudo /etc/init.d/init_disk.sh mount_flash_config
+
+# Verify existing autorun.sh (should already have dnsmasq lines)
+cat /tmp/nasconfig_tmp/autorun.sh
+
+# Append WoL cron injection
+echo '/share/data/homelab/scripts/proxmox-wol-cron.sh' >> /tmp/nasconfig_tmp/autorun.sh
+
+# Verify
+cat /tmp/nasconfig_tmp/autorun.sh
+
+# Unmount flash config
+sudo /etc/init.d/init_disk.sh umount_flash_config
+
+# Run it once now to inject the cron jobs immediately
+/share/data/homelab/scripts/proxmox-wol-cron.sh
+```
+
+**Step 3 — Verify:**
+
+```bash
+# Confirm cron jobs are present
+crontab -l | grep -A1 "Mini PC"
+
+# Reboot and verify they survive
+reboot
+# After reboot:
+crontab -l | grep -A1 "Mini PC"
+```
 
 > [!TIP]
 > Both the shutdown cron (SSH to an off host) and the wake cron (WOL to an already-on host) are harmless no-ops — safe to run even when the Mini PC is in the "wrong" state.
@@ -173,8 +221,9 @@ cat /var/log/minipc-power.log
 | Fixed time daily | 23:59 Sun-Thu / 00:59 Sat-Sun | 07:00 weekdays / 08:00 weekends | `0 7 * * 1-5` + `0 8 * * 0,6` |
 | Always on (override) | Comment out shutdown crons | — | — |
 
-If the NAS is always-on (no scheduled power cycle), replace `@reboot` with a fixed-time cron or combine both:
+If the NAS is always-on (no scheduled power cycle), edit `scripts/proxmox-wol-cron.sh` and replace the `@reboot` entry with fixed-time crons (or combine both):
 ```bash
+# In CRON_ENTRIES variable of scripts/proxmox-wol-cron.sh:
 # @reboot alone won't fire if the NAS never reboots — add fixed-time fallbacks
 @reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 0 7 * * 1-5 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
