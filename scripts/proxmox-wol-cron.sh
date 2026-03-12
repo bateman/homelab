@@ -14,7 +14,7 @@
 #        processes (autorun.sh)" — check the box and click Apply.
 #   2. Mount flash config and append this script to autorun.sh:
 #        sudo /etc/init.d/init_disk.sh mount_flash_config
-#        echo '/share/data/homelab/scripts/proxmox-wol-cron.sh' \
+#        echo '/share/data/homelab/scripts/proxmox-wol-cron.sh >> /var/log/minipc-power.log 2>&1' \
 #          >> /tmp/nasconfig_tmp/autorun.sh
 #        sudo /etc/init.d/init_disk.sh umount_flash_config
 #   3. Reboot and verify: crontab -l | grep -i "mini pc"
@@ -55,8 +55,15 @@ CURRENT_CRONTAB=$(crontab -l 2>/dev/null || true)
 if echo "${CURRENT_CRONTAB}" | grep -qF "${MARKER}"; then
     echo "[proxmox-wol-cron] Cron jobs already present — skipping."
 else
-    # Append entries to existing crontab
-    echo "${CURRENT_CRONTAB}
-${CRON_ENTRIES}" | crontab -
+    # Append entries to existing crontab (avoid leading blank line if empty)
+    if [ -n "${CURRENT_CRONTAB}" ]; then
+        printf '%s\n%s\n' "${CURRENT_CRONTAB}" "${CRON_ENTRIES}" | crontab -
+    else
+        printf '%s\n' "${CRON_ENTRIES}" | crontab -
+    fi
     echo "[proxmox-wol-cron] Cron jobs injected successfully."
+    # @reboot entries only fire at crond startup, which has already happened
+    # by the time autorun.sh runs. Trigger WOL directly for this boot.
+    ( sleep 120 && wakeonlan "${MAC_ADDRESS}" >> "${LOG}" 2>&1 ) &
+    echo "[proxmox-wol-cron] WOL scheduled in background (120s delay)."
 fi

@@ -158,8 +158,8 @@ sudo /etc/init.d/init_disk.sh mount_flash_config
 # Verify existing autorun.sh (should already have dnsmasq lines)
 cat /tmp/nasconfig_tmp/autorun.sh
 
-# Append WoL cron injection
-echo '/share/data/homelab/scripts/proxmox-wol-cron.sh' >> /tmp/nasconfig_tmp/autorun.sh
+# Append WoL cron injection (redirect output to log for troubleshooting)
+echo '/share/data/homelab/scripts/proxmox-wol-cron.sh >> /var/log/minipc-power.log 2>&1' >> /tmp/nasconfig_tmp/autorun.sh
 
 # Verify
 cat /tmp/nasconfig_tmp/autorun.sh
@@ -190,7 +190,7 @@ crontab -l | grep -A1 "Mini PC"
 > **Why SSH from NAS instead of a local cron on Proxmox?** A local `crontab` on the Mini PC would work equally well for the shutdown itself. The reason both jobs live on the NAS is practical:
 > 1. **The wake-up _must_ come from the NAS** — the Mini PC is off, so only another device can send the WOL magic packet.
 > 2. **Single point of management** — keeping shutdown _and_ wake-up in the same crontab means one place to view and edit the entire power cycle.
-> 3. **Sequence coordination** — the NAS orchestrates the full timeline (00:30 Mini PC off → 01:00 NAS off → 07:00 NAS on → 07:02 WOL). Changing timing requires editing only one machine's crontab.
+> 3. **Sequence coordination** — the NAS orchestrates the full timeline (23:59 Mini PC off → 00:00 NAS off → 07:00 NAS on → 07:02 WOL). Changing timing requires editing only one machine's crontab.
 >
 > If the NAS were always-on and never rebooted, a local cron on Proxmox for shutdown would be just as valid.
 
