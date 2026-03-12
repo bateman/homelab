@@ -127,7 +127,7 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 # On NAS (ssh admin@192.168.3.10)
 vi /share/data/homelab/scripts/proxmox-wol-cron.sh
 
-# Change this line to your Mini PC's real MAC (from Proxmox: ip link show):
+# Change this line to your Mini PC's real MAC (from Proxmox: ip link show nic0):
 MAC_ADDRESS="AA:BB:CC:DD:EE:FF"
 ```
 

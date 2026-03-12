@@ -29,7 +29,7 @@ set -eu
 # ---------------------------------------------------------------------------
 PROXMOX_IP="192.168.3.20"
 SSH_KEY="/root/.ssh/id_proxmox_ed25519"
-MAC_ADDRESS="AA:BB:CC:DD:EE:FF"       # Replace with Mini PC's real MAC
+MAC_ADDRESS="AA:BB:CC:DD:EE:FF"       # Replace with Mini PC's real MAC (ip link show nic0)
 LOG="/var/log/minipc-power.log"
 
 # ---------------------------------------------------------------------------
