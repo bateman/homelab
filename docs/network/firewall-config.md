@@ -368,10 +368,10 @@ Rules are processed in order, from first to last. Order matters.
 | Action | Accept |
 | Protocol | TCP |
 | Source | VLAN Media |
-| Destination | VLAN Servers (192.168.3.0/24) |
+| Destination | NAS (192.168.3.10) |
 | Port | SMB (445) |
 
-> Allows Media VLAN devices (Smart TVs, phones, tablets) to mount SMB shared folders from servers on the Servers VLAN (e.g., NAS network shares for media playback or file access).
+> Allows Media VLAN devices (Smart TVs, phones, tablets) to mount SMB shared folders from the NAS (e.g., media libraries, backups, file sharing).
 
 ### Rule 14 — Allow IoT to Home Assistant
 
