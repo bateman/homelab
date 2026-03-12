@@ -68,7 +68,7 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
        │  Both devices OFF (saves ~40-60W)
        │
 07:00  ── NAS powers on ──       (QTS Power Schedule — Weekdays)
-07:02  ── Wake Mini PC ──        (@reboot cron: WOL after 2 min delay)
+07:02  ── Wake Mini PC ──        (autorun.sh: WOL after 2 min delay)
 07:03  Plex available
 ```
 
@@ -82,12 +82,12 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
        │  Both devices OFF (saves ~40-60W)
        │
 08:00  ── NAS powers on ──       (QTS Power Schedule — Weekends)
-08:02  ── Wake Mini PC ──        (@reboot cron: WOL after 2 min delay)
+08:02  ── Wake Mini PC ──        (autorun.sh: WOL after 2 min delay)
 08:03  Plex available
 ```
 
 > [!NOTE]
-> The Mini PC wake is triggered by the NAS boot (`@reboot` cron). Since the NAS has scheduled power on/off, this ensures the Mini PC always comes up ~2 minutes after the NAS powers on. The `@reboot` cron also fires on manual NAS reboots and after power outages.
+> The Mini PC wake is triggered on every NAS boot by `autorun.sh`, which calls `scripts/proxmox-wol-cron.sh`. The script injects the cron jobs (for scheduled shutdown) and sends a WOL magic packet with a 2-minute delay. Since the NAS has scheduled power on/off, this ensures the Mini PC always comes up ~2 minutes after the NAS powers on — including after manual reboots and power outages.
 
 #### Prerequisites
 
@@ -95,7 +95,7 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 2. **SSH key** from NAS to Proxmox (passwordless):
 
 > [!IMPORTANT]
-> On QNAP, `admin` maps to UID 0 (root). The `crontab -e` command edits root's crontab, so cron jobs run with `HOME=/root`. The SSH key **must** live in `/root/.ssh/` — not `/share/homes/admin/.ssh/` — or cron's `ssh` won't find it.
+> On QNAP, `admin` maps to UID 0 (root). Cron jobs run with `HOME=/root`, so the SSH key **must** live in `/root/.ssh/` — not `/share/homes/admin/.ssh/` — or cron's `ssh` won't find it.
 
    ```bash
    # On NAS (ssh admin@192.168.3.10)
@@ -118,12 +118,23 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 
 #### Configure Cron Jobs
 
+> [!CAUTION]
+> **Do NOT use `crontab -e` directly on QNAP.** QTS regenerates the crontab on every reboot, wiping any custom entries. Instead, use the `autorun.sh` approach below so the cron jobs are re-injected automatically after each boot.
+
+**Step 1 — Edit the script with your MAC address:**
+
 ```bash
 # On NAS (ssh admin@192.168.3.10)
-crontab -e
+vi /share/data/homelab/scripts/proxmox-wol-cron.sh
 
+# Change this line to your Mini PC's real MAC (from Proxmox: ip link show nic0):
+MAC_ADDRESS="AA:BB:CC:DD:EE:FF"
+```
+
+The script injects the following cron jobs (idempotent — safe to run multiple times):
+
+```bash
 # === Mini PC Scheduled Power Cycle ===
-# Shutdown 1 minute before NAS (weekday NAS shutdown: 00:00 Mon-Fri, weekend: 01:00 Sat-Sun)
 # Weeknights: 23:59 Sun-Thu (before 00:00 Mon-Fri NAS shutdown)
 59 23 * * 0-4 ssh -i /root/.ssh/id_proxmox_ed25519 -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
 # Weekend nights: 00:59 Sat-Sun (before 01:00 Sat-Sun NAS shutdown)
@@ -132,8 +143,45 @@ crontab -e
 @reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
 
-> [!IMPORTANT]
-> Replace `AA:BB:CC:DD:EE:FF` with the Mini PC's actual MAC address (integrated NIC). See [proxmox-setup.md §8.2.4](../setup/proxmox-setup.md#824-note-mac-address).
+**Step 2 — Enable QNAP autorun and register the script:**
+
+Autorun should already be enabled if you followed the [NAS setup](../setup/nas-setup.md#free-dns-port-port-53) (used for dnsmasq). If not:
+
+> **Control Panel → Hardware → General → "Run user defined startup processes (autorun.sh)"** — check the box and click Apply.
+
+Append the WoL cron script to the existing `autorun.sh` on the flash config partition:
+
+```bash
+# Mount flash config
+sudo /etc/init.d/init_disk.sh mount_flash_config
+
+# Verify existing autorun.sh (should already have dnsmasq lines)
+cat /tmp/nasconfig_tmp/autorun.sh
+
+# Append WoL cron injection (redirect output to log for troubleshooting)
+echo '/share/data/homelab/scripts/proxmox-wol-cron.sh >> /var/log/minipc-power.log 2>&1' >> /tmp/nasconfig_tmp/autorun.sh
+
+# Verify
+cat /tmp/nasconfig_tmp/autorun.sh
+
+# Unmount flash config
+sudo /etc/init.d/init_disk.sh umount_flash_config
+
+# Run it once now to inject the cron jobs immediately
+/share/data/homelab/scripts/proxmox-wol-cron.sh
+```
+
+**Step 3 — Verify:**
+
+```bash
+# Confirm cron jobs are present
+crontab -l | grep -A1 "Mini PC"
+
+# Reboot and verify they survive
+reboot
+# After reboot:
+crontab -l | grep -A1 "Mini PC"
+```
 
 > [!TIP]
 > Both the shutdown cron (SSH to an off host) and the wake cron (WOL to an already-on host) are harmless no-ops — safe to run even when the Mini PC is in the "wrong" state.
@@ -142,7 +190,7 @@ crontab -e
 > **Why SSH from NAS instead of a local cron on Proxmox?** A local `crontab` on the Mini PC would work equally well for the shutdown itself. The reason both jobs live on the NAS is practical:
 > 1. **The wake-up _must_ come from the NAS** — the Mini PC is off, so only another device can send the WOL magic packet.
 > 2. **Single point of management** — keeping shutdown _and_ wake-up in the same crontab means one place to view and edit the entire power cycle.
-> 3. **Sequence coordination** — the NAS orchestrates the full timeline (00:30 Mini PC off → 01:00 NAS off → 07:00 NAS on → 07:02 WOL). Changing timing requires editing only one machine's crontab.
+> 3. **Sequence coordination** — the NAS orchestrates the full timeline (23:59 Mini PC off → 00:00 NAS off → 07:00 NAS on → 07:02 WOL). Changing timing requires editing only one machine's crontab.
 >
 > If the NAS were always-on and never rebooted, a local cron on Proxmox for shutdown would be just as valid.
 
@@ -173,8 +221,9 @@ cat /var/log/minipc-power.log
 | Fixed time daily | 23:59 Sun-Thu / 00:59 Sat-Sun | 07:00 weekdays / 08:00 weekends | `0 7 * * 1-5` + `0 8 * * 0,6` |
 | Always on (override) | Comment out shutdown crons | — | — |
 
-If the NAS is always-on (no scheduled power cycle), replace `@reboot` with a fixed-time cron or combine both:
+If the NAS is always-on (no scheduled power cycle), edit `scripts/proxmox-wol-cron.sh` and replace the `@reboot` entry with fixed-time crons (or combine both):
 ```bash
+# In CRON_ENTRIES variable of scripts/proxmox-wol-cron.sh:
 # @reboot alone won't fire if the NAS never reboots — add fixed-time fallbacks
 @reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 0 7 * * 1-5 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
@@ -245,7 +294,7 @@ Reduce LED brightness overnight to save minor power and reduce light pollution.
 - Mini PC shutdown cron runs 1 min before each NAS shutdown (see [Section 1.1](#11-scheduled-shutdown--wake-up-cron))
 
 > [!TIP]
-> The `@reboot` cron in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) automatically wakes the Mini PC when the NAS powers on (07:00 weekdays, 08:00 weekends).
+> The `autorun.sh` script in [Section 1.1](#11-scheduled-shutdown--wake-up-cron) automatically wakes the Mini PC when the NAS powers on (07:00 weekdays, 08:00 weekends).
 
 > [!NOTE]
 > Docker containers on the NAS auto-restart on boot thanks to `restart: unless-stopped` — no additional startup scripts needed. See [NAS Setup — Auto-Start on Boot](../setup/nas-setup.md#auto-start-on-boot) for details.
@@ -391,13 +440,20 @@ echo "[$(date)] All services resumed."
 
 ```bash
 # On NAS (ssh admin@192.168.3.10)
-crontab -e
+# Add to autorun.sh (same approach as Section 1.1 — crontab -e entries are wiped on reboot)
+sudo /etc/init.d/init_disk.sh mount_flash_config
 
-# Enter power save at 00:00 (after Duplicati backup at 23:00)
+cat >> /tmp/nasconfig_tmp/autorun.sh << 'CRON'
+# Power-save cron jobs (inject on every boot since QTS wipes crontab)
+CURRENT=$(crontab -l 2>/dev/null || true)
+if ! printf '%s\n' "$CURRENT" | grep -qF "power-save-start"; then
+  printf '%s\n%s\n' "$CURRENT" "# === Container Power Save ===
 0 0 * * * /share/container/mediastack/scripts/power-save-start.sh >> /var/log/power-save.log 2>&1
+0 7 * * * /share/container/mediastack/scripts/power-save-stop.sh >> /var/log/power-save.log 2>&1" | crontab -
+fi
+CRON
 
-# Exit power save at 07:00 (before Watchtower at 08:30)
-0 7 * * * /share/container/mediastack/scripts/power-save-stop.sh >> /var/log/power-save.log 2>&1
+sudo /etc/init.d/init_disk.sh umount_flash_config
 ```
 
 > [!IMPORTANT]
@@ -800,8 +856,8 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 |-------|-------|----------|
 | Services don't stop | Script permissions | `chmod +x scripts/power-save-*.sh` |
 | WOL doesn't work | Not on same VLAN | Send from device on VLAN 3 |
-| Mini PC not waking on NAS boot | `@reboot` cron not running | Verify with `crontab -l`; check NAS cron supports `@reboot` |
-| Mini PC not waking on NAS boot | Network not ready at `@reboot` | Increase sleep delay (e.g., `sleep 180`) |
+| Mini PC not waking on NAS boot | WOL script not in `autorun.sh` | Verify: `cat /tmp/nasconfig_tmp/autorun.sh` after mounting flash config |
+| Mini PC not waking on NAS boot | Network not ready at boot | Increase sleep delay in script (e.g., `sleep 180`) |
 | Shutdown cron fails | SSH key not configured | Set up passwordless SSH (see [Section 1.1 Prerequisites](#11-scheduled-shutdown--wake-up-cron)) |
 | Shutdown cron fails | Key in wrong home dir | Cron runs as root (`HOME=/root`); key must be in `/root/.ssh/`, not `/share/homes/admin/.ssh/` |
 | HDD won't spin down | Constant access | Check which process with `iotop` |
