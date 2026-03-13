@@ -132,6 +132,7 @@ All commands should be run in the `/share/container/mediastack` directory on the
 | `make logs` | Follow all container logs in real-time |
 | `make logs-<service>` | Single service log (e.g., `make logs-sonarr`) |
 | `make health` | HTTP health check of all services |
+| `make vpn-check` | Verify VPN is working (no IP/IPv6/DNS leaks) |
 | `make urls` | List access URLs for all services (Sonarr, Radarr, Pi-hole, etc.) |
 
 ### Backup
