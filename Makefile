@@ -7,7 +7,7 @@
 
 .PHONY: help setup setup-dry-run up down restart logs pull update status backup backup-portainer backup-qts verify-backup clean fix-ports health show-urls urls \
         validate check-docker check-compose check-curl recyclarr-sync recyclarr-config \
-        logs-% shell-%
+        vpn-check logs-% shell-%
 
 # Compose files
 COMPOSE_FILES := -f docker/compose.yml -f docker/compose.media.yml
@@ -90,6 +90,7 @@ help:
 	@printf "    $(CYAN)make logs$(NC)        - Show logs (follow)\n"
 	@printf "    $(CYAN)make status$(NC)      - Container status and resources\n"
 	@printf "    $(CYAN)make health$(NC)      - Health check all services\n"
+	@printf "    $(CYAN)make vpn-check$(NC)   - Verify VPN is working (no leaks)\n"
 	@printf "    $(CYAN)make show-urls$(NC)   - Show WebUI URLs\n"
 	@printf "\n"
 	@printf "  $(PURPLE)Backup$(NC)\n"
@@ -529,3 +530,97 @@ show-urls:
 
 # Alias for show-urls
 urls: show-urls
+
+# =============================================================================
+# VPN Verification
+# =============================================================================
+
+vpn-check: check-docker check-curl
+	@echo "=== VPN Leak Check ==="
+	@echo ""
+	@FAIL=0; \
+	PROFILE=$$(grep -s '^COMPOSE_PROFILES=' docker/.env | cut -d= -f2); \
+	if ! echo "$$PROFILE" | grep -q 'vpn' || echo "$$PROFILE" | grep -q 'novpn'; then \
+		printf "$(YELLOW)VPN profile not active (COMPOSE_PROFILES=%s)$(NC)\n" "$$PROFILE"; \
+		printf "$(YELLOW)Set COMPOSE_PROFILES=vpn in docker/.env to use VPN$(NC)\n"; \
+		exit 0; \
+	fi; \
+	printf "Profile: $(GREEN)vpn$(NC)\n"; \
+	\
+	if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^gluetun$$'; then \
+		printf "Gluetun: $(RED)NOT RUNNING — skipping all checks$(NC)\n"; \
+		printf "\n$(RED)$(BOLD)=== SOME CHECKS FAILED ===$(NC)\n\n"; \
+		exit 1; \
+	fi; \
+	HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' gluetun 2>/dev/null); \
+	if [ "$$HEALTH" = "healthy" ]; then \
+		printf "Gluetun: $(GREEN)healthy$(NC)\n"; \
+	else \
+		printf "Gluetun: $(RED)%s$(NC)\n" "$$HEALTH"; \
+		FAIL=1; \
+	fi; \
+	\
+	printf "\n--- IP Leak Test ---\n"; \
+	HOST_PUBLIC_IP=$$(curl -s --max-time 10 https://ipinfo.io/ip 2>/dev/null); \
+	VPN_IP=$$(docker exec gluetun curl -s --max-time 10 https://ipinfo.io/ip 2>/dev/null); \
+	if [ -z "$$HOST_PUBLIC_IP" ]; then \
+		printf "Host public IP:    $(YELLOW)could not determine (offline?)$(NC)\n"; \
+	else \
+		printf "Host public IP:    %s\n" "$$HOST_PUBLIC_IP"; \
+	fi; \
+	if [ -z "$$VPN_IP" ]; then \
+		printf "Gluetun tunnel IP: $(RED)no connectivity through VPN$(NC)\n"; \
+		FAIL=1; \
+	else \
+		printf "Gluetun tunnel IP: %s\n" "$$VPN_IP"; \
+	fi; \
+	if [ -n "$$HOST_PUBLIC_IP" ] && [ -n "$$VPN_IP" ]; then \
+		if [ "$$HOST_PUBLIC_IP" = "$$VPN_IP" ]; then \
+			printf "Result: $(RED)FAIL — same IP! Traffic is NOT tunneled$(NC)\n"; \
+			FAIL=1; \
+		else \
+			printf "Result: $(GREEN)PASS — IPs differ, traffic is tunneled$(NC)\n"; \
+		fi; \
+	fi; \
+	\
+	printf "\n--- IPv6 Leak Test ---\n"; \
+	IPV6_RESULT=$$(docker exec gluetun curl -s --max-time 5 -6 https://ipv6.icanhazip.com 2>/dev/null); \
+	if [ -z "$$IPV6_RESULT" ]; then \
+		printf "IPv6: $(GREEN)PASS — disabled (no IPv6 connectivity)$(NC)\n"; \
+	else \
+		printf "IPv6: $(RED)FAIL — IPv6 reachable: %s$(NC)\n" "$$IPV6_RESULT"; \
+		FAIL=1; \
+	fi; \
+	\
+	printf "\n--- DNS Leak Test ---\n"; \
+	DNS_SERVERS=$$(docker exec gluetun cat /etc/resolv.conf 2>/dev/null | grep '^nameserver' | awk '{print $$2}'); \
+	if [ -n "$$DNS_SERVERS" ]; then \
+		printf "DNS resolvers: %s\n" "$$DNS_SERVERS"; \
+		printf "$(YELLOW)Verify these are NOT your ISP's DNS servers$(NC)\n"; \
+	else \
+		printf "DNS: $(YELLOW)could not read /etc/resolv.conf$(NC)\n"; \
+	fi; \
+	\
+	printf "\n--- Port Forwarding ---\n"; \
+	FWD_PORT=$$(docker exec gluetun cat /gluetun/forwarded_port 2>/dev/null); \
+	if [ -n "$$FWD_PORT" ] && [ "$$FWD_PORT" != "0" ]; then \
+		printf "Forwarded port: $(GREEN)%s$(NC)\n" "$$FWD_PORT"; \
+	else \
+		printf "Forwarded port: $(YELLOW)none (provider may not support it)$(NC)\n"; \
+	fi; \
+	\
+	printf "\n--- Kill Switch ---\n"; \
+	printf "$(YELLOW)Manual test (disrupts downloads briefly):$(NC)\n"; \
+	printf "  docker exec gluetun killall -STOP openvpn  # or wireguard-go\n"; \
+	printf "  docker exec gluetun curl -s --max-time 5 https://ipinfo.io/ip\n"; \
+	printf "  # Should timeout = kill switch works\n"; \
+	printf "  docker restart gluetun  # restore connection\n"; \
+	\
+	echo ""; \
+	if [ "$$FAIL" -eq 0 ]; then \
+		printf "$(GREEN)$(BOLD)=== ALL CHECKS PASSED ===$(NC)\n"; \
+	else \
+		printf "$(RED)$(BOLD)=== SOME CHECKS FAILED ===$(NC)\n"; \
+		exit 1; \
+	fi; \
+	echo ""

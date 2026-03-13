@@ -251,6 +251,16 @@ To get credentials:
 
 ## Verify Functionality
 
+### Quick Check (Recommended)
+
+Run the automated leak check that verifies IP tunneling, IPv6 disabled, DNS, and port forwarding in one command:
+
+```bash
+make vpn-check
+```
+
+For manual step-by-step verification, see the sections below.
+
 ### 1. Startup and VPN Connection Verification
 
 ```bash
