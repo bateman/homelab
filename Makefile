@@ -562,7 +562,7 @@ vpn-check: check-docker check-curl
 	\
 	printf "\n--- IP Leak Test ---\n"; \
 	HOST_PUBLIC_IP=$$(curl -s --max-time 10 https://ipinfo.io/ip 2>/dev/null); \
-	VPN_IP=$$(docker exec gluetun curl -s --max-time 10 https://ipinfo.io/ip 2>/dev/null); \
+	VPN_IP=$$(docker exec gluetun wget -qO- --timeout=10 https://ipinfo.io/ip 2>/dev/null); \
 	if [ -z "$$HOST_PUBLIC_IP" ]; then \
 		printf "Host public IP:    $(YELLOW)could not determine (offline?)$(NC)\n"; \
 	else \
@@ -584,12 +584,14 @@ vpn-check: check-docker check-curl
 	fi; \
 	\
 	printf "\n--- IPv6 Leak Test ---\n"; \
-	IPV6_RESULT=$$(docker exec gluetun curl -s --max-time 5 -6 https://ipv6.icanhazip.com 2>/dev/null); \
-	if [ -z "$$IPV6_RESULT" ]; then \
-		printf "IPv6: $(GREEN)PASS — disabled (no IPv6 connectivity)$(NC)\n"; \
-	else \
+	IPV6_RESULT=$$(docker exec gluetun wget -qO- --timeout=5 https://api64.ipify.org 2>/dev/null); \
+	if [ -n "$$IPV6_RESULT" ] && echo "$$IPV6_RESULT" | grep -q ':'; then \
 		printf "IPv6: $(RED)FAIL — IPv6 reachable: %s$(NC)\n" "$$IPV6_RESULT"; \
 		FAIL=1; \
+	elif [ -n "$$IPV6_RESULT" ]; then \
+		printf "IPv6: $(GREEN)PASS — only IPv4 detected (%s)$(NC)\n" "$$IPV6_RESULT"; \
+	else \
+		printf "IPv6: $(GREEN)PASS — no IPv6 connectivity$(NC)\n"; \
 	fi; \
 	\
 	printf "\n--- DNS Leak Test ---\n"; \
@@ -612,7 +614,7 @@ vpn-check: check-docker check-curl
 	printf "\n--- Kill Switch ---\n"; \
 	printf "$(YELLOW)Manual test (disrupts downloads briefly):$(NC)\n"; \
 	printf "  docker exec gluetun killall -STOP openvpn  # or wireguard-go\n"; \
-	printf "  docker exec gluetun curl -s --max-time 5 https://ipinfo.io/ip\n"; \
+	printf "  docker exec gluetun wget -qO- --timeout=5 https://ipinfo.io/ip\n"; \
 	printf "  # Should timeout = kill switch works\n"; \
 	printf "  docker restart gluetun  # restore connection\n"; \
 	\
