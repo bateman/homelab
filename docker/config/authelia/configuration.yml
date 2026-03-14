@@ -87,14 +87,16 @@ authentication_backend:
 session:
   # Session cookie name
   name: authelia_session
-  # Same site cookie policy
-  same_site: lax
   # Session expiration (7 days = 604800 seconds)
   expiration: 7d
   # Inactivity timeout (3 days = 259200 seconds)
   inactivity: 3d
   # Remember me duration (30 days)
   remember_me: 30d
+  # Redis backend for persistent sessions (survives Authelia restarts)
+  redis:
+    host: redis
+    port: 6379
   # Cookie domain (all *.home.local subdomains)
   cookies:
     - domain: home.local
@@ -178,6 +180,13 @@ access_control:
         - "^(/[^/]+)?/jsonrpc.*$"
         - "^(/[^/]+)?/xmlrpc.*$"
         - "^(/[^/]+)?/jsonprp.*$"
+
+    # qBittorrent WebUI API (/api/v2/*) — needed for *arr download client
+    # connections and mobile apps (e.g., qBittorrent Remote)
+    - domain: qbit.home.local
+      policy: bypass
+      resources:
+        - "^/api/.*$"
 
     # -------------------------------------------------------------------------
     # Two-factor rules (extra security for admin tools)

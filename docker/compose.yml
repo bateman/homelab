@@ -334,6 +334,36 @@ services:
       - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
 
   # ---------------------------------------------------------------------------
+  # Session Store (Redis for Authelia)
+  # ---------------------------------------------------------------------------
+  # Persists Authelia sessions across container restarts so users don't
+  # lose their SSO session every time Watchtower updates Authelia.
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - ./config/redis:/data
+    networks:
+      - proxy
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 16M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # ---------------------------------------------------------------------------
   # Authentication (SSO with Passkey/WebAuthn)
   # ---------------------------------------------------------------------------
   # Authelia: forward authentication for Traefik
@@ -361,6 +391,9 @@ services:
     networks:
       - proxy
       - media_net
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     logging: *common-logging
     healthcheck:

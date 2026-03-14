@@ -291,6 +291,7 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 | FlareSolverr | 8191 | Cloudflare bypass |
 | Pi-hole | 8081 | DNS ad-blocking |
 | Portainer | 9443 | Docker management |
+| Redis | — | Authelia session store (internal only) |
 | Authelia | — | SSO authentication (via auth.home.local only) |
 | Duplicati | 8200 | Incremental backup |
 | Uptime Kuma | 3001 | Monitoring and alerting |

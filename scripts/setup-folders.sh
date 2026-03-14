@@ -188,6 +188,7 @@ make_dir "${CONFIG_ROOT}/gluetun"
 make_dir "${CONFIG_ROOT}/cleanuparr"
 
 # Infrastructure services
+make_dir "${CONFIG_ROOT}/redis"
 make_dir "${CONFIG_ROOT}/pihole/etc-pihole"
 make_dir "${CONFIG_ROOT}/pihole/etc-dnsmasq.d"
 make_dir "${CONFIG_ROOT}/homeassistant"
