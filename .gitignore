@@ -33,7 +33,8 @@ docker/config/cert-page/homelab.mobileconfig
 
 # Exception: keep Authelia configuration templates
 !docker/config/authelia/
-# But ignore SQLite database and runtime files
+# But ignore runtime files and user-customized configs
+docker/config/authelia/users_database.yml
 docker/config/authelia/db.sqlite3
 docker/config/authelia/notification.txt
 

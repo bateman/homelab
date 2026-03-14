@@ -342,7 +342,7 @@ services:
   #
   # First time setup:
   #   1. Generate secrets: ./scripts/generate-authelia-secrets.sh
-  #   2. Edit config/authelia/users_database.yml with your user
+  #   2. cp config/authelia/users_database.yml.example config/authelia/users_database.yml && edit it
   #   3. Start stack: make up
   #   4. Access https://auth.home.local to register passkey
   authelia:

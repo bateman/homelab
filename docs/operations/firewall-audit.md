@@ -217,7 +217,7 @@ regulation:
 
 **Issue:** The file ships with user `admin` and the argon2id hash of password `changeme`. While comments warn to change it, the hash is committed to the repository. If deployed as-is (or if the user forgets to change it), anyone on the network who can reach Authelia can authenticate as admin.
 
-**Recommendation:** Replace the password hash with a placeholder that cannot be used to authenticate (e.g., `CHANGE_ME`), or move this file to a `.example` pattern like the `.env.secrets.example` approach.
+**Resolution:** Moved to `.example` pattern — `users_database.yml` is now gitignored and `users_database.yml.example` is the tracked template. The setup script copies the example file automatically.
 
 ### M8 — ~~Rule 10 pierces Management VLAN boundary from consumer network~~
 
