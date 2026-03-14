@@ -450,17 +450,6 @@ health: check-docker check-curl
 	else \
 		printf "Tailscale: $(YELLOW)NOT RUNNING$(NC)\n"; \
 	fi
-	@# Redis health check (Authelia session store)
-	@HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' redis 2>/dev/null); \
-	if [ "$$HEALTH" = "healthy" ]; then \
-		printf "Redis: $(GREEN)OK (healthy)$(NC)\n"; \
-	elif [ "$$HEALTH" = "starting" ]; then \
-		printf "Redis: $(YELLOW)STARTING$(NC)\n"; \
-	elif [ -z "$$HEALTH" ]; then \
-		printf "Redis: $(YELLOW)NOT RUNNING$(NC)\n"; \
-	else \
-		printf "Redis: $(RED)UNHEALTHY$(NC)\n"; \
-	fi
 	@# Authelia health check
 	@HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' authelia 2>/dev/null); \
 	if [ "$$HEALTH" = "healthy" ]; then \

@@ -234,8 +234,6 @@ Services are protected with different security levels:
 
 ## Session Configuration
 
-Sessions are stored in **Redis** for persistence across Authelia restarts (so you don't lose your SSO session when Watchtower updates Authelia). Redis starts automatically as a dependency.
-
 Sessions are configured for homelab convenience:
 
 | Setting | Value | Description |
@@ -396,7 +394,6 @@ Authelia is a Traefik middleware — it only sees requests that go through Traef
 | `docker/config/authelia/configuration.yml` | Main Authelia config |
 | `docker/config/authelia/users_database.yml.example` | User accounts template (copy to `users_database.yml`) |
 | `docker/config/authelia/users_database.yml` | Your user accounts and passwords (gitignored) |
-| `docker/config/redis/` | Redis data directory (session persistence) |
 | `docker/secrets/authelia/JWT_SECRET` | JWT signing key |
 | `docker/secrets/authelia/SESSION_SECRET` | Session encryption key |
 | `docker/secrets/authelia/STORAGE_ENCRYPTION_KEY` | Database encryption key |

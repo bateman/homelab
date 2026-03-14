@@ -93,10 +93,6 @@ session:
   inactivity: 3d
   # Remember me duration (30 days)
   remember_me: 30d
-  # Redis backend for persistent sessions (survives Authelia restarts)
-  redis:
-    host: redis
-    port: 6379
   # Cookie domain (all *.home.local subdomains)
   cookies:
     - domain: home.local
