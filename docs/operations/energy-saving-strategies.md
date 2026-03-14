@@ -125,7 +125,7 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
 
 ```bash
 # On NAS (ssh admin@192.168.3.10)
-vi /share/data/homelab/scripts/proxmox-wol-cron.sh
+vi /share/container/mediastack/scripts/proxmox-wol-cron.sh
 
 # Change this line to your Mini PC's real MAC (from Proxmox: ip link show nic0):
 MAC_ADDRESS="AA:BB:CC:DD:EE:FF"
@@ -159,7 +159,7 @@ sudo /etc/init.d/init_disk.sh mount_flash_config
 cat /tmp/nasconfig_tmp/autorun.sh
 
 # Append WoL cron injection (redirect output to log for troubleshooting)
-sudo sh -c 'echo "/share/data/homelab/scripts/proxmox-wol-cron.sh >> /var/log/minipc-power.log 2>&1" >> /tmp/nasconfig_tmp/autorun.sh'
+sudo sh -c 'echo "/share/container/mediastack/scripts/proxmox-wol-cron.sh >> /var/log/minipc-power.log 2>&1" >> /tmp/nasconfig_tmp/autorun.sh'
 
 # Verify
 cat /tmp/nasconfig_tmp/autorun.sh
@@ -168,7 +168,7 @@ cat /tmp/nasconfig_tmp/autorun.sh
 sudo /etc/init.d/init_disk.sh umount_flash_config
 
 # Run it once now to inject the cron jobs immediately
-/share/data/homelab/scripts/proxmox-wol-cron.sh
+/share/container/mediastack/scripts/proxmox-wol-cron.sh
 ```
 
 **Step 3 — Verify:**
