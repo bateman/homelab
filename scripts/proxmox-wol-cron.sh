@@ -14,8 +14,7 @@
 #        processes (autorun.sh)" — check the box and click Apply.
 #   2. Mount flash config and append this script to autorun.sh:
 #        sudo /etc/init.d/init_disk.sh mount_flash_config
-#        echo '/share/data/homelab/scripts/proxmox-wol-cron.sh >> /var/log/minipc-power.log 2>&1' \
-#          >> /tmp/nasconfig_tmp/autorun.sh
+#        sudo sh -c 'echo "/share/data/homelab/scripts/proxmox-wol-cron.sh >> /var/log/minipc-power.log 2>&1" >> /tmp/nasconfig_tmp/autorun.sh'
 #        sudo /etc/init.d/init_disk.sh umount_flash_config
 #   3. Reboot and verify: crontab -l | grep -i "mini pc"
 #
