@@ -296,8 +296,9 @@ Both qBittorrent and NZBGet use this same VPN IP for all connections.
 docker exec gluetun ip link set tun0 down
 
 # Try to reach internet from inside the container
-docker exec gluetun wget -qO- --timeout=5 https://ipinfo.io/ip
-# Output: (timeout or error) ← Kill switch works!
+docker exec gluetun wget -O- --timeout=5 https://ipinfo.io/ip
+# Expected: "wget: download timed out" or connection error ← Kill switch works!
+# If you see an IP address ← Kill switch FAILED, traffic is leaking!
 
 # Restore by restarting the container
 docker restart gluetun

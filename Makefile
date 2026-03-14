@@ -612,11 +612,16 @@ vpn-check: check-docker check-curl
 	fi; \
 	\
 	printf "\n--- Kill Switch ---\n"; \
-	printf "$(YELLOW)Manual test (disrupts downloads briefly):$(NC)\n"; \
-	printf "  docker exec gluetun ip link set tun0 down     # break tunnel\n"; \
-	printf "  docker exec gluetun wget -qO- --timeout=5 https://ipinfo.io/ip\n"; \
-	printf "  # Should timeout or fail = kill switch works\n"; \
-	printf "  docker restart gluetun                        # restore\n"; \
+	docker exec gluetun ip link set tun0 down 2>/dev/null; \
+	KSTEST=$$(docker exec gluetun wget -O- --timeout=5 https://ipinfo.io/ip 2>&1); \
+	KSRC=$$?; \
+	docker restart gluetun >/dev/null 2>&1; \
+	if [ $$KSRC -ne 0 ] && ! echo "$$KSTEST" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$$'; then \
+		printf "Kill switch: $(GREEN)PASS — traffic blocked when tunnel is down$(NC)\n"; \
+	else \
+		printf "Kill switch: $(RED)FAIL — traffic leaked: %s$(NC)\n" "$$KSTEST"; \
+		FAIL=1; \
+	fi; \
 	\
 	echo ""; \
 	if [ "$$FAIL" -eq 0 ]; then \
