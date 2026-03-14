@@ -292,15 +292,15 @@ Both qBittorrent and NZBGet use this same VPN IP for all connections.
 ### 3. Verify Kill Switch
 
 ```bash
-# Simulate VPN disconnection (stop the tunnel)
-docker exec gluetun killall -STOP openvpn 2>/dev/null || docker exec gluetun killall -STOP wireguard-go 2>/dev/null
+# Stop the tunnel via Gluetun HTTP control API (port 8000 on host)
+curl -s -X PUT -d '{"status":"stopped"}' http://localhost:8000/v1/openvpn/status
 
-# Try to reach internet
+# Try to reach internet from inside the container
 docker exec gluetun wget -qO- --timeout=5 https://ipinfo.io/ip
 # Output: (timeout or error) ← Kill switch works!
 
-# Restart to restore
-docker restart gluetun
+# Restore the tunnel
+curl -s -X PUT -d '{"status":"running"}' http://localhost:8000/v1/openvpn/status
 ```
 
 > [!NOTE]

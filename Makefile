@@ -613,10 +613,12 @@ vpn-check: check-docker check-curl
 	\
 	printf "\n--- Kill Switch ---\n"; \
 	printf "$(YELLOW)Manual test (disrupts downloads briefly):$(NC)\n"; \
-	printf "  docker exec gluetun killall -STOP openvpn  # or wireguard-go\n"; \
+	printf "  curl -s -X PUT -d '{\"status\":\"stopped\"}' \\\\\n"; \
+	printf "    http://localhost:8000/v1/openvpn/status  # from NAS host\n"; \
 	printf "  docker exec gluetun wget -qO- --timeout=5 https://ipinfo.io/ip\n"; \
-	printf "  # Should timeout = kill switch works\n"; \
-	printf "  docker restart gluetun  # restore connection\n"; \
+	printf "  # Should timeout or fail = kill switch works\n"; \
+	printf "  curl -s -X PUT -d '{\"status\":\"running\"}' \\\\\n"; \
+	printf "    http://localhost:8000/v1/openvpn/status  # restore tunnel\n"; \
 	\
 	echo ""; \
 	if [ "$$FAIL" -eq 0 ]; then \
