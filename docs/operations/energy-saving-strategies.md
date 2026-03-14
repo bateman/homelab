@@ -159,8 +159,7 @@ sudo /etc/init.d/init_disk.sh mount_flash_config
 cat /tmp/nasconfig_tmp/autorun.sh
 
 # Append WoL cron injection (redirect output to log for troubleshooting)
-# Note: sudo sh -c needed because >> redirect doesn't inherit sudo privileges
-sudo sh -c 'echo "/share/data/homelab/scripts/proxmox-wol-cron.sh >> /var/log/minipc-power.log 2>&1" >> /tmp/nasconfig_tmp/autorun.sh'
+echo '/share/data/homelab/scripts/proxmox-wol-cron.sh >> /var/log/minipc-power.log 2>&1' >> /tmp/nasconfig_tmp/autorun.sh
 
 # Verify
 cat /tmp/nasconfig_tmp/autorun.sh
@@ -444,8 +443,7 @@ echo "[$(date)] All services resumed."
 # Add to autorun.sh (same approach as Section 1.1 — crontab -e entries are wiped on reboot)
 sudo /etc/init.d/init_disk.sh mount_flash_config
 
-# Note: sudo tee -a needed because >> redirect doesn't inherit sudo privileges
-sudo tee -a /tmp/nasconfig_tmp/autorun.sh > /dev/null << 'CRON'
+cat >> /tmp/nasconfig_tmp/autorun.sh << 'CRON'
 # Power-save cron jobs (inject on every boot since QTS wipes crontab)
 CURRENT=$(crontab -l 2>/dev/null || true)
 if ! printf '%s\n' "$CURRENT" | grep -qF "power-save-start"; then
