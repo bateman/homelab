@@ -636,7 +636,9 @@ All services in `compose.yml` and `compose.media.yml` use `restart: unless-stopp
   - Keep incomplete in: disabled (use same path)
 - [ ] Options → Downloads → Default Torrent Management Mode: **Automatic**
 - [ ] Options → BitTorrent:
-  - Seeding limits per preferences
+  - When ratio reaches: **1** (or per preference)
+  - When total seeding time reaches: **1440** min (24h, optional)
+  - When seeding goal is reached: **Pause torrent** ← CRITICAL (never "Remove torrent")
 - [ ] Options → WebUI:
   - Change password
 - [ ] Categories (right-click in left panel → Add category):
