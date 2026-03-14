@@ -108,7 +108,7 @@ make setup
 make up
 
 # Verify VPN is working
-docker exec gluetun curl -s https://ipinfo.io/ip
+docker exec gluetun wget -qO- https://ipinfo.io/ip
 # Should show VPN IP, NOT your real IP
 ```
 
@@ -283,7 +283,7 @@ curl -s https://ipinfo.io/ip
 # Output: <your_real_IP>
 
 # Download clients IP (through VPN)
-docker exec gluetun curl -s https://ipinfo.io/ip
+docker exec gluetun wget -qO- https://ipinfo.io/ip
 # Output: <VPN_server_IP>  ← Must be DIFFERENT from your real IP!
 ```
 
@@ -296,7 +296,7 @@ Both qBittorrent and NZBGet use this same VPN IP for all connections.
 docker exec gluetun killall -STOP openvpn 2>/dev/null || docker exec gluetun killall -STOP wireguard-go 2>/dev/null
 
 # Try to reach internet
-docker exec gluetun curl -s --max-time 5 https://ipinfo.io/ip
+docker exec gluetun wget -qO- --timeout=5 https://ipinfo.io/ip
 # Output: (timeout or error) ← Kill switch works!
 
 # Restart to restore
