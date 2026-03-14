@@ -612,10 +612,35 @@ vpn-check: check-docker check-curl
 	fi; \
 	\
 	printf "\n--- Kill Switch ---\n"; \
+	VPN_DEPENDENTS="qbittorrent nzbget"; \
+	RUNNING_DEPS=""; \
+	for dep in $$VPN_DEPENDENTS; do \
+		if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^$${dep}$$"; then \
+			RUNNING_DEPS="$$RUNNING_DEPS $$dep"; \
+		fi; \
+	done; \
 	docker exec gluetun ip link set tun0 down 2>/dev/null; \
 	KSTEST=$$(docker exec gluetun wget -O- --timeout=5 https://ipinfo.io/ip 2>&1); \
 	KSRC=$$?; \
 	docker restart gluetun >/dev/null 2>&1; \
+	if [ -n "$$RUNNING_DEPS" ]; then \
+		printf "Waiting for gluetun to be healthy...\n"; \
+		WAIT=0; \
+		while [ $$WAIT -lt 60 ]; do \
+			GSTATUS=$$(docker inspect --format='{{.State.Health.Status}}' gluetun 2>/dev/null); \
+			if [ "$$GSTATUS" = "healthy" ]; then break; fi; \
+			sleep 2; \
+			WAIT=$$((WAIT + 2)); \
+		done; \
+		if [ "$$GSTATUS" = "healthy" ]; then \
+			printf "Restarting VPN dependents:%s\n" "$$RUNNING_DEPS"; \
+			for dep in $$RUNNING_DEPS; do \
+				docker restart $$dep >/dev/null 2>&1; \
+			done; \
+		else \
+			printf "$(YELLOW)Gluetun not healthy after 60s — skipping dependent restart$(NC)\n"; \
+		fi; \
+	fi; \
 	if [ $$KSRC -ne 0 ] && ! echo "$$KSTEST" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$$'; then \
 		printf "Kill switch: $(GREEN)PASS — traffic blocked when tunnel is down$(NC)\n"; \
 	else \
