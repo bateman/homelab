@@ -352,6 +352,44 @@ Ensure the download client category matches what's configured in qBittorrent/NZB
 
 ---
 
+## Download Client Settings
+
+### qBittorrent Seeding Behavior
+
+> [!CAUTION]
+> **Never set qBittorrent to "Remove torrent" when the seeding goal is reached.** This deletes torrent data before the *arr app can import it, causing failed imports. Even after import, removal breaks hardlinks — the underlying data is deleted from disk.
+
+Per [Trash Guides](https://trash-guides.info/Downloaders/qBittorrent/Basic-Setup/), configure seeding limits in qBittorrent → Options → BitTorrent:
+
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| When ratio reaches | **1** | Seed back what you downloaded (good citizen default) |
+| When total seeding time reaches | **1440** min (24h) | Secondary limit to stop seeding stalled torrents |
+| When seeding goal is reached | **Pause torrent** | Lets *arr apps handle removal via Completed Download Handling |
+
+### *arr Completed Download Handling
+
+Each *arr app can automatically remove completed downloads from qBittorrent after successful import:
+
+Sonarr/Radarr/Lidarr → Settings → Download Clients → Completed Download Handling:
+
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Remove Completed | **Yes** | *arr removes the torrent from qBittorrent after successful import |
+
+This ensures the correct lifecycle:
+
+```
+qBittorrent downloads → seeds to ratio → pauses
+  ↓
+*arr app detects completion → imports (hardlinks) → removes torrent from qBittorrent
+```
+
+> [!NOTE]
+> With hardlinks enabled, removing the torrent after import is safe — the media file in your library is an independent hardlink to the same data on disk. Space is only reclaimed when *both* the torrent file and the library file are deleted.
+
+---
+
 ## Bazarr Tuning
 
 > [!NOTE]
@@ -639,7 +677,8 @@ This is already configured in `docker/recyclarr.yml` under `media_management.pro
 1. **Path mismatch** — download client category save path must align with *arr root folder. Both must be under `/data/`
 2. **Hardlink failure** — source and destination must be on the same filesystem. See [Hardlinking Verification](nas-setup.md#hardlinking-verification)
 3. **Permission issues** — PUID/PGID in `.env` must match the file owner. Check with `ls -ln /share/data`
-4. **Check Activity → Queue** — hover over the warning icon for the specific error message
+4. **Torrent removed before import** — if qBittorrent is set to "Remove torrent" when the seeding goal is reached, files are deleted before import. Change to **"Pause torrent"** in Options → BitTorrent. See [Download Client Settings](#download-client-settings)
+5. **Check Activity → Queue** — hover over the warning icon for the specific error message
 
 ### Custom Format Not Matching
 
