@@ -62,8 +62,9 @@ x-qbittorrent-base: &qbittorrent-base
   restart: unless-stopped
   logging: *common-logging
   healthcheck:
-    # Use wget (more reliable across images) with graceful startup handling
-    test: ["CMD-SHELL", "wget -q --spider http://localhost:8080 || exit 0"]
+    # Properly detect broken network (e.g., after Gluetun restart).
+    # start_period handles startup grace — no need for || exit 0.
+    test: ["CMD-SHELL", "wget -q --spider http://localhost:8080"]
     <<: *common-healthcheck
   deploy:
     resources:
@@ -85,7 +86,7 @@ x-nzbget-base: &nzbget-base
   restart: unless-stopped
   logging: *common-logging
   healthcheck:
-    test: ["CMD-SHELL", "wget -q --spider http://localhost:6789 || exit 0"]
+    test: ["CMD-SHELL", "wget -q --spider http://localhost:6789"]
     <<: *common-healthcheck
   deploy:
     resources:
@@ -184,6 +185,9 @@ services:
     depends_on:
       gluetun:
         condition: service_healthy
+        # Restart qBittorrent when Gluetun restarts (they share network namespace,
+        # so qBittorrent loses connectivity if Gluetun is recreated by Watchtower)
+        restart: true
 
   nzbget:
     <<: *nzbget-base
@@ -195,6 +199,8 @@ services:
     depends_on:
       gluetun:
         condition: service_healthy
+        # Restart NZBGet when Gluetun restarts (same reason as qBittorrent above)
+        restart: true
 
   # ===========================================================================
   # DOWNLOAD CLIENTS - DIRECT VERSION (profile: novpn)
