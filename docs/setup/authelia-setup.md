@@ -224,10 +224,11 @@ Services are protected with different security levels:
 
 ### Bypass (No Auth)
 
-| Pattern | Reason |
-|---------|--------|
-| `/api/*` | Inter-service API calls |
-| `/ping`, `/health` | Health checks |
+| Domain | Pattern | Reason |
+|--------|---------|--------|
+| *arr apps (`sonarr`, `radarr`, etc.) | `/api/*`, `/ping`, `/health` | Inter-service API calls, health checks |
+| `nzbget.home.local` | `/jsonrpc`, `/xmlrpc`, `/jsonprp` | NZBGet JSON-RPC/XML-RPC for *arr apps |
+| `qbit.home.local` | `/api/*` | qBittorrent API for *arr download client connections |
 
 ---
 
