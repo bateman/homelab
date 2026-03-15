@@ -109,7 +109,7 @@ sonarr:
           - name: Bluray-720p
           - name: HDTV-720p
 
-      # HD-1080p - 1080p qualities + Bluray-720p, upgrades until Bluray-1080p
+      # HD-1080p - Only 1080p qualities, upgrades until Bluray-1080p
       - name: HD-1080p
         min_format_score: 0
         upgrade:
@@ -124,7 +124,6 @@ sonarr:
               - WEBDL-1080p
               - WEBRip-1080p
           - name: HDTV-1080p
-          - name: Bluray-720p
 
       # Uncomment for additional profiles (find trash_ids via Trash Guides):
       # - trash_id: <WEB-2160p trash_id>
@@ -267,7 +266,7 @@ radarr:
           - name: Bluray-720p
           - name: HDTV-720p
 
-      # HD-1080p - 1080p qualities + Bluray-720p, upgrades until Bluray-1080p
+      # HD-1080p - Only 1080p qualities, upgrades until Bluray-1080p
       - name: HD-1080p
         min_format_score: 0
         upgrade:
@@ -282,7 +281,6 @@ radarr:
               - WEBDL-1080p
               - WEBRip-1080p
           - name: HDTV-1080p
-          - name: Bluray-720p
 
       # Remux + WEB 1080p
       # - trash_id: 9ca12ea80aa55ef916e3751f4b874151
