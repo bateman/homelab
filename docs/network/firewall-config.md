@@ -229,7 +229,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Centralized DNS accessible from all VLANs.
 
-### Rule 3 — Allow Media to Plex
+### Rule 3 — Allow Media to Plex (Movies/TV)
 
 | Field | Value |
 |-------|-------|
@@ -240,7 +240,20 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | Plex Server (192.168.3.21) |
 | Port | Plex (32400, 32410-32414) |
 
-> Direct access to Plex on port 32400. Plex is also accessible via Traefik (`https://plex.home.local`) through Rule 8 (port 443 to NAS). Rule 3 provides direct-port fallback and supports Plex client app discovery (GDM ports 32410-32414).
+> Direct access to Movies/TV Plex on port 32400. Also accessible via Traefik (`https://plex.home.local`) through Rule 8 (port 443 to NAS). Rule 3 provides direct-port fallback and supports Plex client app discovery (GDM ports 32410-32414). Mini PC may be off — HA wakes it via WoL when Fire TV turns on.
+
+### Rule 3b — Allow Media to Plex Music (NAS)
+
+| Field | Value |
+|-------|-------|
+| Name | Allow Media to Plex Music |
+| Action | Accept |
+| Protocol | TCP/UDP |
+| Source | VLAN Media |
+| Destination | NAS (192.168.3.10) |
+| Port | Plex (32400, 32410-32414) |
+
+> Music Plex runs as Docker container on the NAS (always-on). Same ports as Movies/TV Plex but different destination. Also accessible via Traefik (`https://plex-music.home.local`) through Rule 8.
 
 ### Rule 4 — Allow Media to Media Services
 
@@ -479,7 +492,7 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Threat
 
 In **UDM-SE** (Network application): Settings → Traffic Management → Traffic Rules
 
-### Plex Priority
+### Plex Priority (Movies/TV)
 
 | Field | Value |
 |-------|-------|
@@ -487,6 +500,16 @@ In **UDM-SE** (Network application): Settings → Traffic Management → Traffic
 | Action | Set DSCP |
 | DSCP Value | 46 (EF - Expedited Forwarding) |
 | Source | Plex Server (192.168.3.21) |
+| Port | 32400 |
+
+### Plex Music Priority
+
+| Field | Value |
+|-------|-------|
+| Name | Prioritize Plex Music |
+| Action | Set DSCP |
+| DSCP Value | 46 (EF - Expedited Forwarding) |
+| Source | NAS (192.168.3.10) |
 | Port | 32400 |
 
 ### Guest Bandwidth Limiting
@@ -571,7 +594,8 @@ If in the future you need to open specific ports (e.g., for remote Plex without 
 
 | Name | External Port | Internal Port | Destination | Protocol |
 |------|---------------|---------------|-------------|----------|
-| Plex Remote | 32400 | 32400 | 192.168.3.21 | TCP |
+| Plex Movies/TV Remote | 32400 | 32400 | 192.168.3.21 | TCP |
+| Plex Music Remote | 32401 | 32400 | 192.168.3.10 | TCP |
 
 > [!WARNING]
 > Opening ports exposes services to the Internet. Prefer Tailscale when possible.
@@ -603,8 +627,11 @@ From desktop PC (192.168.3.40):
 # Test DNS
 nslookup google.com 192.168.3.10
 
-# Test Plex
+# Test Plex (Movies/TV) — Mini PC may be off if nobody is watching
 curl -I http://192.168.3.21:32400/web
+
+# Test Plex Music (NAS — always-on)
+curl -I http://192.168.3.10:32400/web
 
 # Test Iliad Box reachability (from Servers VLAN)
 ping 192.168.1.254

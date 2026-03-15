@@ -408,6 +408,7 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:8080,qBittorrent)
 	$(call check_service,http://localhost:6789,NZBGet)
 	$(call check_service,http://localhost:11011/health,Cleanuparr)
+	$(call check_service,http://localhost:32400/identity,Plex-Music)
 	$(call check_service,http://localhost:8191/health,FlareSolverr)
 	$(call check_service,http://localhost:8081/admin/,Pi-hole)
 	@# Home Assistant runs on separate compose file (compose.homeassistant.yml)
@@ -498,6 +499,7 @@ show-urls:
 	@echo "  Lidarr:       http://$(HOST_IP):8686"
 	@echo "  Prowlarr:     http://$(HOST_IP):9696"
 	@echo "  Bazarr:       http://$(HOST_IP):6767"
+	@echo "  Plex Music:   http://$(HOST_IP):32400"
 	@echo ""
 	@printf "$(GREEN)Download$(NC)\n"
 	@echo "  qBittorrent:  http://$(HOST_IP):8080"

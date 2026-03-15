@@ -186,6 +186,7 @@ make_dir "${CONFIG_ROOT}/gluetun"
 
 # Monitoring/automation
 make_dir "${CONFIG_ROOT}/cleanuparr"
+make_dir "${CONFIG_ROOT}/plex-music"
 
 # Infrastructure services
 make_dir "${CONFIG_ROOT}/pihole/etc-pihole"
