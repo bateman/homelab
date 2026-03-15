@@ -1,8 +1,11 @@
 # =============================================================================
-# Traefik dynamic configuration for Plex
+# Traefik dynamic configuration for Plex (Movies/TV)
 # =============================================================================
-# Plex runs as an LXC container on Proxmox (192.168.3.21), not in Docker.
-# This file provides manual routing configuration.
+# Plex (Movies/TV) runs as an LXC container on Proxmox (192.168.3.21).
+# This file provides manual routing since it's not a Docker container.
+#
+# Plex (Music) runs as Docker on NAS — routed via container labels in
+# compose.media.yml (plex-music.home.local), no config needed here.
 #
 # Access: https://plex.home.local
 # Requires Pi-hole DNS record: plex.home.local -> 192.168.3.10

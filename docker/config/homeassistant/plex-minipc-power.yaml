@@ -1,0 +1,74 @@
+# =============================================================================
+# Home Assistant Automations — Mini PC Power Management for Plex
+# =============================================================================
+# Wakes the Mini PC (Proxmox) when Fire TV turns on, so the Movies/TV Plex
+# server is available. Shuts it down when Fire TV goes off to save power.
+#
+# Prerequisites:
+#   1. Android TV integration configured for Fire TV
+#   2. Wake-on-LAN integration enabled in configuration.yaml:
+#        wake_on_lan:
+#   3. Proxmox API token created:
+#        pveum user token add homeassistant@pve hatoken --privsep=0
+#   4. rest_command configured in configuration.yaml:
+#        rest_command:
+#          proxmox_shutdown_minipc:
+#            url: "https://192.168.3.20:8006/api2/json/nodes/pve/status"
+#            method: POST
+#            headers:
+#              Authorization: "PVEAPIToken=homeassistant@pve!hatoken=YOUR_TOKEN_HERE"
+#            payload: "command=shutdown"
+#            verify_ssl: false
+#            content_type: "application/x-www-form-urlencoded"
+#
+# Usage:
+#   Add to configuration.yaml:
+#     automation: !include plex-minipc-power.yaml
+#
+# TODO: Replace placeholder values:
+#   - entity_id: media_player.fire_tv  → your actual Fire TV entity ID
+#   - mac: "XX:XX:XX:XX:XX:XX"         → Mini PC integrated NIC MAC address
+# =============================================================================
+
+# Wake Mini PC when Fire TV turns on
+- id: wake_minipc_for_plex
+  alias: "Wake Mini PC when Fire TV turns on"
+  description: >
+    Sends Wake-on-LAN magic packet to the Mini PC when Fire TV becomes active,
+    so the Movies/TV Plex server (LXC on Proxmox) is ready to stream.
+  trigger:
+    - platform: state
+      entity_id: media_player.fire_tv
+      from:
+        - "off"
+        - "standby"
+        - "unavailable"
+      to:
+        - "on"
+        - "idle"
+        - "playing"
+        - "paused"
+  action:
+    - service: wake_on_lan.send_magic_packet
+      data:
+        mac: "XX:XX:XX:XX:XX:XX"
+        broadcast_address: "192.168.3.255"
+
+# Shut down Mini PC when Fire TV goes off (with 5-min delay)
+- id: shutdown_minipc_when_idle
+  alias: "Shut down Mini PC when Fire TV turns off"
+  description: >
+    Gracefully shuts down the Mini PC via Proxmox API after Fire TV has been
+    off for 5 minutes. Prevents unnecessary power consumption when nobody
+    is watching Movies/TV.
+  trigger:
+    - platform: state
+      entity_id: media_player.fire_tv
+      to:
+        - "off"
+        - "standby"
+        - "unavailable"
+      for:
+        minutes: 5
+  action:
+    - service: rest_command.proxmox_shutdown_minipc

@@ -176,6 +176,7 @@ make_dir "${CONFIG_ROOT}/lidarr"
 make_dir "${CONFIG_ROOT}/prowlarr"
 make_dir "${CONFIG_ROOT}/bazarr"
 make_dir "${CONFIG_ROOT}/recyclarr"
+make_dir "${CONFIG_ROOT}/plex-music"
 
 # Download clients
 make_dir "${CONFIG_ROOT}/qbittorrent"

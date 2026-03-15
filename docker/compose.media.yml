@@ -536,3 +536,48 @@ services:
       - "traefik.http.routers.cleanuparr.tls=true"
       - "traefik.http.routers.cleanuparr.middlewares=authelia@docker"
       - "traefik.http.services.cleanuparr.loadbalancer.server.port=11011"
+
+  # ===========================================================================
+  # PLEX MEDIA SERVER (Music)
+  # ===========================================================================
+  # Always-on Plex instance for music library only.
+  # Movies/TV Plex runs on the Mini PC (LXC) — see proxmox-setup.md.
+
+  plex-music:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex-music
+    env_file:
+      - .env.secrets
+    environment:
+      <<: *common-env
+    volumes:
+      - ./config/plex-music:/config
+      - /share/data/media/music:/data/media/music:ro
+    ports:
+      - "32400:32400"
+      - "32410:32410/udp"
+      - "32412:32412/udp"
+      - "32413:32413/udp"
+      - "32414:32414/udp"
+    networks:
+      - media_net
+      - proxy
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:32400/identity"]
+      <<: *common-healthcheck
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik — no Authelia (Plex has its own auth, client apps need direct API access)
+      - "traefik.enable=true"
+      - "traefik.http.routers.plex-music.rule=Host(`plex-music.home.local`)"
+      - "traefik.http.routers.plex-music.entrypoints=websecure"
+      - "traefik.http.routers.plex-music.tls=true"
+      - "traefik.http.services.plex-music.loadbalancer.server.port=32400"

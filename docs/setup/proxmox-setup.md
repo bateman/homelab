@@ -469,6 +469,9 @@ After claiming, access Plex normally at `http://192.168.3.21:32400/web`.
 
 ### 5.2 Add Libraries
 
+> [!NOTE]
+> This Plex instance serves **Movies/TV only**. Music runs on a separate always-on Plex server on the NAS (Docker container `plex-music` in `compose.media.yml`). Home Assistant manages this Mini PC's power state — waking it via WoL when Fire TV turns on, and shutting it down via Proxmox API when idle.
+
 Add Library → Movies:
 - Name: Movies
 - Folders: /media/movies
@@ -476,10 +479,6 @@ Add Library → Movies:
 Add Library → TV Shows:
 - Name: TV Shows
 - Folders: /media/tv
-
-Add Library → Music:
-- Name: Music
-- Folders: /media/music
 
 ### 5.3 Library Settings (Settings → Library)
 
@@ -583,7 +582,10 @@ Edit Library → Advanced:
 | Enable intro detection | ✅ Enabled | "Skip Intro" feature |
 | Enable credits detection | ✅ Enabled | "Skip Credits" feature |
 
-#### For Music Library
+#### For Music Library (NAS Plex only)
+
+> [!NOTE]
+> These settings apply to the Music Plex server running on the NAS (`plex-music` Docker container), not this Mini PC instance.
 
 Edit Library → Advanced:
 

@@ -38,6 +38,9 @@ docker/config/authelia/users_database.yml
 docker/config/authelia/db.sqlite3
 docker/config/authelia/notification.txt
 
+# Exception: keep Home Assistant automation templates
+!docker/config/homeassistant/
+
 # Exception: keep Pi-hole adlists file (blocklist URLs for bulk import)
 !docker/config/pihole/
 docker/config/pihole/etc-pihole/
