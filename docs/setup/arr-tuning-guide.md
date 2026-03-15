@@ -482,22 +482,14 @@ Bazarr → Settings → Scheduler:
 | Task | Recommended | Why |
 |------|-------------|-----|
 | Sonarr/Radarr Sync | **15 minutes** (default) | Picks up new additions reasonably fast |
-| Disk Indexing | **Manually** | Disables automatic drive scanning for existing subs. Reduces I/O significantly on large libraries |
+| Disk Indexing | **Manually** | Disables automatic drive scanning for existing subs — on large libraries (10,000+ files), periodic scanning causes substantial NAS I/O |
 | Search and Upgrade Subtitles | **6–12 hours** | Default may be too aggressive. Increase if you see "maximum number of running instances reached" in logs |
-
-> [!WARNING]
-> If Disk Indexing is set to anything other than Manually, Bazarr periodically scans your entire media library looking for subtitle files. On large libraries (10,000+ files), this causes substantial NAS I/O.
 
 ### Automatic Subtitle Synchronization
 
 Bazarr → Settings → Subtitles → Automatic Subtitles Synchronization:
 
-| Setting | Recommended | Why |
-|---------|-------------|-----|
-| Enable | **No** | Extracts audio tracks to detect speech and align subs — massive CPU and network usage |
-
-> [!CAUTION]
-> **Do not enable** automatic synchronization unless you have persistent out-of-sync issues and your NAS can handle the CPU load. Bazarr extracts audio from every media file and uses speech detection to align subtitles. On a QNAP NAS, this will saturate CPU and network for hours on a large library.
+- **Recommended: Disabled.** When enabled, Bazarr extracts audio tracks from every media file and uses speech detection to align subtitles — this causes massive CPU and network usage. On a QNAP NAS, this will saturate resources for hours on a large library.
 
 If you need subtitle sync for specific files, use a **post-processing script** instead (see below) — this targets only newly downloaded subs rather than the entire library.
 
@@ -505,15 +497,7 @@ If you need subtitle sync for specific files, use a **post-processing script** i
 
 Bazarr → Settings → Subtitles → Post-Processing:
 
-Bazarr can execute custom scripts after downloading a subtitle. Template variables are available:
-
-| Variable | Description |
-|----------|-------------|
-| `{{subtitles}}` | Path to the downloaded subtitle file |
-| `{{episode}}` / `{{movie}}` | Path to the media file |
-| `{{subtitles_language}}` | Subtitle language code |
-| `{{episode_name}}` / `{{movie_name}}` | Media title |
-| `{{series_id}}` / `{{movie_id}}` | Sonarr/Radarr internal ID |
+Bazarr can execute custom scripts after downloading a subtitle using template variables like `{{subtitles}}` (subtitle path) and `{{episode}}`/`{{movie}}` (media path). See the [Bazarr Wiki](https://wiki.bazarr.media/) for the full variable list.
 
 **Useful community scripts:**
 
@@ -537,7 +521,7 @@ Bazarr supports [Apprise](https://github.com/caronc/apprise)-compatible notifica
 - **Telegram**: `tgram://bot_token/chat_id`
 - **Slack**: `slack://token_a/token_b/token_c/#channel`
 
-Configure notifications for awareness of subtitle activity — especially useful to catch provider failures early.
+Configure notifications for awareness of subtitle activity — especially useful to catch provider failures early. For infrastructure-level monitoring (uptime, container health), see [notifications-setup.md](notifications-setup.md).
 
 ---
 
