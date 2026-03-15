@@ -161,7 +161,8 @@ Traefik labels are already added to all services in compose files:
 | Duplicati | https://duplicati.home.local | :8200 |
 | Uptime Kuma | https://uptime.home.local | :3001 |
 | Home Assistant | https://ha.home.local | :8123 |
-| Plex | https://plex.home.local | :32400 (on 192.168.3.21) |
+| Plex (Movies/TV) | https://plex.home.local | :32400 (on 192.168.3.21, LXC) |
+| Plex Music | https://plex-music.home.local | :32400 (on NAS, Docker labels) |
 | Traefik Dashboard | https://traefik.home.local | (via reverse proxy) |
 
 ### 2.3 Home Assistant Configuration
@@ -375,14 +376,15 @@ make restart s=traefik
 | Portainer | https://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | https://duplicati.home.local | :8200 |
 | Uptime Kuma | https://uptime.home.local | :3001 |
-| Plex | https://plex.home.local | :32400 (on 192.168.3.21) |
+| Plex (Movies/TV) | https://plex.home.local | :32400 (on 192.168.3.21, LXC) |
+| Plex Music | https://plex-music.home.local | :32400 (on NAS, Docker labels) |
 
 > [!NOTE]
 > URLs work both from local network and remotely via Tailscale (thanks to Pi-hole as DNS).
 > HTTP (port 80) is automatically redirected to HTTPS (port 443).
 
 > [!IMPORTANT]
-> All services accessed **via Traefik** (i.e., `https://<service>.home.local`) are protected by Authelia SSO — you authenticate once and access everything. **Exceptions:** `certs.home.local` has no Authelia middleware so devices can download the CA cert before authenticating. `plex.home.local` has no Authelia middleware because Plex has its own authentication and client apps need direct API access. Direct IP:port access (e.g., `http://192.168.3.10:8989`) bypasses Traefik and Authelia entirely.
+> All services accessed **via Traefik** (i.e., `https://<service>.home.local`) are protected by Authelia SSO — you authenticate once and access everything. **Exceptions:** `certs.home.local` has no Authelia middleware so devices can download the CA cert before authenticating. `plex.home.local` and `plex-music.home.local` have no Authelia middleware because Plex has its own authentication and client apps need direct API access. Direct IP:port access (e.g., `http://192.168.3.10:8989`) bypasses Traefik and Authelia entirely.
 > See [Authelia Setup](authelia-setup.md) for configuration details.
 
 ---
@@ -477,11 +479,14 @@ curl http://192.168.3.10:8989
 docker logs traefik --tail 50
 ```
 
-### Plex not accessible via `plex.home.local`
+### Plex (Movies/TV) not accessible via `plex.home.local`
+
+> [!NOTE]
+> This applies to the Movies/TV Plex on the Mini PC. For Music Plex (`plex-music.home.local`), check that the `plex-music` Docker container is running on the NAS: `docker ps | grep plex-music`.
 
 **Symptom: 502 Bad Gateway**
 
-The Mini PC (Proxmox) may be powered off. It shuts down at 00:30 and wakes at ~07:02 (see [energy saving strategies](../operations/energy-saving-strategies.md)).
+The Mini PC (Proxmox) may be powered off. Home Assistant wakes it via WoL when Fire TV turns on (see [energy saving strategies](../operations/energy-saving-strategies.md)).
 
 ```bash
 # Check if Plex LXC is reachable

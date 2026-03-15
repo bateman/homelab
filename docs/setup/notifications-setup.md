@@ -204,13 +204,14 @@ Below are the recommended monitor types for each service in the homelab. Use con
 | FlareSolverr | HTTP(s) | `http://flaresolverr:8191/health` | Dedicated `/health` endpoint |
 | Recyclarr | Docker Container | Container: `recyclarr` | Runs on a schedule, no web UI |
 | Cleanuparr | HTTP(s) | `http://cleanuparr:11011/health` | Dedicated `/health` endpoint |
+| Plex Music | HTTP(s) | `http://192.168.3.10:32400/identity` | Music server (always-on Docker container) |
 
 ### Proxmox Host (192.168.3.20)
 
 | Service | Monitor Type | URL / Target | Notes |
 |---------|-------------|--------------|-------|
 | Proxmox | HTTP(s) | `https://192.168.3.20:8006` | Enable "Ignore TLS/SSL errors" (self-signed cert) |
-| Plex | HTTP(s) | `http://192.168.3.21:32400/web` | Plex runs in LXC on Proxmox |
+| Plex (Movies/TV) | HTTP(s) | `http://192.168.3.21:32400/web` | Movies/TV server in LXC on Proxmox (on-demand) |
 
 ### General Settings
 
