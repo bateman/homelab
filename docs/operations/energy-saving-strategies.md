@@ -664,9 +664,12 @@ Home Assistant can centralize power management with intelligent automations.
 ```
 
 > [!NOTE]
-> Choose **either** cron **or** Home Assistant automations, not both:
-> - Mini PC shutdown/wake-up: cron ([Section 1.1](#11-scheduled-shutdown--wake-up-cron)) or HA "Shutdown Plex Overnight" + "Wake Plex on Arrival" above
-> - Container scheduling: cron ([Section 4.3](#43-configure-cron-jobs)) or HA "Enter/Exit Power Save Mode" above
+> Choose **one** approach for Mini PC power management:
+> - **Cron** ([Section 1.1](#11-scheduled-shutdown--wake-up-cron)): Fixed schedule shutdown/wake
+> - **HA time-based**: "Shutdown Plex Overnight" + "Wake Plex on Arrival" above
+> - **HA Fire TV-based**: `docker/config/homeassistant/plex-minipc-power.yaml` — wakes Mini PC when Fire TV turns on, shuts down when Fire TV goes off (5-min delay)
+>
+> For container scheduling: cron ([Section 4.3](#43-configure-cron-jobs)) or HA "Enter/Exit Power Save Mode" above
 
 > [!TIP]
 > For UniFi AP PoE control, the built-in UniFi integration doesn't support PoE port toggling directly. Use the UniFi Controller's WiFi Blackout Schedule instead (see [`network-setup.md` Phase 7.4](../setup/network-setup.md#74-wifi-blackout-schedule-optional)), or create custom shell commands using the UniFi API.

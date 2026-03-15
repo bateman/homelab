@@ -52,6 +52,7 @@
     - service: wake_on_lan.send_magic_packet
       data:
         mac: "XX:XX:XX:XX:XX:XX"
+        broadcast_address: "192.168.3.255"
 
 # Shut down Mini PC when Fire TV goes off (with 5-min delay)
 - id: shutdown_minipc_when_idle

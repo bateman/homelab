@@ -102,6 +102,7 @@ Access Pi-hole: `http://192.168.3.10:8081`
 | `duplicati.home.local` | 192.168.3.10 |
 | `uptime.home.local` | 192.168.3.10 |
 | `plex.home.local` | 192.168.3.10 |
+| `plex-music.home.local` | 192.168.3.10 |
 
 ### 1.4 Verification
 

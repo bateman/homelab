@@ -62,7 +62,7 @@
 | Network | 1x 1GbE RJ45 (integrated) + 1x 2.5GbE USB-C (adapter) |
 | Adapter | StarTech US2GC30 (USB-C 3.0 to 2.5GbE) |
 | OS | Proxmox VE |
-| Services | Plex, Docker |
+| Services | Plex (Movies/TV), Docker |
 | IP | 192.168.3.20 |
 
 ### U7 — Vented Panel #1

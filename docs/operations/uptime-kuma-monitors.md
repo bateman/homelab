@@ -148,7 +148,8 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 | Servizio | Tipo | URL / Target | Note |
 |----------|------|--------------|------|
 | Proxmox | HTTP(s) | `https://192.168.3.20:8006` | Abilitare "Ignore TLS/SSL errors" (cert self-signed) |
-| Plex | HTTP(s) | `http://192.168.3.21:32400/web` | Plex gira in LXC su Proxmox |
+| Plex (Movies/TV) | HTTP(s) | `http://192.168.3.21:32400/web` | Plex Movies/TV gira in LXC su Proxmox (on-demand, WoL via HA) |
+| Plex Music | HTTP(s) | `http://192.168.3.10:32400/identity` | Plex Music gira in Docker su NAS (always-on) |
 
 ---
 
@@ -178,7 +179,8 @@ Le Status Page raggruppano i monitor in una vista pubblica o interna.
    - **Home Assistant**: Home Assistant
    - **Media**: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr
    - **Download**: qBittorrent, NZBGet, Gluetun (solo profilo `vpn`)
-   - **Proxmox**: Proxmox, Plex
+   - **Proxmox**: Proxmox, Plex (Movies/TV)
+   - **NAS Media**: Plex Music
 5. Trascinare i monitor nei gruppi corrispondenti
 6. Click **Save**
 
