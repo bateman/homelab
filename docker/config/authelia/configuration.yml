@@ -152,6 +152,10 @@ access_control:
     # - domain: uptime.home.local
     #   policy: bypass
 
+    # Pi-hole has its own built-in password protection
+    - domain: pihole.home.local
+      policy: bypass
+
     # API endpoints that bypass auth for *arr inter-service communication.
     # Scoped to specific *arr domains only — a wildcard *.home.local bypass
     # would expose /api/ on Portainer, Pi-hole, Duplicati, etc., undermining

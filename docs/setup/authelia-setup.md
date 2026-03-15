@@ -220,12 +220,12 @@ Services are protected with different security levels:
 | qBittorrent, NZBGet | Download clients |
 | Duplicati | Backup management |
 | Uptime Kuma | Monitoring |
-| Pi-hole | DNS admin |
 
 ### Bypass (No Auth)
 
 | Pattern | Reason |
 |---------|--------|
+| `pihole.home.local` | Has built-in password |
 | `/api/*` | Inter-service API calls |
 | `/ping`, `/health` | Health checks |
 
