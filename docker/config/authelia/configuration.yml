@@ -19,10 +19,8 @@ server:
 # Logging
 # -----------------------------------------------------------------------------
 log:
-  level: debug
+  level: info
   format: text
-  # Change back to 'info' after debugging:
-  # level: info
 
 # -----------------------------------------------------------------------------
 # TOTP Configuration (backup 2FA method)
@@ -97,7 +95,7 @@ session:
   cookies:
     - domain: home.local
       authelia_url: https://auth.home.local
-      default_redirection_url: https://home.local
+      default_redirection_url: https://uptime.home.local
       # Only send cookies over HTTPS
       same_site: lax
       # Expire on browser close if remember_me not checked
