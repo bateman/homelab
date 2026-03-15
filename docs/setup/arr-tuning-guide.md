@@ -425,9 +425,9 @@ Bazarr → Settings → Languages:
 
 Configure a **cutoff** in the language profile so Bazarr stops searching once your primary language subtitle is found — this significantly reduces provider load for multi-language setups.
 
-**Default Settings** (Settings → Languages → Default Settings): Auto-apply language profiles to newly added series and movies so you don't have to configure each one manually.
+**Default Settings** (Bazarr → Settings → Languages → Default Settings): Auto-apply language profiles to newly added series and movies so you don't have to configure each one manually.
 
-### Subtitle Score Threshold
+### Sonarr/Radarr Integration Options
 
 Bazarr → Settings → Sonarr / Radarr → Options:
 
@@ -439,7 +439,7 @@ Bazarr → Settings → Sonarr / Radarr → Options:
 
 ### Sync with Sonarr/Radarr
 
-Path mapping is **not needed** — Bazarr mounts `/share/data/media:/data/media` and sees `/data/media`, the same path Sonarr/Radarr see via `/share/data:/data`. Sync interval is configured in Settings → Scheduler (see [Scheduler Tuning](#scheduler-tuning) below).
+Path mapping is **not needed** — Bazarr mounts `/share/data/media:/data/media` and sees `/data/media`, the same path Sonarr/Radarr see via `/share/data:/data`. Sync interval is configured in Bazarr → Settings → Scheduler (see [Scheduler Tuning](#scheduler-tuning) below).
 
 ### Post-Processing
 
@@ -528,7 +528,7 @@ Configure notifications for awareness of subtitle activity — especially useful
 - **Metadata-stuck downloads** — stuck in metadata download phase
 - **Orphaned files** — files in download folders no longer tracked by any *arr app or without hardlinks
 - **Completed seeded downloads** — remove torrents after they've met their seeding goal
-- **Malware detection** — flag and block suspicious content
+- **Malware detection** — flag releases containing suspicious files (e.g., executables, password-protected archives)
 
 ### Connections
 
@@ -584,11 +584,9 @@ Download detected with problem (stalled, slow, etc.)
 
 Cleanuparr allows different cleanup rules per *arr app:
 
-| App | Strategy | Why |
-|-----|----------|-----|
-| Sonarr (TV) | **More aggressive** — lower timeouts, fewer strikes | Episodes are time-sensitive (weekly releases); stalled downloads delay watching |
-| Radarr (Movies) | **More patient** — higher timeouts, more strikes | Movies aren't time-sensitive; rare releases may need longer to download |
-| Lidarr (Music) | **Default** | Music releases are less time-sensitive; default settings work well for most libraries |
+- **Sonarr (TV)**: More aggressive (lower timeouts, fewer strikes) — episodes are time-sensitive
+- **Radarr (Movies)**: More patient (higher timeouts, more strikes) — rare releases may need longer to download
+- **Lidarr (Music)**: Default settings — music releases are less time-sensitive
 
 ### Ignore / Exclusion Rules
 
@@ -612,8 +610,7 @@ Cleanuparr can detect and clean up files that are no longer useful:
 - **No hardlinks** — files that exist in the download directory but have no hardlinks to the media library (suggesting the import failed or was never completed). Note: only reliable when *arr apps are configured for hardlinking, not copy
 - **Cross-seed awareness** — can be configured to avoid removing files that are being cross-seeded
 
-> [!WARNING]
-> Be cautious with orphaned file cleanup when first enabling it. Review the detected orphans in the Cleanuparr UI before enabling automatic removal to avoid deleting files that are still needed.
+Always review detected orphans in the Cleanuparr UI before enabling automatic removal.
 
 ### Monitoring Schedule
 
@@ -861,7 +858,7 @@ docker exec recyclarr recyclarr sync --preview
 1. **Verify API connections** — ensure each *arr app is connected and the API key is valid
 2. **Check strike count** — downloads may not have accumulated enough strikes yet. Review strike history in the Cleanuparr UI
 3. **Check timeout thresholds** — stalled timeout may be too high for your use case. Reduce from 30 min to 15 min if downloads sit too long
-4. **Verify download client connection** — Cleanuparr needs access to qBittorrent to detect stalled/slow downloads
+4. **Verify download client connection** — Cleanuparr needs access to qBittorrent/NZBGet to detect stalled/slow downloads
 5. **Check exclusion rules** — downloads matching ignore filters (hashes, categories, tags, trackers) are skipped
 6. **Review logs** — check `docker logs cleanuparr` for errors, skipped items, or connection failures
 
