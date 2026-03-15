@@ -546,9 +546,10 @@ services:
   plex-music:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex-music
+    env_file:
+      - .env.secrets
     environment:
       <<: *common-env
-      PLEX_CLAIM: ${PLEX_MUSIC_CLAIM:-}
     volumes:
       - ./config/plex-music:/config
       - /share/data/media/music:/data/media/music:ro
