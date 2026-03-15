@@ -104,6 +104,8 @@ Recyclarr ──→ syncs Trash Guides profiles/CFs to Sonarr & Radarr (schedule
 | Cleanuparr | Sonarr | `sonarr` | 8989 | Monitor queue |
 | Cleanuparr | Radarr | `radarr` | 7878 | Monitor queue |
 | Cleanuparr | Lidarr | `lidarr` | 8686 | Monitor queue |
+| Cleanuparr | qBittorrent | `gluetun` or `qbittorrent` | 8080 | Monitor/remove downloads |
+| Cleanuparr | NZBGet | `gluetun` or `nzbget` | 6789 | Monitor/remove downloads |
 | Recyclarr | Sonarr | `sonarr` | 8989 | Push profiles/CFs |
 | Recyclarr | Radarr | `radarr` | 7878 | Push profiles/CFs |
 
@@ -437,10 +439,7 @@ Bazarr → Settings → Sonarr / Radarr → Options:
 
 ### Sync with Sonarr/Radarr
 
-| Setting | Recommended | Why |
-|---------|-------------|-----|
-| Sync interval | Default (every few hours is fine) | Picks up new content at a reasonable pace |
-| Path mapping | **Not needed** | Bazarr mounts `/share/data/media:/data/media` and sees `/data/media` — the same path Sonarr/Radarr see via `/share/data:/data` |
+Path mapping is **not needed** — Bazarr mounts `/share/data/media:/data/media` and sees `/data/media`, the same path Sonarr/Radarr see via `/share/data:/data`. Sync interval is configured in Settings → Scheduler (see [Scheduler Tuning](#scheduler-tuning) below).
 
 ### Post-Processing
 
@@ -449,7 +448,6 @@ Bazarr → Settings → Subtitles:
 | Setting | Recommended | Why |
 |---------|-------------|-----|
 | Subtitle storage | **Alongside media file** | Plex/media players find them automatically |
-| Subtitle format | **SRT** preferred | Most compatible across players |
 | Upgrade subtitles | **Yes** | Allows Bazarr to replace poor subs when better ones appear |
 | Upgrade days | **7** (default) | How many days back to check for upgrades on existing subs |
 | Upgrade manually downloaded | **No** | Preserve subs you manually chose; set to Yes if you want Bazarr to improve everything |
@@ -548,12 +546,12 @@ Add connections to each *arr app and your download client:
 
 **Download clients:**
 
-| Client | URL | Notes |
-|--------|-----|-------|
-| qBittorrent | `http://gluetun:8080` or `http://qbittorrent:8080` | Use `gluetun` hostname when VPN profile is active |
-| NZBGet | `http://gluetun:6789` or `http://nzbget:6789` | Use `gluetun` hostname when VPN profile is active |
+| Client | URL |
+|--------|-----|
+| qBittorrent | `http://gluetun:8080` or `http://qbittorrent:8080` |
+| NZBGet | `http://gluetun:6789` or `http://nzbget:6789` |
 
-Cleanuparr also supports Readarr, Whisparr v2, Transmission, Deluge, µTorrent, and rTorrent — but only the apps above are used in this stack.
+Use the `gluetun` hostname when the VPN profile is active (see [VPN Setup](vpn-setup.md)). Cleanuparr also supports Transmission, Deluge, and others — only the clients above are used in this stack.
 
 ### Strike System
 
@@ -567,8 +565,6 @@ Download detected with problem (stalled, slow, etc.)
     → Next check: still problematic?
       → Strike 3 (max) → Remove + blocklist
 ```
-
-This prevents false positives from temporary network hiccups or tracker maintenance windows.
 
 ### Cleanup Rules
 
@@ -592,7 +588,7 @@ Cleanuparr allows different cleanup rules per *arr app:
 |-----|----------|-----|
 | Sonarr (TV) | **More aggressive** — lower timeouts, fewer strikes | Episodes are time-sensitive (weekly releases); stalled downloads delay watching |
 | Radarr (Movies) | **More patient** — higher timeouts, more strikes | Movies aren't time-sensitive; rare releases may need longer to download |
-| Lidarr (Music) | **Default** | Music files are small and download quickly; stalled downloads are usually genuinely dead |
+| Lidarr (Music) | **Default** | Music releases are less time-sensitive; default settings work well for most libraries |
 
 ### Ignore / Exclusion Rules
 
@@ -613,7 +609,7 @@ Cleanuparr supports filtering to prevent certain downloads from being cleaned up
 Cleanuparr can detect and clean up files that are no longer useful:
 
 - **No *arr reference** — files in the download directory not tracked by any *arr app's queue or history
-- **No hardlinks** — files that exist in the download directory but have no hardlinks to the media library (suggesting the import failed or was never completed)
+- **No hardlinks** — files that exist in the download directory but have no hardlinks to the media library (suggesting the import failed or was never completed). Note: only reliable when *arr apps are configured for hardlinking, not copy
 - **Cross-seed awareness** — can be configured to avoid removing files that are being cross-seeded
 
 > [!WARNING]
@@ -624,7 +620,6 @@ Cleanuparr can detect and clean up files that are no longer useful:
 | Setting | Recommended | Why |
 |---------|-------------|-----|
 | Check interval | **10–15 minutes** | Frequent enough to catch issues quickly without excessive API calls |
-| Enabled by default | **Yes** | Set and forget |
 
 ### Notifications
 
@@ -633,7 +628,7 @@ Cleanuparr can notify you when it takes action:
 - **On strike** — when a download receives a new strike (useful for monitoring)
 - **On removal** — when a download is removed and blocklisted
 
-Configure notification targets in the Cleanuparr UI. Notifications help you spot patterns — if the same indexer or release group keeps getting strikes, you may want to adjust Prowlarr indexer priorities or add custom format penalties in Recyclarr.
+Configure notification targets in the Cleanuparr UI. Notifications help you spot patterns — if the same indexer or release group keeps getting strikes, investigate the root cause in Prowlarr or Recyclarr.
 
 > [!TIP]
 > Cleanuparr is most valuable when combined with Recyclarr's quality profiles. Failed downloads from low-quality sources get cleaned up and the *arr app automatically searches for a better alternative.
