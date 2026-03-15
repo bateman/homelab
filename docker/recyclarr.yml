@@ -109,12 +109,12 @@ sonarr:
           - name: Bluray-720p
           - name: HDTV-720p
 
-      # HD-1080p - Only 1080p qualities, cutoff at HDTV-1080p
+      # HD-1080p - Only 1080p qualities, upgrades until Bluray-1080p
       - name: HD-1080p
         min_format_score: 0
         upgrade:
           allowed: true
-          until_quality: HDTV-1080p
+          until_quality: Bluray-1080p
           until_score: 10000
         qualities:
           - name: Remux-1080p
@@ -266,12 +266,12 @@ radarr:
           - name: Bluray-720p
           - name: HDTV-720p
 
-      # HD-1080p - Only 1080p qualities, cutoff at HDTV-1080p
+      # HD-1080p - Only 1080p qualities, upgrades until Bluray-1080p
       - name: HD-1080p
         min_format_score: 0
         upgrade:
           allowed: true
-          until_quality: HDTV-1080p
+          until_quality: Bluray-1080p
           until_score: 10000
         qualities:
           - name: Remux-1080p
