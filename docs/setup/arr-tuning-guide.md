@@ -392,8 +392,7 @@ qBittorrent downloads → seeds to ratio → pauses
 
 ## Bazarr Tuning
 
-> [!NOTE]
-> Trash Guides has a [Bazarr setup guide](https://trash-guides.info/Bazarr/Setup-Guide/) with detailed recommendations. The [Bazarr Wiki](https://wiki.bazarr.media/) covers every setting in depth.
+Trash Guides has a [Bazarr setup guide](https://trash-guides.info/Bazarr/Setup-Guide/) with detailed recommendations. The [Bazarr Wiki](https://wiki.bazarr.media/) covers every setting in depth.
 
 ### Provider Configuration
 
@@ -422,12 +421,9 @@ Bazarr → Settings → Languages:
 - **Hearing Impaired (HI)**: Enable "Also search for Hearing Impaired" if you want SDH subtitles, or exclude them if you prefer clean subtitles
 - **Exclude Audio**: Skip subtitle search when the audio track already matches the desired language
 
-> [!TIP]
-> Configure a **cutoff** in the language profile so Bazarr stops searching once your primary language subtitle is found. This significantly reduces provider load for multi-language setups.
+Configure a **cutoff** in the language profile so Bazarr stops searching once your primary language subtitle is found — this significantly reduces provider load for multi-language setups.
 
-**Default Settings** (Settings → Languages → Default Settings):
-
-- Auto-apply language profiles to newly added series and movies so you don't have to configure each one manually
+**Default Settings** (Settings → Languages → Default Settings): Auto-apply language profiles to newly added series and movies so you don't have to configure each one manually.
 
 ### Subtitle Score Threshold
 
@@ -441,13 +437,10 @@ Bazarr → Settings → Sonarr / Radarr → Options:
 
 ### Sync with Sonarr/Radarr
 
-| Setting | Recommended |
-|---------|-------------|
-| Sync interval | Default (every few hours is fine) |
-| Path mapping | **Not needed** if Bazarr uses the same Docker volume mounts as Sonarr/Radarr |
-
-> [!NOTE]
-> Bazarr mounts `/share/data/media:/data/media` (only the media folder, not the full `/share/data` tree). Inside the container, Bazarr sees `/data/media` — the same path that Sonarr/Radarr see (they mount `/share/data:/data`). No path mapping is required.
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Sync interval | Default (every few hours is fine) | Picks up new content at a reasonable pace |
+| Path mapping | **Not needed** | Bazarr mounts `/share/data/media:/data/media` and sees `/data/media` — the same path Sonarr/Radarr see via `/share/data:/data` |
 
 ### Post-Processing
 
@@ -558,9 +551,9 @@ Add connections to each *arr app and your download client:
 | Client | URL | Notes |
 |--------|-----|-------|
 | qBittorrent | `http://gluetun:8080` or `http://qbittorrent:8080` | Use `gluetun` hostname when VPN profile is active |
+| NZBGet | `http://gluetun:6789` or `http://nzbget:6789` | Use `gluetun` hostname when VPN profile is active |
 
-> [!NOTE]
-> Cleanuparr also supports Readarr, Whisparr v2, Transmission, Deluge, µTorrent, and rTorrent — but only Sonarr, Radarr, Lidarr, and qBittorrent are used in this stack.
+Cleanuparr also supports Readarr, Whisparr v2, Transmission, Deluge, µTorrent, and rTorrent — but only the apps above are used in this stack.
 
 ### Strike System
 
@@ -866,8 +859,7 @@ docker exec recyclarr recyclarr sync --preview
 4. **Check languages** — Language Profiles must be assigned to series/movies. Check Settings → Languages → Default Settings to auto-apply to new content
 5. **Check adaptive searching** — if enabled, Bazarr may have deprioritized searches for content that previously had no results. Trigger a manual search to override
 6. **Check scheduler** — Settings → Scheduler → verify search frequency isn't set too infrequently
-7. **Anti-captcha issues** — providers like OpenSubtitles.com may require a working anti-captcha service. Check provider logs for captcha errors
-8. **Rate limiting** — some providers limit requests. Check `docker logs bazarr` for HTTP 429 or rate-limit messages
+7. **Provider issues** — anti-captcha failures (OpenSubtitles.com) or rate limiting (HTTP 429). Check `docker logs bazarr` for specific errors
 
 ### Cleanuparr Not Cleaning Up
 
