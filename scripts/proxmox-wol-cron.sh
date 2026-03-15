@@ -29,6 +29,7 @@ set -eu
 PROXMOX_IP="192.168.3.20"
 SSH_KEY="/root/.ssh/id_proxmox_ed25519"
 MAC_ADDRESS="AA:BB:CC:DD:EE:FF"       # Replace with Mini PC's real MAC (ip link show nic0)
+WOL_CMD="/opt/bin/wakeonlan"           # Full path required — not in default PATH at boot
 LOG="/var/log/minipc-power.log"
 
 # ---------------------------------------------------------------------------
@@ -44,7 +45,7 @@ CRON_ENTRIES="${MARKER}
 # Weekend nights: 00:59 Sat-Sun (before 01:00 Sat-Sun NAS shutdown)
 59 0 * * 0,6 ssh -i ${SSH_KEY} -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@${PROXMOX_IP} \"shutdown -h now\" >> ${LOG} 2>&1
 # Wake Mini PC 2 minutes after NAS boots (handles scheduled power-on, reboots, and power outages)
-@reboot sleep 120 && wakeonlan ${MAC_ADDRESS} >> ${LOG} 2>&1"
+@reboot sleep 120 && ${WOL_CMD} ${MAC_ADDRESS} >> ${LOG} 2>&1"
 
 # ---------------------------------------------------------------------------
 # Inject into crontab (idempotent — skips if marker already present)
@@ -63,6 +64,6 @@ else
     echo "[proxmox-wol-cron] Cron jobs injected successfully."
     # @reboot entries only fire at crond startup, which has already happened
     # by the time autorun.sh runs. Trigger WOL directly for this boot.
-    ( sleep 120 && wakeonlan "${MAC_ADDRESS}" >> "${LOG}" 2>&1 ) &
+    ( sleep 120 && "${WOL_CMD}" "${MAC_ADDRESS}" >> "${LOG}" 2>&1 ) &
     echo "[proxmox-wol-cron] WOL scheduled in background (120s delay)."
 fi

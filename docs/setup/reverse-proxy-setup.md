@@ -491,7 +491,7 @@ curl -s -o /dev/null -w "%{http_code}" http://192.168.3.21:32400/web
 # Expected: 200
 
 # If Mini PC is off, wake it (from NAS)
-wakeonlan AA:BB:CC:DD:EE:FF  # Replace with actual MAC
+/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF  # Replace with actual MAC
 ```
 
 **Symptom: DNS not resolving or connection timeout**
