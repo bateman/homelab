@@ -38,10 +38,10 @@ The Lenovo Mini PC running Proxmox/Plex can be powered off when not in use and w
 ssh root@192.168.3.20 "shutdown -h now"
 
 # Wake Mini PC (from NAS or any LAN device)
-wakeonlan AA:BB:CC:DD:EE:FF  # Replace with actual MAC
+/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF  # Replace with actual MAC
 
 # Wake via Tailscale (from remote — Tailscale runs on NAS)
-ssh admin@192.168.3.10 "wakeonlan AA:BB:CC:DD:EE:FF"
+ssh admin@192.168.3.10 "/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF"
 ```
 
 ### Automation Options
@@ -109,11 +109,11 @@ Automate the full power cycle of the Mini PC via cron jobs on the NAS: shut it d
    # Test: should connect without password prompt
    ssh -i /root/.ssh/id_proxmox_ed25519 root@192.168.3.20 "hostname"
    ```
-3. **`wakeonlan` installed** on NAS:
+3. **`wakeonlan` installed** on NAS (via Entware):
    ```bash
    # Check if available
-   which wakeonlan
-   # On QNAP: usually available via Entware or pre-installed
+   which /opt/bin/wakeonlan
+   # On QNAP: installed via Entware at /opt/bin/wakeonlan
    ```
 
 #### Configure Cron Jobs
@@ -140,7 +140,7 @@ The script injects the following cron jobs (idempotent — safe to run multiple 
 # Weekend nights: 00:59 Sat-Sun (before 01:00 Sat-Sun NAS shutdown)
 59 0 * * 0,6 ssh -i /root/.ssh/id_proxmox_ed25519 -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@192.168.3.20 "shutdown -h now" >> /var/log/minipc-power.log 2>&1
 # Wake Mini PC 2 minutes after NAS boots (handles scheduled power-on, reboots, and power outages)
-@reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+@reboot sleep 120 && /opt/bin/wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
 
 **Step 2 — Enable QNAP autorun and register the script:**
@@ -204,7 +204,7 @@ ssh root@192.168.3.20 "shutdown -h now"
 ping -c 3 192.168.3.20  # Should fail (host unreachable)
 
 # 3. Test WOL wake
-wakeonlan AA:BB:CC:DD:EE:FF
+/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF
 
 # 4. Wait 60 seconds, confirm it's back
 ping -c 3 192.168.3.20  # Should succeed
@@ -217,7 +217,7 @@ cat /var/log/minipc-power.log
 
 | Scenario | Shutdown | Wake | Cron Schedule (wake) |
 |----------|----------|------|---------------------|
-| Wake on NAS boot (recommended) | 23:59 Sun-Thu / 00:59 Sat-Sun | ~2 min after NAS boot | `@reboot sleep 120 && wakeonlan ...` |
+| Wake on NAS boot (recommended) | 23:59 Sun-Thu / 00:59 Sat-Sun | ~2 min after NAS boot | `@reboot sleep 120 && /opt/bin/wakeonlan ...` |
 | Fixed time daily | 23:59 Sun-Thu / 00:59 Sat-Sun | 07:00 weekdays / 08:00 weekends | `0 7 * * 1-5` + `0 8 * * 0,6` |
 | Always on (override) | Comment out shutdown crons | — | — |
 
@@ -225,9 +225,9 @@ If the NAS is always-on (no scheduled power cycle), edit `scripts/proxmox-wol-cr
 ```bash
 # In CRON_ENTRIES variable of scripts/proxmox-wol-cron.sh:
 # @reboot alone won't fire if the NAS never reboots — add fixed-time fallbacks
-@reboot sleep 120 && wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
-0 7 * * 1-5 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
-0 8 * * 0,6 wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+@reboot sleep 120 && /opt/bin/wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+0 7 * * 1-5 /opt/bin/wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
+0 8 * * 0,6 /opt/bin/wakeonlan AA:BB:CC:DD:EE:FF >> /var/log/minipc-power.log 2>&1
 ```
 
 > [!NOTE]
@@ -678,7 +678,7 @@ shell_command:
   # Proxmox control (requires SSH key setup)
   shutdown_proxmox: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa root@192.168.3.20 'shutdown -h now'"
   # Wake via NAS (wakeonlan not available in HA container by default)
-  wake_proxmox: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa admin@192.168.3.10 'wakeonlan AA:BB:CC:DD:EE:FF'"
+  wake_proxmox: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa admin@192.168.3.10 '/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF'"
 
   # NAS power save scripts (requires SSH key setup to NAS)
   power_save_start: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa admin@192.168.3.10 '/share/container/mediastack/scripts/power-save-start.sh'"

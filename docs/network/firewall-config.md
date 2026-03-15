@@ -356,7 +356,7 @@ Rules are processed in order, from first to last. Order matters.
 > [!NOTE]
 > Allows Wake-on-LAN magic packets from Media VLAN (phones, tablets) to wake the Printer and Proxmox Mini PC. **Cross-VLAN WoL limitation**: magic packets are Layer 2 broadcasts and don't cross VLAN boundaries on their own. This rule enables directed (unicast) WoL for apps that send to the target's IP address. For reliable cross-VLAN WoL, use one of these methods:
 >
-> 1. **NAS relay via SSH** (recommended): `ssh admin@192.168.3.10 "wakeonlan <MAC>"` — already allowed by Rule 9 (port 22). See [`proxmox-setup.md` Section 8.2.6](../setup/proxmox-setup.md#826-wol-from-iphone-with-shortcuts).
+> 1. **NAS relay via SSH** (recommended): `ssh admin@192.168.3.10 "/opt/bin/wakeonlan <MAC>"` — already allowed by Rule 9 (port 22). See [`proxmox-setup.md` Section 8.2.6](../setup/proxmox-setup.md#826-wol-from-iphone-with-shortcuts).
 > 2. **WoL app with broadcast address**: Configure the app to send to `192.168.3.255` (Servers VLAN broadcast). Requires the UDM-SE to forward directed broadcasts.
 > 3. **UniFi controller**: Use the UniFi app → select device → send WoL from the controller itself.
 

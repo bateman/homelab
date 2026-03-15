@@ -1017,7 +1017,7 @@ You can create an iOS shortcut to power on the Mini PC and open Plex:
 **Action 1: Run SSH script** (requires accessible SSH server, e.g., NAS)
 - Host: 192.168.3.10 (NAS)
 - User: admin
-- Script: `wakeonlan AA:BB:CC:DD:EE:FF`
+- Script: `/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF`
 
 **Action 2: Wait** 30 seconds
 
@@ -1033,11 +1033,11 @@ To power on the Mini PC when away from home:
 1. The NAS (192.168.3.10) must be on (available 07:00–00:00 weekdays / 08:00–01:00 weekends)
 2. Tailscale runs on the NAS as a Docker container (see `docker/compose.yml`)
 3. From remote, connect via Tailscale to the NAS
-4. Execute: `wakeonlan AA:BB:CC:DD:EE:FF`
+4. Execute: `/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF`
 
 ```bash
 # Example from remote terminal via Tailscale
-ssh admin@192.168.3.10 "wakeonlan AA:BB:CC:DD:EE:FF"
+ssh admin@192.168.3.10 "/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF"
 ```
 
 #### 8.2.8 WOL Troubleshooting
