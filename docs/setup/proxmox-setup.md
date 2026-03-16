@@ -67,16 +67,19 @@ sudo dd bs=4M if=proxmox-ve_*.iso of=/dev/sdX conv=fsync status=progress
 ### 2.3 Network Configuration
 
 > [!NOTE]
-> The Proxmox installer requires a static IP. Use `192.168.3.20` during installation — after setup, the bridge will be switched to DHCP and the UDM-SE DHCP reservation will assign this same IP. See [Phase 8.4](#84-switch-to-25gbe-usb-adapter).
+> The Proxmox installer requires a static IP. Use `192.168.3.20` during installation. For dual-NIC configuration (adding the integrated NIC for Wake-on-LAN), see [Section 8.4](#84-dual-nic-configuration-25gbe-usb-c--1gbe-integrated).
 
 | Field | Value |
 |-------|--------|
-| Management Interface | eth0 (or main interface) |
+| Management Interface | USB 2.5GbE adapter (`enx*`) — see tip below |
 | Hostname (FQDN) | proxmox.servers.local |
 | IP Address | 192.168.3.20 |
 | Netmask | 255.255.255.0 (/24) |
 | Gateway | 192.168.3.1 |
 | DNS Server | 192.168.3.1 (or 1.1.1.1) |
+
+> [!TIP]
+> **Which NIC to select?** During installation, Proxmox lists detected network interfaces. If the USB 2.5GbE adapter (StarTech US2GC30) is connected, it appears as `enx*` (MAC-based name). The integrated Intel NIC appears as `enp*`. Select the **USB adapter** (`enx*`) — this gives 2.5GbE throughput for management and keeps the integrated NIC available for Wake-on-LAN (USB ports lose power when the system is off, so only the integrated NIC can receive WoL magic packets). After installation, add the integrated NIC for WoL — see [Section 8.4.3](#843-add-integrated-nic-for-wol-installed-on-usb-adapter).
 
 ### 2.4 Credentials
 
@@ -318,7 +321,26 @@ Datacenter → proxmox → Create CT
 **Tab DNS:**
 - Use host settings (default)
 
-### 4.3 Configure NFS Mount Point
+### 4.3 Enable Auto-Start
+
+Enable the container to start automatically when Proxmox boots:
+
+```bash
+pct set 100 -onboot 1
+```
+
+Or via WebUI: select CT 100 → Options → Start at boot → ✅ Yes
+
+> [!IMPORTANT]
+> Without this, the Plex LXC stays stopped after a Proxmox reboot or power cycle. This is critical if using Wake-on-LAN scheduling (see [energy saving strategies](../operations/energy-saving-strategies.md)) — the Mini PC wakes but Plex won't be available until the container is manually started.
+
+Verify:
+```bash
+pct config 100 | grep onboot
+# Should show: onboot: 1
+```
+
+### 4.4 Configure NFS Mount Point
 
 Before starting, add a bind mount for media (container must be stopped):
 
@@ -340,7 +362,7 @@ pct config 100 | grep mp
 # NOT: mp0: nas-media:100/vm-100-disk-0.raw (this is wrong — it's a disk image)
 ```
 
-### 4.4 Start Container and Install Plex
+### 4.5 Start Container and Install Plex
 
 ```bash
 # Start container
@@ -404,7 +426,7 @@ stat -c '%u:%g' /media/movies/
 > 1. NFS export permissions on QNAP (Section 3.4)
 > 2. Mount point configuration: `pct config 100 | grep mp0`
 >    - Must show `/mnt/pve/nas-media,mp=/media`
->    - If it shows `nas-media:100/vm-100-disk-0.raw`, you have a disk image instead of a bind mount — see Section 4.3
+>    - If it shows `nas-media:100/vm-100-disk-0.raw`, you have a disk image instead of a bind mount — see Section 4.4
 > 3. NFS service status on NAS: `showmount -e 192.168.3.10`
 
 ### Verify Plex
@@ -447,6 +469,9 @@ After claiming, access Plex normally at `http://192.168.3.21:32400/web`.
 
 ### 5.2 Add Libraries
 
+> [!NOTE]
+> This Plex instance serves **Movies/TV only**. Music runs on a separate always-on Plex server on the NAS (Docker container `plex-music` in `compose.media.yml`). Home Assistant manages this Mini PC's power state — waking it via WoL when Fire TV turns on, and shutting it down via Proxmox API when idle.
+
 Add Library → Movies:
 - Name: Movies
 - Folders: /media/movies
@@ -454,10 +479,6 @@ Add Library → Movies:
 Add Library → TV Shows:
 - Name: TV Shows
 - Folders: /media/tv
-
-Add Library → Music:
-- Name: Music
-- Folders: /media/music
 
 ### 5.3 Library Settings (Settings → Library)
 
@@ -677,7 +698,7 @@ If it shows "Transcoding":
 ## Phase 6: Remote Access (Tailscale)
 
 > [!NOTE]
-> Tailscale runs as a Docker container on the NAS (always-on) instead of on the Mini PC, so remote access remains available even when the Mini PC is powered off. The NAS subnet router advertises `192.168.3.0/24` (Servers VLAN), making Plex at `192.168.3.21:32400` reachable from any Tailscale-connected device.
+> Tailscale runs as a Docker container on the NAS instead of on the Mini PC, so remote access remains available when the Mini PC is powered off (during NAS uptime hours, 07:00–01:00). The NAS subnet router advertises `192.168.3.0/24` (Servers VLAN), making Plex at `192.168.3.21:32400` reachable from any Tailscale-connected device.
 
 For the complete Tailscale setup guide, see **[Tailscale Setup](tailscale-setup.md)**. In summary:
 
@@ -760,8 +781,28 @@ In the Plex app on each remote device:
 2. **Direct Play**: ✅ Enabled
 3. **Direct Stream**: ✅ Enabled
 
+> [!WARNING]
+> **Cellular quality is capped separately.** Plex and Plexamp have independent quality settings for cellular (mobile data) that default to low values. Without changing these, streaming over mobile data will be slow and heavily transcoded — even though Tailscale treats you as local.
+
+#### 6.4.1 Plex (Video) — Cellular Quality
+
+Settings → Video & Audio → **Cellular Quality** → **Maximum / Original**
+
+The default is **720p HD / 2 Mbps**, which forces the server to transcode all video down to 2 Mbps. With Tailscale + 5G/4G, there is no reason to limit this.
+
+#### 6.4.2 Plexamp (Music) — Cellular Quality
+
+> [!NOTE]
+> These are **client-side** settings for the Plexamp app. The Music Plex **server** runs on the NAS — see [NAS Setup → Plex Music Configuration](nas-setup.md#plex-music-configuration) for server-side library and network settings.
+
+Settings → Quality → **Dati cellulare / Cellular Data** → **Maximum**
+
+The default is **128 Kbps**, which forces FLAC files to be transcoded to 128 Kbps Opus — a massive quality loss. A typical FLAC track is 800–1400 Kbps, well within mobile data speeds.
+
+Also set **Bitrate di conversione / Conversion Bitrate** to the highest value (320 Kbps) as a fallback, so if conversion ever kicks in it uses acceptable quality.
+
 > [!TIP]
-> With Tailscale + `100.64.0.0/10` in LAN Networks, Plex treats your remote device as "local". You get the same Direct Play quality as if you were at home.
+> With Tailscale + `100.64.0.0/10` in LAN Networks, Plex treats your remote device as "local". You get the same Direct Play quality as if you were at home — but only if the **client-side** quality settings (including cellular) are set to Maximum.
 
 ### 6.5 Verify Remote Access
 
@@ -790,6 +831,7 @@ On the Plex dashboard, your remote device should appear as **local** (not "remot
 |---------|-------|----------|
 | Plex shows device as "remote" | Missing Tailscale CGNAT in LAN Networks | Add `100.64.0.0/10` to Settings → Network → LAN Networks |
 | Remote playback buffers/transcodes | Quality set to "limited" for remote | Set remote quality to Maximum/Original in client settings |
+| Slow streaming on mobile data | Cellular quality capped (separate from Wi-Fi/remote) | Plex app: Cellular Quality → Maximum. Plexamp: Cellular Data → Maximum (see [Section 6.4](#64-configure-plex-app-on-remote-clients)) |
 | Can't reach Plex from remote | Tailscale subnet routes not approved | Approve in [Tailscale Admin](https://login.tailscale.com/admin/machines) → nas-tailscale → Edit route settings |
 | Can't reach Plex from remote | Mini PC is off (energy saving) | Wake via WOL (see [Section 8.2](#82-wake-on-lan-wol)) |
 | Plex relay active (slow ~2 Mbps) | Relay enabled as fallback | Disable relay in Settings → Network |
@@ -850,7 +892,7 @@ The Mini PC can be powered on remotely via Wake-on-LAN, useful for saving energy
 when Plex is not in use and powering it on only when needed.
 
 > [!IMPORTANT]
-> **Dual-NIC setup:** WOL only works on the integrated Intel NIC (enp2s0), not on the USB-C 2.5GbE adapter. USB ports lose power when the system is off. If you migrated management to the USB-C adapter (see [Section 8.4](#84-network-interface-migration-25gbe-usb-c-adapter)), ensure WOL is configured on the integrated NIC and that the WOL magic packet uses the integrated NIC's MAC address.
+> **Dual-NIC setup:** WOL only works on the integrated Intel NIC (nic0), not on the USB-C 2.5GbE adapter. USB ports lose power when the system is off. If you have a dual-NIC setup (see [Section 8.4](#84-dual-nic-configuration-25gbe-usb-c--1gbe-integrated)), ensure WOL is configured on the integrated NIC and that the WOL magic packet uses the integrated NIC's MAC address.
 
 #### 8.2.1 Enable WOL in BIOS
 
@@ -870,10 +912,10 @@ apt install -y ethtool wakeonlan
 
 # Identify network interface (usually enp*, eth0, or nic*)
 ip link show
-# Note the interface name (e.g., enp2s0, nic1)
+# Note the interface name (e.g., nic0, enp2s0)
 
 # Check current WOL status
-ethtool enp2s0 | grep Wake-on
+ethtool nic0 | grep Wake-on
 # Expected output:
 #   Supports Wake-on: pumbg
 #   Wake-on: g
@@ -881,8 +923,8 @@ ethtool enp2s0 | grep Wake-on
 # "Supports Wake-on: pumbg" = NIC supports WOL (p=PHY, u=unicast, m=multicast, b=broadcast, g=magic packet)
 # "Wake-on: g" = WOL is enabled (magic packet). If "d", WOL is disabled — enable it below
 
-# Enable WOL only if Wake-on shows "d" (replace enp2s0 with your interface)
-ethtool -s enp2s0 wol g
+# Enable WOL only if Wake-on shows "d" (replace nic0 with your interface)
+ethtool -s nic0 wol g
 ```
 
 > [!TIP]
@@ -890,39 +932,39 @@ ethtool -s enp2s0 wol g
 
 #### 8.2.3 Make WOL Persistent on Reboot
 
-Create a systemd-networkd configuration file:
+Proxmox uses `ifupdown` (`/etc/network/interfaces`), not `systemd-networkd`. Use a `post-up` hook to enable WOL on every boot:
 
 ```bash
-# Identify the integrated NIC (enp*, eth*, nic* — NOT enx* USB adapters)
-IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(enp|eth|nic)' | head -1)
-echo "Detected interface: $IFACE"
+# Edit network interfaces
+nano /etc/network/interfaces
 
+# Find the integrated NIC stanza and add the post-up line:
+#
+#   auto nic0
+#   iface nic0 inet manual
+#       post-up /usr/sbin/ethtool -s nic0 wol g
+#
+# Replace nic0 with your interface name if different.
 # IMPORTANT: if using dual-NIC setup (see Section 8.4), ensure this
 # matches the INTEGRATED Intel NIC, not the USB-C adapter.
 # USB adapters use enx* names and do NOT support WOL.
 
-# Create persistent WOL configuration
-cat > /etc/systemd/network/99-wol.link << EOF
-[Match]
-Name=$IFACE
-
-[Link]
-WakeOnLan=magic
-EOF
-
-# Restart networking
-systemctl restart systemd-networkd
+# Apply without reboot
+ifreload -a
 
 # Verify applied configuration
-ethtool $IFACE | grep Wake-on
+ethtool nic0 | grep Wake-on
 # Should show: Wake-on: g
 ```
+
+> [!WARNING]
+> Do **not** use `systemd-networkd` `.link` files (e.g., `99-wol.link`) — Proxmox's networking is managed by `ifupdown`, so `.link` files are silently ignored.
 
 #### 8.2.4 Note MAC Address
 
 ```bash
 # Get MAC address for WOL
-ip link show $IFACE | grep ether
+ip link show nic0 | grep ether
 # Example output: link/ether AA:BB:CC:DD:EE:FF brd ff:ff:ff:ff:ff:ff
 
 # Note the MAC address (AA:BB:CC:DD:EE:FF)
@@ -962,7 +1004,7 @@ You can create an iOS shortcut to power on the Mini PC and open Plex:
 **Action 1: Run SSH script** (requires accessible SSH server, e.g., NAS)
 - Host: 192.168.3.10 (NAS)
 - User: admin
-- Script: `wakeonlan AA:BB:CC:DD:EE:FF`
+- Script: `/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF`
 
 **Action 2: Wait** 30 seconds
 
@@ -975,14 +1017,14 @@ You can create an iOS shortcut to power on the Mini PC and open Plex:
 
 To power on the Mini PC when away from home:
 
-1. The NAS (192.168.3.10) must be always on (it is)
+1. The NAS (192.168.3.10) must be on (available 07:00–00:00 weekdays / 08:00–01:00 weekends)
 2. Tailscale runs on the NAS as a Docker container (see `docker/compose.yml`)
 3. From remote, connect via Tailscale to the NAS
-4. Execute: `wakeonlan AA:BB:CC:DD:EE:FF`
+4. Execute: `/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF`
 
 ```bash
 # Example from remote terminal via Tailscale
-ssh admin@192.168.3.10 "wakeonlan AA:BB:CC:DD:EE:FF"
+ssh admin@192.168.3.10 "/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF"
 ```
 
 #### 8.2.8 WOL Troubleshooting
@@ -990,7 +1032,7 @@ ssh admin@192.168.3.10 "wakeonlan AA:BB:CC:DD:EE:FF"
 | Problem | Cause | Solution |
 |---------|-------|----------|
 | WOL doesn't work | Not enabled in BIOS | Verify BIOS settings |
-| Wake-on: d after reboot | Config not persistent | Verify 99-wol.link |
+| Wake-on: d after reboot | Config not persistent | Add `post-up /usr/sbin/ethtool -s nic0 wol g` to `/etc/network/interfaces` |
 | Works only sometimes | Fast Startup Windows | Not applicable (Proxmox) |
 | Doesn't work from another VLAN | Broadcast doesn't pass | Send from same VLAN |
 | Doesn't work via Tailscale | Magic packet not routed | Use device on LAN |
@@ -1169,13 +1211,13 @@ the codec during transcoding.
 > [!IMPORTANT]
 > Hardware transcoding requires **Plex Pass** subscription.
 
-### 8.4 Network Interface Migration (2.5GbE USB-C Adapter)
+### 8.4 Dual-NIC Configuration (2.5GbE USB-C + 1GbE Integrated)
 
 The Mini PC has two network interfaces:
 - **Integrated**: 1x 1GbE RJ45 (Intel) — supports WOL
 - **USB-C adapter**: 1x 2.5GbE (StarTech US2GC30) — does NOT support WOL
 
-This section documents how to move Proxmox management to the 2.5GbE adapter while keeping the integrated 1GbE connected for Wake-on-LAN only.
+This section covers configuring both NICs: the USB adapter for Proxmox management and the integrated NIC for Wake-on-LAN.
 
 > [!IMPORTANT]
 > USB network adapters cannot receive magic packets when the system is powered off (USB ports lose power in S5 state). The integrated Intel NIC must remain connected to the switch for WOL to work.
@@ -1199,18 +1241,64 @@ ssh root@192.168.3.20
 ip link show
 
 # Identify which is which:
-# - Integrated Intel NIC: typically enp* (e.g., enp2s0)
+# - Integrated Intel NIC: typically nic* (e.g., nic0) or enp*
 # - USB-C adapter: typically enx* (MAC-based name) or usb0
 #
 # Verify with ethtool:
-ethtool enp2s0 | grep -i speed    # Should show 1000Mb/s
+ethtool nic0 | grep -i speed    # Should show 1000Mb/s
 ethtool enxAABBCCDDEEFF | grep -i speed  # Should show 2500Mb/s
 ```
 
 > [!TIP]
 > USB network adapters on Linux typically get a name starting with `enx` followed by the MAC address (e.g., `enxaabbccddeeff`). This naming is deterministic and won't change across reboots.
 
-#### 8.4.3 Install DHCP Client
+#### 8.4.3 Add Integrated NIC for WOL (Installed on USB Adapter)
+
+> [!NOTE]
+> If you selected the USB 2.5GbE adapter during Proxmox installation ([Section 2.3](#23-network-configuration)), `vmbr0` is already on the USB adapter. You only need to add the integrated NIC for WOL. If you installed on the integrated NIC instead, skip to [Section 8.4.4](#844-bridge-migration-installed-on-integrated-nic).
+
+1. [ ] Backup current configuration:
+
+```bash
+cp /etc/network/interfaces /etc/network/interfaces.bak
+```
+
+2. [ ] Add the integrated NIC stanza to `/etc/network/interfaces`:
+
+```bash
+cat >> /etc/network/interfaces << 'EOF'
+
+# Integrated 1GbE Intel NIC — WOL only, no IP
+auto nic0
+iface nic0 inet manual
+    post-up /usr/sbin/ethtool -s nic0 wol g
+EOF
+```
+
+> [!TIP]
+> Replace `nic0` with your integrated NIC name from [Section 8.4.2](#842-identify-interface-names) if different.
+
+3. [ ] Apply the configuration:
+
+```bash
+ifreload -a
+```
+
+4. [ ] Verify the integrated NIC is up with no IP:
+
+```bash
+ip addr show nic0
+# Should show state UP but no inet address
+```
+
+5. [ ] Configure WOL on the integrated NIC — follow [Section 8.2.1](#821-enable-wol-in-bios) through [Section 8.2.5](#825-test-wake-on-lan)
+
+#### 8.4.4 Bridge Migration (Installed on Integrated NIC)
+
+> [!NOTE]
+> This section is for users who installed Proxmox on the **integrated NIC** (`nic*`/`enp*`) and need to move the bridge to the USB 2.5GbE adapter. If you already installed on the USB adapter, see [Section 8.4.3](#843-add-integrated-nic-for-wol-installed-on-usb-adapter) instead.
+
+##### Install DHCP Client
 
 > [!IMPORTANT]
 > The Proxmox installer sets a static IP. This step switches the host to DHCP so the UDM-SE DHCP reservation assigns `192.168.3.20` based on MAC address. This must be done **before** editing the network configuration.
@@ -1235,7 +1323,7 @@ EOF
 > [!NOTE]
 > On PVE 8.x, the ISC `dhclient` is available by default and no extra package is needed. You can skip the install step, but the `allowinterfaces` restriction is still recommended if using `dhcpcd`.
 
-#### 8.4.4 Reconfigure Network Interfaces
+##### Reconfigure Network Interfaces
 
 1. [ ] Backup current configuration:
 
@@ -1256,9 +1344,9 @@ auto lo
 iface lo inet loopback
 
 # Integrated 1GbE Intel NIC — WOL only, no IP
-auto enp2s0
-iface enp2s0 inet manual
-    # Keep link up for WOL but no IP address
+auto nic0
+iface nic0 inet manual
+    post-up /usr/sbin/ethtool -s nic0 wol g
 
 # 2.5GbE USB-C adapter — Proxmox management
 auto enxAABBCCDDEEFF
@@ -1282,7 +1370,7 @@ Key changes from the installer defaults:
 > [!WARNING]
 > **This will disconnect your SSH session.** You'll need physical access (monitor + keyboard) or apply via the Proxmox WebUI (System → Network) if the change doesn't work.
 
-#### 8.4.5 Apply Configuration
+##### Apply Configuration
 
 **Option A: Via Proxmox WebUI (safer)**
 
@@ -1303,7 +1391,26 @@ ifreload -a
 # cp /etc/network/interfaces.bak /etc/network/interfaces && ifreload -a
 ```
 
-#### 8.4.6 Verify Configuration
+##### Verify WOL Configuration
+
+The `post-up` line in the interfaces file above already enables WOL on nic0. Verify it's working:
+
+```bash
+# Apply updated interfaces
+ifreload -a
+
+# Verify WOL is enabled on the integrated NIC (nic0), NOT the USB adapter
+ethtool nic0 | grep Wake-on
+# Should show: Wake-on: g
+```
+
+> [!NOTE]
+> **Update your saved MAC address.** The MAC for WOL magic packets must be the integrated NIC's MAC (nic0), not the USB adapter's.
+
+#### 8.4.5 Verify Configuration (Bridge Migration)
+
+> [!NOTE]
+> These checks apply after bridge migration ([Section 8.4.4](#844-bridge-migration-installed-on-integrated-nic)). If you followed [Section 8.4.3](#843-add-integrated-nic-for-wol-installed-on-usb-adapter), verification is already included in those steps.
 
 ```bash
 # Verify bridge is on the 2.5GbE adapter
@@ -1323,7 +1430,7 @@ ethtool enxAABBCCDDEEFF | grep Speed
 # Should show: Speed: 2500Mb/s
 
 # Verify integrated NIC is up (for WOL) but has no IP
-ip addr show enp2s0
+ip addr show nic0
 # Should show UP but no inet address
 
 # Verify connectivity
@@ -1331,43 +1438,17 @@ ping 192.168.3.1   # Gateway
 ping 192.168.3.10  # NAS
 ```
 
-#### 8.4.7 Update WOL Configuration
-
-Since WOL must use the integrated NIC, update the persistent WOL configuration:
-
-```bash
-# WOL must target the integrated NIC (enp2s0), NOT the USB adapter
-cat > /etc/systemd/network/99-wol.link << EOF
-[Match]
-# Match the integrated Intel NIC by MAC address for reliability
-MACAddress=XX:XX:XX:XX:XX:XX
-
-[Link]
-WakeOnLan=magic
-EOF
-
-# Restart networking
-systemctl restart systemd-networkd
-
-# Verify WOL is enabled on the integrated NIC
-ethtool enp2s0 | grep Wake-on
-# Should show: Wake-on: g
-```
-
-> [!NOTE]
-> **Update your saved MAC address.** The MAC for WOL magic packets must be the integrated NIC's MAC (enp2s0), not the USB adapter's.
-
-#### 8.4.8 Dual-NIC Troubleshooting
+#### 8.4.6 Dual-NIC Troubleshooting
 
 | Problem | Cause | Solution |
 |---------|-------|----------|
 | USB adapter not detected | Driver missing | `apt install r8152` or check `dmesg \| grep usb` |
 | Interface name changes after reboot | USB enumeration order | Use `enx*` MAC-based name (stable) |
 | No link on 2.5GbE | Wrong switch port speed | Verify switch port is 2.5GbE (ports 13-16) |
-| WOL stopped working | WOL configured on wrong NIC | Must be on integrated NIC (enp2s0) |
+| WOL stopped working | WOL configured on wrong NIC | Must be on integrated NIC (nic0) |
 | LXC containers lose network | Bridge on wrong interface | Verify `bridge-ports` in vmbr0 |
 | Lost SSH after change | New interface not up | Use Proxmox console (monitor+keyboard) to fix |
-| No IP after switching to DHCP | `dhclient` missing (PVE 9+) | Install `dhcpcd` (see [8.4.3](#843-install-dhcp-client)) |
+| No IP after switching to DHCP | `dhclient` missing (PVE 9+) | Install `dhcpcd` (see [8.4.4](#844-bridge-migration-installed-on-integrated-nic)) |
 | Wrong IP from DHCP | Reservation not set | Check UDM-SE DHCP reservation matches MAC of `enxAABBCCDDEEFF` |
 
 ### 8.5 Automatic Plex Updates

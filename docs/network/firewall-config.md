@@ -183,9 +183,10 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | Proxmox Management | 8006 |
 | mDNS | 5353 |
 | WoL | 9 |
+| SMB | 445 |
 
 > [!NOTE]
-> **Traefik** — reverse proxy HTTPS port (Rule 8). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO.
+> **Traefik** — reverse proxy HTTPS port (Rule 8). Port 80 not included — Traefik auto-redirects HTTP→HTTPS, so clients use `https://` directly. All traffic through Traefik is protected by Authelia SSO, except `plex.home.local` (Plex has its own authentication).
 >
 > **Media Services** — *arr apps and download clients exposed to Media VLAN (Rule 4): Sonarr (8989), Radarr (7878), Lidarr (8686), Prowlarr (9696), Bazarr (6767), qBittorrent (8080), NZBGet (6789), Cleanuparr (11011), FlareSolverr (8191). These are direct-port fallbacks; prefer Traefik (Rule 8) for Authelia-protected access.
 >
@@ -228,7 +229,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Centralized DNS accessible from all VLANs.
 
-### Rule 3 — Allow Media to Plex
+### Rule 3 — Allow Media to Plex (Movies/TV)
 
 | Field | Value |
 |-------|-------|
@@ -238,6 +239,21 @@ Rules are processed in order, from first to last. Order matters.
 | Source | VLAN Media |
 | Destination | Plex Server (192.168.3.21) |
 | Port | Plex (32400, 32410-32414) |
+
+> Direct access to Movies/TV Plex on port 32400. Also accessible via Traefik (`https://plex.home.local`) through Rule 8 (port 443 to NAS). Rule 3 provides direct-port fallback and supports Plex client app discovery (GDM ports 32410-32414). Mini PC may be off — HA wakes it via WoL when Fire TV turns on.
+
+### Rule 3b — Allow Media to Plex Music (NAS)
+
+| Field | Value |
+|-------|-------|
+| Name | Allow Media to Plex Music |
+| Action | Accept |
+| Protocol | TCP/UDP |
+| Source | VLAN Media |
+| Destination | NAS (192.168.3.10) |
+| Port | Plex (32400, 32410-32414) |
+
+> Music Plex runs as Docker container on the NAS (always-on). Same ports as Movies/TV Plex but different destination. Also accessible via Traefik (`https://plex-music.home.local`) through Rule 8.
 
 ### Rule 4 — Allow Media to Media Services
 
@@ -353,11 +369,24 @@ Rules are processed in order, from first to last. Order matters.
 > [!NOTE]
 > Allows Wake-on-LAN magic packets from Media VLAN (phones, tablets) to wake the Printer and Proxmox Mini PC. **Cross-VLAN WoL limitation**: magic packets are Layer 2 broadcasts and don't cross VLAN boundaries on their own. This rule enables directed (unicast) WoL for apps that send to the target's IP address. For reliable cross-VLAN WoL, use one of these methods:
 >
-> 1. **NAS relay via SSH** (recommended): `ssh admin@192.168.3.10 "wakeonlan <MAC>"` — already allowed by Rule 9 (port 22). See [`proxmox-setup.md` Section 8.2.6](../setup/proxmox-setup.md#826-wol-from-iphone-with-shortcuts).
+> 1. **NAS relay via SSH** (recommended): `ssh admin@192.168.3.10 "/opt/bin/wakeonlan <MAC>"` — already allowed by Rule 9 (port 22). See [`proxmox-setup.md` Section 8.2.6](../setup/proxmox-setup.md#826-wol-from-iphone-with-shortcuts).
 > 2. **WoL app with broadcast address**: Configure the app to send to `192.168.3.255` (Servers VLAN broadcast). Requires the UDM-SE to forward directed broadcasts.
 > 3. **UniFi controller**: Use the UniFi app → select device → send WoL from the controller itself.
 
-### Rule 13 — Allow IoT to Home Assistant
+### Rule 13 — Allow Media to SMB Shares
+
+| Field | Value |
+|-------|-------|
+| Name | Allow Media to SMB Shares |
+| Action | Accept |
+| Protocol | TCP |
+| Source | VLAN Media |
+| Destination | NAS (192.168.3.10) |
+| Port | SMB (445) |
+
+> Allows Media VLAN devices (Smart TVs, phones, tablets) to mount SMB shared folders from the NAS (e.g., media libraries, backups, file sharing).
+
+### Rule 14 — Allow IoT to Home Assistant
 
 | Field | Value |
 |-------|-------|
@@ -370,7 +399,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
-### Rule 14 — Block IoT to All Private
+### Rule 15 — Block IoT to All Private
 
 | Field | Value |
 |-------|-------|
@@ -381,9 +410,9 @@ Rules are processed in order, from first to last. Order matters.
 | Destination | RFC1918 |
 
 > [!TIP]
-> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 13).
+> Blocks any attempt by IoT devices to reach other private networks. They can only access the Internet (required for Alexa and cloud services) and Home Assistant (Rule 14).
 
-### Rule 15 — Block Guest to All Private
+### Rule 16 — Block Guest to All Private
 
 | Field | Value |
 |-------|-------|
@@ -395,7 +424,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Complete Guest network isolation. Internet access only.
 
-### Rule 16 — Allow Management from Servers
+### Rule 17 — Allow Management from Servers
 
 | Field | Value |
 |-------|-------|
@@ -407,7 +436,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows desktop PC (VLAN 3) to access switch and AP management interfaces. Uses the native UniFi "Management" network as destination (not a custom network list).
 
-### Rule 17 — Block All Inter-VLAN (Catch-All)
+### Rule 18 — Block All Inter-VLAN (Catch-All)
 
 | Field | Value |
 |-------|-------|
@@ -463,7 +492,7 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Threat
 
 In **UDM-SE** (Network application): Settings → Traffic Management → Traffic Rules
 
-### Plex Priority
+### Plex Priority (Movies/TV)
 
 | Field | Value |
 |-------|-------|
@@ -471,6 +500,16 @@ In **UDM-SE** (Network application): Settings → Traffic Management → Traffic
 | Action | Set DSCP |
 | DSCP Value | 46 (EF - Expedited Forwarding) |
 | Source | Plex Server (192.168.3.21) |
+| Port | 32400 |
+
+### Plex Music Priority
+
+| Field | Value |
+|-------|-------|
+| Name | Prioritize Plex Music |
+| Action | Set DSCP |
+| DSCP Value | 46 (EF - Expedited Forwarding) |
+| Source | NAS (192.168.3.10) |
 | Port | 32400 |
 
 ### Guest Bandwidth Limiting
@@ -555,7 +594,8 @@ If in the future you need to open specific ports (e.g., for remote Plex without 
 
 | Name | External Port | Internal Port | Destination | Protocol |
 |------|---------------|---------------|-------------|----------|
-| Plex Remote | 32400 | 32400 | 192.168.3.21 | TCP |
+| Plex Movies/TV Remote | 32400 | 32400 | 192.168.3.21 | TCP |
+| Plex Music Remote | 32401 | 32400 | 192.168.3.10 | TCP |
 
 > [!WARNING]
 > Opening ports exposes services to the Internet. Prefer Tailscale when possible.
@@ -587,8 +627,11 @@ From desktop PC (192.168.3.40):
 # Test DNS
 nslookup google.com 192.168.3.10
 
-# Test Plex
+# Test Plex (Movies/TV) — Mini PC may be off if nobody is watching
 curl -I http://192.168.3.21:32400/web
+
+# Test Plex Music (NAS — always-on)
+curl -I http://192.168.3.10:32400/web
 
 # Test Iliad Box reachability (from Servers VLAN)
 ping 192.168.1.254
@@ -727,6 +770,6 @@ To eliminate Double NAT:
 
 - **Legacy Network**: The 192.168.1.0/24 subnet remains for Iliad Box and Vimar devices. Not managed by UDM-SE.
 - **Double NAT**: See dedicated section above.
-- **Tailscale**: Runs as Docker container on NAS (always-on), provides mesh VPN access without port forwarding.
+- **Tailscale**: Runs as Docker container on NAS (available during NAS uptime, 07:00–01:00), provides mesh VPN access without port forwarding.
 - **Home Assistant**: Accessible from Media VLAN (phones/tablets) and IoT VLAN (smart devices).
 - **Config backup**: Export regularly from UDM-SE: Settings → System → Backup.

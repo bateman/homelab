@@ -176,6 +176,7 @@ make_dir "${CONFIG_ROOT}/lidarr"
 make_dir "${CONFIG_ROOT}/prowlarr"
 make_dir "${CONFIG_ROOT}/bazarr"
 make_dir "${CONFIG_ROOT}/recyclarr"
+make_dir "${CONFIG_ROOT}/plex-music"
 
 # Download clients
 make_dir "${CONFIG_ROOT}/qbittorrent"
@@ -195,8 +196,21 @@ make_dir "${CONFIG_ROOT}/portainer"
 make_dir "${CONFIG_ROOT}/duplicati"
 make_dir "${CONFIG_ROOT}/uptime-kuma"
 make_dir "${CONFIG_ROOT}/traefik"
+make_dir "${CONFIG_ROOT}/cert-page"
 make_dir "${CONFIG_ROOT}/authelia"
 make_dir "${CONFIG_ROOT}/tailscale"
+
+# Copy Authelia users database template if not already present
+AUTHELIA_USERS="${CONFIG_ROOT}/authelia/users_database.yml"
+AUTHELIA_USERS_EXAMPLE="${SCRIPT_DIR}/../docker/config/authelia/users_database.yml.example"
+if [[ "$DRY_RUN" == true ]]; then
+    if [[ ! -f "$AUTHELIA_USERS" ]]; then
+        log_info "[DRY-RUN] Would copy users_database.yml.example -> users_database.yml"
+    fi
+elif [[ ! -f "$AUTHELIA_USERS" && -f "$AUTHELIA_USERS_EXAMPLE" ]]; then
+    cp "$AUTHELIA_USERS_EXAMPLE" "$AUTHELIA_USERS"
+    log_info "Copied users_database.yml.example -> users_database.yml (edit with your users)"
+fi
 
 # Secrets directory (for Authelia secrets)
 SECRETS_ROOT="${SCRIPT_DIR}/../docker/secrets"

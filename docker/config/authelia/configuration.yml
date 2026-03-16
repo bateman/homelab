@@ -87,8 +87,6 @@ authentication_backend:
 session:
   # Session cookie name
   name: authelia_session
-  # Same site cookie policy
-  same_site: lax
   # Session expiration (7 days = 604800 seconds)
   expiration: 7d
   # Inactivity timeout (3 days = 259200 seconds)
@@ -169,6 +167,22 @@ access_control:
         - "^/ping$"
         - "^/health$"
         - "^/healthcheck$"
+
+    # NZBGet API uses JSON-RPC/XML-RPC endpoints, not /api/
+    # Supports both /jsonrpc and /username:password/jsonrpc auth styles
+    - domain: nzbget.home.local
+      policy: bypass
+      resources:
+        - "^(/[^/]+)?/jsonrpc.*$"
+        - "^(/[^/]+)?/xmlrpc.*$"
+        - "^(/[^/]+)?/jsonprp.*$"
+
+    # qBittorrent WebUI API (/api/v2/*) — needed for *arr download client
+    # connections and mobile apps (e.g., qBittorrent Remote)
+    - domain: qbit.home.local
+      policy: bypass
+      resources:
+        - "^/api/.*$"
 
     # -------------------------------------------------------------------------
     # Two-factor rules (extra security for admin tools)

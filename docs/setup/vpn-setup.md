@@ -108,7 +108,7 @@ make setup
 make up
 
 # Verify VPN is working
-docker exec gluetun curl -s https://ipinfo.io/ip
+docker exec gluetun wget -qO- https://ipinfo.io/ip
 # Should show VPN IP, NOT your real IP
 ```
 
@@ -251,6 +251,16 @@ To get credentials:
 
 ## Verify Functionality
 
+### Quick Check (Recommended)
+
+Run the automated leak check that verifies IP tunneling, IPv6 disabled, DNS, and port forwarding in one command:
+
+```bash
+make vpn-check
+```
+
+For manual step-by-step verification, see the sections below.
+
 ### 1. Startup and VPN Connection Verification
 
 ```bash
@@ -273,7 +283,7 @@ curl -s https://ipinfo.io/ip
 # Output: <your_real_IP>
 
 # Download clients IP (through VPN)
-docker exec gluetun curl -s https://ipinfo.io/ip
+docker exec gluetun wget -qO- https://ipinfo.io/ip
 # Output: <VPN_server_IP>  ← Must be DIFFERENT from your real IP!
 ```
 
@@ -282,14 +292,15 @@ Both qBittorrent and NZBGet use this same VPN IP for all connections.
 ### 3. Verify Kill Switch
 
 ```bash
-# Simulate VPN disconnection (stop the tunnel)
-docker exec gluetun killall -STOP openvpn 2>/dev/null || docker exec gluetun killall -STOP wireguard-go 2>/dev/null
+# Bring down the tunnel interface
+docker exec gluetun ip link set tun0 down
 
-# Try to reach internet
-docker exec gluetun curl -s --max-time 5 https://ipinfo.io/ip
-# Output: (timeout or error) ← Kill switch works!
+# Try to reach internet from inside the container
+docker exec gluetun wget -O- --timeout=5 https://ipinfo.io/ip
+# Expected: "wget: download timed out" or connection error ← Kill switch works!
+# If you see an IP address ← Kill switch FAILED, traffic is leaking!
 
-# Restart to restore
+# Restore by restarting the container
 docker restart gluetun
 ```
 

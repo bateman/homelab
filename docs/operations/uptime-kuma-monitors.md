@@ -114,6 +114,7 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 | Tailscale | Docker Container | Container: `tailscale` | L'health check integrato esegue `tailscale status --json`; usa `network_mode: host` quindi non è raggiungibile via rete Docker. Per il setup completo vedi [Tailscale Setup](../setup/tailscale-setup.md) |
 | Socket Proxy | Docker Container | Container: `socket-proxy` | Interno, nessun endpoint HTTP esposto |
 | Watchtower | Docker Container | Container: `watchtower` | L'endpoint metriche richiede auth; il monitor Docker è più semplice |
+| Cert Page | HTTP(s) | `http://cert-page:80/` | Pagina download certificato CA; nessuna autenticazione richiesta |
 
 > [!NOTE]
 > Non creare un monitor per Uptime Kuma stesso — non può monitorare in modo affidabile la propria disponibilità.
@@ -141,13 +142,14 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 | FlareSolverr | HTTP(s) | `http://flaresolverr:8191/health` | Endpoint `/health` dedicato |
 | Recyclarr | Docker Container | Container: `recyclarr` | Eseguito su schedule, nessuna web UI |
 | Cleanuparr | HTTP(s) | `http://cleanuparr:11011/health` | Endpoint `/health` dedicato |
+| Plex Music | HTTP(s) | `http://plex-music:32400/identity` | Plex Music gira in Docker su NAS (always-on); Uptime Kuma condivide `media_net` |
 
 ### Proxmox (192.168.3.20)
 
 | Servizio | Tipo | URL / Target | Note |
 |----------|------|--------------|------|
 | Proxmox | HTTP(s) | `https://192.168.3.20:8006` | Abilitare "Ignore TLS/SSL errors" (cert self-signed) |
-| Plex | HTTP(s) | `http://192.168.3.21:32400/web` | Plex gira in LXC su Proxmox |
+| Plex (Movies/TV) | HTTP(s) | `http://192.168.3.21:32400/web` | Plex Movies/TV gira in LXC su Proxmox (on-demand, WoL via HA) |
 
 ---
 
@@ -173,11 +175,12 @@ Le Status Page raggruppano i monitor in una vista pubblica o interna.
 2. Click **New Status Page**
 3. Inserire un nome (es. `Homelab`) e uno slug (es. `homelab`)
 4. Aggiungere gruppi tematici:
-   - **Infrastructure**: Traefik, Authelia, Pi-hole, Portainer, Duplicati, Tailscale, Socket Proxy, Watchtower
+   - **Infrastructure**: Traefik, Authelia, Pi-hole, Portainer, Duplicati, Tailscale, Socket Proxy, Watchtower, Cert Page
    - **Home Assistant**: Home Assistant
    - **Media**: Sonarr, Radarr, Lidarr, Prowlarr, Bazarr
    - **Download**: qBittorrent, NZBGet, Gluetun (solo profilo `vpn`)
-   - **Proxmox**: Proxmox, Plex
+   - **Proxmox**: Proxmox, Plex (Movies/TV)
+   - **NAS Media**: Plex Music
 5. Trascinare i monitor nei gruppi corrispondenti
 6. Click **Save**
 

@@ -5,9 +5,9 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup setup-dry-run up down restart logs pull update status backup backup-portainer backup-qts verify-backup clean health show-urls urls \
+.PHONY: help setup setup-dry-run up down restart logs pull update status backup backup-portainer backup-qts verify-backup clean fix-ports health show-urls urls \
         validate check-docker check-compose check-curl recyclarr-sync recyclarr-config \
-        logs-% shell-%
+        vpn-check logs-% shell-%
 
 # Compose files
 COMPOSE_FILES := -f docker/compose.yml -f docker/compose.media.yml
@@ -42,6 +42,12 @@ check-compose: check-docker
 check-curl:
 	@command -v curl >/dev/null 2>&1 || { \
 		printf "$(RED)Error: curl not found. Install curl before continuing.$(NC)\n"; \
+		exit 1; \
+	}
+
+check-openssl:
+	@command -v openssl >/dev/null 2>&1 || { \
+		printf "$(RED)Error: openssl not found. Install openssl before continuing.$(NC)\n"; \
 		exit 1; \
 	}
 
@@ -84,6 +90,7 @@ help:
 	@printf "    $(CYAN)make logs$(NC)        - Show logs (follow)\n"
 	@printf "    $(CYAN)make status$(NC)      - Container status and resources\n"
 	@printf "    $(CYAN)make health$(NC)      - Health check all services\n"
+	@printf "    $(CYAN)make vpn-check$(NC)   - Verify VPN is working (no leaks)\n"
 	@printf "    $(CYAN)make show-urls$(NC)   - Show WebUI URLs\n"
 	@printf "\n"
 	@printf "  $(PURPLE)Backup$(NC)\n"
@@ -95,7 +102,8 @@ help:
 	@printf "\n"
 	@printf "  $(PURPLE)Utilities$(NC)\n"
 	@printf "    $(CYAN)make clean$(NC)            - Remove orphan Docker resources\n"
-	@printf "    $(CYAN)make recyclarr-sync$(NC)   - Manual Trash Guides profile sync\n"
+	@printf "    $(CYAN)make fix-ports$(NC)        - Fix stale Docker port allocations\n"
+	@printf "    $(CYAN)make recyclarr-sync$(NC)   - Manual Trash Guides profile sync (adopt=true to adopt existing)\n"
 	@printf "    $(CYAN)make recyclarr-config$(NC) - Install Recyclarr config from template\n"
 	@printf "\n"
 	@printf "  $(PURPLE)Per service$(NC)\n"
@@ -106,7 +114,7 @@ help:
 # Setup
 # =============================================================================
 
-setup: check-compose
+setup: check-compose check-openssl
 	@if [ ! -f docker/.env ]; then \
 		echo ">>> Creating .env from template..."; \
 		cp docker/.env.example docker/.env; \
@@ -144,11 +152,17 @@ setup: check-compose
 		printf "$(GREEN)>>> Authelia secrets already exist (skipping)$(NC)\n"; \
 	fi
 	@echo ">>> Generating TLS certificates..."
-	@if [ ! -f docker/config/traefik/certs/home.local.crt ] || ! openssl x509 -noout -in docker/config/traefik/certs/home.local.crt 2>/dev/null; then \
-		rm -f docker/config/traefik/certs/home.local.crt docker/config/traefik/certs/home.local.key; \
-		if [ ! -x scripts/generate-certs.sh ]; then \
-			chmod +x scripts/generate-certs.sh; \
-		fi; \
+	@if [ ! -x scripts/generate-certs.sh ]; then \
+		chmod +x scripts/generate-certs.sh; \
+	fi
+	@if [ ! -f docker/config/traefik/certs/ca.crt ] || ! openssl x509 -noout -in docker/config/traefik/certs/ca.crt 2>/dev/null; then \
+		echo ">>> No valid CA found — generating CA + server certificate..."; \
+		./scripts/generate-certs.sh; \
+	elif [ ! -f docker/config/traefik/certs/home.local.crt ] || ! openssl x509 -noout -in docker/config/traefik/certs/home.local.crt 2>/dev/null; then \
+		echo ">>> CA exists but server cert is missing/invalid — regenerating server cert..."; \
+		./scripts/generate-certs.sh; \
+	elif ! openssl verify -CAfile docker/config/traefik/certs/ca.crt docker/config/traefik/certs/home.local.crt >/dev/null 2>&1; then \
+		echo ">>> Server cert not signed by current CA — regenerating..."; \
 		./scripts/generate-certs.sh; \
 	else \
 		printf "$(GREEN)>>> TLS certificates already exist and are valid (skipping)$(NC)\n"; \
@@ -168,20 +182,21 @@ setup-dry-run:
 
 up: validate
 	@echo ">>> Starting stack..."
-	@$(COMPOSE_CMD) up -d && \
+	@$(COMPOSE_CMD) up -d --remove-orphans && \
 		printf "$(GREEN)>>> Stack started$(NC)\n" && \
 		$(MAKE) --no-print-directory status || \
 		{ printf "$(RED)>>> Error starting stack$(NC)\n"; exit 1; }
 
 down: check-compose
 	@echo ">>> Stopping stack..."
-	@$(COMPOSE_CMD) down
+	@$(COMPOSE_CMD) down --remove-orphans
 	@printf "$(GREEN)>>> Stack stopped$(NC)\n"
 
 restart: check-compose
 ifdef s
 	@printf ">>> Restarting $(s)...\n"
-	@$(COMPOSE_CMD) up -d --force-recreate $(s) && \
+	@$(COMPOSE_CMD) stop $(s) && \
+	 $(COMPOSE_CMD) up -d --force-recreate $(s) && \
 		printf "$(GREEN)>>> $(s) restarted$(NC)\n" || \
 		{ printf "$(RED)>>> Error restarting $(s)$(NC)\n"; exit 1; }
 else
@@ -309,6 +324,20 @@ clean: check-docker
 		echo ">>> Operation cancelled"; \
 	fi
 
+fix-ports: check-docker
+	@echo ">>> Checking for port conflicts..."
+	@stale=$$(docker ps -a --filter "status=exited" --filter "status=dead" --filter "status=created" -q); \
+	if [ -n "$$stale" ]; then \
+		printf "$(YELLOW)>>> Removing stale containers...$(NC)\n"; \
+		docker rm -f $$stale; \
+	else \
+		echo ">>> No stale containers found"; \
+	fi
+	@docker network prune -f >/dev/null 2>&1 && \
+		echo ">>> Pruned unused networks" || true
+	@printf "$(GREEN)>>> Port cleanup complete. Try 'make up' now.$(NC)\n"
+	@printf "$(YELLOW)>>> If ports are still stuck, restart Docker: systemctl restart docker$(NC)\n"
+
 # =============================================================================
 # Recyclarr
 # =============================================================================
@@ -316,6 +345,11 @@ clean: check-docker
 recyclarr-sync: check-compose
 	@echo ">>> Syncing Trash Guides quality profiles..."
 	@if docker ps --format '{{.Names}}' | grep -q '^recyclarr$$'; then \
+		if [ "$(adopt)" = "true" ]; then \
+			echo ">>> Adopting existing profiles..."; \
+			docker exec recyclarr recyclarr state repair --adopt && \
+			printf "$(GREEN)>>> Adopt complete$(NC)\n"; \
+		fi; \
 		docker exec recyclarr recyclarr sync && \
 		printf "$(GREEN)>>> Sync complete$(NC)\n"; \
 	else \
@@ -374,6 +408,7 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:8080,qBittorrent)
 	$(call check_service,http://localhost:6789,NZBGet)
 	$(call check_service,http://localhost:11011/health,Cleanuparr)
+	$(call check_service,http://localhost:32400/identity,Plex-Music)
 	$(call check_service,http://localhost:8191/health,FlareSolverr)
 	$(call check_service,http://localhost:8081/admin/,Pi-hole)
 	@# Home Assistant runs on separate compose file (compose.homeassistant.yml)
@@ -427,6 +462,19 @@ health: check-docker check-curl
 	else \
 		printf "Authelia: $(RED)UNHEALTHY$(NC)\n"; \
 	fi
+	@# Cert download page (no host port — Traefik only)
+	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^cert-page$$'; then \
+		HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' cert-page 2>/dev/null); \
+		if [ "$$HEALTH" = "healthy" ]; then \
+			printf "Cert-Page: $(GREEN)OK (healthy)$(NC)\n"; \
+		elif [ "$$HEALTH" = "starting" ]; then \
+			printf "Cert-Page: $(YELLOW)STARTING$(NC)\n"; \
+		else \
+			printf "Cert-Page: $(RED)UNHEALTHY$(NC)\n"; \
+		fi; \
+	else \
+		printf "Cert-Page: $(YELLOW)NOT RUNNING$(NC)\n"; \
+	fi
 	@# Portainer uses HTTPS
 	@STATUS=$$(curl -sk -o /dev/null -w '%{http_code}' --max-time 5 https://localhost:9443 2>/dev/null); \
 	if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "303" ]; then \
@@ -451,6 +499,7 @@ show-urls:
 	@echo "  Lidarr:       http://$(HOST_IP):8686"
 	@echo "  Prowlarr:     http://$(HOST_IP):9696"
 	@echo "  Bazarr:       http://$(HOST_IP):6767"
+	@echo "  Plex Music:   http://$(HOST_IP):32400"
 	@echo ""
 	@printf "$(GREEN)Download$(NC)\n"
 	@echo "  qBittorrent:  http://$(HOST_IP):8080"
@@ -475,8 +524,137 @@ show-urls:
 	@printf "$(GREEN)Authentication (SSO)$(NC)\n"
 	@echo "  Authelia:     https://auth.home.local (requires DNS)"
 	@echo ""
-	@printf "$(YELLOW)Note: All services require Authelia SSO when accessed via *.home.local$(NC)\n"
+	@printf "$(GREEN)Utilities$(NC)\n"
+	@echo "  Cert Page:    https://certs.home.local (CA cert download)"
+	@echo ""
+	@printf "$(YELLOW)Note: All services require Authelia SSO via *.home.local (except certs.home.local)$(NC)\n"
 	@echo ""
 
 # Alias for show-urls
 urls: show-urls
+
+# =============================================================================
+# VPN Verification
+# =============================================================================
+
+vpn-check: check-docker check-curl
+	@echo "=== VPN Leak Check ==="
+	@echo ""
+	@FAIL=0; \
+	PROFILE=$$(grep -s '^COMPOSE_PROFILES=' docker/.env | cut -d= -f2); \
+	if ! echo "$$PROFILE" | grep -q 'vpn' || echo "$$PROFILE" | grep -q 'novpn'; then \
+		printf "$(YELLOW)VPN profile not active (COMPOSE_PROFILES=%s)$(NC)\n" "$$PROFILE"; \
+		printf "$(YELLOW)Set COMPOSE_PROFILES=vpn in docker/.env to use VPN$(NC)\n"; \
+		exit 0; \
+	fi; \
+	printf "Profile: $(GREEN)vpn$(NC)\n"; \
+	\
+	if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^gluetun$$'; then \
+		printf "Gluetun: $(RED)NOT RUNNING — skipping all checks$(NC)\n"; \
+		printf "\n$(RED)$(BOLD)=== SOME CHECKS FAILED ===$(NC)\n\n"; \
+		exit 1; \
+	fi; \
+	HEALTH=$$(docker inspect --format='{{.State.Health.Status}}' gluetun 2>/dev/null); \
+	if [ "$$HEALTH" = "healthy" ]; then \
+		printf "Gluetun: $(GREEN)healthy$(NC)\n"; \
+	else \
+		printf "Gluetun: $(RED)%s$(NC)\n" "$$HEALTH"; \
+		FAIL=1; \
+	fi; \
+	\
+	printf "\n--- IP Leak Test ---\n"; \
+	HOST_PUBLIC_IP=$$(curl -s --max-time 10 https://ipinfo.io/ip 2>/dev/null); \
+	VPN_IP=$$(docker exec gluetun wget -qO- --timeout=10 https://ipinfo.io/ip 2>/dev/null); \
+	if [ -z "$$HOST_PUBLIC_IP" ]; then \
+		printf "Host public IP:    $(YELLOW)could not determine (offline?)$(NC)\n"; \
+	else \
+		printf "Host public IP:    %s\n" "$$HOST_PUBLIC_IP"; \
+	fi; \
+	if [ -z "$$VPN_IP" ]; then \
+		printf "Gluetun tunnel IP: $(RED)no connectivity through VPN$(NC)\n"; \
+		FAIL=1; \
+	else \
+		printf "Gluetun tunnel IP: %s\n" "$$VPN_IP"; \
+	fi; \
+	if [ -n "$$HOST_PUBLIC_IP" ] && [ -n "$$VPN_IP" ]; then \
+		if [ "$$HOST_PUBLIC_IP" = "$$VPN_IP" ]; then \
+			printf "Result: $(RED)FAIL — same IP! Traffic is NOT tunneled$(NC)\n"; \
+			FAIL=1; \
+		else \
+			printf "Result: $(GREEN)PASS — IPs differ, traffic is tunneled$(NC)\n"; \
+		fi; \
+	fi; \
+	\
+	printf "\n--- IPv6 Leak Test ---\n"; \
+	IPV6_RESULT=$$(docker exec gluetun wget -qO- --timeout=5 https://api64.ipify.org 2>/dev/null); \
+	if [ -n "$$IPV6_RESULT" ] && echo "$$IPV6_RESULT" | grep -q ':'; then \
+		printf "IPv6: $(RED)FAIL — IPv6 reachable: %s$(NC)\n" "$$IPV6_RESULT"; \
+		FAIL=1; \
+	elif [ -n "$$IPV6_RESULT" ]; then \
+		printf "IPv6: $(GREEN)PASS — only IPv4 detected (%s)$(NC)\n" "$$IPV6_RESULT"; \
+	else \
+		printf "IPv6: $(GREEN)PASS — no IPv6 connectivity$(NC)\n"; \
+	fi; \
+	\
+	printf "\n--- DNS Leak Test ---\n"; \
+	DNS_SERVERS=$$(docker exec gluetun cat /etc/resolv.conf 2>/dev/null | grep '^nameserver' | awk '{print $$2}'); \
+	if [ -n "$$DNS_SERVERS" ]; then \
+		printf "DNS resolvers: %s\n" "$$DNS_SERVERS"; \
+		printf "$(YELLOW)Verify these are NOT your ISP's DNS servers$(NC)\n"; \
+	else \
+		printf "DNS: $(YELLOW)could not read /etc/resolv.conf$(NC)\n"; \
+	fi; \
+	\
+	printf "\n--- Port Forwarding ---\n"; \
+	FWD_PORT=$$(docker exec gluetun cat /gluetun/forwarded_port 2>/dev/null); \
+	if [ -n "$$FWD_PORT" ] && [ "$$FWD_PORT" != "0" ]; then \
+		printf "Forwarded port: $(GREEN)%s$(NC)\n" "$$FWD_PORT"; \
+	else \
+		printf "Forwarded port: $(YELLOW)none (provider may not support it)$(NC)\n"; \
+	fi; \
+	\
+	printf "\n--- Kill Switch ---\n"; \
+	VPN_DEPENDENTS="qbittorrent nzbget"; \
+	RUNNING_DEPS=""; \
+	for dep in $$VPN_DEPENDENTS; do \
+		if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^$${dep}$$"; then \
+			RUNNING_DEPS="$$RUNNING_DEPS $$dep"; \
+		fi; \
+	done; \
+	docker exec gluetun ip link set tun0 down 2>/dev/null; \
+	KSTEST=$$(docker exec gluetun wget -O- --timeout=5 https://ipinfo.io/ip 2>&1); \
+	KSRC=$$?; \
+	docker restart gluetun >/dev/null 2>&1; \
+	if [ -n "$$RUNNING_DEPS" ]; then \
+		printf "Waiting for gluetun to be healthy...\n"; \
+		WAIT=0; \
+		while [ $$WAIT -lt 60 ]; do \
+			GSTATUS=$$(docker inspect --format='{{.State.Health.Status}}' gluetun 2>/dev/null); \
+			if [ "$$GSTATUS" = "healthy" ]; then break; fi; \
+			sleep 2; \
+			WAIT=$$((WAIT + 2)); \
+		done; \
+		if [ "$$GSTATUS" = "healthy" ]; then \
+			printf "Restarting VPN dependents:%s\n" "$$RUNNING_DEPS"; \
+			for dep in $$RUNNING_DEPS; do \
+				docker restart $$dep >/dev/null 2>&1; \
+			done; \
+		else \
+			printf "$(YELLOW)Gluetun not healthy after 60s — skipping dependent restart$(NC)\n"; \
+		fi; \
+	fi; \
+	if [ $$KSRC -ne 0 ] && ! echo "$$KSTEST" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$$'; then \
+		printf "Kill switch: $(GREEN)PASS — traffic blocked when tunnel is down$(NC)\n"; \
+	else \
+		printf "Kill switch: $(RED)FAIL — traffic leaked: %s$(NC)\n" "$$KSTEST"; \
+		FAIL=1; \
+	fi; \
+	\
+	echo ""; \
+	if [ "$$FAIL" -eq 0 ]; then \
+		printf "$(GREEN)$(BOLD)=== ALL CHECKS PASSED ===$(NC)\n"; \
+	else \
+		printf "$(RED)$(BOLD)=== SOME CHECKS FAILED ===$(NC)\n"; \
+		exit 1; \
+	fi; \
+	echo ""

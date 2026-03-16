@@ -9,7 +9,7 @@ Infrastructure-as-code configuration for a homelab based on QNAP NAS and Proxmox
 - Automated management of TV series, movies, and music (Sonarr, Radarr, Lidarr)
 - Downloads from torrent and Usenet with hardlinking support
 - Network-wide DNS ad-blocking (Pi-hole)
-- Local and remote media streaming (Plex)
+- Local and remote media streaming (Plex Movies/TV + Plex Music)
 - Automated local and cloud backups
 - Network segmentation with VLANs for security
 
@@ -18,7 +18,7 @@ Infrastructure-as-code configuration for a homelab based on QNAP NAS and Proxmox
 | Device | Role | IP |
 |--------|------|-----|
 | [QNAP TS-435XeU](https://www.qnap.com/en/product/ts-435xeu) | NAS + Docker media stack | 192.168.3.10 |
-| [Lenovo ThinkCentre neo 50q Gen 4](https://www.lenovo.com/us/en/p/desktops/thinkcentre/thinkcentre-neo-series/thinkcentre-neo-50q-gen-4-tiny-(intel)/12lmcto1wwit1) | Proxmox + Plex | 192.168.3.20 |
+| [Lenovo ThinkCentre neo 50q Gen 4](https://www.lenovo.com/us/en/p/desktops/thinkcentre/thinkcentre-neo-series/thinkcentre-neo-50q-gen-4-tiny-(intel)/12lmcto1wwit1) | Proxmox + Plex (Movies/TV) | 192.168.3.20 |
 | [Ubiquiti UniFi Dream Machine SE](https://store.ui.com/us/en/category/cloud-gateways-large-scale/products/udm-se) | Router/Firewall | 192.168.2.1 |
 | [Ubiquiti USW-Pro-Max-16-PoE](https://store.ui.com/us/en/products/usw-pro-max-16-poe) | PoE Switch | 192.168.2.10 |
 | [Ubiquiti U6-Pro](https://store.ui.com/us/en/category/wifi-flagship-high-capacity/products/u6-pro) | Wi-Fi 6 Access Point | DHCP |
@@ -35,7 +35,7 @@ Infrastructure-as-code configuration for a homelab based on QNAP NAS and Proxmox
 - **[qBittorrent](https://www.qbittorrent.org/)** (8080) - Torrent (via Gluetun)
 - **[NZBGet](https://nzbget.com/)** (6789) - Usenet (via Gluetun)
 - **[Recyclarr](https://recyclarr.dev/)** - Trash Guides profile sync
-- **[Cleanuparr](https://github.com/Cleanuparr/Cleanuparr)** (11011) - Automatic cleanup
+- **[Cleanuparr](https://github.com/flmorg/cleanuperr)** (11011) - Automatic cleanup
 - **[FlareSolverr](https://github.com/FlareSolverr/FlareSolverr)** (8191) - Cloudflare bypass
 - **[Pi-hole](https://pi-hole.net/)** (8081) - DNS/Ad-blocking
 - **[Home Assistant](https://www.home-assistant.io/)** (8123) - Home automation
@@ -44,13 +44,14 @@ Infrastructure-as-code configuration for a homelab based on QNAP NAS and Proxmox
 - **[Uptime Kuma](https://github.com/louislam/uptime-kuma)** (3001) - Monitoring and alerting
 - **[Watchtower](https://containrrr.dev/watchtower/)** (8383) - Container auto-update
 - **[Traefik](https://traefik.io/traefik/)** (80/443) - Reverse proxy
+- **[Plex Music](https://www.plex.tv/)** (32400) - Music streaming (always-on)
 - **[Tailscale](https://tailscale.com/)** - Mesh VPN remote access (subnet router for 192.168.3.0/24 and 192.168.4.0/24)
 
 ## Proxmox Stack (Mini PC)
 
 The Mini PC runs Proxmox VE as hypervisor with LXC containers:
 
-- **[Plex Media Server](https://www.plex.tv/)** (32400) - Media streaming with Intel Quick Sync hardware transcoding
+- **[Plex Media Server](https://www.plex.tv/)** (32400) - Movies/TV streaming with Intel Quick Sync hardware transcoding (on-demand, HA wakes via WoL)
 
 Proxmox WebUI: `https://192.168.3.20:8006`
 
@@ -90,10 +91,10 @@ Details in [`docs/setup/network-setup.md`](docs/setup/network-setup.md).
 - [`docs/setup/rack-mounting-guide.md`](docs/setup/rack-mounting-guide.md) - Rack mounting order and cable routing
 - [`docs/setup/network-setup.md`](docs/setup/network-setup.md) - UniFi network and VLAN setup
 - [`docs/setup/nas-setup.md`](docs/setup/nas-setup.md) - QNAP NAS and Docker setup
-- [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md) - Proxmox and Plex setup
+- [`docs/setup/proxmox-setup.md`](docs/setup/proxmox-setup.md) - Proxmox and Plex (Movies/TV) setup
 - [`docs/setup/vpn-setup.md`](docs/setup/vpn-setup.md) - VPN protection for download clients (Gluetun)
 - [`docs/setup/reverse-proxy-setup.md`](docs/setup/reverse-proxy-setup.md) - Traefik, HTTPS certificates, Pi-hole DNS
-- [`docs/setup/notifications-setup.md`](docs/setup/notifications-setup.md) - Uptime Kuma notifications via Home Assistant
+- [`docs/setup/notifications-setup.md`](docs/setup/notifications-setup.md) - Notifications (Uptime Kuma, Watchtower)
 
 ### Reference
 - [`CLAUDE.md`](CLAUDE.md) - Project guide and development guidelines
@@ -132,6 +133,7 @@ All commands should be run in the `/share/container/mediastack` directory on the
 | `make logs` | Follow all container logs in real-time |
 | `make logs-<service>` | Single service log (e.g., `make logs-sonarr`) |
 | `make health` | HTTP health check of all services |
+| `make vpn-check` | Verify VPN is working (no IP/IPv6/DNS leaks) |
 | `make urls` | List access URLs for all services (Sonarr, Radarr, Pi-hole, etc.) |
 
 ### Backup

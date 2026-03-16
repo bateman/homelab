@@ -89,6 +89,12 @@ docker run --rm authelia/authelia:latest \
 # Copy the output hash (starts with $argon2id$...)
 ```
 
+Copy and edit the users database:
+
+```bash
+cp docker/config/authelia/users_database.yml.example docker/config/authelia/users_database.yml
+```
+
 Edit `docker/config/authelia/users_database.yml`:
 
 ```yaml
@@ -218,10 +224,11 @@ Services are protected with different security levels:
 
 ### Bypass (No Auth)
 
-| Pattern | Reason |
-|---------|--------|
-| `/api/*` | Inter-service API calls |
-| `/ping`, `/health` | Health checks |
+| Domain | Pattern | Reason |
+|--------|---------|--------|
+| *arr apps (`sonarr`, `radarr`, etc.) | `/api/*`, `/ping`, `/health` | Inter-service API calls, health checks |
+| `nzbget.home.local` | `/jsonrpc`, `/xmlrpc`, `/jsonprp` | NZBGet JSON-RPC/XML-RPC for *arr apps |
+| `qbit.home.local` | `/api/*` | qBittorrent API for *arr download client connections |
 
 ---
 
@@ -366,8 +373,9 @@ docker restart authelia
 Authelia is a Traefik middleware — it only sees requests that go through Traefik. Anything that bypasses Traefik bypasses Authelia:
 
 - **Direct port access** (e.g., `http://192.168.3.10:8989`) — requests go straight to the container, never touching Traefik or Authelia. If you configured *arr apps with "External" auth (see [Phase 6](#phase-6-enable-sso-for-arr-apps-eliminate-double-login)), direct port access has **no authentication**. If you kept "Forms" auth, the app's own login protects direct access as a fallback.
-- **API endpoints** (`/api/*`, `/ping`, `/health`) — intentionally bypassed so *arr services can communicate with each other.
+- **API endpoints** (`/api/*`, `/ping`, `/health`, `/jsonrpc`, `/xmlrpc`) — intentionally bypassed so *arr services and NZBGet can communicate with each other and with mobile apps.
 - **Home Assistant** — has its own robust auth; Authelia middleware is not applied to its Traefik route.
+- **Cert Page** (`certs.home.local`) — intentionally unprotected so devices can download the CA certificate before authenticating.
 
 ### Recommendations
 
@@ -384,7 +392,8 @@ Authelia is a Traefik middleware — it only sees requests that go through Traef
 | File | Purpose |
 |------|---------|
 | `docker/config/authelia/configuration.yml` | Main Authelia config |
-| `docker/config/authelia/users_database.yml` | User accounts and passwords |
+| `docker/config/authelia/users_database.yml.example` | User accounts template (copy to `users_database.yml`) |
+| `docker/config/authelia/users_database.yml` | Your user accounts and passwords (gitignored) |
 | `docker/secrets/authelia/JWT_SECRET` | JWT signing key |
 | `docker/secrets/authelia/SESSION_SECRET` | Session encryption key |
 | `docker/secrets/authelia/STORAGE_ENCRYPTION_KEY` | Database encryption key |

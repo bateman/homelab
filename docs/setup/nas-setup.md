@@ -576,11 +576,31 @@ make logs | grep -i error
 - [ ] Cleanuparr: `http://192.168.3.10:11011` responds
 - [ ] FlareSolverr: `http://192.168.3.10:8191/health` responds
 - [ ] Watchtower: `http://192.168.3.10:8383/v1/metrics` responds
+- [ ] Plex Music: `http://192.168.3.10:32400/web` responds
 - [ ] Traefik: `http://192.168.3.10:80` redirects to HTTPS
 - [ ] Authelia: `https://auth.home.local` responds (requires DNS/hosts entry)
 
 > [!NOTE]
 > **Optional service:** Home Assistant (`http://192.168.3.10:8123`) is only available if you started the stack with `compose.homeassistant.yml`. See the compose file for details.
+
+### Auto-Start on Boot
+
+All services in `compose.yml` and `compose.media.yml` use `restart: unless-stopped`. This means Docker automatically restarts every container that was running before the NAS shut down — no cron jobs or startup scripts required.
+
+**How it works:**
+
+1. NAS powers on (QTS Power Schedule: 07:00 weekdays / 08:00 weekends)
+2. Container Station starts the Docker daemon automatically
+3. Docker restarts all containers that were running before shutdown
+4. Services come up respecting `depends_on` health checks (e.g., *arr apps wait for download clients)
+
+> [!NOTE]
+> Home Assistant (`compose.homeassistant.yml`) is **not** included — it runs on the Proxmox Mini PC as a separate deployment. Only the infrastructure (`compose.yml`) and media stack (`compose.media.yml`) auto-start on the NAS.
+
+> [!WARNING]
+> If you ran `make down` before the NAS shut down, containers were explicitly stopped and **will not auto-restart** on the next boot. Run `make up` manually in that case. Avoid `make down` before scheduled shutdowns — just let the NAS power off with containers running.
+
+**Coordination with power schedule:** The NAS shuts down at 00:00 weekdays / 01:00 weekends and powers on at 07:00 weekdays / 08:00 weekends. All containers resume automatically within ~1 minute of boot. Watchtower runs at 08:30, after services are back up. See [Energy Saving Strategies](../operations/energy-saving-strategies.md#23-scheduled-power-onoff) for the full power cycle timeline.
 
 ---
 
@@ -617,7 +637,9 @@ make logs | grep -i error
   - Keep incomplete in: disabled (use same path)
 - [ ] Options → Downloads → Default Torrent Management Mode: **Automatic**
 - [ ] Options → BitTorrent:
-  - Seeding limits per preferences
+  - When ratio reaches: **1** (or per preference)
+  - When total seeding time reaches: **1440** min (24h, optional)
+  - When seeding goal is reached: **Pause torrent** ← CRITICAL (never "Remove torrent")
 - [ ] Options → WebUI:
   - Change password
 - [ ] Categories (right-click in left panel → Add category):
@@ -687,6 +709,69 @@ make logs | grep -i error
 - [ ] Settings → Radarr: (similar configuration)
 - [ ] Settings → Languages: configure subtitle languages
 - [ ] Settings → Providers: add subtitle providers
+
+---
+
+## Plex Music Configuration
+
+> [!NOTE]
+> This is the **Music-only** Plex server running on the NAS as a Docker container (`plex-music` in `compose.media.yml`). The Movies/TV Plex server runs separately on the Mini PC — see [Proxmox Setup → Phase 5](proxmox-setup.md#phase-5-plex-configuration-trash-guides).
+
+### Claim Server (Initial Setup)
+
+The `plex-music` Docker container uses the `PLEX_CLAIM` environment variable for initial claiming (linking to your Plex account).
+
+1. [ ] Get a claim token from [plex.tv/claim](https://www.plex.tv/claim/) — **expires in 4 minutes**
+2. [ ] Set the token in `.env.secrets`:
+   ```bash
+   PLEX_CLAIM=claim-xxxxxxxxxxxxxxxxxxxx
+   ```
+3. [ ] Start (or restart) the container:
+   ```bash
+   make up
+   ```
+4. [ ] Access Plex at `http://192.168.3.10:32400/web`
+5. [ ] Name the server: "Homelab Plex Music"
+6. [ ] Skip the "Add Library" wizard (we'll configure the library properly below)
+7. [ ] After successful claim, comment out `PLEX_CLAIM` in `.env.secrets` (no longer needed)
+
+> [!TIP]
+> You can use the same Plex account as the Movies/TV server or a different one. Both servers will appear independently in your Plex apps.
+
+### Add Music Library
+
+Add Library → Music:
+- Name: Music
+- Folders: `/data/media/music`
+
+### Library Settings
+
+Edit Library → Advanced:
+
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| Sonic Analysis | ❌ Disabled | Resource-intensive audio fingerprinting; not needed for basic music playback |
+| Popular Tracks | ✅ Enabled | Powers radio stations and the popular tracks area on artist pages |
+| Find Lyrics | ✅ Enabled | Automatically finds and displays lyrics for tracks |
+| Concerts | ❌ Disabled | Loads concert data for artists; not needed for a home music library |
+| Prefer local metadata | ✅ Enabled | Uses embedded tags and local files (cover art, lyrics) — consistent with Lidarr-managed metadata |
+| Store track progress | ❌ Disabled | Primarily useful for podcasts/audiobooks, not music tracks |
+| Genres | Plex Music | Uses Plex's genre classification for artists and albums |
+| Album Art | Both Plex Music and Local Files | Combines online artwork with local cover art managed by Lidarr |
+
+### Network Settings (Settings → Network)
+
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| Secure connections | Preferred | Allows Plex to obtain a `*.plex.direct` certificate for secure connections from app.plex.tv |
+| Enable local network discovery (GDM) | ✅ Enabled | Allows automatic server discovery on local network (ports 32410-32414/UDP) |
+| Enable Relay | ❌ Disabled | Limited to ~2 Mbps, causes playback issues. We use Tailscale |
+| Custom server access URLs | `http://192.168.3.10:32400` | Ensures clients know the NAS LAN address. Add Tailscale URL if configured |
+| LAN Networks | `192.168.3.0/24,192.168.4.0/24,100.64.0.0/10` | Include Tailscale CGNAT range so remote clients get LAN treatment (Direct Play) |
+| Remote Access | ❌ Disabled | We use Tailscale instead of Plex's built-in remote access |
+
+> [!TIP]
+> This Plex instance is **always-on** — it runs on the NAS which follows a fixed power schedule (see [Energy Saving Strategies](../operations/energy-saving-strategies.md#23-scheduled-power-onoff)). Unlike the Mini PC Movies/TV Plex, no WoL or HA automation is needed. Client settings (Plexamp cellular quality) are documented in [Proxmox Setup → Plexamp Cellular Quality](proxmox-setup.md#642-plexamp-music--cellular-quality).
 
 ---
 
@@ -862,8 +947,10 @@ radarr:
 
 ### Synchronization
 
+Recyclarr syncs automatically every day at 18:00 via `CRON_SCHEDULE` in `compose.media.yml`.
+
 ```bash
-# Manual sync
+# Manual sync (on-demand)
 make recyclarr-sync
 
 # Or

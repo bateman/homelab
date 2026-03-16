@@ -93,6 +93,7 @@ Access Pi-hole: `http://192.168.3.10:8081`
 | `prowlarr.home.local` | 192.168.3.10 |
 | `bazarr.home.local` | 192.168.3.10 |
 | `cleanuparr.home.local` | 192.168.3.10 |
+| `certs.home.local` | 192.168.3.10 |
 | `qbit.home.local` | 192.168.3.10 |
 | `nzbget.home.local` | 192.168.3.10 |
 | `pihole.home.local` | 192.168.3.10 |
@@ -100,7 +101,8 @@ Access Pi-hole: `http://192.168.3.10:8081`
 | `portainer.home.local` | 192.168.3.10 |
 | `duplicati.home.local` | 192.168.3.10 |
 | `uptime.home.local` | 192.168.3.10 |
-| `plex.home.local` | 192.168.3.21 |
+| `plex.home.local` | 192.168.3.10 |
+| `plex-music.home.local` | 192.168.3.10 |
 
 ### 1.4 Verification
 
@@ -129,11 +131,11 @@ nslookup sonarr.home.local
 ### 2.1 Configuration Already Included
 
 Traefik is already configured in `docker/compose.yml` with:
-- **HTTPS enabled** with self-signed certificate for `*.home.local`
+- **HTTPS enabled** with certificate signed by a private Root CA for `*.home.local`
 - Automatic HTTP → HTTPS redirect
 - Dashboard accessible via reverse proxy at `traefik.home.local`
 - Docker auto-discovery on `homelab_proxy` network
-- File provider for non-Docker services (Home Assistant)
+- File provider for non-Docker services (Home Assistant, Plex)
 - Traefik labels already added to all services
 
 **Dashboard Access**: https://traefik.home.local (requires Pi-hole DNS configured)
@@ -153,11 +155,14 @@ Traefik labels are already added to all services in compose files:
 | qBittorrent | https://qbit.home.local | :8080 |
 | NZBGet | https://nzbget.home.local | :6789 |
 | Cleanuparr | https://cleanuparr.home.local | :11011 |
+| Cert Page | https://certs.home.local | (via reverse proxy) |
 | Pi-hole | https://pihole.home.local | :8081 |
 | Portainer | https://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | https://duplicati.home.local | :8200 |
 | Uptime Kuma | https://uptime.home.local | :3001 |
 | Home Assistant | https://ha.home.local | :8123 |
+| Plex (Movies/TV) | https://plex.home.local | :32400 (on 192.168.3.21, LXC) |
+| Plex Music | https://plex-music.home.local | :32400 (on NAS, Docker labels) |
 | Traefik Dashboard | https://traefik.home.local | (via reverse proxy) |
 
 ### 2.3 Home Assistant Configuration
@@ -165,9 +170,17 @@ Traefik labels are already added to all services in compose files:
 Home Assistant uses `network_mode: host`, so it cannot use Docker labels.
 Configuration is already present in `docker/config/traefik/homeassistant.yml`.
 
-### 2.4 HTTPS Certificate Generation
+### 2.4 Plex Configuration
 
-Before starting the stack, generate self-signed certificates. `make setup` runs this automatically, but you can also run it manually:
+Plex runs as an LXC container on Proxmox (`192.168.3.21`), not in Docker.
+Configuration is already present in `docker/config/traefik/plex.yml`.
+
+> [!NOTE]
+> Plex is **not** protected by Authelia — it has its own authentication (Plex account) and client apps (iOS, Android, Smart TV) need direct API access.
+
+### 2.5 HTTPS Certificate Generation
+
+Before starting the stack, generate the Root CA and server certificates. `make setup` runs this automatically, but you can also run it manually:
 
 ```bash
 # Generate wildcard certificate for *.home.local
@@ -182,7 +195,7 @@ Certificate is valid for 10 years and covers:
 - `*.home.local` (all subdomains)
 - `home.local` (base domain)
 
-### 2.5 Startup and Verification
+### 2.6 Startup and Verification
 
 ```bash
 # Create folder structure, secrets, and certificates
@@ -198,17 +211,17 @@ docker logs traefik
 # https://traefik.home.local
 ```
 
-### 2.6 Test Access via Name
+### 2.7 Test Access via Name
 
 ```bash
-# From browser or curl (-k ignores self-signed certificate)
+# From browser or curl (-k ignores untrusted certificate)
 curl -k https://sonarr.home.local
 curl -k https://radarr.home.local
 curl -k https://pihole.home.local
 ```
 
 > [!NOTE]
-> Browser will show warning on first access because certificate is self-signed. This is normal and safe for internal use. Accept certificate once and warning won't appear again.
+> Browser will show a warning on first access because the Root CA is not publicly trusted. This is normal for internal use. Install the CA certificate (see [Phase 3](#phase-3-trust-the-homelab-ca-certificate)) to permanently remove the warning on all devices.
 
 ---
 
@@ -273,60 +286,70 @@ For each service:
 
 ---
 
-## Phase 3: Accept Self-Signed Certificate
+## Phase 3: Trust the Homelab CA Certificate
 
-HTTPS is enabled by default with self-signed certificates. Traffic is encrypted, but browsers will show a warning because certificate is not issued by a public CA.
+HTTPS is enabled by default using a private Root CA that signs the `*.home.local` wildcard certificate. Traffic is encrypted, but browsers show a warning until you install the CA certificate on your device. **This is a one-time setup per device** — once the CA is trusted, all current and future `*.home.local` services work without warnings.
 
-### 3.1 Accept in Browser (Simple Method)
+### 3.1 Install via Download Page (Recommended)
 
-On first access to each service:
+A certificate download page is available at **https://certs.home.local** with per-platform instructions and one-click downloads.
 
-1. Browser shows "Connection is not private" (or similar)
-2. Click **Advanced** → **Proceed anyway**
-3. Certificate is remembered and warning won't appear again
+> [!NOTE]
+> The first visit to `https://certs.home.local` will show a certificate warning — this is expected. Click through it once, install the CA, and all warnings disappear permanently.
 
-### 3.2 Import Certificate (Permanent Method)
+### 3.2 iPhone / iPad (via .mobileconfig profile)
 
-To eliminate warning on all services, import certificate as trusted.
+1. Open **Safari** and go to `https://certs.home.local`
+2. Tap **Install Profile** — a prompt says "Profile Downloaded"
+3. Open **Settings** → **General** → **Profiles**
+4. Tap the downloaded profile → **Install** → enter passcode
+5. Go to **Settings** → **General** → **About** → **Certificate Trust Settings**
+6. Enable **Full Trust** for **Homelab Root CA**
 
-**Export certificate from NAS:**
+### 3.3 macOS
+
+Using the .mobileconfig profile (same as iOS), or manually:
 ```bash
-# Certificate is in:
-# docker/config/traefik/certs/home.local.crt
+sudo security add-trusted-cert -d -r trustRoot \
+    -k /Library/Keychains/System.keychain docker/config/traefik/certs/ca.crt
 ```
 
-**Windows:**
-1. Copy `home.local.crt` to PC
-2. Double-click → **Install certificate**
+### 3.4 Windows
+
+1. Download `ca.crt` from `https://certs.home.local`
+2. Double-click → **Install Certificate**
 3. Select **Local Machine** → **Next**
 4. **Place all certificates in the following store** → **Browse**
 5. Select **Trusted Root Certification Authorities**
 6. **Finish** → Restart browser
 
-**macOS:**
+### 3.5 Linux (Chrome/Chromium)
+
 ```bash
-sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain home.local.crt
+certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Homelab Root CA" -i ca.crt
 ```
 
-**Linux (Chrome/Chromium):**
-```bash
-certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Homelab" -i home.local.crt
-```
+### 3.6 Firefox (all systems)
 
-**Firefox (all systems):**
-1. In Firefox: Settings → Privacy & Security → Certificates → View Certificates
+1. Settings → Privacy & Security → Certificates → View Certificates
 2. **Authorities** tab → **Import**
-3. Select `home.local.crt`
-4. Select **Trust this CA to identify websites**
+3. Select `ca.crt` → check **Trust this CA to identify websites**
 
-### 3.3 Regenerate Certificates
+### 3.7 Regenerate Certificates
 
-If certificates expire or you want to regenerate:
+The server certificate can be regenerated without re-importing on any device (the CA stays the same):
 
 ```bash
 ./scripts/generate-certs.sh
-# Answer 'y' to overwrite
-make restart
+make restart s=traefik
+```
+
+To regenerate the CA itself (all devices must re-trust):
+
+```bash
+./scripts/generate-certs.sh --force-ca
+make restart s=traefik
+# Then re-install the new CA on all devices
 ```
 
 ---
@@ -347,19 +370,21 @@ make restart
 | qBittorrent | https://qbit.home.local | :8080 |
 | NZBGet | https://nzbget.home.local | :6789 |
 | Cleanuparr | https://cleanuparr.home.local | :11011 |
+| Cert Page | https://certs.home.local | (via reverse proxy) |
 | Pi-hole | https://pihole.home.local | :8081 |
 | Home Assistant | https://ha.home.local | :8123 |
 | Portainer | https://portainer.home.local | :9443 (HTTPS) |
 | Duplicati | https://duplicati.home.local | :8200 |
 | Uptime Kuma | https://uptime.home.local | :3001 |
-| Plex | https://plex.home.local | :32400 (on 192.168.3.21) |
+| Plex (Movies/TV) | https://plex.home.local | :32400 (on 192.168.3.21, LXC) |
+| Plex Music | https://plex-music.home.local | :32400 (on NAS, Docker labels) |
 
 > [!NOTE]
 > URLs work both from local network and remotely via Tailscale (thanks to Pi-hole as DNS).
 > HTTP (port 80) is automatically redirected to HTTPS (port 443).
 
 > [!IMPORTANT]
-> All services accessed **via Traefik** (i.e., `https://<service>.home.local`) are protected by Authelia SSO — you authenticate once and access everything. Direct IP:port access (e.g., `http://192.168.3.10:8989`) bypasses Traefik and Authelia entirely.
+> All services accessed **via Traefik** (i.e., `https://<service>.home.local`) are protected by Authelia SSO — you authenticate once and access everything. **Exceptions:** `certs.home.local` has no Authelia middleware so devices can download the CA cert before authenticating. `plex.home.local` and `plex-music.home.local` have no Authelia middleware because Plex has its own authentication and client apps need direct API access. Direct IP:port access (e.g., `http://192.168.3.10:8989`) bypasses Traefik and Authelia entirely.
 > See [Authelia Setup](authelia-setup.md) for configuration details.
 
 ---
@@ -454,6 +479,39 @@ curl http://192.168.3.10:8989
 docker logs traefik --tail 50
 ```
 
+### Plex (Movies/TV) not accessible via `plex.home.local`
+
+> [!NOTE]
+> This applies to the Movies/TV Plex on the Mini PC. For Music Plex (`plex-music.home.local`), check that the `plex-music` Docker container is running on the NAS: `docker ps | grep plex-music`.
+
+**Symptom: 502 Bad Gateway**
+
+The Mini PC (Proxmox) may be powered off. Home Assistant wakes it via WoL when Fire TV turns on (see [energy saving strategies](../operations/energy-saving-strategies.md)).
+
+```bash
+# Check if Plex LXC is reachable
+ping -c 3 192.168.3.21
+
+# Check Plex service
+curl -s -o /dev/null -w "%{http_code}" http://192.168.3.21:32400/web
+# Expected: 200
+
+# If Mini PC is off, wake it (from NAS)
+/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF  # Replace with actual MAC
+```
+
+**Symptom: DNS not resolving or connection timeout**
+
+Verify DNS points to Traefik (`192.168.3.10`), not directly to Plex (`192.168.3.21`):
+
+```bash
+nslookup plex.home.local
+# Should return 192.168.3.10 (Traefik on NAS)
+# If it returns 192.168.3.21, update the Pi-hole DNS record
+```
+
+**Direct access fallback**: `http://192.168.3.21:32400/web` (bypasses Traefik, requires Mini PC to be on)
+
 ### Remote access not working
 
 ```bash
@@ -474,5 +532,5 @@ tailscale status
 
 - **Direct ports**: Remain accessible as backup if Traefik has issues
 - **Home Assistant**: Requires separate file configuration (network_mode: host)
-- **Plex**: If on Proxmox, add DNS record pointing to 192.168.3.21 (LXC container IP)
+- **Plex**: Runs on Proxmox LXC (`192.168.3.21`). Routed via Traefik file provider (`plex.yml`), no Authelia.
 - **Updates**: Watchtower automatically updates Traefik

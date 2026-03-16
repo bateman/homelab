@@ -62,8 +62,9 @@ x-qbittorrent-base: &qbittorrent-base
   restart: unless-stopped
   logging: *common-logging
   healthcheck:
-    # Use wget (more reliable across images) with graceful startup handling
-    test: ["CMD-SHELL", "wget -q --spider http://localhost:8080 || exit 0"]
+    # Properly detect broken network (e.g., after Gluetun restart).
+    # start_period handles startup grace — no need for || exit 0.
+    test: ["CMD-SHELL", "wget -q --spider http://localhost:8080"]
     <<: *common-healthcheck
   deploy:
     resources:
@@ -85,7 +86,7 @@ x-nzbget-base: &nzbget-base
   restart: unless-stopped
   logging: *common-logging
   healthcheck:
-    test: ["CMD-SHELL", "wget -q --spider http://localhost:6789 || exit 0"]
+    test: ["CMD-SHELL", "wget -q --spider http://localhost:6789"]
     <<: *common-healthcheck
   deploy:
     resources:
@@ -184,6 +185,9 @@ services:
     depends_on:
       gluetun:
         condition: service_healthy
+        # Restart qBittorrent when Gluetun restarts (they share network namespace,
+        # so qBittorrent loses connectivity if Gluetun is recreated by Watchtower)
+        restart: true
 
   nzbget:
     <<: *nzbget-base
@@ -195,6 +199,8 @@ services:
     depends_on:
       gluetun:
         condition: service_healthy
+        # Restart NZBGet when Gluetun restarts (same reason as qBittorrent above)
+        restart: true
 
   # ===========================================================================
   # DOWNLOAD CLIENTS - DIRECT VERSION (profile: novpn)
@@ -464,6 +470,7 @@ services:
     environment:
       TZ: ${TZ:-Europe/Rome}
       RECYCLARR_CREATE_CONFIG: "true"
+      CRON_SCHEDULE: "0 18 * * *"
     volumes:
       - ./config/recyclarr:/config
     networks:
@@ -529,3 +536,50 @@ services:
       - "traefik.http.routers.cleanuparr.tls=true"
       - "traefik.http.routers.cleanuparr.middlewares=authelia@docker"
       - "traefik.http.services.cleanuparr.loadbalancer.server.port=11011"
+
+  # ===========================================================================
+  # PLEX MEDIA SERVER (Music)
+  # ===========================================================================
+  # Always-on Plex instance for music library only.
+  # Movies/TV Plex runs on the Mini PC (LXC) — see proxmox-setup.md.
+
+  plex-music:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex-music
+    env_file:
+      - .env.secrets
+    environment:
+      <<: *common-env
+      ADVERTISE_IP: http://192.168.3.10:32400/
+    volumes:
+      - ./config/plex-music:/config
+      - /share/data/media/music:/data/media/music:ro
+    ports:
+      - "32400:32400"
+      - "32410:32410/udp"
+      - "32411:32411/udp"
+      - "32412:32412/udp"
+      - "32413:32413/udp"
+      - "32414:32414/udp"
+    networks:
+      - media_net
+      - proxy
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:32400/identity"]
+      <<: *common-healthcheck
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      # Traefik — no Authelia (Plex has its own auth, client apps need direct API access)
+      - "traefik.enable=true"
+      - "traefik.http.routers.plex-music.rule=Host(`plex-music.home.local`)"
+      - "traefik.http.routers.plex-music.entrypoints=websecure"
+      - "traefik.http.routers.plex-music.tls=true"
+      - "traefik.http.services.plex-music.loadbalancer.server.port=32400"
