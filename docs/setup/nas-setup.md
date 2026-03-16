@@ -715,7 +715,7 @@ All services in `compose.yml` and `compose.media.yml` use `restart: unless-stopp
 ## Plex Music Configuration
 
 > [!NOTE]
-> This is the **Music-only** Plex server running on the NAS as a Docker container (`plex-music` in `compose.media.yml`). The Movies/TV Plex server runs separately on the Mini PC — see [Proxmox Setup → Phase 5](proxmox-setup.md#phase-5-plex-media-server).
+> This is the **Music-only** Plex server running on the NAS as a Docker container (`plex-music` in `compose.media.yml`). The Movies/TV Plex server runs separately on the Mini PC — see [Proxmox Setup → Phase 5](proxmox-setup.md#phase-5-plex-configuration-trash-guides).
 
 ### Claim Server (Initial Setup)
 
