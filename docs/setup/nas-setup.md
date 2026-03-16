@@ -719,30 +719,24 @@ All services in `compose.yml` and `compose.media.yml` use `restart: unless-stopp
 
 ### Claim Server (Initial Setup)
 
-Plex requires the server to be "claimed" (linked to your Plex account). New servers only allow claiming from **localhost**, so you need an SSH tunnel.
+The `plex-music` Docker container uses the `PLEX_CLAIM` environment variable for initial claiming (linking to your Plex account).
 
-**From your workstation:**
+1. [ ] Get a claim token from [plex.tv/claim](https://www.plex.tv/claim/) — **expires in 4 minutes**
+2. [ ] Set the token in `.env.secrets`:
+   ```bash
+   PLEX_CLAIM=claim-xxxxxxxxxxxxxxxxxxxx
+   ```
+3. [ ] Start (or restart) the container:
+   ```bash
+   make up
+   ```
+4. [ ] Access Plex at `http://192.168.3.10:32400/web`
+5. [ ] Name the server: "Homelab Plex Music"
+6. [ ] Skip the "Add Library" wizard (we'll configure the library properly below)
+7. [ ] After successful claim, comment out `PLEX_CLAIM` in `.env.secrets` (no longer needed)
 
-```bash
-# Create SSH tunnel: local port 8888 → NAS Plex Music port 32400
-ssh -L 8888:192.168.3.10:32400 admin@192.168.3.10
-```
-
-Then open your browser and go to:
-
-```
-http://localhost:8888/web
-```
-
-> [!IMPORTANT]
-> You **must** use `localhost:8888`, not `192.168.3.10:32400`. Plex checks the connecting IP — only localhost is allowed to claim an unclaimed server.
-
-1. [ ] Login with your Plex account (or create one)
-2. [ ] Name the server: "Homelab Plex Music"
-3. [ ] Skip the "Add Library" wizard (we'll configure the library properly below)
-4. [ ] Close the SSH tunnel (Ctrl+C) once claimed
-
-After claiming, access Plex normally at `http://192.168.3.10:32400/web`.
+> [!TIP]
+> You can use the same Plex account as the Movies/TV server or a different one. Both servers will appear independently in your Plex apps.
 
 ### Add Music Library
 
