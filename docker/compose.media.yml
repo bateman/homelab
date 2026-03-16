@@ -550,6 +550,7 @@ services:
       - .env.secrets
     environment:
       <<: *common-env
+      ADVERTISE_IP: http://192.168.3.10:32400/
     volumes:
       - ./config/plex-music:/config
       - /share/data/media/music:/data/media/music:ro
