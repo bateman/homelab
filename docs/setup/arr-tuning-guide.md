@@ -331,6 +331,28 @@ Lidarr → Settings → Metadata:
 - MusicBrainz rate limits API calls — keep the default delay settings to avoid being blocked
 - If you see metadata mismatches, check the release on [MusicBrainz](https://musicbrainz.org/) — community-maintained, you can submit corrections
 
+### Artist Images (fanart.tv)
+
+> [!WARNING]
+> Without a personal fanart.tv API key, many artist images will be missing. Lidarr's metadata server proxies fanart.tv but can get rate-limited or blocked (HTTP 403).
+
+**Setup:**
+
+1. Create a free account at [fanart.tv](https://fanart.tv/get-an-api-key/)
+2. Copy your **Personal API Key** from your profile
+3. In Lidarr → **Settings → Metadata → Fanart.tv**, paste the API key
+4. Run **System → Tasks → Refresh All Artist Metadata** to re-download images
+
+**Troubleshooting missing images:**
+
+- Verify connectivity from the container:
+  ```bash
+  docker exec lidarr curl -s -o /dev/null -w "%{http_code}" https://api.fanart.tv
+  ```
+  A `403` response confirms the API key is missing or invalid.
+- For individual artists: select the artist → Edit (wrench icon) → Refresh Metadata
+- Some lesser-known artists may genuinely have no image on fanart.tv — this is expected
+
 ### Media Management
 
 | Setting | Recommended | Why |
