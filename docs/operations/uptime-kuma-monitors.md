@@ -142,6 +142,7 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 | FlareSolverr | HTTP(s) | `http://flaresolverr:8191/health` | Endpoint `/health` dedicato |
 | Recyclarr | Docker Container | Container: `recyclarr` | Eseguito su schedule, nessuna web UI |
 | Cleanuparr | HTTP(s) | `http://cleanuparr:11011/health` | Endpoint `/health` dedicato |
+| Plex Music | HTTP(s) | `http://plex-music:32400/identity` | Plex Music gira in Docker su NAS (always-on); Uptime Kuma condivide `media_net` |
 
 ### Proxmox (192.168.3.20)
 
@@ -149,7 +150,6 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 |----------|------|--------------|------|
 | Proxmox | HTTP(s) | `https://192.168.3.20:8006` | Abilitare "Ignore TLS/SSL errors" (cert self-signed) |
 | Plex (Movies/TV) | HTTP(s) | `http://192.168.3.21:32400/web` | Plex Movies/TV gira in LXC su Proxmox (on-demand, WoL via HA) |
-| Plex Music | HTTP(s) | `http://192.168.3.10:32400/identity` | Plex Music gira in Docker su NAS (always-on) |
 
 ---
 
