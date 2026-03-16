@@ -576,6 +576,7 @@ make logs | grep -i error
 - [ ] Cleanuparr: `http://192.168.3.10:11011` responds
 - [ ] FlareSolverr: `http://192.168.3.10:8191/health` responds
 - [ ] Watchtower: `http://192.168.3.10:8383/v1/metrics` responds
+- [ ] Plex Music: `http://192.168.3.10:32400/web` responds
 - [ ] Traefik: `http://192.168.3.10:80` redirects to HTTPS
 - [ ] Authelia: `https://auth.home.local` responds (requires DNS/hosts entry)
 
@@ -708,6 +709,66 @@ All services in `compose.yml` and `compose.media.yml` use `restart: unless-stopp
 - [ ] Settings → Radarr: (similar configuration)
 - [ ] Settings → Languages: configure subtitle languages
 - [ ] Settings → Providers: add subtitle providers
+
+---
+
+## Plex Music Configuration
+
+> [!NOTE]
+> This is the **Music-only** Plex server running on the NAS as a Docker container (`plex-music` in `compose.media.yml`). The Movies/TV Plex server runs separately on the Mini PC — see [Proxmox Setup → Phase 5](proxmox-setup.md#phase-5-plex-configuration-trash-guides).
+
+### Claim Server (Initial Setup)
+
+The `plex-music` Docker container uses the `PLEX_CLAIM` environment variable for initial claiming (linking to your Plex account).
+
+1. [ ] Get a claim token from [plex.tv/claim](https://www.plex.tv/claim/) — **expires in 4 minutes**
+2. [ ] Set the token in `.env.secrets`:
+   ```bash
+   PLEX_CLAIM=claim-xxxxxxxxxxxxxxxxxxxx
+   ```
+3. [ ] Start (or restart) the container:
+   ```bash
+   make up
+   ```
+4. [ ] Access Plex at `http://192.168.3.10:32400/web`
+5. [ ] Name the server: "Homelab Plex Music"
+6. [ ] Skip the "Add Library" wizard (we'll configure the library properly below)
+7. [ ] After successful claim, comment out `PLEX_CLAIM` in `.env.secrets` (no longer needed)
+
+> [!TIP]
+> You can use the same Plex account as the Movies/TV server or a different one. Both servers will appear independently in your Plex apps.
+
+### Add Music Library
+
+Add Library → Music:
+- Name: Music
+- Folders: `/data/media/music`
+
+### Library Settings
+
+Edit Library → Advanced:
+
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| Sonic Analysis | ❌ Disabled | Resource-intensive audio fingerprinting; not needed for basic music playback |
+| Popular Tracks | ✅ Enabled | Powers radio stations and the popular tracks area on artist pages |
+| Find Lyrics | ✅ Enabled | Automatically finds and displays lyrics for tracks |
+| Concerts | ❌ Disabled | Loads concert data for artists; not needed for a home music library |
+| Prefer local metadata | ✅ Enabled | Uses embedded tags and local files (cover art, lyrics) — consistent with Lidarr-managed metadata |
+| Store track progress | ❌ Disabled | Primarily useful for podcasts/audiobooks, not music tracks |
+| Genres | Plex Music | Uses Plex's genre classification for artists and albums |
+| Album Art | Both Plex Music and Local Files | Combines online artwork with local cover art managed by Lidarr |
+
+### Network Settings (Settings → Network)
+
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| Enable Relay | ❌ Disabled | Limited to ~2 Mbps, causes playback issues. We use Tailscale |
+| LAN Networks | `192.168.3.0/24,192.168.4.0/24,100.64.0.0/10` | Include Tailscale CGNAT range so remote clients get LAN treatment (Direct Play) |
+| Remote Access | ❌ Disabled | We use Tailscale instead of Plex's built-in remote access |
+
+> [!TIP]
+> This Plex instance is **always-on** — it runs on the NAS which follows a fixed power schedule (see [Energy Saving Strategies](../operations/energy-saving-strategies.md#23-scheduled-power-onoff)). Unlike the Mini PC Movies/TV Plex, no WoL or HA automation is needed. Client settings (Plexamp cellular quality) are documented in [Proxmox Setup → Plexamp Cellular Quality](proxmox-setup.md#642-plexamp-music--cellular-quality).
 
 ---
 

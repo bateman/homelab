@@ -204,7 +204,7 @@ Below are the recommended monitor types for each service in the homelab. Use con
 | FlareSolverr | HTTP(s) | `http://flaresolverr:8191/health` | Dedicated `/health` endpoint |
 | Recyclarr | Docker Container | Container: `recyclarr` | Runs on a schedule, no web UI |
 | Cleanuparr | HTTP(s) | `http://cleanuparr:11011/health` | Dedicated `/health` endpoint |
-| Plex Music | HTTP(s) | `http://192.168.3.10:32400/identity` | Music server (always-on Docker container) |
+| Plex Music | HTTP(s) | `http://plex-music:32400/identity` | Music server (always-on Docker container on NAS) |
 
 ### Proxmox Host (192.168.3.20)
 
