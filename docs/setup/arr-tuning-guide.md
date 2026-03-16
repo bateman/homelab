@@ -331,27 +331,23 @@ Lidarr → Settings → Metadata:
 - MusicBrainz rate limits API calls — keep the default delay settings to avoid being blocked
 - If you see metadata mismatches, check the release on [MusicBrainz](https://musicbrainz.org/) — community-maintained, you can submit corrections
 
-### Artist Images (fanart.tv)
+### Artist Images
 
-> [!WARNING]
-> Without a personal fanart.tv API key, many artist images will be missing. Lidarr's metadata server proxies fanart.tv but can get rate-limited or blocked (HTTP 403).
+> [!NOTE]
+> Lidarr fetches artist images from [fanart.tv](https://fanart.tv) and [TheAudioDB](https://www.theaudiodb.com/) via its own metadata server (`api.lidarr.audio`). There is no user-configurable API key — the metadata server handles all requests.
 
-**Setup:**
+**Why some artists have no image:**
 
-1. Create a free account at [fanart.tv](https://fanart.tv/get-an-api-key/)
-2. Copy your **Personal API Key** from your profile
-3. In Lidarr → **Settings → Metadata → Fanart.tv**, paste the API key
-4. Run **System → Tasks → Refresh All Artist Metadata** to re-download images
+- The artist has no artwork on fanart.tv or TheAudioDB — this is the most common cause, even for well-known artists
+- The metadata server caches artwork with a **7+ day delay**, so recently added images on fanart.tv won't appear immediately
+- Temporary metadata server outages (check [Lidarr GitHub issues](https://github.com/Lidarr/Lidarr/issues) for known incidents)
 
-**Troubleshooting missing images:**
+**How to fix missing images:**
 
-- Verify connectivity from the container:
-  ```bash
-  docker exec lidarr curl -s -o /dev/null -w "%{http_code}" https://api.fanart.tv
-  ```
-  A `403` response confirms the API key is missing or invalid.
-- For individual artists: select the artist → Edit (wrench icon) → Refresh Metadata
-- Some lesser-known artists may genuinely have no image on fanart.tv — this is expected
+1. **Check the source** — search for the artist on [fanart.tv](https://fanart.tv). If no image exists, you can create an account and submit one (it takes 7+ days to propagate to Lidarr)
+2. **Refresh the artist** — select the artist → Edit (wrench icon) → Refresh Metadata
+3. **Refresh all artists** — System → Tasks → Refresh All Artist Metadata (useful after a metadata server outage)
+4. **Check logs** — System → Logs, look for errors related to `MediaCover` or `api.lidarr.audio`
 
 ### Media Management
 
