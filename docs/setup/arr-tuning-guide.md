@@ -104,6 +104,8 @@ Recyclarr ──→ syncs Trash Guides profiles/CFs to Sonarr & Radarr (schedule
 | Cleanuparr | Sonarr | `sonarr` | 8989 | Monitor queue |
 | Cleanuparr | Radarr | `radarr` | 7878 | Monitor queue |
 | Cleanuparr | Lidarr | `lidarr` | 8686 | Monitor queue |
+| Cleanuparr | qBittorrent | `gluetun` or `qbittorrent` | 8080 | Monitor/remove downloads |
+| Cleanuparr | NZBGet | `gluetun` or `nzbget` | 6789 | Monitor/remove downloads |
 | Recyclarr | Sonarr | `sonarr` | 8989 | Push profiles/CFs |
 | Recyclarr | Radarr | `radarr` | 7878 | Push profiles/CFs |
 
@@ -392,8 +394,7 @@ qBittorrent downloads → seeds to ratio → pauses
 
 ## Bazarr Tuning
 
-> [!NOTE]
-> Trash Guides has a [Bazarr setup guide](https://trash-guides.info/Bazarr/Setup-Guide/) with detailed recommendations. This section summarizes the key settings.
+Trash Guides has a [Bazarr setup guide](https://trash-guides.info/Bazarr/Setup-Guide/) with detailed recommendations. The [Bazarr Wiki](https://wiki.bazarr.media/) covers every setting in depth.
 
 ### Provider Configuration
 
@@ -407,42 +408,111 @@ Bazarr → Settings → Providers:
 - **Anti-captcha**: Some providers require an anti-captcha service. [anti-captcha.com](https://anti-captcha.com/) is the recommended provider
 - **Provider priority**: Drag providers into preferred order. Bazarr tries them top-to-bottom
 
+> [!TIP]
+> Test each provider after adding it. Providers with authentication issues or rate limits will silently fail during searches.
+
 ### Language Profiles
 
 Bazarr → Settings → Languages:
 
 - Create language profiles with your preferred subtitle languages in priority order
-- **Forced subtitles**: Enable if you want forced subs (foreign language dialogue only) — typically for movies with partial non-English dialogue
+- **Forced subtitles**: Enable if you want forced subs (foreign language dialogue only) — typically for movies with partial non-English dialogue. Options:
+  - **False** — don't search for forced subs
+  - **True** — search only for forced subs
+  - **Both** — search for both normal and forced subs
 - **Hearing Impaired (HI)**: Enable "Also search for Hearing Impaired" if you want SDH subtitles, or exclude them if you prefer clean subtitles
+- **Exclude Audio**: Skip subtitle search when the audio track already matches the desired language
 
-> [!TIP]
-> Configure a **cutoff** in the language profile so Bazarr stops searching once your primary language subtitle is found.
+Configure a **cutoff** in the language profile so Bazarr stops searching once your primary language subtitle is found — this significantly reduces provider load for multi-language setups.
 
-### Subtitle Score Threshold
+**Default Settings** (Bazarr → Settings → Languages → Default Settings): Auto-apply language profiles to newly added series and movies so you don't have to configure each one manually.
 
-Bazarr → Settings → Subtitles:
+### Sonarr/Radarr Integration Options
 
-- **Minimum Score**: Raise this if you get out-of-sync or poor subtitles frequently. A higher threshold means fewer but better-matched subtitles
+Bazarr → Settings → Sonarr / Radarr → Options:
+
+- **Minimum Score**: The percentage match quality required before Bazarr downloads a subtitle. Raise this if you get out-of-sync or poor subtitles frequently
 - The score is based on how well the subtitle matches the release (hash match > name match > partial match)
+- **Excluded tags**: Skip series/movies with specific tags (case-sensitive) — useful for excluding anime or foreign content that needs special subtitle handling
+- **Excluded series types**: Skip Standard, Anime, or Daily show types from subtitle searches
+- **Monitored only**: Only search for subtitles for monitored content (recommended)
 
 ### Sync with Sonarr/Radarr
 
-| Setting | Recommended |
-|---------|-------------|
-| Sync interval | Default (every few hours is fine) |
-| Path mapping | **Not needed** if Bazarr uses the same Docker volume mounts as Sonarr/Radarr |
-
-> [!NOTE]
-> Bazarr mounts `/share/data/media:/data/media` (only the media folder, not the full `/share/data` tree). Inside the container, Bazarr sees `/data/media` — the same path that Sonarr/Radarr see (they mount `/share/data:/data`). No path mapping is required.
+Path mapping is **not needed** — Bazarr mounts `/share/data/media:/data/media` and sees `/data/media`, the same path Sonarr/Radarr see via `/share/data:/data`. Sync interval is configured in Bazarr → Settings → Scheduler (see [Scheduler Tuning](#scheduler-tuning) below).
 
 ### Post-Processing
+
+Bazarr → Settings → Subtitles:
 
 | Setting | Recommended | Why |
 |---------|-------------|-----|
 | Subtitle storage | **Alongside media file** | Plex/media players find them automatically |
-| Subtitle format | **SRT** preferred | Most compatible across players |
 | Upgrade subtitles | **Yes** | Allows Bazarr to replace poor subs when better ones appear |
-| Upgrade frequency | Default | How often to check for subtitle upgrades |
+| Upgrade days | **7** (default) | How many days back to check for upgrades on existing subs |
+| Upgrade manually downloaded | **No** | Preserve subs you manually chose; set to Yes if you want Bazarr to improve everything |
+| Encode subtitles in UTF-8 | **Yes** | Ensures consistent encoding; prevents garbled characters on non-Latin subtitle files |
+
+### Performance & Optimization
+
+Bazarr → Settings → Subtitles → Performance / Optimization:
+
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Adaptive Searching | **Enabled** | Reduces search frequency over time for files unlikely to have subtitles — prevents hammering providers |
+| Search Providers Simultaneously | **Enabled** | Faster results. Disable on low-power devices (Raspberry Pi) |
+| Use Embedded Subtitles | **Disabled** | Scanning embedded subs triggers ffprobe on every media file — CPU and I/O intensive |
+
+> [!NOTE]
+> **Embedded subtitles**: When enabled, Bazarr detects text-based embedded subs (SRT, ASS, SSA) in MKV/MP4 containers and can extract them automatically. PGS (image-based) subtitles cannot be converted to text (no OCR support). Only enable this if you have many files with embedded subs you want to reuse.
+
+### Scheduler Tuning
+
+Bazarr → Settings → Scheduler:
+
+| Task | Recommended | Why |
+|------|-------------|-----|
+| Sonarr/Radarr Sync | **15 minutes** (default) | Picks up new additions reasonably fast |
+| Disk Indexing | **Manually** | Disables automatic drive scanning for existing subs — on large libraries (10,000+ files), periodic scanning causes substantial NAS I/O |
+| Search and Upgrade Subtitles | **6–12 hours** | Default may be too aggressive. Increase if you see "maximum number of running instances reached" in logs |
+
+### Automatic Subtitle Synchronization
+
+Bazarr → Settings → Subtitles → Automatic Subtitles Synchronization:
+
+- **Recommended: Disabled.** When enabled, Bazarr extracts audio tracks from every media file and uses speech detection to align subtitles — this causes massive CPU and network usage. On a QNAP NAS, this will saturate resources for hours on a large library.
+
+If you need subtitle sync for specific files, use a **post-processing script** instead (see below) — this targets only newly downloaded subs rather than the entire library.
+
+### Custom Post-Processing Scripts
+
+Bazarr → Settings → Subtitles → Post-Processing:
+
+Bazarr can execute custom scripts after downloading a subtitle using template variables like `{{subtitles}}` (subtitle path) and `{{episode}}`/`{{movie}}` (media path). See the [Bazarr Wiki](https://wiki.bazarr.media/) for the full variable list.
+
+**Useful community scripts:**
+
+- **[bazarr-cleansubs](https://github.com/TheCaptain989/bazarr-cleansubs)** — removes scene branding and attribution lines from SRT files (e.g., "Subtitles by YTS" ads)
+- **SubSync** — synchronize subtitle timing against the audio track:
+  ```
+  subsync --cli sync --sub '{{subtitles}}' --ref '{{episode}}' --out '{{subtitles}}' --overwrite
+  ```
+  This is the targeted alternative to enabling automatic synchronization globally
+
+> [!NOTE]
+> Post-processing scripts run inside the Bazarr container. If using a community tool, it must be installed in the container or accessible via a mounted volume.
+
+### Notifications
+
+Bazarr → Settings → Notifications:
+
+Bazarr supports [Apprise](https://github.com/caronc/apprise)-compatible notification strings for alerting on subtitle downloads and failures:
+
+- **Discord**: `discord://webhook_id/webhook_token`
+- **Telegram**: `tgram://bot_token/chat_id`
+- **Slack**: `slack://token_a/token_b/token_c/#channel`
+
+Configure notifications for awareness of subtitle activity — especially useful to catch provider failures early. For infrastructure-level monitoring (uptime, container health), see [notifications-setup.md](notifications-setup.md).
 
 ---
 
@@ -450,19 +520,23 @@ Bazarr → Settings → Subtitles:
 
 ### What Cleanuparr Does
 
-[Cleanuparr](https://github.com/cleanuparr/cleanuparr) monitors your *arr apps' download queues and automatically cleans up problematic downloads:
+[Cleanuparr](https://github.com/flmorg/cleanuperr) monitors your *arr apps' download queues and automatically cleans up problematic downloads:
 
 - **Stalled downloads** — stuck torrents with no seeders
+- **Slow downloads** — transfers below a speed threshold or with excessive ETAs
 - **Failed downloads** — NZB/torrent errors
-- **Orphaned downloads** — files no longer tracked by any *arr app
+- **Metadata-stuck downloads** — stuck in metadata download phase
+- **Orphaned files** — files in download folders no longer tracked by any *arr app or without hardlinks
+- **Completed seeded downloads** — remove torrents after they've met their seeding goal
+- **Malware detection** — flag releases containing suspicious files (e.g., executables, password-protected archives)
 
-### Recommended Settings
+### Connections
 
 Access Cleanuparr at `http://192.168.3.10:11011` (or `https://cleanuparr.home.local` via Traefik).
 
-#### Connections
+Add connections to each *arr app and your download client:
 
-Add connections to each *arr app:
+**Arr apps:**
 
 | App | URL | API Key Source |
 |-----|-----|---------------|
@@ -470,20 +544,88 @@ Add connections to each *arr app:
 | Radarr | `http://radarr:7878` | Radarr → Settings → General |
 | Lidarr | `http://lidarr:8686` | Lidarr → Settings → General |
 
-#### Cleanup Rules
+**Download clients:**
+
+| Client | URL |
+|--------|-----|
+| qBittorrent | `http://gluetun:8080` or `http://qbittorrent:8080` |
+| NZBGet | `http://gluetun:6789` or `http://nzbget:6789` |
+
+Use the `gluetun` hostname when the VPN profile is active (see [VPN Setup](vpn-setup.md)). Cleanuparr also supports Transmission, Deluge, and others — only the clients above are used in this stack.
+
+### Strike System
+
+Cleanuparr uses a **strike system** to avoid prematurely removing downloads that may recover:
+
+```
+Download detected with problem (stalled, slow, etc.)
+  → Strike 1 recorded
+  → Next check: still problematic?
+    → Strike 2 recorded
+    → Next check: still problematic?
+      → Strike 3 (max) → Remove + blocklist
+```
+
+### Cleanup Rules
 
 | Setting | Recommended | Why |
 |---------|-------------|-----|
-| Stalled timeout | **30 minutes** | Long enough to survive temporary issues |
+| Max strikes | **3** | Number of consecutive failures before removal. Lower = more aggressive cleanup |
+| Stalled timeout | **30 minutes** | How long a download can be stalled before receiving a strike |
 | Failed download action | **Remove and blocklist** | Prevents re-downloading the same broken release |
-| Strike count | **3** | Number of failures before blocklisting |
+| Low speed threshold | **Based on your connection** | Strike downloads below this speed (e.g., 100 KB/s). Set to 0 to disable |
+| Max ETA | **4–8 hours** | Strike downloads estimated to take longer than this. Useful for catching very slow torrents |
+| Seeding removal | **After ratio met** | Remove completed seeded torrents once they've reached the ratio set in qBittorrent |
+
+> [!TIP]
+> Start with conservative settings (higher timeouts, more strikes) and tighten over time as you learn your typical download patterns.
+
+### Per-App Configuration
+
+Cleanuparr allows different cleanup rules per *arr app:
+
+- **Sonarr (TV)**: More aggressive (lower timeouts, fewer strikes) — episodes are time-sensitive
+- **Radarr (Movies)**: More patient (higher timeouts, more strikes) — rare releases may need longer to download
+- **Lidarr (Music)**: Default settings — music releases are less time-sensitive
+
+### Ignore / Exclusion Rules
+
+Cleanuparr supports filtering to prevent certain downloads from being cleaned up:
+
+| Filter Type | Use Case |
+|-------------|----------|
+| **Torrent hashes** | Whitelist specific downloads you want to keep regardless of status |
+| **Categories** | Skip certain download categories from cleanup (e.g., `manual` category) |
+| **Tags** | Exclude tagged downloads — useful for cross-seed or long-term seed content |
+| **Trackers** | Ignore downloads from specific trackers (e.g., private trackers with strict ratio requirements) |
+
+> [!TIP]
+> If you're using cross-seeding tools alongside qBittorrent, add their category or tag to the exclusion list so Cleanuparr doesn't remove cross-seeded content.
+
+### Orphaned File Detection
+
+Cleanuparr can detect and clean up files that are no longer useful:
+
+- **No *arr reference** — files in the download directory not tracked by any *arr app's queue or history
+- **No hardlinks** — files that exist in the download directory but have no hardlinks to the media library (suggesting the import failed or was never completed). Note: only reliable when *arr apps are configured for hardlinking, not copy
+- **Cross-seed awareness** — can be configured to avoid removing files that are being cross-seeded
+
+Always review detected orphans in the Cleanuparr UI before enabling automatic removal.
 
 ### Monitoring Schedule
 
-| Setting | Recommended |
-|---------|-------------|
-| Check interval | **10–15 minutes** | Frequent enough to catch issues quickly |
-| Enabled by default | **Yes** | Set and forget |
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Check interval | **10–15 minutes** | Frequent enough to catch issues quickly without excessive API calls |
+
+### Notifications
+
+Cleanuparr can notify you when it takes action:
+
+- **On strike** — when a download receives a new strike (useful for monitoring)
+- **On removal** — when a download is removed and blocklisted
+
+Configure notification targets in the Cleanuparr UI. Notifications help you spot patterns — if the same indexer or release group keeps getting strikes, investigate the root cause in Prowlarr or Recyclarr.
 
 > [!TIP]
 > Cleanuparr is most valuable when combined with Recyclarr's quality profiles. Failed downloads from low-quality sources get cleaned up and the *arr app automatically searches for a better alternative.
@@ -703,16 +845,29 @@ docker exec recyclarr recyclarr sync --preview
 
 ### Bazarr Not Finding Subtitles
 
-1. **Verify providers** — Settings → Providers → Test each one
+1. **Verify providers** — Settings → Providers → Test each one. Failed providers silently stop returning results
 2. **Check score threshold** — lower the minimum score temporarily to see if subs are being found but rejected
 3. **Verify Sonarr/Radarr connection** — Settings → Sonarr/Radarr → Test
-4. **Check languages** — Language Profiles must be assigned to series/movies
+4. **Check languages** — Language Profiles must be assigned to series/movies. Check Settings → Languages → Default Settings to auto-apply to new content
+5. **Check adaptive searching** — if enabled, Bazarr may have deprioritized searches for content that previously had no results. Trigger a manual search to override
+6. **Check scheduler** — Settings → Scheduler → verify search frequency isn't set too infrequently
+7. **Provider issues** — anti-captcha failures (OpenSubtitles.com) or rate limiting (HTTP 429). Check `docker logs bazarr` for specific errors
 
 ### Cleanuparr Not Cleaning Up
 
 1. **Verify API connections** — ensure each *arr app is connected and the API key is valid
-2. **Check timeout thresholds** — stalled timeout may be too high for your use case
-3. **Review logs** — check `docker logs cleanuparr` for errors or skipped items
+2. **Check strike count** — downloads may not have accumulated enough strikes yet. Review strike history in the Cleanuparr UI
+3. **Check timeout thresholds** — stalled timeout may be too high for your use case. Reduce from 30 min to 15 min if downloads sit too long
+4. **Verify download client connection** — Cleanuparr needs access to qBittorrent/NZBGet to detect stalled/slow downloads
+5. **Check exclusion rules** — downloads matching ignore filters (hashes, categories, tags, trackers) are skipped
+6. **Review logs** — check `docker logs cleanuparr` for errors, skipped items, or connection failures
+
+### Cleanuparr Too Aggressive
+
+1. **Increase max strikes** — raise from 3 to 5 to give downloads more chances to recover
+2. **Increase stalled timeout** — raise to 60 minutes if your indexers have intermittent seeder availability
+3. **Disable speed/ETA checks** — set thresholds to 0 if slow downloads are being removed prematurely
+4. **Add exclusions** — whitelist specific trackers or categories that are known to be slow but reliable
 
 ### Debugging Custom Format Scores
 
@@ -733,6 +888,8 @@ Step-by-step walkthrough:
 - [Trash Guides — Sonarr Quality Profiles](https://trash-guides.info/Sonarr/sonarr-setup-quality-profiles/)
 - [Trash Guides — Radarr Quality Profiles](https://trash-guides.info/Radarr/radarr-setup-quality-profiles/)
 - [Trash Guides — Bazarr Setup Guide](https://trash-guides.info/Bazarr/Setup-Guide/)
+- [Bazarr Wiki](https://wiki.bazarr.media/) — Official Bazarr documentation (all settings, performance tuning, post-processing)
+- [Cleanuparr GitHub](https://github.com/flmorg/cleanuperr) — Source repository and documentation
 - [Recyclarr Documentation](https://recyclarr.dev/wiki/)
 - [Recyclarr YAML Reference](https://recyclarr.dev/wiki/yaml/config-reference/)
 - Internal: [NAS Deployment Checklist](nas-setup.md) — Initial *arr setup
