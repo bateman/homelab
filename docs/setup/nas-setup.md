@@ -766,6 +766,7 @@ Edit Library → Advanced:
 | Secure connections | Preferred | Allows Plex to obtain a `*.plex.direct` certificate for secure connections from app.plex.tv |
 | Enable local network discovery (GDM) | ✅ Enabled | Allows automatic server discovery on local network (ports 32410-32414/UDP) |
 | Enable Relay | ❌ Disabled | Limited to ~2 Mbps, causes playback issues. We use Tailscale |
+| Custom server access URLs | `http://192.168.3.10:32400` | Ensures clients know the NAS LAN address. Add Tailscale URL if configured |
 | LAN Networks | `192.168.3.0/24,192.168.4.0/24,100.64.0.0/10` | Include Tailscale CGNAT range so remote clients get LAN treatment (Direct Play) |
 | Remote Access | ❌ Disabled | We use Tailscale instead of Plex's built-in remote access |
 
