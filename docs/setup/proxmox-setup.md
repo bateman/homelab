@@ -582,24 +582,6 @@ Edit Library → Advanced:
 | Enable intro detection | ✅ Enabled | "Skip Intro" feature |
 | Enable credits detection | ✅ Enabled | "Skip Credits" feature |
 
-#### For Music Library (NAS Plex only)
-
-> [!NOTE]
-> These settings apply to the Music Plex server running on the NAS (`plex-music` Docker container), not this Mini PC instance.
-
-Edit Library → Advanced:
-
-| Setting | Value | Rationale |
-|---------|-------|-----------|
-| Sonic Analysis | ❌ Disabled | Resource-intensive audio fingerprinting; not needed for basic music playback |
-| Popular Tracks | ✅ Enabled | Powers radio stations and the popular tracks area on artist pages |
-| Find Lyrics | ✅ Enabled | Automatically finds and displays lyrics for tracks |
-| Concerts | ❌ Disabled | Loads concert data for artists; not needed for a home music library |
-| Prefer local metadata | ✅ Enabled | Uses embedded tags and local files (cover art, lyrics) — consistent with Lidarr-managed metadata |
-| Store track progress | ❌ Disabled | Primarily useful for podcasts/audiobooks, not music tracks |
-| Genres | Plex Music | Uses Plex's genre classification for artists and albums |
-| Album Art | Both Plex Music and Local Files | Combines online artwork with local cover art managed by Lidarr |
-
 ### 5.7 Recommended Client Settings
 
 > Reference: [Media Clients Wiki](https://mediaclients.wiki/Plex) for device-specific settings.
@@ -809,6 +791,9 @@ Settings → Video & Audio → **Cellular Quality** → **Maximum / Original**
 The default is **720p HD / 2 Mbps**, which forces the server to transcode all video down to 2 Mbps. With Tailscale + 5G/4G, there is no reason to limit this.
 
 #### 6.4.2 Plexamp (Music) — Cellular Quality
+
+> [!NOTE]
+> These are **client-side** settings for the Plexamp app. The Music Plex **server** runs on the NAS — see [NAS Setup → Plex Music Configuration](nas-setup.md#plex-music-configuration) for server-side library and network settings.
 
 Settings → Quality → **Dati cellulare / Cellular Data** → **Maximum**
 
