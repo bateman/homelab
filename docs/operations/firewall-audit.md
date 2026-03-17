@@ -372,7 +372,7 @@ The following security measures are well-implemented:
 - **Docker socket proxy**: Deny-by-default with explicit API permissions (14 endpoints explicitly denied)
 - **Socket proxy network**: `internal: true` prevents external access to the socket proxy
 - **IDS/IPS**: Enabled in prevention mode (not just detection) on IoT and Guest VLANs
-- **QoS**: Plex traffic prioritized (DSCP 46/EF), Guest bandwidth limited (50/10 Mbps)
+- **QoS**: Plex streaming prioritized (QoS Prioritize via Proxmox devices → VLAN-Media), Guest bandwidth limited (50/10 Mbps)
 - **VPN for downloads**: Gluetun with kill switch protects torrent traffic; IPv6 disabled to prevent leaks
 - **Authelia 2FA**: Required for Portainer and Traefik dashboard (the two most sensitive admin tools)
 - **WebAuthn/Passkey**: Modern passwordless authentication supported

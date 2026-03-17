@@ -492,25 +492,20 @@ In **UDM-SE** (Network application): Settings → Firewall & Security → Threat
 
 In **UDM-SE** (Network application): Settings → Traffic Management → Traffic Rules
 
-### Plex Priority (Movies/TV)
+### Plex Streaming Priority
 
 | Field | Value |
 |-------|-------|
-| Name | Prioritize Plex |
-| Action | Set DSCP |
-| DSCP Value | 46 (EF - Expedited Forwarding) |
-| Source | Plex Server (192.168.3.21) |
-| Port | 32400 |
+| Name | Prioritize Plex Streaming |
+| Type | QoS |
+| QoS Behavior | Prioritize |
+| Interface | All WANs |
+| Source | Device: Proxmox 2.5G, Proxmox 1G |
+| Destination | IP List: VLAN-Media |
+| Port | List: Plex Ports (32400, 32410-32414) |
+| Schedule | Always |
 
-### Plex Music Priority
-
-| Field | Value |
-|-------|-------|
-| Name | Prioritize Plex Music |
-| Action | Set DSCP |
-| DSCP Value | 46 (EF - Expedited Forwarding) |
-| Source | NAS (192.168.3.10) |
-| Port | 32400 |
+> Consolidates both Movies/TV and Music Plex QoS into a single rule. The Proxmox host runs the Movies/TV Plex server (192.168.3.21 VM) and its traffic exits via both NICs. Music Plex on the NAS (192.168.3.10) is covered separately by firewall rules 3b and 8 but does not need device-level QoS since the NAS is always-on and locally accessed.
 
 ### Guest Bandwidth Limiting
 
