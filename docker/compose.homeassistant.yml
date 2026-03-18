@@ -2,7 +2,7 @@
 # Docker Compose - Home Assistant (Optional)
 # NAS QNAP TS-435XeU - Homelab
 #
-# Home automation platform - currently disabled to save RAM (~2GB)
+# Home automation platform - currently disabled to save RAM (~1GB)
 #
 # To enable, add this file to your compose command:
 #   docker compose -f compose.yml -f compose.media.yml -f compose.homeassistant.yml up -d
@@ -57,7 +57,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2G
+          memory: 1G
         reservations:
           memory: 512M
     labels:
