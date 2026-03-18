@@ -10,7 +10,7 @@
         vpn-check logs-% shell-%
 
 # Compose files
-COMPOSE_FILES := -f docker/compose.yml -f docker/compose.media.yml -f docker/compose.homeassistant.yml
+COMPOSE_FILES := -f docker/compose.yml -f docker/compose.media.yml
 COMPOSE_CMD := docker compose $(COMPOSE_FILES)
 HOST_IP := 192.168.3.10
 

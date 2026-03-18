@@ -584,7 +584,7 @@ make logs | grep -i error
 
 ### Auto-Start on Boot
 
-All services in `compose.yml`, `compose.media.yml`, and `compose.homeassistant.yml` use `restart: unless-stopped`. This means Docker automatically restarts every container that was running before the NAS shut down — no cron jobs or startup scripts required.
+All services in `compose.yml` and `compose.media.yml` use `restart: unless-stopped`. This means Docker automatically restarts every container that was running before the NAS shut down — no cron jobs or startup scripts required.
 
 **How it works:**
 
@@ -594,7 +594,7 @@ All services in `compose.yml`, `compose.media.yml`, and `compose.homeassistant.y
 4. Services come up respecting `depends_on` health checks (e.g., *arr apps wait for download clients)
 
 > [!NOTE]
-> Home Assistant (`compose.homeassistant.yml`) uses `network_mode: host` for device discovery, so it binds directly to port 8123 on the NAS IP rather than using Docker networks.
+> Home Assistant uses `network_mode: host` for device discovery, so it binds directly to port 8123 on the NAS IP rather than using Docker networks.
 
 > [!WARNING]
 > If you ran `make down` before the NAS shut down, containers were explicitly stopped and **will not auto-restart** on the next boot. Run `make up` manually in that case. Avoid `make down` before scheduled shutdowns — just let the NAS power off with containers running.

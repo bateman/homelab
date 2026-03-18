@@ -51,9 +51,8 @@ Infrastructure-as-code for a homelab: QNAP NAS (Docker media stack) + Lenovo Min
 homelab/
 ├── Makefile                      # Stack management (run `make help`)
 ├── docker/
-│   ├── compose.yml               # Infrastructure: networking, auth, monitoring, backups
+│   ├── compose.yml               # Infrastructure: networking, auth, monitoring, backups, home automation
 │   ├── compose.media.yml         # Media stack: *arr apps, download clients (VPN/no-VPN)
-│   ├── compose.homeassistant.yml # Home Assistant (network_mode: host)
 │   ├── recyclarr.yml             # Recyclarr quality profiles config
 │   ├── config/                   # Service configs (Authelia, Traefik rules, etc.)
 │   ├── .env.example              # Non-sensitive config template
