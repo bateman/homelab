@@ -685,11 +685,25 @@ Settings for handling torrents stuck in the metadata download phase. This is a c
 
 #### Stalled Download Rules
 
-Rules for detecting and handling stalled downloads (torrents with no transfer activity). Configure the stalled timeout — how long a download can be stalled before receiving a strike. Recommended starting point: **30 minutes**. Lower for time-sensitive content (Sonarr/TV), higher for rare releases (Radarr/movies).
+Rules for detecting and handling stalled downloads (torrents with no transfer activity). Create one or more stall rules — each rule is independently configurable:
+
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Name | *(descriptive name)* | Identifies the rule (e.g., "Default Stall Rule", "Aggressive TV Stall") |
+| Enabled | **On** | Toggle individual rules without deleting them |
+| Max Strikes | **3** | Number of strikes before action is taken. Higher = more patient |
+| Privacy Type | **Both** | Which torrent types the rule applies to: **Public**, **Private**, or **Both** |
+| Min Completion % | **0** | Only apply the rule once download progress exceeds this value. 0 means apply from the start (0% and above) |
+| Max Completion % | **100** | Only apply the rule to downloads at or below this completion percentage. Use to skip nearly-complete downloads |
+| Reset Strikes on Progress | **Off** | When enabled, the strike count resets to zero if the torrent shows any download progress. Useful for torrents with intermittent seeders — prevents premature removal |
+| Delete Private from Client | **Off** | When disabled, private torrents are removed from the *arr app but kept in qBittorrent. Enable only if you also want the torrent deleted from the client |
+
+> [!TIP]
+> Create multiple stall rules for different scenarios — e.g., a lenient rule for private torrents (`Privacy Type: Private`, higher strikes, `Reset Strikes on Progress: On`) and an aggressive rule for public torrents (`Privacy Type: Public`, fewer strikes). Use `Min/Max Completion %` to treat nearly-complete downloads differently from those stuck at 0%.
 
 #### Slow Download Rules
 
-Rules for detecting and handling slow downloads. Configure:
+Rules for detecting and handling slow downloads. The rule structure mirrors [Stalled Download Rules](#stalled-download-rules) (Name, Enabled, Max Strikes, Privacy Type, Min/Max Completion %, Reset Strikes on Progress, Delete Private from Client), with these additional settings:
 
 - **Low speed threshold** — strike downloads below this speed (e.g., 100 KB/s). Set to 0 to disable
 - **Max ETA** — strike downloads estimated to take longer than this (e.g., 4–8 hours). Useful for catching very slow torrents that would otherwise tie up queue slots
