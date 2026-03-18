@@ -515,52 +515,84 @@ Bazarr → Settings → Sonarr / Radarr → Options:
 
 Path mapping is **not needed** — Bazarr mounts `/share/data/media:/data/media` and sees `/data/media`, the same path Sonarr/Radarr see via `/share/data:/data`. Sync interval is configured in Bazarr → Settings → Scheduler (see [Scheduler Tuning](#scheduler-tuning) below).
 
-### Post-Processing
+### Subtitles Settings
 
 Bazarr → Settings → Subtitles:
 
-| Setting | Recommended | Why |
-|---------|-------------|-----|
-| Subtitle storage | **Alongside media file** | Plex/media players find them automatically |
-| Upgrade subtitles | **Yes** | Allows Bazarr to replace poor subs when better ones appear |
-| Upgrade days | **7** (default) | How many days back to check for upgrades on existing subs |
-| Upgrade manually downloaded | **No** | Preserve subs you manually chose; set to Yes if you want Bazarr to improve everything |
-| Encode subtitles in UTF-8 | **Yes** | Ensures consistent encoding; prevents garbled characters on non-Latin subtitle files |
+#### Subtitle File Options
 
-### Performance & Optimization
+| Setting | Value | Why |
+|---------|-------|-----|
+| Subtitle Folder | **AlongSide Media File** | Plex/media players find them automatically |
+| Hearing-impaired subtitles extension | **hi (Hearing-Impaired)** | Uses `.hi` extension when saving HI subtitle files to disk |
+| Encode Subtitles To UTF-8 | **Enabled** | Ensures consistent encoding; prevents garbled characters on non-Latin subtitle files |
+| Change Subtitle File Permission After Download (chmod) | **Disabled** | Not needed — container PUID/PGID handles permissions |
 
-Bazarr → Settings → Subtitles → Performance / Optimization:
+#### Embedded Subtitles Handling
 
-| Setting | Recommended | Why |
-|---------|-------------|-----|
+| Setting | Value | Why |
+|---------|-------|-----|
+| Treat Embedded Subtitles as Downloaded | **Enabled** | Prevents Bazarr from searching providers when the media file already has embedded subs |
+| Embedded Subtitles video parser | **ffprobe** | Faster than mediainfo and included in Bazarr already |
+| Ignore Embedded PGS Subtitles | **Disabled** | PGS (image-based) subs are still recognized as present |
+| Ignore Embedded VobSub Subtitles | **Disabled** | VobSub subs are still recognized as present |
+| Ignore Embedded ASS Subtitles | **Disabled** | ASS subs are still recognized as present |
+| Show Only Desired Languages | **Enabled** | Hides embedded subtitle tracks for languages not in your profile |
+
+#### Upgrading Subtitles
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Upgrade Previously Downloaded Subtitles | **Enabled** | Allows Bazarr to replace poor subs when better ones appear |
+| Upgrade days | **14** | How many days back to check for upgrades — increased from default 7 for broader upgrade window |
+| Upgrade Manually Downloaded or Translated Subtitles | **Enabled** | Bazarr can improve even manually selected subs if a better match appears |
+
+#### Performance / Optimization
+
+| Setting | Value | Why |
+|---------|-------|-----|
 | Adaptive Searching | **Enabled** | Reduces search frequency over time for files unlikely to have subtitles — prevents hammering providers |
-| Search Providers Simultaneously | **Enabled** | Faster results. Disable on low-power devices (Raspberry Pi) |
-| Use Embedded Subtitles | **Disabled** | Scanning embedded subs triggers ffprobe on every media file — CPU and I/O intensive |
+| Adaptive searching delay | **3 weeks** | Time window from first search before adaptive mode kicks in |
+| Adaptive searching delta | **1 week** | Once adaptive mode is active, Bazarr skips files searched more recently than this |
+| Search Enabled Providers Simultaneously | **Enabled** | Queries all providers at once for faster results. Disable on low-power devices |
+| Skip video file hash calculation | **Disabled** | Hash matching gives the most accurate subtitle results; only enable to prevent waking a sleeping HDD |
+
+#### Sub-Zero Subtitle Content Modifications
+
+All post-download content modifications are **disabled**:
+
+| Setting | Value |
+|---------|-------|
+| Hearing Impaired | Disabled |
+| Remove Tags | Disabled |
+| Remove Emoji | Disabled |
+| OCR Fixes | Disabled |
+| Common Fixes | Disabled |
+| Fix Uppercase | Disabled |
+| Color | *(none)* |
+| Reverse RTL | Disabled |
 
 > [!NOTE]
-> **Embedded subtitles**: When enabled, Bazarr detects text-based embedded subs (SRT, ASS, SSA) in MKV/MP4 containers and can extract them automatically. PGS (image-based) subtitles cannot be converted to text (no OCR support). Only enable this if you have many files with embedded subs you want to reuse.
+> These modify subtitle content after download (remove HI annotations, strip formatting tags, fix OCR artifacts, etc.). Keeping them all disabled preserves subtitles as-is from the provider. Enable selectively if you encounter issues like `[music playing]` annotations in non-HI subs or garbled OCR text.
 
-### Scheduler Tuning
+#### Audio Synchronization / Alignment
 
-Bazarr → Settings → Scheduler:
+| Setting | Value | Why |
+|---------|-------|-----|
+| Always use Audio Track as Reference for Syncing | **Disabled** | Only uses audio reference when needed, not for every sync |
+| Do Not Fix Framerate Mismatch | **Enabled** | Prevents subsync from altering timing when video/subtitle framerates differ — avoids making sync worse |
+| Golden-Section Search | **Enabled** | Uses golden-section search to find the optimal framerate ratio between video and subtitles |
+| Max Offset Seconds | **60** | Maximum allowed timing offset per subtitle segment |
+| Automatic Subtitles Audio Synchronization | **Disabled** | Avoids massive CPU usage from extracting audio and running speech detection on every file. On a QNAP NAS, this would saturate resources for hours on a large library |
 
-| Task | Recommended | Why |
-|------|-------------|-----|
-| Sonarr/Radarr Sync | **15 minutes** (default) | Picks up new additions reasonably fast |
-| Disk Indexing | **Manually** | Disables automatic drive scanning for existing subs — on large libraries (10,000+ files), periodic scanning causes substantial NAS I/O |
-| Search and Upgrade Subtitles | **6–12 hours** | Default may be too aggressive. Increase if you see "maximum number of running instances reached" in logs |
+> [!TIP]
+> If you need subtitle sync for specific files, use a **post-processing script** instead (see below) — this targets only newly downloaded subs rather than the entire library.
 
-### Automatic Subtitle Synchronization
+#### Custom Post-Processing
 
-Bazarr → Settings → Subtitles → Automatic Subtitles Synchronization:
-
-- **Recommended: Disabled.** When enabled, Bazarr extracts audio tracks from every media file and uses speech detection to align subtitles — this causes massive CPU and network usage. On a QNAP NAS, this will saturate resources for hours on a large library.
-
-If you need subtitle sync for specific files, use a **post-processing script** instead (see below) — this targets only newly downloaded subs rather than the entire library.
-
-### Custom Post-Processing Scripts
-
-Bazarr → Settings → Subtitles → Post-Processing:
+| Setting | Value |
+|---------|-------|
+| Custom Post-Processing | **Disabled** |
 
 Bazarr can execute custom scripts after downloading a subtitle using template variables like `{{subtitles}}` (subtitle path) and `{{episode}}`/`{{movie}}` (media path). See the [Bazarr Wiki](https://wiki.bazarr.media/) for the full variable list.
 
@@ -575,6 +607,23 @@ Bazarr can execute custom scripts after downloading a subtitle using template va
 
 > [!NOTE]
 > Post-processing scripts run inside the Bazarr container. If using a community tool, it must be installed in the container or accessible via a mounted volume.
+
+#### Translating
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Score for Translated Episode and Movie Subtitles | **0** | Translated subtitles receive no score bonus — original-language subs are always preferred |
+| Translator | **Google Translate** | Used as fallback when no subtitle is available in the desired language |
+
+### Scheduler Tuning
+
+Bazarr → Settings → Scheduler:
+
+| Task | Recommended | Why |
+|------|-------------|-----|
+| Sonarr/Radarr Sync | **15 minutes** (default) | Picks up new additions reasonably fast |
+| Disk Indexing | **Manually** | Disables automatic drive scanning for existing subs — on large libraries (10,000+ files), periodic scanning causes substantial NAS I/O |
+| Search and Upgrade Subtitles | **6–12 hours** | Default may be too aggressive. Increase if you see "maximum number of running instances reached" in logs |
 
 ### Notifications
 
