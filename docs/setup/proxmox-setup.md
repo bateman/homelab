@@ -182,6 +182,19 @@ sed -Ezi.bak "s/(Ext.Msg.show\(\{[^}]*license[^}]*\}\);)/void(0);/g" /usr/share/
 systemctl restart pveproxy
 ```
 
+To persist the patch across Proxmox upgrades, create a dpkg post-install hook:
+
+```bash
+cat > /etc/apt/apt.conf.d/99-no-subscription-popup << 'EOF'
+DPkg::Post-Invoke {
+    "if [ -f /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js ]; then sed -Ezi 's/(Ext.Msg.show\(\{[^}]*license[^}]*\}\);)/void(0);/g' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js && systemctl restart pveproxy 2>/dev/null || true; fi";
+};
+EOF
+```
+
+> [!NOTE]
+> The hook runs after every `dpkg` operation. It checks if `proxmoxlib.js` exists, re-applies the patch, and restarts the proxy. The `|| true` ensures apt never fails due to the hook.
+
 ### 3.4 Configure NFS Storage from NAS
 
 #### Prerequisite: Enable NFS Export on QNAP
