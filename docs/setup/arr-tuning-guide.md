@@ -703,10 +703,23 @@ Rules for detecting and handling stalled downloads (torrents with no transfer ac
 
 #### Slow Download Rules
 
-Rules for detecting and handling slow downloads. The rule structure mirrors [Stalled Download Rules](#stalled-download-rules) (Name, Enabled, Max Strikes, Privacy Type, Min/Max Completion %, Reset Strikes on Progress, Delete Private from Client), with these additional settings:
+Rules for detecting and handling downloads that are transferring too slowly. Create one or more slow rules — each rule is independently configurable:
 
-- **Low speed threshold** — strike downloads below this speed (e.g., 100 KB/s). Set to 0 to disable
-- **Max ETA** — strike downloads estimated to take longer than this (e.g., 4–8 hours). Useful for catching very slow torrents that would otherwise tie up queue slots
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Name | *(descriptive name)* | Identifies the rule (e.g., "Default Slow Rule", "Strict Public Slow") |
+| Enabled | **On** | Toggle individual rules without deleting them |
+| Max Strikes | **3** | Number of strikes before action is taken |
+| Min Speed | **100 KB/s** | Minimum speed threshold — downloads below this receive a strike. Toggle between KB/s and MB/s. Leave empty to disable speed checking |
+| Maximum Time (Hours) | **0** (disabled) | Maximum time allowed for slow downloads. Downloads exceeding this duration receive a strike. Set to 0 to disable — useful if you only want speed-based detection |
+| Privacy Type | **Both** | Which torrent types the rule applies to: **Public**, **Private**, or **Both** |
+| Min Completion % | **0** | Only apply the rule once download progress exceeds this value (0 includes items at 0% and above) |
+| Max Completion % | **100** | Only apply the rule to downloads at or below this completion percentage |
+| Ignore Above Size | *(empty)* | Skip downloads larger than this size (MB or GB). Useful for tolerating slow speeds on very large releases (e.g., Remux files) that naturally take longer |
+| Reset Strikes on Progress | **Off** | When enabled, the strike count resets if the torrent shows download progress |
+
+> [!TIP]
+> Combine **Min Speed** and **Maximum Time** for layered detection — e.g., strike anything below 100 KB/s immediately, but also strike anything that has been downloading for over 8 hours regardless of speed. Use **Ignore Above Size** to exempt large Remux or 4K releases that are expected to be slow.
 
 #### Per-App Configuration
 
