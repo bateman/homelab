@@ -178,7 +178,8 @@ reboot
 
 ```bash
 # Optional - removes license popup in WebUI
-sed -Ezi.bak "s/(Ext.Msg.show\(\{[^}]*license[^}]*\}\);)/void(0);/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+# Bypasses the subscription check by making checked_command() call orig_cmd() immediately
+sed -i.bak 's/checked_command: function (orig_cmd) {/checked_command: function (orig_cmd) { orig_cmd(); return;/' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
 systemctl restart pveproxy
 ```
 
@@ -187,7 +188,7 @@ To persist the patch across Proxmox upgrades, create a dpkg post-install hook:
 ```bash
 cat > /etc/apt/apt.conf.d/99-no-subscription-popup << 'EOF'
 DPkg::Post-Invoke {
-    "if [ -f /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js ]; then sed -Ezi 's/(Ext.Msg.show\(\{[^}]*license[^}]*\}\);)/void(0);/g' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js && systemctl restart pveproxy 2>/dev/null || true; fi";
+    "if [ -f /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js ]; then sed -i 's/checked_command: function (orig_cmd) {/checked_command: function (orig_cmd) { orig_cmd(); return;/' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js && systemctl restart pveproxy 2>/dev/null || true; fi";
 };
 EOF
 ```
