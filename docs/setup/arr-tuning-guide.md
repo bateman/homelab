@@ -465,17 +465,22 @@ No language equivalences configured. Use this to treat two language codes as ide
 
 #### Languages Profile
 
-One profile configured:
+One profile configured — **ITA-EN**:
 
-| Name | Languages | Notes |
-|------|-----------|-------|
-| **ITA-EN** | Italian (IT), English (EN) | Searches for Italian subtitles first, then English as fallback |
+| ID | Language | Subtitles Type | Search only when... |
+|----|----------|---------------|---------------------|
+| 1 | **Italian** | Normal or hearing-impaired | Always |
+| 2 | **English** | Normal or hearing-impaired | Always |
 
-Profile settings to configure when editing:
-- **Forced subtitles**: Set per-language. Use **False** (default) for normal subs, **True** for forced-only (foreign dialogue), or **Both**
-- **Hearing Impaired (HI)**: Enable "Also search for Hearing Impaired" for SDH subtitles, or exclude for clean subtitles
-- **Exclude Audio**: Skip subtitle search when the audio track already matches — avoids unnecessary provider queries
-- **Cutoff**: Set to your primary language so Bazarr stops searching once that subtitle is found — reduces provider load
+| Setting | Value | Why |
+|---------|-------|-----|
+| Cutoff | **Italian (it)** | Bazarr stops searching once an Italian subtitle is found — English is only fetched if Italian is unavailable |
+| Must contain | *(empty)* | No keyword filtering on subtitle release info |
+| Must not contain | *(empty)* | No keyword exclusion on subtitle release info |
+| Use Original Format | **Disabled** | Allows Bazarr to convert subtitle format (e.g., ASS → SRT) for broader player compatibility |
+
+> [!NOTE]
+> **Subtitles Type** "Normal or hearing-impaired" accepts both clean and SDH subtitles — Bazarr downloads whichever scores highest. Change to "Normal" to exclude HI/SDH subs, or "Hearing-impaired" for SDH-only.
 
 #### Tag-Based Automatic Language Profile Selection
 
