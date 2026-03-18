@@ -619,11 +619,40 @@ Bazarr can execute custom scripts after downloading a subtitle using template va
 
 Bazarr → Settings → Scheduler:
 
-| Task | Recommended | Why |
-|------|-------------|-----|
-| Sonarr/Radarr Sync | **15 minutes** (default) | Picks up new additions reasonably fast |
-| Disk Indexing | **Manually** | Disables automatic drive scanning for existing subs — on large libraries (10,000+ files), periodic scanning causes substantial NAS I/O |
-| Search and Upgrade Subtitles | **6–12 hours** | Default may be too aggressive. Increase if you see "maximum number of running instances reached" in logs |
+#### Sonarr/Radarr Sync
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Sync with Sonarr | **1 Hour** | Picks up new series additions; increased from default 15 min to reduce API calls |
+| Sync Only Monitored Series | **Disabled** | Syncs all series so Bazarr has the complete library view |
+| Sync with Radarr | **1 Hour** | Picks up new movie additions; matches Sonarr sync interval |
+| Sync Only Monitored Movies | **Disabled** | Syncs all movies so Bazarr has the complete library view |
+
+#### Disk Indexing
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Update All Episode Subtitles from Disk | **Daily** | Re-scans episode files for on-disk subtitle changes once per day |
+| Time of Day (Episodes) | **4:00** | Runs during off-peak hours to minimize NAS I/O impact |
+| Use cached embedded subtitles parser results (Episodes) | **Enabled** | Avoids re-running ffprobe on every file each scan — significantly reduces disk I/O |
+| Update All Movie Subtitles from Disk | **Daily** | Re-scans movie files for on-disk subtitle changes once per day |
+| Time of Day (Movies) | **4:00** | Runs during off-peak hours alongside episode indexing |
+| Use cached embedded subtitles parser results (Movies) | **Enabled** | Same I/O savings as episodes — only re-parses files when metadata changes |
+
+#### Search and Upgrade Subtitles
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Search for Missing Series Subtitles | **6 Hours** | Balances finding subs quickly vs. not hammering providers |
+| Search for Missing Movies Subtitles | **6 Hours** | Matches series search interval for consistency |
+| Upgrade Previously Downloaded Subtitles | **12 Hours** | Less urgent than missing subs — checks for better versions twice daily |
+
+#### Backup
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Backup Database and Configuration File | **Weekly** | Bazarr config rarely changes; weekly is sufficient |
+| Day of Week | **Sunday** | Aligns with off-peak maintenance window |
 
 ### Notifications
 
