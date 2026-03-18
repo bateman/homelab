@@ -157,8 +157,14 @@ elif [ -f /etc/apt/sources.list.d/ceph.list ]; then
     sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/ceph.list
 fi
 
-# Add no-subscription repo
-echo "deb http://download.proxmox.com/debian/pve trixie pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
+# Add no-subscription repo (DEB822 format for Proxmox 9+/trixie)
+cat > /etc/apt/sources.list.d/pve-no-subscription.sources << 'EOF'
+Types: deb
+URIs: http://download.proxmox.com/debian/pve
+Suites: trixie
+Components: pve-no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+EOF
 ```
 
 ### 3.2 Update System
@@ -172,9 +178,23 @@ reboot
 
 ```bash
 # Optional - removes license popup in WebUI
-sed -Ezi.bak "s/(Ext.Msg.show\(\{[^}]*license[^}]*\}\);)/void(0);/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+# Bypasses the subscription check by making checked_command() call orig_cmd() immediately
+sed -i.bak 's/checked_command: function (orig_cmd) {/checked_command: function (orig_cmd) { orig_cmd(); return;/' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
 systemctl restart pveproxy
 ```
+
+To persist the patch across Proxmox upgrades, create a dpkg post-install hook:
+
+```bash
+cat > /etc/apt/apt.conf.d/99-no-subscription-popup << 'EOF'
+DPkg::Post-Invoke {
+    "if [ -f /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js ]; then sed -i 's/checked_command: function (orig_cmd) {/checked_command: function (orig_cmd) { orig_cmd(); return;/' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js && systemctl restart pveproxy 2>/dev/null || true; fi";
+};
+EOF
+```
+
+> [!NOTE]
+> The hook runs after every `dpkg` operation. It checks if `proxmoxlib.js` exists, re-applies the patch, and restarts the proxy. The `|| true` ensures apt never fails due to the hook.
 
 ### 3.4 Configure NFS Storage from NAS
 
