@@ -620,41 +620,63 @@ Download detected with problem (stalled, slow, etc.)
       → Strike 3 (max) → Remove + blocklist
 ```
 
-### Cleanup Rules
+### Queue Cleaner
+
+Settings → Queue Cleaner in the Cleanuparr UI (`http://192.168.3.10:11011/settings/queue-cleaner`). This is where all automatic cleanup rules are configured.
+
+#### General
 
 | Setting | Recommended | Why |
 |---------|-------------|-----|
-| Max strikes | **3** | Number of consecutive failures before removal. Lower = more aggressive cleanup |
-| Stalled timeout | **30 minutes** | How long a download can be stalled before receiving a strike |
-| Failed download action | **Remove and blocklist** | Prevents re-downloading the same broken release |
-| Low speed threshold | **Based on your connection** | Strike downloads below this speed (e.g., 100 KB/s). Set to 0 to disable |
-| Max ETA | **4–8 hours** | Strike downloads estimated to take longer than this. Useful for catching very slow torrents |
-| Seeding removal | **After ratio met** | Remove completed seeded torrents once they've reached the ratio set in qBittorrent |
+| Enabled | **On** | Activates the queue cleaner on the configured schedule |
+| Process downloads with no content ID | **Off** | When enabled, processes queue items not linked to any content in the *arr app. Cleanuparr cannot trigger a replacement search for these, so leave off unless you want orphaned queue entries cleaned up |
+| Advanced Scheduling | **Off** | Toggle between simple interval scheduling and advanced cron expressions. Simple scheduling is sufficient for most setups |
+| Schedule Unit | **Minutes** | Time unit for the check interval |
+| Every | **15** | How often the queue cleaner runs. 15 minutes is frequent enough to catch issues without excessive API calls |
+
+**Ignored Downloads**: Add patterns (hash, tag, category, label, tracker) to exclude specific downloads from all queue cleaner actions. Useful for cross-seed content, private tracker torrents with strict ratio requirements, or manually managed downloads.
+
+> [!TIP]
+> If you're using cross-seeding tools alongside qBittorrent, add their category or tag to the ignored downloads list so Cleanuparr doesn't remove cross-seeded content.
+
+#### Failed Import
+
+Settings for handling downloads that the *arr app has flagged as failed imports (e.g., bad file, sample-only release, unpacking errors):
+
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Max Strikes | **3** | Number of strikes before action is taken. Set to 0 to disable failed import handling. Minimum 3 to enable |
+| Ignore Private Torrents | **Off** | When enabled, private torrents are excluded from failed import checks. Enable if your private tracker has strict hit-and-run rules |
+| Delete Private from Client | **Off** | When disabled, private torrents are removed from the *arr app but kept in the torrent client. Enable only if you want Cleanuparr to also delete the torrent from qBittorrent |
+| Skip if Not Found in Client | **On** | Skips failed import checks for torrents not found in any enabled torrent client. Prevents false positives when the torrent was already manually removed |
+| Pattern Mode | **Exclude** | Controls how patterns are applied: **Exclude** skips matching downloads (everything else is processed), **Include** only processes matching downloads (everything else is skipped) |
+| Excluded/Included Patterns | *(empty)* | Patterns to filter which failed imports are processed, based on the Pattern Mode above |
 
 > [!TIP]
 > Start with conservative settings (higher timeouts, more strikes) and tighten over time as you learn your typical download patterns.
 
-### Per-App Configuration
+#### Downloading Metadata (qBittorrent Only)
 
-Cleanuparr allows different cleanup rules per *arr app:
+Settings for handling torrents stuck in the metadata download phase. This is a common issue with torrents that have few seeders or broken DHT entries. Each section (one per connected *arr app) has its own settings. The structure mirrors the Failed Import section — configure Max Strikes, private torrent handling, and pattern filtering per app.
+
+#### Stalled Download Rules
+
+Rules for detecting and handling stalled downloads (torrents with no transfer activity). Configure the stalled timeout — how long a download can be stalled before receiving a strike. Recommended starting point: **30 minutes**. Lower for time-sensitive content (Sonarr/TV), higher for rare releases (Radarr/movies).
+
+#### Slow Download Rules
+
+Rules for detecting and handling slow downloads. Configure:
+
+- **Low speed threshold** — strike downloads below this speed (e.g., 100 KB/s). Set to 0 to disable
+- **Max ETA** — strike downloads estimated to take longer than this (e.g., 4–8 hours). Useful for catching very slow torrents that would otherwise tie up queue slots
+
+#### Per-App Configuration
+
+Each rule category (Failed Import, Downloading Metadata, Stalled Download Rules, Slow Download Rules) can be configured independently per *arr app:
 
 - **Sonarr (TV)**: More aggressive (lower timeouts, fewer strikes) — episodes are time-sensitive
 - **Radarr (Movies)**: More patient (higher timeouts, more strikes) — rare releases may need longer to download
 - **Lidarr (Music)**: Default settings — music releases are less time-sensitive
-
-### Ignore / Exclusion Rules
-
-Cleanuparr supports filtering to prevent certain downloads from being cleaned up:
-
-| Filter Type | Use Case |
-|-------------|----------|
-| **Torrent hashes** | Whitelist specific downloads you want to keep regardless of status |
-| **Categories** | Skip certain download categories from cleanup (e.g., `manual` category) |
-| **Tags** | Exclude tagged downloads — useful for cross-seed or long-term seed content |
-| **Trackers** | Ignore downloads from specific trackers (e.g., private trackers with strict ratio requirements) |
-
-> [!TIP]
-> If you're using cross-seeding tools alongside qBittorrent, add their category or tag to the exclusion list so Cleanuparr doesn't remove cross-seeded content.
 
 ### Orphaned File Detection
 
@@ -665,12 +687,6 @@ Cleanuparr can detect and clean up files that are no longer useful:
 - **Cross-seed awareness** — can be configured to avoid removing files that are being cross-seeded
 
 Always review detected orphans in the Cleanuparr UI before enabling automatic removal.
-
-### Monitoring Schedule
-
-| Setting | Recommended | Why |
-|---------|-------------|-----|
-| Check interval | **10–15 minutes** | Frequent enough to catch issues quickly without excessive API calls |
 
 ### Notifications
 
