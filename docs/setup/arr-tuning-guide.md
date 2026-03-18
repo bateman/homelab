@@ -4,6 +4,30 @@
 
 ---
 
+## Quick Navigation
+
+| Section | Description |
+|---------|-------------|
+| [Overview](#overview) | Guide scope, prerequisites, what Recyclarr manages vs manual tuning |
+| [Trash Guides Philosophy](#trash-guides-philosophy) | How quality profiles, custom formats, and scoring work |
+| [Data Flow](#data-flow-from-indexer-to-library) | Full pipeline diagram and inter-service communication |
+| **Per-App Settings** | |
+| [Prowlarr](#prowlarr-tuning) | Indexer management and sync settings |
+| [Sonarr](#sonarr-tuning) | TV series — media management, quality profiles |
+| [Radarr](#radarr-tuning) | Movies — media management, release group tiers |
+| [Lidarr](#lidarr-tuning) | Music — quality profiles, metadata, media management |
+| [Bazarr](#bazarr-tuning) | Subtitles — providers, languages, performance, scheduling |
+| [Cleanuparr](#cleanuparr-tuning) | Queue cleanup — general settings, queue cleaner, strike system |
+| **Shared Settings** | |
+| [Quality Profiles](#quality-profiles-sonarr--radarr) | Profile selection for Sonarr & Radarr |
+| [Custom Formats](#custom-formats-sonarr--radarr) | Scoring system and common CF categories |
+| [Download Client Settings](#download-client-settings) | qBittorrent seeding behavior and completed download handling |
+| [Recyclarr Deep Dive](#recyclarr-deep-dive) | Adding profiles, score overrides, useful commands |
+| [Troubleshooting](#troubleshooting) | Common issues and debugging steps |
+| [References](#references) | External links and internal docs |
+
+---
+
 ## Overview
 
 This guide goes beyond the initial setup checklist in [nas-setup.md](nas-setup.md#arr-services-configuration) and explains **how and why** to tune each *arr app for optimal quality, automation, and maintenance.
