@@ -423,32 +423,78 @@ Trash Guides has a [Bazarr setup guide](https://trash-guides.info/Bazarr/Setup-G
 
 Bazarr → Settings → Providers:
 
-- **Add multiple providers** for better subtitle coverage. Recommended:
-  - OpenSubtitles.com (account required, free tier available)
-  - Subscene
-  - Podnapisi
-  - Addic7ed (account required)
-- **Anti-captcha**: Some providers require an anti-captcha service. [anti-captcha.com](https://anti-captcha.com/) is the recommended provider
+**Enabled providers** (in priority order):
+
+| Provider | Notes |
+|----------|-------|
+| **Gestdown** (Addic7ed proxy) | Proxy for the Addic7ed website — no login or cookies needed. Preferred over using Addic7ed directly |
+| **YIFY Subtitles** | Good coverage for popular movies. No account required |
+| **TVSubtitles** | TV-focused provider. No account required |
+| **Supersubtitles** | Additional coverage for TV and movies. No account required |
+| **Podnapisi** | Reliable multi-language provider. No account required |
+| **Addic7ed** | Requires Anti-Captcha provider or cookies to bypass rate limiting. Redundant if Gestdown is enabled, but kept as fallback |
+| **OpenSubtitles.com** | Largest subtitle database. Account required (free tier available) |
+
+- **Anti-captcha**: Addic7ed requires an anti-captcha service or cookies. [anti-captcha.com](https://anti-captcha.com/) is the recommended provider
 - **Provider priority**: Drag providers into preferred order. Bazarr tries them top-to-bottom
+- **Why Gestdown over Addic7ed directly?** Gestdown proxies Addic7ed without needing credentials or anti-captcha, making it more reliable for automated use
 
 > [!TIP]
 > Test each provider after adding it. Providers with authentication issues or rate limits will silently fail during searches.
 
-### Language Profiles
+### Language Settings
 
 Bazarr → Settings → Languages:
 
-- Create language profiles with your preferred subtitle languages in priority order
-- **Forced subtitles**: Enable if you want forced subs (foreign language dialogue only) — typically for movies with partial non-English dialogue. Options:
-  - **False** — don't search for forced subs
-  - **True** — search only for forced subs
-  - **Both** — search for both normal and forced subs
-- **Hearing Impaired (HI)**: Enable "Also search for Hearing Impaired" if you want SDH subtitles, or exclude them if you prefer clean subtitles
-- **Exclude Audio**: Skip subtitle search when the audio track already matches the desired language
+#### Subtitles Language
 
-Configure a **cutoff** in the language profile so Bazarr stops searching once your primary language subtitle is found — this significantly reduces provider load for multi-language setups.
+| Setting | Value | Why |
+|---------|-------|-----|
+| Single Language | **Disabled** | Keeps language codes in subtitle filenames so Plex/media players identify each language correctly |
+| Languages Filter | **English, Italian** | The two languages Bazarr will search for across all providers |
 
-**Default Settings** (Bazarr → Settings → Languages → Default Settings): Auto-apply language profiles to newly added series and movies so you don't have to configure each one manually.
+#### Language Equals
+
+No language equivalences configured. Use this to treat two language codes as identical across providers (e.g., Portuguese and Brazilian Portuguese).
+
+#### Embedded Tracks Language
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Deep analyze media file | **Disabled** | Avoids CPU-intensive ffprobe scans on every media file to detect audio track languages |
+
+#### Languages Profile
+
+One profile configured:
+
+| Name | Languages | Notes |
+|------|-----------|-------|
+| **ITA-EN** | Italian (IT), English (EN) | Searches for Italian subtitles first, then English as fallback |
+
+Profile settings to configure when editing:
+- **Forced subtitles**: Set per-language. Use **False** (default) for normal subs, **True** for forced-only (foreign dialogue), or **Both**
+- **Hearing Impaired (HI)**: Enable "Also search for Hearing Impaired" for SDH subtitles, or exclude for clean subtitles
+- **Exclude Audio**: Skip subtitle search when the audio track already matches — avoids unnecessary provider queries
+- **Cutoff**: Set to your primary language so Bazarr stops searching once that subtitle is found — reduces provider load
+
+#### Tag-Based Automatic Language Profile Selection
+
+| Setting | Value |
+|---------|-------|
+| Series | **Disabled** |
+| Movies | **Disabled** |
+| Remove Profile Tags | *(empty)* |
+
+When enabled, Bazarr matches Sonarr/Radarr tag names to language profile names and auto-assigns profiles. Useful for multi-language libraries where different content needs different subtitle languages.
+
+#### Default Language Profiles For Newly Added Shows
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Series | **Enabled** — Profile: ITA-EN | Auto-applies the ITA-EN profile to all new series added to Sonarr |
+| Movies | **Enabled** | Auto-applies profile to all new movies added to Radarr |
+
+This ensures every new addition gets subtitle searches immediately without manual profile assignment.
 
 ### Sonarr/Radarr Integration Options
 
