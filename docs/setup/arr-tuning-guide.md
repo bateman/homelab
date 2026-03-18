@@ -423,13 +423,21 @@ Trash Guides has a [Bazarr setup guide](https://trash-guides.info/Bazarr/Setup-G
 
 Bazarr → Settings → Providers:
 
-- **Add multiple providers** for better subtitle coverage. Recommended:
-  - OpenSubtitles.com (account required, free tier available)
-  - Subscene
-  - Podnapisi
-  - Addic7ed (account required)
-- **Anti-captcha**: Some providers require an anti-captcha service. [anti-captcha.com](https://anti-captcha.com/) is the recommended provider
+**Enabled providers** (in priority order):
+
+| Provider | Notes |
+|----------|-------|
+| **Gestdown** (Addic7ed proxy) | Proxy for the Addic7ed website — no login or cookies needed. Preferred over using Addic7ed directly |
+| **YIFY Subtitles** | Good coverage for popular movies. No account required |
+| **TVSubtitles** | TV-focused provider. No account required |
+| **Supersubtitles** | Additional coverage for TV and movies. No account required |
+| **Podnapisi** | Reliable multi-language provider. No account required |
+| **Addic7ed** | Requires Anti-Captcha provider or cookies to bypass rate limiting. Redundant if Gestdown is enabled, but kept as fallback |
+| **OpenSubtitles.com** | Largest subtitle database. Account required (free tier available) |
+
+- **Anti-captcha**: Addic7ed requires an anti-captcha service or cookies. [anti-captcha.com](https://anti-captcha.com/) is the recommended provider
 - **Provider priority**: Drag providers into preferred order. Bazarr tries them top-to-bottom
+- **Why Gestdown over Addic7ed directly?** Gestdown proxies Addic7ed without needing credentials or anti-captcha, making it more reliable for automated use
 
 > [!TIP]
 > Test each provider after adding it. Providers with authentication issues or rate limits will silently fail during searches.
