@@ -104,8 +104,7 @@ Recyclarr ──→ syncs Trash Guides profiles/CFs to Sonarr & Radarr (schedule
 | Cleanuparr | Sonarr | `sonarr` | 8989 | Monitor queue |
 | Cleanuparr | Radarr | `radarr` | 7878 | Monitor queue |
 | Cleanuparr | Lidarr | `lidarr` | 8686 | Monitor queue |
-| Cleanuparr | qBittorrent | `gluetun` or `qbittorrent` | 8080 | Monitor/remove downloads |
-| Cleanuparr | NZBGet | `gluetun` or `nzbget` | 6789 | Monitor/remove downloads |
+| Cleanuparr | qBittorrent | `gluetun` or `qbittorrent` | 8080 | Monitor/remove torrents |
 | Recyclarr | Sonarr | `sonarr` | 8989 | Push profiles/CFs |
 | Recyclarr | Radarr | `radarr` | 7878 | Push profiles/CFs |
 
@@ -544,14 +543,69 @@ Add connections to each *arr app and your download client:
 | Radarr | `http://radarr:7878` | Radarr → Settings → General |
 | Lidarr | `http://lidarr:8686` | Lidarr → Settings → General |
 
-**Download clients:**
+**Download clients (torrent only):**
 
 | Client | URL |
 |--------|-----|
 | qBittorrent | `http://gluetun:8080` or `http://qbittorrent:8080` |
-| NZBGet | `http://gluetun:6789` or `http://nzbget:6789` |
 
-Use the `gluetun` hostname when the VPN profile is active (see [VPN Setup](vpn-setup.md)). Cleanuparr also supports Transmission, Deluge, and others — only the clients above are used in this stack.
+Use the `gluetun` hostname when the VPN profile is active (see [VPN Setup](vpn-setup.md)). Cleanuparr also supports Transmission and Deluge — only qBittorrent is used in this stack.
+
+> [!NOTE]
+> Cleanuparr only supports torrent download clients. Usenet clients (NZBGet, SABnzbd) are not supported — failed NZB downloads are handled by the *arr apps' own "Failed Download Handling" settings.
+
+### General Settings
+
+Settings → General in the Cleanuparr UI (`http://192.168.3.10:11011/settings/general`):
+
+#### General
+
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Dry Run Mode | **Off** | When enabled, actions are logged but not executed — useful for testing rules before going live |
+| Display Support Banner | **Off** | Hides the support/sponsor banner on the dashboard |
+| Status Check | **On** | Periodically checks for new Cleanuparr versions. Disable if your environment has restricted outbound network access |
+
+**Ignored Downloads**: Add patterns (hash, tag, category, label, tracker) to exclude specific downloads from all cleanup actions. Leave empty unless you have downloads that should never be touched by Cleanuparr.
+
+#### Authentication
+
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Disable Authentication for Local Addresses | **On** | Requests from local networks (localhost, 192.168.x.x, 10.x.x.x, 172.16–31.x.x) bypass authentication |
+| Trust Forwarded Headers | **Off** | Enable only if Cleanuparr is behind a reverse proxy (Traefik) — trusts `X-Forwarded-For` and `X-Real-IP` headers to determine the client's real IP |
+
+**Additional Trusted Networks**: Add CIDR ranges that should bypass authentication. For this stack:
+
+- `192.168.3.0/24` — Server VLAN (where *arr apps and Cleanuparr run)
+- `192.168.4.0/24` — IoT/media VLAN (if accessing from media devices)
+- `100.64.0.0/10` — Tailscale CGNAT range (for remote access via Tailscale)
+
+#### HTTP Settings
+
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Max Retries | **0** | Number of retry attempts for failed HTTPS requests to *arr APIs. 0 means no retries — increase if your *arr apps have intermittent connectivity |
+| Timeout | **100** seconds | HTTP request timeout for API calls. Default is sufficient for most setups |
+| Certificate Validation | **Enabled** | Validates HTTPS certificates. Only disable if using self-signed certs for *arr app connections (not recommended) |
+
+#### Search Settings
+
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Search Enabled | **On** | When a download is removed, Cleanuparr triggers the *arr app to search for an alternative release automatically |
+| Search Delay | **120** seconds | Delay between search operations to avoid hammering indexers. Lower values risk rate-limiting from indexers |
+
+#### State Management
+
+| Setting | Recommended | Why |
+|---------|-------------|-----|
+| Strike Inactivity Window | **24** hours | Strikes for a download are cleared after this many hours without a new strike. As long as new strikes keep occurring, all strikes are retained |
+
+**Purge All Strikes**: Permanently deletes all strike data for every download, resetting strike counts to zero. Use this after changing cleanup rules to start fresh, or if strike data has become stale after a long period of downtime.
+
+> [!TIP]
+> **Dry Run Mode** is excellent for initial setup — enable it, let Cleanuparr run for a day, then review the logs to see what *would* have been cleaned up before committing to live cleanup.
 
 ### Strike System
 
@@ -858,7 +912,7 @@ docker exec recyclarr recyclarr sync --preview
 1. **Verify API connections** — ensure each *arr app is connected and the API key is valid
 2. **Check strike count** — downloads may not have accumulated enough strikes yet. Review strike history in the Cleanuparr UI
 3. **Check timeout thresholds** — stalled timeout may be too high for your use case. Reduce from 30 min to 15 min if downloads sit too long
-4. **Verify download client connection** — Cleanuparr needs access to qBittorrent/NZBGet to detect stalled/slow downloads
+4. **Verify download client connection** — Cleanuparr needs access to qBittorrent to detect stalled/slow torrents
 5. **Check exclusion rules** — downloads matching ignore filters (hashes, categories, tags, trackers) are skipped
 6. **Review logs** — check `docker logs cleanuparr` for errors, skipped items, or connection failures
 
