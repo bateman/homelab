@@ -53,7 +53,7 @@ homelab/
 ├── docker/
 │   ├── compose.yml               # Infrastructure: networking, auth, monitoring, backups
 │   ├── compose.media.yml         # Media stack: *arr apps, download clients (VPN/no-VPN)
-│   ├── compose.homeassistant.yml # Home Assistant (separate for Proxmox deployment)
+│   ├── compose.homeassistant.yml # Home Assistant (network_mode: host)
 │   ├── recyclarr.yml             # Recyclarr quality profiles config
 │   ├── config/                   # Service configs (Authelia, Traefik rules, etc.)
 │   ├── .env.example              # Non-sensitive config template

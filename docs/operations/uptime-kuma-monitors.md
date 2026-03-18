@@ -119,7 +119,7 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 > [!NOTE]
 > Non creare un monitor per Uptime Kuma stesso — non può monitorare in modo affidabile la propria disponibilità.
 
-### Home Assistant (compose.homeassistant.yml)
+### Home Assistant
 
 | Servizio | Tipo | URL / Target | Note |
 |----------|------|--------------|------|

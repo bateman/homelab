@@ -299,9 +299,7 @@ UDM-SE (LAN SFP+) <--10G--> Switch (SFP+ Port 1)
 | Tailscale | — | Mesh VPN remote access (subnet router, `network_mode: host`) |
 | Plex (Music) | 32400 | Music server (always-on) |
 | Cert Page | — | CA certificate download page (via certs.home.local) |
-
-> [!NOTE]
-> **Optional service:** Home Assistant (port 8123) is available via `compose.homeassistant.yml` but not included in the default stack. To enable, add `-f compose.homeassistant.yml` to your docker compose command. Home Assistant manages Mini PC power state for on-demand Plex (Movies/TV).
+| Home Assistant | 8123 | Home automation (`network_mode: host`) — manages Mini PC power state for on-demand Plex |
 
 ### Proxmox Mini PC (192.168.3.20)
 

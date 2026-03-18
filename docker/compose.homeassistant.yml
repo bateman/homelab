@@ -1,13 +1,9 @@
 # =============================================================================
-# Docker Compose - Home Assistant (Optional)
+# Docker Compose - Home Assistant
 # NAS QNAP TS-435XeU - Homelab
 #
-# Home automation platform - currently disabled to save RAM (~1GB)
-#
-# To enable, add this file to your compose command:
-#   docker compose -f compose.yml -f compose.media.yml -f compose.homeassistant.yml up -d
-#
-# Or update Makefile COMPOSE_FILES variable to include this file
+# Home automation platform (~1GB RAM)
+# Included in Makefile COMPOSE_FILES by default.
 #
 # NOTE: Home Assistant uses network_mode: host for device discovery
 # (Zigbee, Bluetooth, mDNS), so it doesn't use Docker networks.

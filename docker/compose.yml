@@ -4,14 +4,11 @@
 #
 # Infrastructure services: DNS, SSO, container management, backup
 # For media stack, see compose.media.yml
-# For home automation (optional), see compose.homeassistant.yml
+# For home automation, see compose.homeassistant.yml
 #
 # Usage:
-#   docker compose -f compose.yml -f compose.media.yml up -d
-#   or simply: make up
-#
-# To include Home Assistant (adds ~2GB RAM):
 #   docker compose -f compose.yml -f compose.media.yml -f compose.homeassistant.yml up -d
+#   or simply: make up
 # =============================================================================
 
 # Shared networks for all services
