@@ -104,8 +104,7 @@ Recyclarr ──→ syncs Trash Guides profiles/CFs to Sonarr & Radarr (schedule
 | Cleanuparr | Sonarr | `sonarr` | 8989 | Monitor queue |
 | Cleanuparr | Radarr | `radarr` | 7878 | Monitor queue |
 | Cleanuparr | Lidarr | `lidarr` | 8686 | Monitor queue |
-| Cleanuparr | qBittorrent | `gluetun` or `qbittorrent` | 8080 | Monitor/remove downloads |
-| Cleanuparr | NZBGet | `gluetun` or `nzbget` | 6789 | Monitor/remove downloads |
+| Cleanuparr | qBittorrent | `gluetun` or `qbittorrent` | 8080 | Monitor/remove torrents |
 | Recyclarr | Sonarr | `sonarr` | 8989 | Push profiles/CFs |
 | Recyclarr | Radarr | `radarr` | 7878 | Push profiles/CFs |
 
@@ -544,14 +543,16 @@ Add connections to each *arr app and your download client:
 | Radarr | `http://radarr:7878` | Radarr → Settings → General |
 | Lidarr | `http://lidarr:8686` | Lidarr → Settings → General |
 
-**Download clients:**
+**Download clients (torrent only):**
 
 | Client | URL |
 |--------|-----|
 | qBittorrent | `http://gluetun:8080` or `http://qbittorrent:8080` |
-| NZBGet | `http://gluetun:6789` or `http://nzbget:6789` |
 
-Use the `gluetun` hostname when the VPN profile is active (see [VPN Setup](vpn-setup.md)). Cleanuparr also supports Transmission, Deluge, and others — only the clients above are used in this stack.
+Use the `gluetun` hostname when the VPN profile is active (see [VPN Setup](vpn-setup.md)). Cleanuparr also supports Transmission and Deluge — only qBittorrent is used in this stack.
+
+> [!NOTE]
+> Cleanuparr only supports torrent download clients. Usenet clients (NZBGet, SABnzbd) are not supported — failed NZB downloads are handled by the *arr apps' own "Failed Download Handling" settings.
 
 ### General Settings
 
@@ -911,7 +912,7 @@ docker exec recyclarr recyclarr sync --preview
 1. **Verify API connections** — ensure each *arr app is connected and the API key is valid
 2. **Check strike count** — downloads may not have accumulated enough strikes yet. Review strike history in the Cleanuparr UI
 3. **Check timeout thresholds** — stalled timeout may be too high for your use case. Reduce from 30 min to 15 min if downloads sit too long
-4. **Verify download client connection** — Cleanuparr needs access to qBittorrent/NZBGet to detect stalled/slow downloads
+4. **Verify download client connection** — Cleanuparr needs access to qBittorrent to detect stalled/slow torrents
 5. **Check exclusion rules** — downloads matching ignore filters (hashes, categories, tags, trackers) are skipped
 6. **Review logs** — check `docker logs cleanuparr` for errors, skipped items, or connection failures
 
