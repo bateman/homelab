@@ -158,6 +158,7 @@ When facing trade-offs, **ask the user**:
 | Authelia SSO | `docs/setup/authelia-setup.md` |
 | Notifications | `docs/setup/notifications-setup.md` |
 | Portainer use cases | `docs/setup/portainer-guide.md` |
+| Home Assistant setup | `docs/setup/homeassistant-setup.md` |
 | *arr tuning (Trash Guides) | `docs/setup/arr-tuning-guide.md` |
 | Backup procedures | `docs/operations/runbook-backup-restore.md` |
 | Energy saving | `docs/operations/energy-saving-strategies.md` |
