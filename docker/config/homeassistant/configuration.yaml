@@ -25,7 +25,7 @@ http:
 # ---------------------------------------------------------------------------
 # Wake-on-LAN: required by plex-minipc-power.yaml automations to send
 # magic packets to the Mini PC (Proxmox) when Fire TV turns on.
-# See: docs/setup/alexa-firetv-setup.md
+# See: docs/setup/homeassistant-setup.md
 wake_on_lan:
 
 # Include automation files from this directory
