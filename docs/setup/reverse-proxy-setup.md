@@ -531,6 +531,6 @@ tailscale status
 ## Notes
 
 - **Direct ports**: Remain accessible as backup if Traefik has issues
-- **Home Assistant**: Uses file-based Traefik config (`homeassistant.yml`) since `network_mode: host` prevents Docker label discovery
+- **Home Assistant**: Uses file-based Traefik config (`homeassistant.yml`) since `network_mode: host` prevents Docker label discovery. Requires `trusted_proxies` in `configuration.yaml` to accept proxied requests (see `docker/config/homeassistant/configuration.yaml`)
 - **Plex**: Runs on Proxmox LXC (`192.168.3.21`). Routed via Traefik file provider (`plex.yml`), no Authelia.
 - **Updates**: Watchtower automatically updates Traefik
