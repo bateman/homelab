@@ -38,8 +38,18 @@ docker/config/authelia/users_database.yml
 docker/config/authelia/db.sqlite3
 docker/config/authelia/notification.txt
 
-# Exception: keep Home Assistant automation templates
+# Exception: keep Home Assistant configuration templates
 !docker/config/homeassistant/
+docker/config/homeassistant/.HA_VERSION
+docker/config/homeassistant/.ha_run.lock
+docker/config/homeassistant/.storage/
+docker/config/homeassistant/blueprints/
+docker/config/homeassistant/home-assistant.log*
+docker/config/homeassistant/home-assistant_v2.db*
+docker/config/homeassistant/automations.yaml
+docker/config/homeassistant/scenes.yaml
+docker/config/homeassistant/scripts.yaml
+docker/config/homeassistant/secrets.yaml
 
 # Exception: keep Pi-hole adlists file (blocklist URLs for bulk import)
 !docker/config/pihole/
