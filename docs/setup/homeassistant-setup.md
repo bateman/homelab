@@ -173,7 +173,7 @@ automation: !include plex-minipc-power.yaml
 ```
 
 > [!NOTE]
-> The shutdown automation in `plex-minipc-power.yaml` also requires a `rest_command` block in this file. See [Section 9.1](#91-mini-pc-power-management-fire-tv-based) for the full `rest_command` configuration to add.
+> The shutdown automation in `plex-minipc-power.yaml` uses `rest_command.proxmox_shutdown_minipc`, which is defined in this file with `!secret proxmox_api_token`. See [Section 9.1](#91-mini-pc-power-management-fire-tv-based) for the Proxmox API token setup.
 
 ### What's tracked in git vs what's not
 
@@ -266,23 +266,23 @@ To ensure the Fire TV always gets the same IP (required for reliable automations
 4. Note the IP for the next step
 
 > [!TIP]
-> If Fire TV is on the Media VLAN (192.168.4.x), you'll need a firewall rule allowing HA (192.168.3.10) to reach it on port 5555 (ADB). See [Section 10](#10-firewall-considerations).
+> If Fire TV is on the Media VLAN (192.168.4.x), you'll need a firewall rule allowing HA (192.168.3.10) to reach it on port 5555 (ADB). See [Section 10](#10-firewall-considerations) and [firewall-config.md Rule 14b](../network/firewall-config.md).
 
 ### 6.4 Add Integration in Home Assistant
 
 1. Open Home Assistant: `http://192.168.3.10:8123`
 2. **Settings** → **Devices & Services** → **Add Integration**
-3. Search for **"Android TV Remote"**
+3. Search for **"Android Debug Bridge"**
 4. Enter the Fire TV IP address
 5. On the Fire TV screen, a pairing prompt will appear — **confirm the code**
 6. The device appears as `media_player.fire_tv` (or similar — note the exact entity ID)
 
 > [!NOTE]
 > Home Assistant offers two Android TV integrations:
-> - **Android TV Remote** (recommended) — uses the Android TV Remote protocol, more reliable
-> - **Android Debug Bridge** — legacy, uses ADB directly
+> - **Android Debug Bridge** (recommended for Fire TV) — uses ADB on port 5555, reliable state detection
+> - **Android TV Remote** — uses port 6466, not supported on Fire TV Stick (port closed)
 >
-> Try **Android TV Remote** first. If it doesn't detect state changes correctly, use the ADB-based integration instead.
+> Use **Android Debug Bridge** for Fire TV Stick devices. The Android TV Remote integration requires port 6466, which Fire TV Stick does not expose.
 
 ### 6.5 Verify the Entity
 
@@ -437,25 +437,22 @@ mac: "XX:XX:XX:XX:XX:XX"         # → Mini PC integrated NIC MAC address
 entity_id: media_player.fire_tv  # → your actual Fire TV entity ID
 ```
 
-**Prerequisites for the shutdown automation** — add to `configuration.yaml`:
+**Prerequisites for the shutdown automation:**
 
-```yaml
-rest_command:
-  proxmox_shutdown_minipc:
-    url: "https://192.168.3.20:8006/api2/json/nodes/pve/status"
-    method: POST
-    headers:
-      Authorization: "PVEAPIToken=homeassistant@pve!hatoken=YOUR_TOKEN_HERE"
-    payload: "command=shutdown"
-    verify_ssl: false
-    content_type: "application/x-www-form-urlencoded"
-```
+The `rest_command` block is already in `configuration.yaml` and uses `!secret` for the API token. You just need to:
 
-Create the Proxmox API token:
+1. Create the Proxmox API token:
 
 ```bash
 # On Proxmox (ssh root@192.168.3.20)
 pveum user token add homeassistant@pve hatoken --privsep=0
+```
+
+2. Add the token to `secrets.yaml` (gitignored):
+
+```yaml
+# docker/config/homeassistant/secrets.yaml
+proxmox_api_token: "PVEAPIToken=homeassistant@pve!hatoken=<token-value>"
 ```
 
 > [!NOTE]
@@ -510,12 +507,12 @@ If these devices need to reach Home Assistant on the Server VLAN (192.168.3.x), 
 
 | Rule | Source | Destination | Port | Protocol | Action |
 |------|--------|-------------|------|----------|--------|
-| HA → Fire TV (ADB) | 192.168.3.10 | Fire TV IP (Media VLAN) | 5555 | TCP | Allow |
+| HA → Fire TV (ADB) | 192.168.3.10 | Fire TV IP (192.168.4.166) | 5555 | TCP | Allow |
 | IoT → HA (mDNS) | IoT VLAN (192.168.6.0/24) | 192.168.3.10 | 5353 | UDP | Allow |
 | Echo → HA (API) | Echo device IP (IoT VLAN) | 192.168.3.10 | 8123 | TCP | Allow |
 
 > [!NOTE]
-> Rules 7 and 14 already allow Media and IoT VLANs to reach HA on port 8123 (see below). You only need additional rules for ADB (5555) and mDNS (5353) if required.
+> Rules 7 and 14 already allow Media and IoT VLANs to reach HA on port 8123 (see below). The HA → Fire TV rule (Rule 14b in [firewall-config.md](../network/firewall-config.md)) allows traffic in the **reverse direction** — from Servers VLAN to Media VLAN. Fire TV Stick uses ADB on port **5555** (the Android TV Remote protocol on port 6466 is not supported on Fire TV Stick).
 
 Existing firewall rules that already cover HA access:
 
@@ -534,7 +531,7 @@ Existing firewall rules that already cover HA access:
 | HA not reachable on port 8123 | Container not running | `docker ps \| grep homeassistant` → `make up` |
 | Fire TV not discovered | ADB debugging off | Enable in Fire TV Developer Options |
 | Fire TV entity stays `unavailable` | IP changed | Set DHCP reservation in UniFi |
-| Fire TV pairing prompt doesn't appear | Firewall blocking | Allow TCP 5555 from HA to Fire TV |
+| Fire TV pairing prompt doesn't appear | Firewall blocking | Allow TCP 5555 (ADB) from HA to Fire TV — see Rule 14b |
 | Alexa integration asks to re-authenticate | Amazon session expired | Re-enter credentials in HA notification |
 | TTS not working | Wrong entity or type | Use `type: announce` for Echo, `type: tts` for Fire TV |
 | Plex wake automation doesn't fire | Wrong entity ID | Check Developer Tools → States for exact `media_player` ID |
