@@ -100,7 +100,7 @@ Internet
 | Gateway (UDM-SE) | 192.168.4.1 | — |
 | Smart TV bedroom | DHCP reservation | Wired |
 | Smart TV living room | DHCP reservation | WiFi |
-| Fire TV Stick | 192.168.4.166 | DHCP reservation · Android TV Remote (port 6466) for HA |
+| Fire TV Stick | 192.168.4.166 | DHCP reservation · ADB (port 5555) for HA |
 | Phones/Tablets | DHCP | Plex clients, *arr management, infrastructure management (QTS, Proxmox); UniFi via gateway IP (`192.168.4.1`) |
 
 ### VLAN 5 — Guest (192.168.5.0/24)
@@ -181,7 +181,7 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | NAS Management | 22, 5000, 5001, 8081, 9443, 8200, 3001 |
 | Traefik | 443 |
 | Home Assistant | 8123 |
-| Android TV Remote | 6466 |
+| ADB | 5555 |
 | SSH | 22 |
 | Printing | 631, 9100 |
 | Proxmox Management | 8006 |
@@ -403,7 +403,7 @@ Rules are processed in order, from first to last. Order matters.
 
 > Allows IoT devices to communicate with Home Assistant for automations.
 
-### Rule 14b — Allow HA to Fire TV (Android TV Remote)
+### Rule 14b — Allow HA to Fire TV (ADB)
 
 | Field | Value |
 |-------|-------|
@@ -412,9 +412,9 @@ Rules are processed in order, from first to last. Order matters.
 | Protocol | TCP |
 | Source | Home Assistant Server (192.168.3.10) |
 | Destination | Fire TV (192.168.4.166) |
-| Port | Android TV Remote (6466) |
+| Port | ADB (5555) |
 
-> Allows Home Assistant (NAS) to communicate with Fire TV on the Media VLAN via the Android TV Remote protocol. Required for the `media_player.fire_tv` entity used in power automations (`plex-minipc-power.yaml`). If using the legacy ADB integration instead, change the port to 5555.
+> Allows Home Assistant (NAS) to communicate with Fire TV on the Media VLAN via ADB (Android Debug Bridge). Required for the `media_player.fire_tv` entity used in power automations (`plex-minipc-power.yaml`). The Android TV Remote integration (port 6466) is not supported on Fire TV Stick — use the ADB integration instead.
 
 ### Rule 15 — Block IoT to All Private
 

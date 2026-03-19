@@ -266,23 +266,23 @@ To ensure the Fire TV always gets the same IP (required for reliable automations
 4. Note the IP for the next step
 
 > [!TIP]
-> If Fire TV is on the Media VLAN (192.168.4.x), you'll need a firewall rule allowing HA (192.168.3.10) to reach it on port 6466 (Android TV Remote) or 5555 (ADB). See [Section 10](#10-firewall-considerations) and [firewall-config.md Rule 14b](../network/firewall-config.md).
+> If Fire TV is on the Media VLAN (192.168.4.x), you'll need a firewall rule allowing HA (192.168.3.10) to reach it on port 5555 (ADB). See [Section 10](#10-firewall-considerations) and [firewall-config.md Rule 14b](../network/firewall-config.md).
 
 ### 6.4 Add Integration in Home Assistant
 
 1. Open Home Assistant: `http://192.168.3.10:8123`
 2. **Settings** → **Devices & Services** → **Add Integration**
-3. Search for **"Android TV Remote"**
+3. Search for **"Android Debug Bridge"**
 4. Enter the Fire TV IP address
 5. On the Fire TV screen, a pairing prompt will appear — **confirm the code**
 6. The device appears as `media_player.fire_tv` (or similar — note the exact entity ID)
 
 > [!NOTE]
 > Home Assistant offers two Android TV integrations:
-> - **Android TV Remote** (recommended) — uses the Android TV Remote protocol, more reliable
-> - **Android Debug Bridge** — legacy, uses ADB directly
+> - **Android Debug Bridge** (recommended for Fire TV) — uses ADB on port 5555, reliable state detection
+> - **Android TV Remote** — uses port 6466, not supported on Fire TV Stick (port closed)
 >
-> Try **Android TV Remote** first. If it doesn't detect state changes correctly, use the ADB-based integration instead.
+> Use **Android Debug Bridge** for Fire TV Stick devices. The Android TV Remote integration requires port 6466, which Fire TV Stick does not expose.
 
 ### 6.5 Verify the Entity
 
@@ -510,12 +510,12 @@ If these devices need to reach Home Assistant on the Server VLAN (192.168.3.x), 
 
 | Rule | Source | Destination | Port | Protocol | Action |
 |------|--------|-------------|------|----------|--------|
-| HA → Fire TV (Android TV Remote) | 192.168.3.10 | Fire TV IP (192.168.4.166) | 6466 | TCP | Allow |
+| HA → Fire TV (ADB) | 192.168.3.10 | Fire TV IP (192.168.4.166) | 5555 | TCP | Allow |
 | IoT → HA (mDNS) | IoT VLAN (192.168.6.0/24) | 192.168.3.10 | 5353 | UDP | Allow |
 | Echo → HA (API) | Echo device IP (IoT VLAN) | 192.168.3.10 | 8123 | TCP | Allow |
 
 > [!NOTE]
-> Rules 7 and 14 already allow Media and IoT VLANs to reach HA on port 8123 (see below). The HA → Fire TV rule (Rule 14b in [firewall-config.md](../network/firewall-config.md)) allows traffic in the **reverse direction** — from Servers VLAN to Media VLAN. The Android TV Remote integration uses port **6466**; the legacy ADB integration uses port **5555**.
+> Rules 7 and 14 already allow Media and IoT VLANs to reach HA on port 8123 (see below). The HA → Fire TV rule (Rule 14b in [firewall-config.md](../network/firewall-config.md)) allows traffic in the **reverse direction** — from Servers VLAN to Media VLAN. Fire TV Stick uses ADB on port **5555** (the Android TV Remote protocol on port 6466 is not supported on Fire TV Stick).
 
 Existing firewall rules that already cover HA access:
 
@@ -534,7 +534,7 @@ Existing firewall rules that already cover HA access:
 | HA not reachable on port 8123 | Container not running | `docker ps \| grep homeassistant` → `make up` |
 | Fire TV not discovered | ADB debugging off | Enable in Fire TV Developer Options |
 | Fire TV entity stays `unavailable` | IP changed | Set DHCP reservation in UniFi |
-| Fire TV pairing prompt doesn't appear | Firewall blocking | Allow TCP 6466 (Android TV Remote) or 5555 (ADB) from HA to Fire TV — see Rule 14b |
+| Fire TV pairing prompt doesn't appear | Firewall blocking | Allow TCP 5555 (ADB) from HA to Fire TV — see Rule 14b |
 | Alexa integration asks to re-authenticate | Amazon session expired | Re-enter credentials in HA notification |
 | TTS not working | Wrong entity or type | Use `type: announce` for Echo, `type: tts` for Fire TV |
 | Plex wake automation doesn't fire | Wrong entity ID | Check Developer Tools → States for exact `media_player` ID |
