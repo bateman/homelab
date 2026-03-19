@@ -32,5 +32,24 @@ mobile_app:
 # See: docs/setup/homeassistant-setup.md
 wake_on_lan:
 
+# ---------------------------------------------------------------------------
+# REST Commands
+# ---------------------------------------------------------------------------
+# Proxmox API call used by plex-minipc-power.yaml to gracefully shut down
+# the Mini PC when Fire TV goes idle.
+# Requires a Proxmox API token — create with:
+#   pveum user token add homeassistant@pve hatoken --privsep=0
+# Then add to secrets.yaml:
+#   proxmox_api_token: PVEAPIToken=homeassistant@pve!hatoken=<token-value>
+rest_command:
+  proxmox_shutdown_minipc:
+    url: "https://192.168.3.20:8006/api2/json/nodes/pve/status"
+    method: POST
+    headers:
+      Authorization: !secret proxmox_api_token
+    payload: "command=shutdown"
+    verify_ssl: false
+    content_type: "application/x-www-form-urlencoded"
+
 # Include automation files from this directory
 automation: !include plex-minipc-power.yaml

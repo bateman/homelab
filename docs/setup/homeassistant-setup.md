@@ -173,7 +173,7 @@ automation: !include plex-minipc-power.yaml
 ```
 
 > [!NOTE]
-> The shutdown automation in `plex-minipc-power.yaml` also requires a `rest_command` block in this file. See [Section 9.1](#91-mini-pc-power-management-fire-tv-based) for the full `rest_command` configuration to add.
+> The shutdown automation in `plex-minipc-power.yaml` uses `rest_command.proxmox_shutdown_minipc`, which is defined in this file with `!secret proxmox_api_token`. See [Section 9.1](#91-mini-pc-power-management-fire-tv-based) for the Proxmox API token setup.
 
 ### What's tracked in git vs what's not
 
@@ -437,25 +437,22 @@ mac: "XX:XX:XX:XX:XX:XX"         # → Mini PC integrated NIC MAC address
 entity_id: media_player.fire_tv  # → your actual Fire TV entity ID
 ```
 
-**Prerequisites for the shutdown automation** — add to `configuration.yaml`:
+**Prerequisites for the shutdown automation:**
 
-```yaml
-rest_command:
-  proxmox_shutdown_minipc:
-    url: "https://192.168.3.20:8006/api2/json/nodes/pve/status"
-    method: POST
-    headers:
-      Authorization: "PVEAPIToken=homeassistant@pve!hatoken=YOUR_TOKEN_HERE"
-    payload: "command=shutdown"
-    verify_ssl: false
-    content_type: "application/x-www-form-urlencoded"
-```
+The `rest_command` block is already in `configuration.yaml` and uses `!secret` for the API token. You just need to:
 
-Create the Proxmox API token:
+1. Create the Proxmox API token:
 
 ```bash
 # On Proxmox (ssh root@192.168.3.20)
 pveum user token add homeassistant@pve hatoken --privsep=0
+```
+
+2. Add the token to `secrets.yaml` (gitignored):
+
+```yaml
+# docker/config/homeassistant/secrets.yaml
+proxmox_api_token: "PVEAPIToken=homeassistant@pve!hatoken=<token-value>"
 ```
 
 > [!NOTE]
