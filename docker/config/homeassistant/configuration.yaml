@@ -23,6 +23,10 @@ http:
 # ---------------------------------------------------------------------------
 # Integrations
 # ---------------------------------------------------------------------------
+# Mobile App: required for HA Companion App registration and push
+# notifications. Without this, the app returns APIError code 6.
+mobile_app:
+
 # Wake-on-LAN: required by plex-minipc-power.yaml automations to send
 # magic packets to the Mini PC (Proxmox) when Fire TV turns on.
 # See: docs/setup/homeassistant-setup.md
