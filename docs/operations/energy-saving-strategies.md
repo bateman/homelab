@@ -601,7 +601,7 @@ Home Assistant can centralize power management with intelligent automations.
 
 ### 6.1 Prerequisites
 
-- Enable Home Assistant: Add `compose.homeassistant.yml` to compose files
+- Home Assistant running (included in `compose.yml`, started by `make up`)
 - Install Wake-on-LAN integration
 - Install NUT integration (if using UPS monitoring)
 

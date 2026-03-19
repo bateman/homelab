@@ -580,8 +580,7 @@ make logs | grep -i error
 - [ ] Traefik: `http://192.168.3.10:80` redirects to HTTPS
 - [ ] Authelia: `https://auth.home.local` responds (requires DNS/hosts entry)
 
-> [!NOTE]
-> **Optional service:** Home Assistant (`http://192.168.3.10:8123`) is only available if you started the stack with `compose.homeassistant.yml`. See the compose file for details.
+- [ ] Home Assistant: `http://192.168.3.10:8123` responds
 
 ### Auto-Start on Boot
 
@@ -595,7 +594,7 @@ All services in `compose.yml` and `compose.media.yml` use `restart: unless-stopp
 4. Services come up respecting `depends_on` health checks (e.g., *arr apps wait for download clients)
 
 > [!NOTE]
-> Home Assistant (`compose.homeassistant.yml`) is **not** included — it runs on the Proxmox Mini PC as a separate deployment. Only the infrastructure (`compose.yml`) and media stack (`compose.media.yml`) auto-start on the NAS.
+> Home Assistant uses `network_mode: host` for device discovery, so it binds directly to port 8123 on the NAS IP rather than using Docker networks.
 
 > [!WARNING]
 > If you ran `make down` before the NAS shut down, containers were explicitly stopped and **will not auto-restart** on the next boot. Run `make up` manually in that case. Avoid `make down` before scheduled shutdowns — just let the NAS power off with containers running.

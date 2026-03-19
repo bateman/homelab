@@ -2,16 +2,12 @@
 # Docker Compose - Infrastructure Stack
 # NAS QNAP TS-435XeU - Homelab
 #
-# Infrastructure services: DNS, SSO, container management, backup
+# Infrastructure services: DNS, SSO, container management, backup, home automation
 # For media stack, see compose.media.yml
-# For home automation (optional), see compose.homeassistant.yml
 #
 # Usage:
 #   docker compose -f compose.yml -f compose.media.yml up -d
 #   or simply: make up
-#
-# To include Home Assistant (adds ~2GB RAM):
-#   docker compose -f compose.yml -f compose.media.yml -f compose.homeassistant.yml up -d
 # =============================================================================
 
 # Shared networks for all services
@@ -541,5 +537,38 @@ services:
           memory: 256M
         reservations:
           memory: 64M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # ---------------------------------------------------------------------------
+  # Home Automation
+  # ---------------------------------------------------------------------------
+  # NOTE: Home Assistant uses network_mode: host for device discovery
+  # (Zigbee, Bluetooth, mDNS). This means:
+  # - It is NOT part of media_net network
+  # - It cannot resolve other containers by name (use IP 192.168.3.10 instead)
+  # - It binds directly to host port 8123
+  # - Firewall rules targeting NAS IP (192.168.3.10:8123) work correctly
+  #   because HA responds on the host interface, not a container network
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    environment:
+      TZ: ${TZ:-Europe/Rome}
+    volumes:
+      - ./config/homeassistant:/config
+      - /run/dbus:/run/dbus:ro
+    network_mode: host
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8123/api/"]
+      <<: *common-healthcheck
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
