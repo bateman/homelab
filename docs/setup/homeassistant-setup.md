@@ -266,7 +266,7 @@ To ensure the Fire TV always gets the same IP (required for reliable automations
 4. Note the IP for the next step
 
 > [!TIP]
-> If Fire TV is on the Media VLAN (192.168.4.x), you'll need a firewall rule allowing HA (192.168.3.10) to reach it on port 5555 (ADB). See [Section 10](#10-firewall-considerations).
+> If Fire TV is on the Media VLAN (192.168.4.x), you'll need a firewall rule allowing HA (192.168.3.10) to reach it on port 6466 (Android TV Remote) or 5555 (ADB). See [Section 10](#10-firewall-considerations) and [firewall-config.md Rule 14b](../network/firewall-config.md).
 
 ### 6.4 Add Integration in Home Assistant
 
@@ -510,12 +510,12 @@ If these devices need to reach Home Assistant on the Server VLAN (192.168.3.x), 
 
 | Rule | Source | Destination | Port | Protocol | Action |
 |------|--------|-------------|------|----------|--------|
-| HA → Fire TV (ADB) | 192.168.3.10 | Fire TV IP (Media VLAN) | 5555 | TCP | Allow |
+| HA → Fire TV (Android TV Remote) | 192.168.3.10 | Fire TV IP (192.168.4.166) | 6466 | TCP | Allow |
 | IoT → HA (mDNS) | IoT VLAN (192.168.6.0/24) | 192.168.3.10 | 5353 | UDP | Allow |
 | Echo → HA (API) | Echo device IP (IoT VLAN) | 192.168.3.10 | 8123 | TCP | Allow |
 
 > [!NOTE]
-> Rules 7 and 14 already allow Media and IoT VLANs to reach HA on port 8123 (see below). You only need additional rules for ADB (5555) and mDNS (5353) if required.
+> Rules 7 and 14 already allow Media and IoT VLANs to reach HA on port 8123 (see below). The HA → Fire TV rule (Rule 14b in [firewall-config.md](../network/firewall-config.md)) allows traffic in the **reverse direction** — from Servers VLAN to Media VLAN. The Android TV Remote integration uses port **6466**; the legacy ADB integration uses port **5555**.
 
 Existing firewall rules that already cover HA access:
 
@@ -534,7 +534,7 @@ Existing firewall rules that already cover HA access:
 | HA not reachable on port 8123 | Container not running | `docker ps \| grep homeassistant` → `make up` |
 | Fire TV not discovered | ADB debugging off | Enable in Fire TV Developer Options |
 | Fire TV entity stays `unavailable` | IP changed | Set DHCP reservation in UniFi |
-| Fire TV pairing prompt doesn't appear | Firewall blocking | Allow TCP 5555 from HA to Fire TV |
+| Fire TV pairing prompt doesn't appear | Firewall blocking | Allow TCP 6466 (Android TV Remote) or 5555 (ADB) from HA to Fire TV — see Rule 14b |
 | Alexa integration asks to re-authenticate | Amazon session expired | Re-enter credentials in HA notification |
 | TTS not working | Wrong entity or type | Use `type: announce` for Echo, `type: tts` for Fire TV |
 | Plex wake automation doesn't fire | Wrong entity ID | Check Developer Tools → States for exact `media_player` ID |

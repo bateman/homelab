@@ -100,6 +100,7 @@ Internet
 | Gateway (UDM-SE) | 192.168.4.1 | — |
 | Smart TV bedroom | DHCP reservation | Wired |
 | Smart TV living room | DHCP reservation | WiFi |
+| Fire TV Stick | 192.168.4.166 | DHCP reservation · Android TV Remote (port 6466) for HA |
 | Phones/Tablets | DHCP | Plex clients, *arr management, infrastructure management (QTS, Proxmox); UniFi via gateway IP (`192.168.4.1`) |
 
 ### VLAN 5 — Guest (192.168.5.0/24)
@@ -164,6 +165,8 @@ Before creating rules, define these lists in **UDM-SE** (Network application): S
 | VLAN Media | Subnet | 192.168.4.0/24 |
 | VLAN Guest | Subnet | 192.168.5.0/24 |
 | VLAN IoT | Subnet | 192.168.6.0/24 |
+| Home Assistant Server | IP Address | 192.168.3.10 |
+| Fire TV | IP Address | 192.168.4.166 |
 | RFC1918 | Subnet | 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12 |
 
 ### Port Network Lists
@@ -178,6 +181,7 @@ Define in **UDM-SE** (Network application): Settings → Profiles → Network Li
 | NAS Management | 22, 5000, 5001, 8081, 9443, 8200, 3001 |
 | Traefik | 443 |
 | Home Assistant | 8123 |
+| Android TV Remote | 6466 |
 | SSH | 22 |
 | Printing | 631, 9100 |
 | Proxmox Management | 8006 |
@@ -398,6 +402,19 @@ Rules are processed in order, from first to last. Order matters.
 | Port | Home Assistant (8123) |
 
 > Allows IoT devices to communicate with Home Assistant for automations.
+
+### Rule 14b — Allow HA to Fire TV (Android TV Remote)
+
+| Field | Value |
+|-------|-------|
+| Name | Allow HA to Fire TV |
+| Action | Accept |
+| Protocol | TCP |
+| Source | Home Assistant Server (192.168.3.10) |
+| Destination | Fire TV (192.168.4.166) |
+| Port | Android TV Remote (6466) |
+
+> Allows Home Assistant (NAS) to communicate with Fire TV on the Media VLAN via the Android TV Remote protocol. Required for the `media_player.fire_tv` entity used in power automations (`plex-minipc-power.yaml`). If using the legacy ADB integration instead, change the port to 5555.
 
 ### Rule 15 — Block IoT to All Private
 
