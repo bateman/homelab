@@ -1,0 +1,24 @@
+# =============================================================================
+# Home Assistant - Core Configuration
+# =============================================================================
+# Managed as part of homelab infrastructure-as-code.
+# Changes here require a Home Assistant restart to take effect.
+# =============================================================================
+
+homeassistant:
+  name: Home
+  unit_system: metric
+
+# ---------------------------------------------------------------------------
+# Reverse proxy (Traefik)
+# ---------------------------------------------------------------------------
+# Home Assistant runs with network_mode: host. Traefik (in a Docker bridge
+# network) connects to 192.168.3.10:8123, so its source IP is a Docker
+# bridge address (172.x.x.x). Without this block HA returns 400 Bad Request.
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.16.0.0/12   # Docker bridge networks (default pool)
+
+# Include automation files from this directory
+automation: !include plex-minipc-power.yaml
