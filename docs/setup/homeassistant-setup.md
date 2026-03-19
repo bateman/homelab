@@ -1,4 +1,4 @@
-# Home Assistant Setup — Alexa & Fire TV Integration
+# Home Assistant Setup
 
 > Complete Home Assistant configuration guide: initial setup, reverse proxy, core integrations, Fire TV, Alexa, and power automations
 
@@ -54,6 +54,7 @@ Home Assistant runs on the QNAP NAS as a Docker container with `network_mode: ho
 | Decision | Reason |
 |----------|--------|
 | `network_mode: host` | Required for mDNS device discovery, Zigbee, Bluetooth |
+| `/run/dbus:/run/dbus:ro` volume | Exposes host D-Bus to HA — needed for Bluetooth device access |
 | No Authelia middleware | HA has its own auth; SSO breaks HA Companion app login |
 | Traefik via file provider | Docker labels don't work with `network_mode: host` |
 | Config volume tracked in git | Infrastructure-as-code; secrets excluded via `.gitignore` |
@@ -83,10 +84,10 @@ Home Assistant is defined in `docker/compose.yml` and starts automatically with 
 1. Open `http://192.168.3.10:8123`
 2. Wait for initial setup (may take a few minutes on first boot)
 3. Create the **owner account** (admin user)
-4. Set **Home name**: `Home`
+4. Set **Home name** (e.g., `Home` — matches `configuration.yaml`)
 5. Set **Location** (used for sun-based automations, weather)
-6. Set **Unit system**: Metric
-7. Set **Time zone**: Europe/Rome
+6. Set **Unit system** (e.g., Metric — matches `configuration.yaml`)
+7. Set **Time zone** (e.g., Europe/Rome — matches `TZ` in `.env`)
 8. Review auto-detected integrations → skip for now (we'll add them manually)
 9. Click **Finish**
 
@@ -165,6 +166,9 @@ wake_on_lan:
 
 automation: !include plex-minipc-power.yaml
 ```
+
+> [!NOTE]
+> The shutdown automation in `plex-minipc-power.yaml` also requires a `rest_command` block in this file. See [Section 9.1](#91-mini-pc-power-management-fire-tv-based) for the full `rest_command` configuration to add.
 
 ### What's tracked in git vs what's not
 
@@ -257,7 +261,7 @@ To ensure the Fire TV always gets the same IP (required for reliable automations
 4. Note the IP for the next step
 
 > [!TIP]
-> If Fire TV is on the IoT VLAN (192.168.4.x), you'll need a firewall rule allowing HA (192.168.3.10) to reach it on port 5555 (ADB). See [Section 10](#10-firewall-considerations).
+> If Fire TV is on the Media VLAN (192.168.4.x), you'll need a firewall rule allowing HA (192.168.3.10) to reach it on port 5555 (ADB). See [Section 10](#10-firewall-considerations).
 
 ### 6.4 Add Integration in Home Assistant
 
@@ -335,6 +339,9 @@ HACS (Home Assistant Community Store) is required to install Alexa Media Player.
 
 ### 7.3 Configure Alexa Media Player
 
+> [!NOTE]
+> In this homelab, Alexa/Echo devices are on VLAN 6 — IoT (192.168.6.0/24) per [rack-homelab-config.md](../network/rack-homelab-config.md). Home Assistant can discover them because it runs with `network_mode: host` and firewall Rule 14 allows IoT → HA traffic on port 8123.
+
 1. **Settings** → **Devices & Services** → **Add Integration**
 2. Search for **"Alexa Media Player"**
 3. Enter your **Amazon account credentials** (the account linked to your Alexa devices)
@@ -368,6 +375,13 @@ Send a text-to-speech announcement to an Echo device:
     data:
       type: announce
 ```
+
+> [!NOTE]
+> Alexa Media Player supports two speech modes:
+> - **`type: announce`** — plays an attention tone before speaking; ideal for Echo speakers (alerts, notifications)
+> - **`type: tts`** — speaks immediately without a tone; better for Fire TV or background announcements
+>
+> Use `announce` for important alerts and `tts` for passive updates.
 
 ---
 
@@ -407,7 +421,7 @@ Two automations that wake/shutdown the Mini PC based on Fire TV state:
 
 | Automation | Trigger | Action |
 |------------|---------|--------|
-| Wake Mini PC | Fire TV turns on (off/standby → on/idle/playing) | `wake_on_lan.send_magic_packet` to Mini PC |
+| Wake Mini PC | Fire TV turns on (off/standby/unavailable → on/idle/playing/paused) | `wake_on_lan.send_magic_packet` to Mini PC |
 | Shutdown Mini PC | Fire TV off for 5 minutes | `rest_command.proxmox_shutdown_minipc` via Proxmox API |
 
 **TODO — Replace placeholder values before enabling:**
@@ -480,23 +494,30 @@ HA acts as a webhook bridge between Uptime Kuma and iOS push notifications. See 
 
 ## 10. Firewall Considerations
 
-If Fire TV or Echo devices are on the IoT VLAN (192.168.4.x), add firewall rules to allow communication with Home Assistant on the Server VLAN (192.168.3.x).
+Fire TV and Echo/Alexa devices live on different VLANs (see [rack-homelab-config.md](../network/rack-homelab-config.md)):
+
+| Device | VLAN | Subnet |
+|--------|------|--------|
+| Fire TV | 4 — Media | 192.168.4.0/24 |
+| Echo / Alexa | 6 — IoT | 192.168.6.0/24 |
+
+If these devices need to reach Home Assistant on the Server VLAN (192.168.3.x), add firewall rules:
 
 | Rule | Source | Destination | Port | Protocol | Action |
 |------|--------|-------------|------|----------|--------|
-| HA → Fire TV (ADB) | 192.168.3.10 | Fire TV IP | 5555 | TCP | Allow |
-| IoT → HA (mDNS) | IoT VLAN (192.168.4.0/24) | 192.168.3.10 | 5353 | UDP | Allow |
-| Echo → HA (API) | Echo device IP | 192.168.3.10 | 8123 | TCP | Allow |
+| HA → Fire TV (ADB) | 192.168.3.10 | Fire TV IP (Media VLAN) | 5555 | TCP | Allow |
+| IoT → HA (mDNS) | IoT VLAN (192.168.6.0/24) | 192.168.3.10 | 5353 | UDP | Allow |
+| Echo → HA (API) | Echo device IP (IoT VLAN) | 192.168.3.10 | 8123 | TCP | Allow |
 
 > [!NOTE]
-> If all devices are on the same VLAN (Default/LAN — 192.168.1.0/24), no additional firewall rules are needed. Rules are only required for cross-VLAN communication.
+> Rules 7 and 14 already allow Media and IoT VLANs to reach HA on port 8123 (see below). You only need additional rules for ADB (5555) and mDNS (5353) if required.
 
 Existing firewall rules that already cover HA access:
 
 | Rule | Description | File Reference |
 |------|-------------|----------------|
-| Rule 7 | Allow Media VLAN → HA (port 8123) | [firewall-config.md](../network/firewall-config.md) |
-| Rule 14 | Allow IoT VLAN → HA (port 8123) | [firewall-config.md](../network/firewall-config.md) |
+| Rule 7 | Allow Media VLAN (192.168.4.0/24) → HA (port 8123) | [firewall-config.md](../network/firewall-config.md) |
+| Rule 14 | Allow IoT VLAN (192.168.6.0/24) → HA (port 8123) | [firewall-config.md](../network/firewall-config.md) |
 
 ---
 
