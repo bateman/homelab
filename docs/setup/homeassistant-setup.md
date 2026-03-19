@@ -105,6 +105,9 @@ For mobile notifications (used by [notifications-setup.md](notifications-setup.m
 
 The app registers as `notify.mobile_app_<device_name>` — used for push notifications.
 
+> [!IMPORTANT]
+> The `mobile_app:` component must be present in `configuration.yaml` (see [Section 4](#4-core-configuration)). Without it, the Companion App cannot register and HA returns `APIError code 6` ("mobile_app component not loaded").
+
 ---
 
 ## 3. Reverse Proxy (Traefik)
@@ -161,6 +164,8 @@ http:
   use_x_forwarded_for: true
   trusted_proxies:
     - 172.16.0.0/12
+
+mobile_app:
 
 wake_on_lan:
 
