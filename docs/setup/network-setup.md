@@ -620,7 +620,7 @@ Use the same **Security**, **Behavior Controls**, and **Advanced** settings as H
 | Network | IoT (VLAN 6) | Isolated IoT VLAN |
 | Broadcasting APs | **All** | |
 | Application | **IoT** | Optimized for IoT device behavior |
-| Radio Band | **2.4 GHz + 5 GHz** | Many IoT devices only support 2.4 GHz |
+| Radio Band | **2.4 GHz only** | Most IoT devices (Samsung appliances, Roborock, many Alexa) only support 2.4 GHz; disabling 5 GHz avoids association failures |
 
 > [!WARNING]
 > Legacy or IoT clients may experience connectivity issues with PMF. If IoT devices fail to connect to Homelab-IoT, set PMF to **Disabled** on that specific SSID, or create a separate WPA2-only network.
