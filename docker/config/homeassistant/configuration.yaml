@@ -20,5 +20,13 @@ http:
   trusted_proxies:
     - 172.16.0.0/12   # Docker bridge networks (default pool)
 
+# ---------------------------------------------------------------------------
+# Integrations
+# ---------------------------------------------------------------------------
+# Wake-on-LAN: required by plex-minipc-power.yaml automations to send
+# magic packets to the Mini PC (Proxmox) when Fire TV turns on.
+# See: docs/setup/alexa-firetv-setup.md
+wake_on_lan:
+
 # Include automation files from this directory
 automation: !include plex-minipc-power.yaml
