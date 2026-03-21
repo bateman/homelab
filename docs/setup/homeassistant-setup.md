@@ -11,7 +11,7 @@
 3. [Reverse Proxy (Traefik)](#3-reverse-proxy-traefik)
 4. [Core Configuration](#4-core-configuration)
 5. [Built-in Integrations](#5-built-in-integrations)
-6. [Fire TV (Android TV Integration)](#6-fire-tv-android-tv-integration)
+6. [Fire TV → Proxmox Power Management](#6-fire-tv--proxmox-power-management)
 7. [Alexa (via HACS)](#7-alexa-via-hacs)
 8. [Expose HA Entities to Alexa (Optional)](#8-expose-ha-entities-to-alexa-optional)
 9. [Automations](#9-automations)
@@ -173,7 +173,7 @@ automation: !include plex-minipc-power.yaml
 ```
 
 > [!NOTE]
-> The shutdown automation in `plex-minipc-power.yaml` uses `shell_command.shutdown_minipc`, which is defined in this file. See [Section 9.1](#91-mini-pc-power-management-fire-tv-based) for SSH key setup.
+> The `wake_on_lan:` and `automation: !include plex-minipc-power.yaml` lines support the power management workflow. See [Section 6](#6-fire-tv--proxmox-power-management) for the full setup walkthrough including SSH key configuration.
 
 ### What's tracked in git vs what's not
 
@@ -207,28 +207,11 @@ After editing `configuration.yaml`:
 
 These integrations are configured via the HA UI (**Settings → Devices & Services → Add Integration**) and stored in `.storage/` (gitignored, backed up by Duplicati).
 
-### 5.1 Wake-on-LAN
-
-Enabled in `configuration.yaml` with `wake_on_lan:`. Used by `plex-minipc-power.yaml` to wake the Mini PC.
-
-- **Setup:** Already active (declared in config)
-- **Usage:** `wake_on_lan.send_magic_packet` service call
-
-### 5.2 Ping (Binary Sensor)
-
-Monitor whether the Mini PC (Proxmox) is online.
-
-1. **Settings** → **Helpers** → **Add Helper** → **Ping**
-2. Hostname: `192.168.3.20`
-3. Name: `Proxmox`
-
-Creates `binary_sensor.proxmox` — used in automations to check if the Mini PC is up.
-
-### 5.3 HA Companion App (Mobile)
+### 5.1 HA Companion App (Mobile)
 
 Auto-discovered when you install the HA Companion app (see [Section 2.4](#24-install-the-ha-companion-app-optional)). Creates `notify.mobile_app_<device_name>` for push notifications.
 
-### 5.4 Webhook (for Uptime Kuma)
+### 5.2 Webhook (for Uptime Kuma)
 
 Used to receive alerts from Uptime Kuma and forward them as iOS push notifications. No UI setup required — configured via automations.
 
@@ -236,15 +219,23 @@ See [notifications-setup.md](notifications-setup.md) for the full webhook integr
 
 ---
 
-## 6. Fire TV (Android TV Integration)
+## 6. Fire TV → Proxmox Power Management
 
-The Android TV integration monitors Fire TV state (on/off/playing) and enables the power automations in `plex-minipc-power.yaml`.
+This section walks through the complete power management setup end-to-end. When done, turning on the Fire TV automatically wakes the Mini PC (Plex), and turning it off for 5 minutes triggers a graceful shutdown.
 
-### 6.1 Prerequisites
+**File:** `docker/config/homeassistant/plex-minipc-power.yaml` (tracked in git)
 
-- Fire TV on the same network as Home Assistant (or reachable via firewall rule)
-- Fire TV IP address (Fire TV Settings → My Fire TV → About → Network)
-- ADB debugging enabled on Fire TV
+| Automation | Trigger | Action |
+|------------|---------|--------|
+| Wake Mini PC | Fire TV turns on (off/standby/unavailable → on/idle/playing/paused) | `wake_on_lan.send_magic_packet` to Mini PC |
+| Shutdown Mini PC | Fire TV off for 5 minutes | `shell_command.shutdown_minipc` via SSH |
+
+> [!NOTE]
+> Choose **one** approach for Mini PC power management — cron ([energy-saving-strategies.md §1.1](../operations/energy-saving-strategies.md#11-scheduled-shutdown--wake-up-cron)), HA time-based, or HA Fire TV-based. See [energy-saving-strategies.md §6](../operations/energy-saving-strategies.md#6-home-assistant-power-automations) for all options.
+
+### 6.1 Enable Wake-on-LAN
+
+Already declared in `configuration.yaml` with `wake_on_lan:` (see [Section 4](#4-core-configuration)). No additional setup needed — this enables the `wake_on_lan.send_magic_packet` service call used by the wake automation.
 
 ### 6.2 Enable ADB on Fire TV
 
@@ -268,7 +259,7 @@ To ensure the Fire TV always gets the same IP (required for reliable automations
 > [!TIP]
 > If Fire TV is on the Media VLAN (192.168.4.x), you'll need a firewall rule allowing HA (192.168.3.10) to reach it on port 5555 (ADB). See [Section 10](#10-firewall-considerations) and [firewall-config.md Rule 14b](../network/firewall-config.md).
 
-### 6.4 Add Integration in Home Assistant
+### 6.4 Add Android Debug Bridge Integration
 
 1. Open Home Assistant: `http://192.168.3.10:8123`
 2. **Settings** → **Devices & Services** → **Add Integration**
@@ -284,7 +275,7 @@ To ensure the Fire TV always gets the same IP (required for reliable automations
 >
 > Use **Android Debug Bridge** for Fire TV Stick devices. The Android TV Remote integration requires port 6466, which Fire TV Stick does not expose.
 
-### 6.5 Verify the Entity
+### 6.5 Verify the Fire TV Entity
 
 1. **Developer Tools** → **States**
 2. Search for `media_player.fire_tv`
@@ -292,17 +283,61 @@ To ensure the Fire TV always gets the same IP (required for reliable automations
    - Turn on Fire TV → state should change to `idle`, `playing`, or `on`
    - Turn off Fire TV → state should change to `standby` or `off`
 
-### 6.6 Update Automation Entity ID
+### 6.6 Create Ping Sensor
 
-The existing `plex-minipc-power.yaml` automation references `media_player.fire_tv`. If your entity has a different ID:
+The Ping sensor monitors whether the Mini PC (Proxmox) is online. The shutdown automation uses it to confirm the machine is up before sending the SSH command.
+
+1. **Settings** → **Helpers** → **Add Helper** → **Ping**
+2. Hostname: `192.168.3.20`
+3. Name: `Proxmox`
+
+Creates `binary_sensor.proxmox` — used by automations to check if the Mini PC is up.
+
+### 6.7 Set Up SSH Key for Shutdown
+
+The shutdown automation runs `shell_command.shutdown_minipc` (defined in `configuration.yaml`), which SSHes into the Mini PC. You need passwordless SSH from the HA container to Proxmox:
 
 ```bash
-# Check the actual entity ID in HA Developer Tools → States
-# Then update the automation file:
-vi docker/config/homeassistant/plex-minipc-power.yaml
+# From inside the HA container (docker exec -it homeassistant bash):
+mkdir -p /config/.ssh
+ssh-keygen -t ed25519 -f /config/.ssh/id_ed25519 -N ""
+cat /config/.ssh/id_ed25519.pub
 
-# Replace media_player.fire_tv with your actual entity ID
+# On Proxmox (ssh root@192.168.3.20), add the public key:
+nano ~/.ssh/authorized_keys   # paste the key
 ```
+
+### 6.8 Fill in Placeholders
+
+Replace the placeholder values in `plex-minipc-power.yaml` before enabling the automations:
+
+```yaml
+# In plex-minipc-power.yaml:
+mac: "XX:XX:XX:XX:XX:XX"         # → Mini PC integrated NIC MAC address
+entity_id: media_player.fire_tv  # → your actual Fire TV entity ID (from step 6.5)
+```
+
+### 6.9 Restart and Verify
+
+1. Restart Home Assistant to pick up any config changes:
+   - **From HA UI:** Settings → System → Restart
+   - **From CLI:**
+     ```bash
+     cd /share/container/mediastack
+     docker compose -f docker/compose.yml restart homeassistant
+     ```
+
+2. Verify the automations are loaded:
+   - **Settings** → **Automations & Scenes** → confirm both power automations appear
+   - Check they are **enabled** (toggle on)
+
+3. Test the wake automation:
+   - Turn off the Mini PC (or let it be off)
+   - Turn on the Fire TV → Mini PC should wake via WoL within seconds
+
+4. Test the shutdown automation:
+   - Turn off the Fire TV
+   - Wait 5 minutes → Mini PC should shut down gracefully via SSH
 
 ---
 
@@ -418,43 +453,7 @@ Requires more setup but no subscription:
 
 ## 9. Automations
 
-### 9.1 Mini PC Power Management (Fire TV-based)
-
-**File:** `docker/config/homeassistant/plex-minipc-power.yaml` (tracked in git)
-
-Two automations that wake/shutdown the Mini PC based on Fire TV state:
-
-| Automation | Trigger | Action |
-|------------|---------|--------|
-| Wake Mini PC | Fire TV turns on (off/standby/unavailable → on/idle/playing/paused) | `wake_on_lan.send_magic_packet` to Mini PC |
-| Shutdown Mini PC | Fire TV off for 5 minutes | `shell_command.shutdown_minipc` via SSH |
-
-**TODO — Replace placeholder values before enabling:**
-
-```yaml
-# In plex-minipc-power.yaml:
-mac: "XX:XX:XX:XX:XX:XX"         # → Mini PC integrated NIC MAC address
-entity_id: media_player.fire_tv  # → your actual Fire TV entity ID
-```
-
-**Prerequisites for the shutdown automation:**
-
-The `shell_command` is already in `configuration.yaml`. You just need to set up SSH key auth:
-
-```bash
-# From inside the HA container (docker exec -it homeassistant bash):
-mkdir -p /config/.ssh
-ssh-keygen -t ed25519 -f /config/.ssh/id_ed25519 -N ""
-cat /config/.ssh/id_ed25519.pub
-
-# On Proxmox (ssh root@192.168.3.20), add the public key:
-nano ~/.ssh/authorized_keys   # paste the key
-```
-
-> [!NOTE]
-> Choose **one** approach for Mini PC power management — cron ([energy-saving-strategies.md §1.1](../operations/energy-saving-strategies.md#11-scheduled-shutdown--wake-up-cron)), HA time-based, or HA Fire TV-based. See [energy-saving-strategies.md §6](../operations/energy-saving-strategies.md#6-home-assistant-power-automations) for all options.
-
-### 9.2 Announce When Plex is Ready (Alexa TTS)
+### 9.1 Announce When Plex is Ready (Alexa TTS)
 
 After Fire TV triggers Mini PC wake-up, announce on the nearest Echo when Plex is available. Create via HA UI or add to `automations.yaml`:
 
@@ -482,9 +481,9 @@ After Fire TV triggers Mini PC wake-up, announce on the nearest Echo when Plex i
 ```
 
 > [!NOTE]
-> Requires the Ping helper (`binary_sensor.proxmox`) from [Section 5.2](#52-ping-binary-sensor) and Alexa Media Player from [Section 7](#7-alexa-via-hacs).
+> Requires the Ping helper (`binary_sensor.proxmox`) from [Section 6.6](#66-create-ping-sensor) and Alexa Media Player from [Section 7](#7-alexa-via-hacs).
 
-### 9.3 Uptime Kuma Notifications
+### 9.2 Uptime Kuma Notifications
 
 HA acts as a webhook bridge between Uptime Kuma and iOS push notifications. See [notifications-setup.md](notifications-setup.md) for the full setup.
 
@@ -525,12 +524,12 @@ Existing firewall rules that already cover HA access:
 |-------|-------|----------|
 | HA returns 400 Bad Request via Traefik | Missing `trusted_proxies` | Add `172.16.0.0/12` to `http.trusted_proxies` in `configuration.yaml` |
 | HA not reachable on port 8123 | Container not running | `docker ps \| grep homeassistant` → `make up` |
-| Fire TV not discovered | ADB debugging off | Enable in Fire TV Developer Options |
-| Fire TV entity stays `unavailable` | IP changed | Set DHCP reservation in UniFi |
+| Fire TV not discovered | ADB debugging off | Enable in Fire TV Developer Options ([Section 6.2](#62-enable-adb-on-fire-tv)) |
+| Fire TV entity stays `unavailable` | IP changed | Set DHCP reservation in UniFi ([Section 6.3](#63-reserve-fire-tv-ip-dhcp-reservation)) |
 | Fire TV pairing prompt doesn't appear | Firewall blocking | Allow TCP 5555 (ADB) from HA to Fire TV — see Rule 14b |
+| Plex wake automation doesn't fire | Wrong entity ID | Check Developer Tools → States for exact `media_player` ID ([Section 6.5](#65-verify-the-fire-tv-entity)) |
 | Alexa integration asks to re-authenticate | Amazon session expired | Re-enter credentials in HA notification |
 | TTS not working | Wrong entity or type | Use `type: announce` for Echo, `type: tts` for Fire TV |
-| Plex wake automation doesn't fire | Wrong entity ID | Check Developer Tools → States for exact `media_player` ID |
 | HACS not showing in integrations | Restart needed | Restart HA after HACS install, clear browser cache |
 | `configuration.yaml` changes not applied | Restart needed | Settings → System → Restart (or `docker compose restart homeassistant`) |
 
