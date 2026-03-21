@@ -283,17 +283,7 @@ To ensure the Fire TV always gets the same IP (required for reliable automations
    - Turn on Fire TV → state should change to `idle`, `playing`, or `on`
    - Turn off Fire TV → state should change to `standby` or `off`
 
-### 6.6 Create Ping Sensor
-
-The Ping integration monitors whether the Mini PC (Proxmox) is online. The shutdown automation uses it to confirm the machine is up before sending the SSH command.
-
-1. **Settings** → **Devices & Services** → **Add Integration** → search **"Ping"**
-2. Hostname: `192.168.3.20`
-3. Name: `Proxmox`
-
-Creates `binary_sensor.proxmox` — used by automations to check if the Mini PC is up.
-
-### 6.7 Set Up SSH Key for Shutdown
+### 6.6 Set Up SSH Key for Shutdown
 
 The shutdown automation runs `shell_command.shutdown_minipc` (defined in `configuration.yaml`), which SSHes into the Mini PC. You need passwordless SSH from the HA container to Proxmox:
 
@@ -307,7 +297,7 @@ cat /config/.ssh/id_ed25519.pub
 nano ~/.ssh/authorized_keys   # paste the key
 ```
 
-### 6.8 Fill in Placeholders
+### 6.7 Fill in Placeholders
 
 Replace the placeholder values in `plex-minipc-power.yaml` before enabling the automations:
 
@@ -317,7 +307,7 @@ mac: "XX:XX:XX:XX:XX:XX"         # → Mini PC integrated NIC MAC address
 entity_id: media_player.fire_tv  # → your actual Fire TV entity ID (from step 6.5)
 ```
 
-### 6.9 Restart and Verify
+### 6.8 Restart and Verify
 
 1. Restart Home Assistant to pick up any config changes:
    - **From HA UI:** Settings → System → Restart
@@ -453,9 +443,19 @@ Requires more setup but no subscription:
 
 ## 9. Automations
 
-### 9.1 Announce When Plex is Ready (Alexa TTS)
+### 9.1 Announce When Plex is Ready (Alexa TTS) — Optional
 
-After Fire TV triggers Mini PC wake-up, announce on the nearest Echo when Plex is available. Create via HA UI or add to `automations.yaml`:
+After Fire TV triggers Mini PC wake-up, announce on the nearest Echo when Plex is available. Requires Alexa Media Player ([Section 7](#7-alexa-via-hacs)).
+
+**Prerequisite — create a Ping sensor for the Mini PC:**
+
+1. **Settings** → **Devices & Services** → **Add Integration** → search **"Ping"**
+2. Hostname: `192.168.3.20`
+3. Name: `Proxmox`
+
+This creates `binary_sensor.proxmox`, which the automation below uses as its trigger.
+
+**Automation** — create via HA UI or add to `automations.yaml`:
 
 ```yaml
 - id: announce_plex_ready
@@ -479,9 +479,6 @@ After Fire TV triggers Mini PC wake-up, announce on the nearest Echo when Plex i
         data:
           type: announce
 ```
-
-> [!NOTE]
-> Requires the Ping integration (`binary_sensor.proxmox`) from [Section 6.6](#66-create-ping-sensor) and Alexa Media Player from [Section 7](#7-alexa-via-hacs).
 
 ### 9.2 Uptime Kuma Notifications
 
