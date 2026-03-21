@@ -643,7 +643,7 @@ Home Assistant can centralize power management with intelligent automations.
     - condition: template
       value_template: "{{ states('sensor.plex') | int(0) == 0 }}"
   action:
-    - service: shell_command.shutdown_proxmox
+    - service: shell_command.shutdown_minipc
 
 # Time-based service control (alternative to cron)
 # Use this if you prefer HA to manage power save instead of cron
@@ -679,20 +679,20 @@ Home Assistant can centralize power management with intelligent automations.
 ```yaml
 shell_command:
   # Proxmox control (requires SSH key setup)
-  shutdown_proxmox: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa root@192.168.3.20 'shutdown -h now'"
+  shutdown_minipc: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_ed25519 root@192.168.3.20 'shutdown -h now'"
   # Wake via NAS (wakeonlan not available in HA container by default)
-  wake_proxmox: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa admin@192.168.3.10 '/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF'"
+  wake_minipc: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_ed25519 admin@192.168.3.10 '/opt/bin/wakeonlan AA:BB:CC:DD:EE:FF'"
 
   # NAS power save scripts (requires SSH key setup to NAS)
-  power_save_start: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa admin@192.168.3.10 '/share/container/mediastack/scripts/power-save-start.sh'"
-  power_save_stop: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_rsa admin@192.168.3.10 '/share/container/mediastack/scripts/power-save-stop.sh'"
+  power_save_start: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_ed25519 admin@192.168.3.10 '/share/container/mediastack/scripts/power-save-start.sh'"
+  power_save_stop: "ssh -o StrictHostKeyChecking=no -i /config/.ssh/id_ed25519 admin@192.168.3.10 '/share/container/mediastack/scripts/power-save-stop.sh'"
 ```
 
 > [!IMPORTANT]
 > For shell commands to work, you must:
-> 1. Generate SSH key in HA container: `ssh-keygen -t ed25519 -f /config/.ssh/id_rsa -N ""`
-> 2. Copy public key to Proxmox: `ssh-copy-id -i /config/.ssh/id_rsa.pub root@192.168.3.20`
-> 3. Copy public key to NAS: `ssh-copy-id -i /config/.ssh/id_rsa.pub admin@192.168.3.10`
+> 1. Generate SSH key in HA container: `ssh-keygen -t ed25519 -f /config/.ssh/id_ed25519 -N ""`
+> 2. Copy public key to Proxmox: `ssh-copy-id -i /config/.ssh/id_ed25519.pub root@192.168.3.20`
+> 3. Copy public key to NAS: `ssh-copy-id -i /config/.ssh/id_ed25519.pub admin@192.168.3.10`
 > 4. Test connections from HA container before using automations
 
 ### 6.3 Power Monitoring Dashboard

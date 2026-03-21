@@ -552,4 +552,4 @@ Existing firewall rules that already cover HA access:
 - [Notifications Setup](notifications-setup.md) — Uptime Kuma → HA → iOS push
 - [Energy Saving Strategies §6](../operations/energy-saving-strategies.md#6-home-assistant-power-automations) — Power automations (all options)
 - [Firewall Config](../network/firewall-config.md) — VLAN access rules for HA
-- [Proxmox Setup](proxmox-setup.md) — WoL and API token for Mini PC control
+- [Proxmox Setup](proxmox-setup.md) — WoL and SSH-based shutdown for Mini PC control
