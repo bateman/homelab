@@ -173,7 +173,7 @@ automation: !include plex-minipc-power.yaml
 ```
 
 > [!NOTE]
-> The shutdown automation in `plex-minipc-power.yaml` uses `rest_command.proxmox_shutdown_minipc`, which is defined in this file with `!secret proxmox_api_token`. See [Section 9.1](#91-mini-pc-power-management-fire-tv-based) for the Proxmox API token setup.
+> The shutdown automation in `plex-minipc-power.yaml` uses `shell_command.shutdown_minipc`, which is defined in this file. See [Section 9.1](#91-mini-pc-power-management-fire-tv-based) for SSH key setup.
 
 ### What's tracked in git vs what's not
 
@@ -427,7 +427,7 @@ Two automations that wake/shutdown the Mini PC based on Fire TV state:
 | Automation | Trigger | Action |
 |------------|---------|--------|
 | Wake Mini PC | Fire TV turns on (off/standby/unavailable → on/idle/playing/paused) | `wake_on_lan.send_magic_packet` to Mini PC |
-| Shutdown Mini PC | Fire TV off for 5 minutes | `rest_command.proxmox_shutdown_minipc` via Proxmox API |
+| Shutdown Mini PC | Fire TV off for 5 minutes | `shell_command.shutdown_minipc` via SSH |
 
 **TODO — Replace placeholder values before enabling:**
 
@@ -439,20 +439,16 @@ entity_id: media_player.fire_tv  # → your actual Fire TV entity ID
 
 **Prerequisites for the shutdown automation:**
 
-The `rest_command` block is already in `configuration.yaml` and uses `!secret` for the API token. You just need to:
-
-1. Create the Proxmox API token:
+The `shell_command` is already in `configuration.yaml`. You just need to set up SSH key auth:
 
 ```bash
-# On Proxmox (ssh root@192.168.3.20)
-pveum user token add homeassistant@pve hatoken --privsep=0
-```
+# From inside the HA container (docker exec -it homeassistant bash):
+mkdir -p /config/.ssh
+ssh-keygen -t ed25519 -f /config/.ssh/id_ed25519 -N ""
+cat /config/.ssh/id_ed25519.pub
 
-2. Add the token to `secrets.yaml` (gitignored):
-
-```yaml
-# docker/config/homeassistant/secrets.yaml
-proxmox_api_token: "PVEAPIToken=homeassistant@pve!hatoken=<token-value>"
+# On Proxmox (ssh root@192.168.3.20), add the public key:
+nano ~/.ssh/authorized_keys   # paste the key
 ```
 
 > [!NOTE]
@@ -556,4 +552,4 @@ Existing firewall rules that already cover HA access:
 - [Notifications Setup](notifications-setup.md) — Uptime Kuma → HA → iOS push
 - [Energy Saving Strategies §6](../operations/energy-saving-strategies.md#6-home-assistant-power-automations) — Power automations (all options)
 - [Firewall Config](../network/firewall-config.md) — VLAN access rules for HA
-- [Proxmox Setup](proxmox-setup.md) — WoL and API token for Mini PC control
+- [Proxmox Setup](proxmox-setup.md) — WoL and SSH-based shutdown for Mini PC control

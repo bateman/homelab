@@ -50,6 +50,7 @@ docker/config/homeassistant/automations.yaml
 docker/config/homeassistant/scenes.yaml
 docker/config/homeassistant/scripts.yaml
 docker/config/homeassistant/secrets.yaml
+docker/config/homeassistant/.ssh/
 
 # Exception: keep Pi-hole adlists file (blocklist URLs for bulk import)
 !docker/config/pihole/

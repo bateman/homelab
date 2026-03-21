@@ -490,7 +490,7 @@ After claiming, access Plex normally at `http://192.168.3.21:32400/web`.
 ### 5.2 Add Libraries
 
 > [!NOTE]
-> This Plex instance serves **Movies/TV only**. Music runs on a separate always-on Plex server on the NAS (Docker container `plex-music` in `compose.media.yml`). Home Assistant manages this Mini PC's power state — waking it via WoL when Fire TV turns on, and shutting it down via Proxmox API when idle.
+> This Plex instance serves **Movies/TV only**. Music runs on a separate always-on Plex server on the NAS (Docker container `plex-music` in `compose.media.yml`). Home Assistant manages this Mini PC's power state — waking it via WoL when Fire TV turns on, and shutting it down via SSH when idle.
 
 Add Library → Movies:
 - Name: Movies
