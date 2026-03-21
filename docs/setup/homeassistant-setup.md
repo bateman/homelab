@@ -285,9 +285,9 @@ To ensure the Fire TV always gets the same IP (required for reliable automations
 
 ### 6.6 Create Ping Sensor
 
-The Ping sensor monitors whether the Mini PC (Proxmox) is online. The shutdown automation uses it to confirm the machine is up before sending the SSH command.
+The Ping integration monitors whether the Mini PC (Proxmox) is online. The shutdown automation uses it to confirm the machine is up before sending the SSH command.
 
-1. **Settings** → **Helpers** → **Add Helper** → **Ping**
+1. **Settings** → **Devices & Services** → **Add Integration** → search **"Ping"**
 2. Hostname: `192.168.3.20`
 3. Name: `Proxmox`
 
@@ -481,7 +481,7 @@ After Fire TV triggers Mini PC wake-up, announce on the nearest Echo when Plex i
 ```
 
 > [!NOTE]
-> Requires the Ping helper (`binary_sensor.proxmox`) from [Section 6.6](#66-create-ping-sensor) and Alexa Media Player from [Section 7](#7-alexa-via-hacs).
+> Requires the Ping integration (`binary_sensor.proxmox`) from [Section 6.6](#66-create-ping-sensor) and Alexa Media Player from [Section 7](#7-alexa-via-hacs).
 
 ### 9.2 Uptime Kuma Notifications
 
