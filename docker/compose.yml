@@ -562,7 +562,7 @@ services:
     restart: unless-stopped
     logging: *common-logging
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8123/api/"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8123/manifest.json"]
       <<: *common-healthcheck
     deploy:
       resources:

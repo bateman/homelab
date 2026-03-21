@@ -184,7 +184,7 @@ Below are the recommended monitor types for each service in the homelab. Use con
 | Socket Proxy | Docker Container | Container: `socket-proxy` | Internal only, no exposed HTTP endpoint |
 | Watchtower | Docker Container | Container: `watchtower` | Metrics endpoint requires auth token; Docker monitor is simpler |
 | Cert Page | HTTP(s) | `http://cert-page:80/` | CA certificate download page; no auth required |
-| Home Assistant | HTTP(s) | `http://192.168.3.10:8123/api/` | Must use host IP — HA runs in `network_mode: host` |
+| Home Assistant | HTTP(s) | `http://192.168.3.10:8123/manifest.json` | Must use host IP — HA runs in `network_mode: host`; do not use `/api/` (requires auth, causes login errors in HA log) |
 
 > [!NOTE]
 > Do not create a monitor for Uptime Kuma itself — it cannot reliably monitor its own availability.
@@ -280,7 +280,7 @@ To receive notifications even when iPhone is in silent mode or Do Not Disturb:
 
 ```bash
 # Verify HA responds
-curl http://192.168.3.10:8123/api/
+curl http://192.168.3.10:8123/manifest.json
 
 # If error, verify HA is running
 docker ps | grep homeassistant
