@@ -8,14 +8,8 @@
 #   1. Android TV integration configured for Fire TV
 #   2. Wake-on-LAN integration enabled in configuration.yaml:
 #        wake_on_lan:
-#   3. Proxmox API token created and added to secrets.yaml:
-#        pveum user add homeassistant@pve
-#        pveum role add HAShutdown -privs "Sys.PowerMgmt"
-#        pveum acl modify /nodes/pve -user homeassistant@pve -role HAShutdown
-#        pveum user token add homeassistant@pve hatoken --privsep=0
-#        # secrets.yaml: proxmox_api_token: "PVEAPIToken=homeassistant@pve!hatoken=<token>"
-#   4. rest_command.proxmox_shutdown_minipc defined in configuration.yaml
-#      (uses !secret proxmox_api_token)
+#   3. SSH key for root@Proxmox — see docs/setup/homeassistant-setup.md §9.1
+#   4. shell_command.shutdown_minipc defined in configuration.yaml
 #
 # Usage:
 #   Add to configuration.yaml:
@@ -54,7 +48,7 @@
 - id: shutdown_minipc_when_idle
   alias: "Shut down Mini PC when Fire TV turns off"
   description: >
-    Gracefully shuts down the Mini PC via Proxmox API after Fire TV has been
+    Gracefully shuts down the Mini PC via SSH after Fire TV has been
     off for 5 minutes. Prevents unnecessary power consumption when nobody
     is watching Movies/TV.
   trigger:
@@ -67,4 +61,4 @@
       for:
         minutes: 5
   action:
-    - service: rest_command.proxmox_shutdown_minipc
+    - service: shell_command.shutdown_minipc
