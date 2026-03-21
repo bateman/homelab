@@ -441,10 +441,13 @@ entity_id: media_player.fire_tv  # → your actual Fire TV entity ID
 
 The `rest_command` block is already in `configuration.yaml` and uses `!secret` for the API token. You just need to:
 
-1. Create the Proxmox API token:
+1. Create a Proxmox user, role, and API token:
 
 ```bash
 # On Proxmox (ssh root@192.168.3.20)
+pveum user add homeassistant@pve
+pveum role add HAShutdown -privs "Sys.PowerMgmt"
+pveum acl modify /nodes/pve -user homeassistant@pve -role HAShutdown
 pveum user token add homeassistant@pve hatoken --privsep=0
 ```
 

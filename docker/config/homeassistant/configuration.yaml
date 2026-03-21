@@ -38,6 +38,9 @@ wake_on_lan:
 # Proxmox API call used by plex-minipc-power.yaml to gracefully shut down
 # the Mini PC when Fire TV goes idle.
 # Requires a Proxmox API token — create with:
+#   pveum user add homeassistant@pve
+#   pveum role add HAShutdown -privs "Sys.PowerMgmt"
+#   pveum acl modify /nodes/pve -user homeassistant@pve -role HAShutdown
 #   pveum user token add homeassistant@pve hatoken --privsep=0
 # Then add to secrets.yaml:
 #   proxmox_api_token: PVEAPIToken=homeassistant@pve!hatoken=<token-value>
