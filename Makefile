@@ -413,8 +413,8 @@ health: check-docker check-curl
 	$(call check_service,http://localhost:8081/admin/,Pi-hole)
 	@# Home Assistant uses network_mode: host (no Docker network)
 	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^homeassistant$$'; then \
-		STATUS=$$(curl -sLk -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:8123/api/ 2>/dev/null); \
-		if [ "$$STATUS" = "200" ] || [ "$$STATUS" = "401" ]; then \
+		STATUS=$$(curl -sLk -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:8123/manifest.json 2>/dev/null); \
+		if [ "$$STATUS" = "200" ]; then \
 			printf "HomeAssistant: $(GREEN)OK ($$STATUS)$(NC)\n"; \
 		elif [ -n "$$STATUS" ] && [ "$$STATUS" != "000" ]; then \
 			printf "HomeAssistant: $(YELLOW)$$STATUS$(NC)\n"; \

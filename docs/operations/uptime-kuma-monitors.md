@@ -123,7 +123,7 @@ Usato per verificare che Pi-hole risolva correttamente i domini.
 
 | Servizio | Tipo | URL / Target | Note |
 |----------|------|--------------|------|
-| Home Assistant | HTTP(s) | `http://192.168.3.10:8123/api/` | Usare l'IP dell'host — HA usa `network_mode: host`, non è raggiungibile via hostname Docker |
+| Home Assistant | HTTP(s) | `http://192.168.3.10:8123/manifest.json` | Usare l'IP dell'host — HA usa `network_mode: host`, non è raggiungibile via hostname Docker; non usare `/api/` (richiede autenticazione e genera errori di login nel log di HA) |
 
 ### Media Stack (compose.media.yml)
 
